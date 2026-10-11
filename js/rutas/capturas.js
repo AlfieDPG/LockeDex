@@ -118,6 +118,25 @@ function guardarEn(idJuego, clave, captura) {
   alGuardar();
 }
 
+// Al desmarcar un lugar, lo que se capturó ahí se va con él (sin volver a pintar: ya lo hace
+// rutas/index.js con el botón)
+export function quitarCaptura(idJuego, clave) {
+  if (!capturaDe(idJuego, clave)) return;
+  const guardadas = todas();
+  const delJuego = { ...(guardadas[idJuego] || {}) };
+  delete delJuego[lugarDe(clave)];
+  guardadas[idJuego] = delJuego;
+  escribir(CLAVE, guardadas);
+}
+
+// «Desmarcar todo»: las de un juego entero
+export function quitarCapturasDelJuego(idJuego) {
+  const guardadas = todas();
+  if (!guardadas[idJuego]) return;
+  delete guardadas[idJuego];
+  escribir(CLAVE, guardadas);
+}
+
 async function guardar() {
   const error = dialogo.querySelector(".captura-error");
   const texto = dialogo.querySelector(".captura-pokemon").value.trim();

@@ -103,7 +103,7 @@ function pintar() {
     ? conTexto
         .map(
           (suceso) => `
-            <div class="suceso ${escaparHTML(suceso.tipo)} ${suceso.delta < 0 ? "resta" : ""}">
+            <div class="suceso suceso-${escaparHTML(suceso.tipo)} ${suceso.delta < 0 ? "resta" : ""}">
               <span class="suceso-icono">${iconoSuceso(suceso)}</span>
               <span class="suceso-texto">${textoSuceso(suceso, locke)}</span>
               <time class="suceso-cuando">${hace(suceso.cuando)}</time>

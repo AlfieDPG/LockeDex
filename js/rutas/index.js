@@ -16,7 +16,7 @@ import {
   rutasPropias, lugaresDe, seccionesDeLaWeb, lugaresDeLaWeb, MAX_LUGARES
 } from "../comun/personalizados.js";
 import { apuntarEnLockesDelJuego } from "../comun/lockes.js";
-import { plantillaCaptura, abrirCaptura, iniciarCapturas } from "./capturas.js";
+import { plantillaCaptura, abrirCaptura, iniciarCapturas, quitarCaptura, quitarCapturasDelJuego } from "./capturas.js";
 
 // NO cambiar estas claves: si se cambian, se pierden las rutas marcadas
 const CLAVE_MARCADAS = "poketeams-rutas-v2"; // { idJuego: ["rutas:Ruta 1", ...] }
@@ -330,8 +330,10 @@ export function iniciar() {
       return;
     }
 
-    if (usadas.has(clave)) usadas.delete(clave);
-    else usadas.add(clave);
+    if (usadas.has(clave)) {
+      usadas.delete(clave);
+      quitarCaptura(juego.id, clave);
+    } else usadas.add(clave);
     const apartado = clave.slice(0, clave.indexOf(":"));
     const ancho = boton.style.flexBasis;
     boton.outerHTML = botonLugar(apartado, clave.slice(clave.indexOf(":") + 1));
@@ -356,6 +358,7 @@ export function iniciar() {
     if (usadas.size === 0) return;
     if (!confirm(`¿Desmarcar todos los lugares de ${juego.nombre}?`)) return;
     usadas.clear();
+    quitarCapturasDelJuego(juego.id);
     guardar();
     pintarLista();
   });

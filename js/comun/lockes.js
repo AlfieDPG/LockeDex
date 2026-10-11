@@ -40,6 +40,13 @@ import { apuntarLockesGanados, miPerfil, alCambiarMiPerfil, guardarMiPerfil } fr
 import { quitarConjuntosAjenos, normasDeLocke } from "./normas.js";
 import { hoyComoTexto } from "./utilidades.js";
 import { leer, escribir } from "./almacen.js";
+import { JUEGOS } from "./juegos.js";
+
+// «usum» -> «alola» ("" si no es un juego de la web)
+function regionDe(idJuego) {
+  const juego = JUEGOS.find((cada) => cada.id === idJuego);
+  return juego ? juego.region : "";
+}
 
 let todos = [];
 let delServidor = false; // la última lista llegó del servidor (no solo de la caché del navegador)
@@ -482,11 +489,17 @@ export async function apuntarEnLockesDelJuego(campoPropio, idJuego, tipo, detall
   const usuario = usuarioActual();
   if (!usuario || !baseDeDatos()) return;
 
-  const delJuego = misLockes().filter((locke) => {
-    if (locke.estado === "cerrado" || estaEliminado(locke, usuario.uid)) return false;
+  // Vale tanto su lista propia (si la lleva) como el juego de la web: un locke de Alola con
+  // unas rutas propias sigue siendo de Alola si marcas en las de la web. Si no hay ninguno de
+  // ese juego exacto, uno de la misma región: Sol / Luna y Ultrasol / Ultraluna comparten casi
+  // todo, y es fácil tener abierto en «Rutas» el otro.
+  const abiertos = misLockes().filter((locke) => locke.estado !== "cerrado" && !estaEliminado(locke, usuario.uid));
+  const exactos = abiertos.filter((locke) => {
     const propio = locke[campoPropio];
-    return (propio ? propio.id : locke.juego) === idJuego;
+    return (propio && propio.id === idJuego) || locke.juego === idJuego;
   });
+  const region = regionDe(idJuego);
+  const delJuego = exactos.length ? exactos : abiertos.filter((locke) => region && regionDe(locke.juego) === region);
 
   await Promise.all(
     delJuego.map(async (locke) => {
