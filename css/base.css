@@ -127,27 +127,88 @@ body {
 
 /* ---------- Desplegable de sugerencias ---------- */
 
+/* La lista que sale al escribir (js/comun/autocompletado.js): oscura como el resto, con la
+   marcada (ratón o flechas del teclado) en amarillo */
 .sugerencias {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 0.25rem);
   left: 0;
   right: 0;
-  background: #fff;
-  color: #222;
-  border-radius: 0.45rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   z-index: 10;
+  max-height: min(22rem, 55vh);
+  overflow-y: auto;
+  background: #1e1f2b;
+  color: #f2f2f2;
+  border-radius: 0.5rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
+  font-size: 0.92rem;
+  font-weight: normal;
   text-align: left;
-  overflow: hidden;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.sugerencias:not(:empty) {
+  padding: 0.25rem;
+  border: 1px solid rgba(241, 196, 15, 0.4);
 }
 
 .sugerencias .opcion {
-  padding: 0.6rem 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.35rem;
   cursor: pointer;
 }
 
-.sugerencias .opcion:hover {
+.sugerencias .opcion.marcada {
   background: #f1c40f;
+  color: #1e1f2b;
+}
+
+.sugerencias .opcion-nombre {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: bold;
+}
+
+/* El nombre en inglés, flojito a la derecha */
+.sugerencias .opcion small {
+  flex: none;
+  margin-left: auto;
+  font-size: 0.78rem;
+  opacity: 0.55;
+}
+
+.sugerencias .opcion-icono {
+  display: flex;
+  flex: none;
+  width: 1.9rem;
+  height: 1.9rem;
+}
+
+/* Retratos de Mundo Misterioso, redondos (los objetos, tal cual) */
+.sugerencias .opcion-icono img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #2c2e3e;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.sugerencias .opcion-icono img.objeto {
+  border-radius: 0;
+  background: none;
+  object-fit: contain;
+  image-rendering: auto;
+}
+
+.sugerencias .opcion.marcada .opcion-icono img:not(.objeto) {
+  box-shadow: 0 0 0 2px #1e1f2b;
 }
 
 /* ---------- Iconos de tipo ---------- */

@@ -34,10 +34,13 @@ import {
   imagenConRespaldo, urlsPMD, urlsPMDEmocion, urlSpriteHome, urlSpritePixel, precargarImagen
 } from "./comun/imagenes.js";
 import { cargarDatos, datos } from "./comun/datos.js";
-import { activarAutocompletado } from "./comun/autocompletado.js";
+import { activarAutocompletado, iconoPokemon } from "./comun/autocompletado.js";
 import { obtenerVariedades } from "./comun/formas.js";
 import { elegirForma, datosDeForma } from "./comun/elegir-forma.js";
 import { LOGROS, insignia } from "./comun/logros.js";
+import {
+  FONDOS_METAL, FONDOS_TIPO, fondoDe, logrosDe, desbloqueado, requisito, claseFondo, estiloFondo
+} from "./comun/fondos.js";
 
 const MAX_DESTACADOS = 12;   // los que caben en el perfil (cada uno es una copia dentro de él)
 const VER_DESTACADOS = 3;    // los que se ven sin pulsar «Ver todos»
@@ -150,6 +153,54 @@ function pintarTitulos() {
 async function ponerTitulo(id) {
   await guardarMiPerfil({ titulo: id });
   dialogoTitulo.close();
+}
+
+// El fondo de tu tarjeta de «Amigos» (js/comun/fondos.js). Plegado, solo unos pocos (el que
+// llevas y otros que ya tienes) y un «+» para verlos todos: los de metal y los 18 de tipo, los
+// que aún no tienes con un candado y lo que piden.
+const VER_FONDOS = 3;
+let fondosEnteros = false;
+
+function plantillaFondos(perfil) {
+  const puesto = fondoDe(perfil);
+  const tengo = logrosDe(perfil);
+  const muestra = (fondo) => {
+    const libre = !fondo.id || desbloqueado(fondo, perfil);
+    const pide = fondo.logro ? requisito(fondo) : `Se desbloquea con ${fondo.logros} logros (tienes ${tengo})`;
+    return `
+      <button class="perfil-fondo ${claseFondo(fondo.id)} ${fondo.id === puesto ? "elegido" : ""}"
+              style="${estiloFondo(fondo.id)}" data-fondo="${fondo.id}" ${libre ? "" : "disabled"}
+              title="${escaparHTML(libre ? fondo.nombre : pide)}">
+        <span class="perfil-fondo-nombre">${libre ? "" : icono("candado")} ${fondo.nombre}</span>
+        ${libre || fondo.logro ? "" : `<small>${fondo.logros} logros</small>`}
+      </button>`;
+  };
+  const normal = { id: "", nombre: "Sin fondo" };
+  const todos = [normal, ...FONDOS_METAL, ...FONDOS_TIPO];
+
+  if (!fondosEnteros) {
+    // El puesto primero; luego «Normal» y los que ya tienes (los más nuevos de metal antes)
+    const libres = [...FONDOS_METAL].reverse().concat(FONDOS_TIPO).filter((fondo) => desbloqueado(fondo, perfil));
+    const pocos = [todos.find((fondo) => fondo.id === puesto) || normal, normal, ...libres]
+      .filter((fondo, i, lista) => lista.indexOf(fondo) === i)
+      .slice(0, VER_FONDOS);
+    const quedan = todos.length - pocos.length;
+    return `
+      <section class="perfil-apartado">
+        <h3>Fondo de tu tarjeta</h3>
+        <div class="perfil-fondos">
+          ${pocos.map(muestra).join("")}
+          <button class="perfil-fondo perfil-fondos-mas" title="Ver todos los fondos">${icono("mas")}<small>${quedan} más</small></button>
+        </div>
+      </section>`;
+  }
+
+  return `
+    <section class="perfil-apartado">
+      <h3>Fondo de tu tarjeta <button class="perfil-fondos-mas perfil-fondos-menos">Ver menos</button></h3>
+      <div class="perfil-fondos">${[normal, ...FONDOS_METAL].map(muestra).join("")}</div>
+      <div class="perfil-fondos perfil-fondos-tipo">${FONDOS_TIPO.map(muestra).join("")}</div>
+    </section>`;
 }
 
 // Lockes jugados juntos en total (los de Versus, en marcha o terminados, y los apuntados a
@@ -343,6 +394,8 @@ function pintar() {
 
     ${plantillaSalon(perfil)}
 
+    ${mio ? plantillaFondos(perfil) : ""}
+
     ${mio ? plantillaAmigos() : ""}`;
 
   dialogo.querySelector(".perfil-borrar").hidden = !mio;
@@ -382,6 +435,7 @@ export function abrirMiPerfil() {
   editandoNombre = false;
   pestana = "perfil";
   salonEntero = false;
+  fondosEnteros = false;
   pintar();
   if (!dialogo.open) dialogo.showModal();
 }
@@ -622,6 +676,13 @@ cuerpo.addEventListener("click", (e) => {
     dialogoEscaparate.showModal();
   } else if (boton.classList.contains("perfil-ver-equipos")) {
     abrirDestacados();
+  } else if (boton.classList.contains("perfil-fondos-mas")) {
+    fondosEnteros = !fondosEnteros;
+    pintar();
+  } else if (boton.classList.contains("perfil-fondo")) {
+    // Se ve ya, mientras se guarda (cuando llega el perfil se vuelve a pintar igual)
+    cuerpo.querySelectorAll(".perfil-fondo").forEach((cada) => cada.classList.toggle("elegido", cada === boton));
+    guardarMiPerfil({ fondo: boton.dataset.fondo || null }).catch(siFalla);
   } else if (boton.classList.contains("perfil-ver-salon")) {
     salonEntero = !salonEntero;
     pintar();
@@ -673,7 +734,7 @@ campoAvatar.addEventListener("keydown", (e) => {
 });
 const autocompletadoAvatar = activarAutocompletado(campoAvatar, listaPokemon, (pokemon) => {
   eligiendoAvatar = elegirAvatar(pokemon).finally(() => (eligiendoAvatar = null));
-});
+}, { icono: iconoPokemon });
 campoAvatar.addEventListener("input", () => (avatarElegido = null));
 dialogoAvatar.querySelector(".avatar-formulario").addEventListener("submit", (e) => {
   e.preventDefault();

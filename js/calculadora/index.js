@@ -15,7 +15,7 @@ import { icono } from "../comun/iconos.js";
 import { escaparHTML, quitarAcentos } from "../comun/utilidades.js";
 import { coloresTipo, tiposEs, iconoTipo } from "../comun/tipos.js";
 import { imagenConRespaldo, urlsPMD, urlSpritePixel, urlsIconoObjeto } from "../comun/imagenes.js";
-import { activarAutocompletado } from "../comun/autocompletado.js";
+import { activarAutocompletado, iconoPokemon as iconoSugerencia, iconoObjeto } from "../comun/autocompletado.js";
 import { cargarDatos, datos } from "../comun/datos.js";
 import { leer } from "../comun/almacen.js";
 import { sumarContador } from "../comun/contadores.js";
@@ -353,7 +353,7 @@ function pintarLado(lado) {
     activarAutocompletado(campoObjeto, datos.objetos, (entrada) => {
       c.objeto = { id: entrada.id, es: entrada.es, en: entrada.en };
       pintarTodo();
-    });
+    }, { icono: iconoObjeto });
   }
 
   const campoHabilidad = ficha.querySelector(".calc-habilidad-campo");
@@ -689,7 +689,7 @@ function prepararColumna(lado) {
   activarAutocompletado(buscar, listaPokemon, (entrada) => {
     buscar.value = "";
     elegirDePokedex(lado, entrada);
-  });
+  }, { icono: iconoSugerencia });
   prepararEquipos(lado);
 
   columna.addEventListener("click", (e) => {

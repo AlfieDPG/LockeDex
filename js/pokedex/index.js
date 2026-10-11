@@ -161,7 +161,8 @@ let textoBuscado = "";
 let tipoElegido = "";
 
 // El panel de «Filtros» (para que no se llene la barra de desplegables): generación, formas y
-// legendarios. Cada grupo, una fila de botones de los que se elige uno; el primero es «todos».
+// legendarios. Cada grupo, una fila de botones que se marcan y desmarcan (se pueden marcar
+// varios: vale cualquiera de ellos, «1ª o 2ª»); el primero, «todos», los desmarca.
 const FILTROS = [
   {
     clave: "gen",
@@ -183,7 +184,8 @@ const FILTROS = [
   }
 ];
 
-const filtros = { gen: "", forma: "", clase: "" };
+// Los marcados de cada grupo (vacío: todos)
+const filtros = { gen: new Set(), forma: new Set(), clase: new Set() };
 
 function claseDeForma(p) {
   if (p.normal || p.clave === p.numero) return "normal";
@@ -194,12 +196,16 @@ function claseDeForma(p) {
 
 function pasaFiltros(p) {
   if (tipoElegido && !p.tipos.includes(tipoElegido)) return false;
-  if (FILTROS.some((filtro) => filtros[filtro.clave] && !filtro.pasa(p, filtros[filtro.clave]))) return false;
+  const noPasa = (filtro) => {
+    const marcados = filtros[filtro.clave];
+    return marcados.size > 0 && ![...marcados].some((valor) => filtro.pasa(p, valor));
+  };
+  if (FILTROS.some(noPasa)) return false;
   return !textoBuscado || p.busqueda.includes(textoBuscado);
 }
 
 function pintarFiltros() {
-  const activos = FILTROS.filter((filtro) => filtros[filtro.clave]).length;
+  const activos = FILTROS.reduce((suma, filtro) => suma + filtros[filtro.clave].size, 0);
   panelFiltros.innerHTML =
     FILTROS.map(
       (filtro) => `
@@ -207,10 +213,11 @@ function pintarFiltros() {
           <span class="pokedex-filtro-titulo">${filtro.titulo}</span>
           <div class="pokedex-filtro-opciones">
             ${filtro.opciones
-              .map(
-                ([valor, texto]) =>
-                  `<button class="${filtros[filtro.clave] === valor ? "activa" : ""}" data-filtro="${filtro.clave}" data-valor="${valor}">${texto}</button>`
-              )
+              .map(([valor, texto]) => {
+                const marcados = filtros[filtro.clave];
+                const activa = valor === "" ? marcados.size === 0 : marcados.has(valor);
+                return `<button class="${activa ? "activa" : ""}" data-filtro="${filtro.clave}" data-valor="${valor}" aria-pressed="${activa}">${texto}</button>`;
+              })
               .join("")}
           </div>
         </div>`
@@ -263,9 +270,16 @@ function prepararFiltros() {
     const boton = e.target.closest("button");
     if (!boton) return;
     if (boton.classList.contains("pokedex-filtros-quitar")) {
-      for (const filtro of FILTROS) filtros[filtro.clave] = "";
+      for (const filtro of FILTROS) filtros[filtro.clave].clear();
     } else if (boton.dataset.filtro) {
-      filtros[boton.dataset.filtro] = boton.dataset.valor;
+      const marcados = filtros[boton.dataset.filtro];
+      const valor = boton.dataset.valor;
+      if (!valor) marcados.clear();
+      else if (marcados.has(valor)) marcados.delete(valor);
+      else marcados.add(valor);
+      // Todos los de un grupo marcados es lo mismo que ninguno
+      const filtro = FILTROS.find((cada) => cada.clave === boton.dataset.filtro);
+      if (marcados.size === filtro.opciones.length - 1) marcados.clear();
     } else return;
     cerrarEvoluciones();
     pintarFiltros();

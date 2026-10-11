@@ -21,6 +21,14 @@
   height: 1.35rem;
 }
 
+/* Los de tipo: el icono del tipo (es una máscara, toma el color del texto) */
+.logro-insignia .icono-tipo-insignia {
+  display: block;
+  background-color: currentColor;
+  -webkit-mask: var(--icono) center / contain no-repeat;
+  mask: var(--icono) center / contain no-repeat;
+}
+
 .logro-insignia.bronce  { --color-nivel: #cd7f32; }
 .logro-insignia.plata   { --color-nivel: #c3cad6; }
 .logro-insignia.oro     { --color-nivel: #f1c40f; }

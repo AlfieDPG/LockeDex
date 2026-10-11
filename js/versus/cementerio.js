@@ -13,7 +13,7 @@ import { icono } from "../comun/iconos.js";
 import { escaparHTML } from "../comun/utilidades.js";
 import { usuarioActual } from "../comun/nube.js";
 import { cargarDatos, datos } from "../comun/datos.js";
-import { activarAutocompletado } from "../comun/autocompletado.js";
+import { activarAutocompletado, iconoPokemon } from "../comun/autocompletado.js";
 import { obtenerVariedades } from "../comun/formas.js";
 import { elegirForma, datosDeForma } from "../comun/elegir-forma.js";
 import { imagenConRespaldo, urlsPMD, urlSpritePixel } from "../comun/imagenes.js";
@@ -346,7 +346,7 @@ export function iniciarCementerio(alFallar) {
   });
   autocompletado = activarAutocompletado(campo, listaPokemon, (pokemon) => {
     eligiendo = elegirEspecie(pokemon).finally(() => (eligiendo = null));
-  });
+  }, { icono: iconoPokemon });
   campo.addEventListener("input", () => (elegido = null));
 
   dialogoMuerte.querySelector(".muerte-formulario").addEventListener("submit", (e) => {

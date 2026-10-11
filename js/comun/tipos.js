@@ -19,6 +19,10 @@ export const tiposEs = {
 // una variable CSS, y el navegador la resolvería desde la carpeta css/.
 const URL_ICONOS_TIPO = new URL("../../img/tipos/", import.meta.url).href;
 
+export function urlIconoTipo(tipo) {
+  return `${URL_ICONOS_TIPO}${tipo}.svg`;
+}
+
 export function iconoTipo(tipo) {
-  return `<span class="icono-tipo" style="--icono: url(${URL_ICONOS_TIPO}${tipo}.svg)"></span>`;
+  return `<span class="icono-tipo" style="--icono: url(${urlIconoTipo(tipo)})"></span>`;
 }

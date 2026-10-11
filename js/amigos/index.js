@@ -7,6 +7,7 @@
 // tu palmarés. Lo que ganes en «Versus» se apunta solo.
 
 import { imagenConRespaldo } from "../comun/imagenes.js";
+import { fondoDe, claseFondo, estiloFondo } from "../comun/fondos.js";
 import { icono } from "../comun/iconos.js";
 import { campoNumero } from "../comun/numero.js";
 import { escaparHTML, fechaLarga } from "../comun/utilidades.js";
@@ -313,7 +314,8 @@ function plantillaFicha(ficha) {
   const conectado = !ficha.mia && estaConectado(ficha.clave);
 
   return `
-    <article class="ficha-jugador plegada ${ficha.mia ? "mia" : ""} ${conectado ? "conectado" : ""}"
+    <article class="ficha-jugador plegada ${ficha.mia ? "mia" : ""} ${conectado ? "conectado" : ""} ${claseFondo(ficha.fondo)}"
+             style="${estiloFondo(ficha.fondo)}"
              draggable="true" data-clave="${escaparHTML(ficha.clave)}"
              title="Pulsa para ver los lockes">
       ${ficha.mia ? "" : `<span class="punto-conectado" title="Tiene la web abierta"></span>`}
@@ -336,6 +338,7 @@ function fichaDePerfil(perfil, mia) {
     urls: [perfil.foto].filter(Boolean),
     tipos: tiposParaFicha(perfil),
     ganados: perfil.ganados || [],
+    fondo: fondoDe(perfil),
     mia
   };
 }

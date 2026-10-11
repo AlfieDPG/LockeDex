@@ -25,6 +25,7 @@ import { conjuntos } from "./normas.js";
 import { contadores } from "./contadores.js";
 import { icono } from "./iconos.js";
 import { escaparHTML } from "./utilidades.js";
+import { tiposEs, urlIconoTipo } from "./tipos.js";
 
 export const NIVELES = {
   bronce: "Bronce",
@@ -41,8 +42,32 @@ export const CATEGORIAS = [
   { id: "personalizados", nombre: "A tu manera" },
   { id: "social", nombre: "Amigos y perfil" },
   { id: "otros", nombre: "Otros" },
+  { id: "tipos", nombre: "Tipos" },
   { id: "logros", nombre: "Logros" }
 ];
+
+// ---------- Logros de tipo ----------
+//
+// Uno por tipo: tener en tus equipos guardados 15 Pokémon distintos de ese tipo (cuenta la
+// especie, así una Mega no suma otra vez). Cada uno desbloquea el fondo de ese tipo para tu
+// tarjeta de «Amigos» (ver fondos.js).
+
+export const POKEMON_POR_TIPO = 15;
+
+const NOMBRES_DE_TIPO = {
+  normal: "Gente corriente", fire: "Corazón ardiente", water: "Lobo de mar", grass: "Mano verde",
+  electric: "Alto voltaje", ice: "Corazón helado", fighting: "Cinturón negro", poison: "Toxicólogo",
+  ground: "Con los pies en la tierra", flying: "Rey de los cielos", psychic: "Mente maestra",
+  bug: "Entomólogo", rock: "Duro como una roca", ghost: "Cazafantasmas", dragon: "Domador de dragones",
+  dark: "El lado oscuro", steel: "Voluntad de acero", fairy: "Cuento de hadas"
+};
+
+const LOGROS_DE_TIPO = Object.keys(tiposEs).map((tipo) => ({
+  id: `t-${tipo}`, categoria: "tipos", nivel: "plata", icono: "pokeball", tipo,
+  nombre: NOMBRES_DE_TIPO[tipo],
+  descripcion: `Ten ${POKEMON_POR_TIPO} Pokémon distintos de tipo ${tiposEs[tipo]} en tus equipos guardados.`,
+  valor: (c) => (c.especiesPorTipo.get(tipo) || new Set()).size, meta: POKEMON_POR_TIPO
+}));
 
 const cuantos = (lista, condicion) => lista.filter(condicion).length;
 
@@ -378,6 +403,9 @@ export const LOGROS = [
     nombre: "Analista de combate", descripcion: "Haz 50 cálculos distintos en la calculadora.",
     valor: (c) => c.contadores.calculos || 0, meta: 50 },
 
+  // ---------- Tipos ----------
+  ...LOGROS_DE_TIPO,
+
   // ---------- Logros de logros (se miran los últimos, con los demás ya contados) ----------
   { id: "m-10", categoria: "logros", nivel: "plata", icono: "trofeo",
     nombre: "Cazalogros", descripcion: "Consigue 10 logros.",
@@ -456,6 +484,7 @@ async function contexto() {
     equipos,
     equiposDeSeis: equipos.filter((equipo) => equipo.pokemon.length === 6),
     pokemonGuardados: equipos.flatMap((equipo) => equipo.pokemon),
+    especiesPorTipo: especiesPorTipo(equipos),
     normas: conjuntos(),
     rutasPropias: rutasTodas.filter((lista) => !lista.recibido),
     capsPropios: capsTodos.filter((lista) => !lista.recibido),
@@ -466,6 +495,19 @@ async function contexto() {
     ...progresoRutas(LUGARES, rutasTodas),
     ...progresoCaps(COMBATES, capsTodos)
   };
+}
+
+// tipo -> especies distintas (su número) de ese tipo en tus equipos guardados
+function especiesPorTipo(equipos) {
+  const porTipo = new Map();
+  for (const p of equipos.flatMap((equipo) => equipo.pokemon)) {
+    if (!p || !p.id) continue;
+    for (const tipo of p.tipos || []) {
+      if (!porTipo.has(tipo)) porTipo.set(tipo, new Set());
+      porTipo.get(tipo).add(p.id);
+    }
+  }
+  return porTipo;
 }
 
 // Lugares marcados en total, en cuántos juegos hay alguno, y en cuántos están todos (de 10
@@ -601,8 +643,14 @@ export function iniciarLogros() {
 
 let caja = null;
 
+// Los de tipo, con el icono del tipo
 export function insignia(logro, conseguido = true) {
-  return `<span class="logro-insignia ${escaparHTML(logro.nivel)} ${conseguido ? "" : "bloqueado"}">${icono(conseguido ? logro.icono : "candado")}</span>`;
+  const dibujo = !conseguido
+    ? icono("candado")
+    : logro.tipo
+      ? `<span class="icono icono-tipo-insignia" style="--icono: url(${urlIconoTipo(logro.tipo)})"></span>`
+      : icono(logro.icono);
+  return `<span class="logro-insignia ${escaparHTML(logro.nivel)} ${conseguido ? "" : "bloqueado"}">${dibujo}</span>`;
 }
 
 // Una fanfarria cortita, de consola antigua, hecha por el navegador (sin archivos). Solo deja

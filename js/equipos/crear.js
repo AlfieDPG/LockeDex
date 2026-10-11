@@ -13,7 +13,7 @@ import {
   ataqueDesdeAPI, obtenerStats, obtenerDatosCombate, descripcionHabilidad, descripcionObjeto, textoForma
 } from "../comun/pokemon.js";
 import { activarTooltips, actualizarTooltip, ocultarTooltip, escaparHTML } from "../comun/tooltip.js";
-import { activarAutocompletado } from "../comun/autocompletado.js";
+import { activarAutocompletado, iconoPokemon, iconoObjeto } from "../comun/autocompletado.js";
 import { pasteDelEquipo, copiarAlPortapapeles } from "./exportar.js";
 import { iniciarEntreno, abrirEntreno, textoEntreno } from "./entreno.js";
 import { icono } from "../comun/iconos.js";
@@ -460,7 +460,7 @@ function pintarCasilla(casilla, valor, placeholder, etiqueta, lista, clase, alCa
     const campo = casilla.querySelector("input");
     activarAutocompletado(campo, lista, (entrada) => {
       alCambiar({ id: entrada.id, es: entrada.es, en: entrada.en });
-    });
+    }, { icono: clase === "objeto" ? iconoObjeto : null });
   }
 }
 
@@ -757,6 +757,6 @@ export function iniciarCrear() {
     (elemento) => (elemento.matches(".habilidad, .objeto") ? RETRASO_FICHAS : 0)
   );
 
-  const buscadorPokemon = activarAutocompletado(campoBuscar, datos.pokemon, agregarPokemon);
+  const buscadorPokemon = activarAutocompletado(campoBuscar, datos.pokemon, agregarPokemon, { icono: iconoPokemon });
   document.getElementById("buscar").addEventListener("click", () => buscadorPokemon.elegirPrimera());
 }
