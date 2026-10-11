@@ -8,6 +8,7 @@
 
 import { imagenConRespaldo } from "../comun/imagenes.js";
 import { icono } from "../comun/iconos.js";
+import { campoNumero } from "../comun/numero.js";
 import { escaparHTML, fechaLarga } from "../comun/utilidades.js";
 import {
   plantillaCampoJuego, activarCamposJuego, leerCampoJuego, nombreJuego
@@ -584,9 +585,9 @@ function plantillaDetalles(ganado) {
         <div class="participante">
           <input class="participante-nombre" type="text" value="${escaparHTML(p.nombre || "")}" placeholder="Nombre">
           <span class="participante-corazon">${icono("corazon")}</span>
-          <input class="participante-vidas" type="number" min="0" max="999"
+          ${campoNumero(`<input class="participante-vidas" type="number" min="0" max="999"
             value="${p.vidas === null || p.vidas === undefined ? "" : escaparHTML(p.vidas)}"
-            placeholder="Vidas" title="Vidas con las que acabó">
+            placeholder="Vidas" title="Vidas con las que acabó">`)}
           <button class="participante-quitar" title="Quitar">${icono("aspa")}</button>
         </div>`
     )

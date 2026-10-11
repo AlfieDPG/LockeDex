@@ -19,6 +19,8 @@
 //     normas: { id, nombre, conGenerales, lista },  // copia del conjunto elegido (normas.js)
 //     rutasPropias, capsPropios,   // copias de unas rutas / level caps personalizados (personalizados.js)
 //     muertos: {uid: [muerto]},    // cementerio de cada uno (ver Cementerio, abajo)
+//     reacciones: {idMuerto: {uid: emoji}},
+//     combates, resultados, rom, salon,  // ver «Combates, ROM y salón de la fama»
 //     estado: "abierto"|"cerrado", ganador, fechaFin: "2025-06-01",
 //     contado: [uid], creado, actualizado }
 //
@@ -34,7 +36,7 @@
 // dejarían ni leer la invitación. Quién ha aceptado está en «estados».
 
 import { usuarioActual, baseDeDatos, alCambiarSesion, cuandoEsteSincronizado } from "./nube.js";
-import { apuntarLockesGanados, miPerfil, alCambiarMiPerfil } from "./perfiles.js";
+import { apuntarLockesGanados, miPerfil, alCambiarMiPerfil, guardarMiPerfil } from "./perfiles.js";
 import { quitarConjuntosAjenos, normasDeLocke } from "./normas.js";
 import { hoyComoTexto } from "./utilidades.js";
 import { leer, escribir } from "./almacen.js";
@@ -252,9 +254,18 @@ export function lockePorId(id) {
 
 // «invitados» puede venir vacío: un locke para ti solo es perfectamente válido, y luego
 // siempre se puede meter gente.
+// Los combates del locke a partir de sus nombres (uno por combate; "" = sin nombre). Los que
+// ya había conservan su id, y con él su resultado.
+function combatesNuevos(nombres, anteriores = []) {
+  return (nombres || []).map((nombre, i) => ({
+    id: (anteriores[i] && anteriores[i].id) || `c${Date.now().toString(36)}${i}${Math.random().toString(36).slice(2, 5)}`,
+    nombre: String(nombre || "").trim().slice(0, 30)
+  }));
+}
+
 export async function crearLocke({
   nombre, descripcion, tipo, juego, juegoOtro, vidas, vidasIlimitadas, normas, rutasPropias, capsPropios,
-  invitados, nombres, fotos
+  combates, invitados, nombres, fotos
 }) {
   const usuario = usuarioActual();
   const { bd, fn } = baseDeDatos();
@@ -288,6 +299,9 @@ export async function crearLocke({
     normas: normas || null,
     rutasPropias: rutasPropias || null,
     capsPropios: capsPropios || null,
+    combates: combatesNuevos(combates),
+    resultados: {},
+    rom: {},
     estado: "abierto",
     ganador: "",
     fechaFin: "",
@@ -317,7 +331,8 @@ export async function cambiarNumero(id, uid, campo, cuanto) {
   await apuntarCambio(id, tipo, Math.sign(cuanto));
 }
 
-// Solo quien creó el locke elige ganador. Se apunta el día, que luego sale en la ficha.
+// Solo quien creó el locke lo cierra, con su ganador o sin ninguno (uid vacío: nadie se pasó
+// la ROM). Se apunta el día, que luego sale en la ficha.
 export async function elegirGanador(id, uid) {
   const locke = lockePorId(id);
   const usuario = usuarioActual();
@@ -326,12 +341,167 @@ export async function elegirGanador(id, uid) {
   const { fn, ref } = referencia(id);
   await fn.updateDoc(ref, {
     estado: "cerrado",
-    ganador: uid,
+    ganador: uid || "",
     fechaFin: hoyComoTexto(),
     actualizado: Date.now()
   });
-  await apuntarSuceso(id, "ganador", { ganador: uid });
-  await apuntarLockesGanados();
+  await apuntarSuceso(id, "ganador", { ganador: uid || "" });
+  if (uid) await apuntarLockesGanados();
+}
+
+// ---------- Combates, ROM y salón de la fama ----------
+//
+//   combates: [{ id, nombre }]   // los que tendrá el locke (los pone quien lo crea; el nombre,
+//                                // opcional: «Tras la 3ª medalla», «Liga»...)
+//   resultados: { idCombate: { ganador: uid, marcador: "2-1" } }  // los apunta cualquiera de dentro
+//   rom: { uid: true }           // se ha pasado la ROM (cada uno la suya)
+//   salon: { uid: { nombre, pokemon, mvp } }   // equipo final y MVP, ya con el locke cerrado
+//
+// Quién gana el locke (ganadorPropuesto): para ganar hay que pasarse la ROM. Si no se la pasa
+// nadie, no gana nadie; si solo uno, ese, vaya como vaya en los combates; si varios, el que
+// más combates ha ganado (o más victorias, en los lockes sin combates). Si empatan, lo decide
+// quien lo creó.
+
+export function combatesDe(locke) {
+  return (locke && Array.isArray(locke.combates) && locke.combates) || [];
+}
+
+export function nombreCombate(locke, idCombate) {
+  const posicion = combatesDe(locke).findIndex((combate) => combate.id === idCombate);
+  const combate = combatesDe(locke)[posicion];
+  return (combate && combate.nombre) || `Combate ${posicion + 1}`;
+}
+
+// Victorias de alguien: con combates, los que ha ganado; sin ellos, las que se ha sumado
+export function victoriasDe(locke, uid) {
+  const combates = combatesDe(locke);
+  if (!combates.length) return (locke.marcador || {})[uid] || 0;
+  const resultados = locke.resultados || {};
+  return combates.filter((combate) => (resultados[combate.id] || {}).ganador === uid).length;
+}
+
+export function seHaPasadoLaRom(locke, uid) {
+  return Boolean((locke.rom || {})[uid]);
+}
+
+// { ganadores: [uid] } (uno, varios si empatan o ninguno)
+export function ganadorPropuesto(locke) {
+  const pasados = (locke.jugadores || []).filter(
+    (uid) => estadoDe(locke, uid) === "aceptado" && seHaPasadoLaRom(locke, uid) && !estaEliminado(locke, uid)
+  );
+  if (pasados.length <= 1) return { ganadores: pasados };
+  const mejor = Math.max(...pasados.map((uid) => victoriasDe(locke, uid)));
+  return { ganadores: pasados.filter((uid) => victoriasDe(locke, uid) === mejor) };
+}
+
+// Sin ganador: se borra el resultado
+export async function apuntarResultado(id, idCombate, ganador, marcador) {
+  const locke = lockePorId(id);
+  const usuario = usuarioActual();
+  if (!locke || !usuario || locke.estado === "cerrado") return;
+
+  const { fn, ref } = referencia(id);
+  await fn.updateDoc(ref, {
+    [`resultados.${idCombate}`]: ganador ? { ganador, marcador: marcador || "" } : fn.deleteField(),
+    actualizado: Date.now()
+  });
+  if (ganador) {
+    const detalle = `${nombreCombate(locke, idCombate)}${marcador ? ` (${marcador})` : ""}`;
+    await apuntarSuceso(id, "combate", { ganador, detalle });
+  }
+}
+
+export async function cambiarRom(id, pasada) {
+  const locke = lockePorId(id);
+  const usuario = usuarioActual();
+  if (!locke || !usuario || locke.estado === "cerrado") return;
+
+  const { fn, ref } = referencia(id);
+  await fn.updateDoc(ref, {
+    [`rom.${usuario.uid}`]: pasada ? true : fn.deleteField(),
+    actualizado: Date.now()
+  });
+  await apuntarCambio(id, "rom", pasada ? 1 : -1);
+}
+
+// Tu equipo final y tu MVP (posición en el equipo, o -1) de un locke ya cerrado. Va en el
+// locke (lo ven los que jugaron) y una copia en tu perfil (tu salón de la fama, que ven tus
+// amigos). equipo null: se quita.
+const MAX_SALON = 50;
+
+export async function guardarSalon(id, equipo, mvp = -1) {
+  const locke = lockePorId(id);
+  const usuario = usuarioActual();
+  if (!locke || !usuario || locke.estado !== "cerrado") return;
+
+  const entrada = equipo ? { nombre: equipo.nombre || "", pokemon: equipo.pokemon, mvp } : null;
+  const { fn, ref } = referencia(id);
+  await fn.updateDoc(ref, { [`salon.${usuario.uid}`]: entrada || fn.deleteField(), actualizado: Date.now() });
+
+  const salon = ((miPerfil() || {}).salon || []).filter((cada) => cada.id !== id);
+  if (entrada) {
+    salon.unshift({
+      id,
+      locke: locke.nombre,
+      tipo: locke.tipo || null,
+      fechaFin: locke.fechaFin || "",
+      gano: locke.ganador === usuario.uid,
+      ...entrada
+    });
+  }
+  await guardarMiPerfil({ salon: salon.slice(0, MAX_SALON) });
+}
+
+// ---------- Reacciones en el cementerio ----------
+//
+//   reacciones: { idMuerto: { uid: "💀" } }   // una por persona; la misma otra vez la quita
+
+export const REACCIONES = ["🙏", "💀", "😭", "😂", "🫡"];
+
+export async function reaccionar(id, idMuerto, reaccion) {
+  const locke = lockePorId(id);
+  const usuario = usuarioActual();
+  if (!locke || !usuario || !REACCIONES.includes(reaccion)) return;
+
+  const actual = ((locke.reacciones || {})[idMuerto] || {})[usuario.uid];
+  const { fn, ref } = referencia(id);
+  await fn.updateDoc(ref, {
+    [`reacciones.${idMuerto}.${usuario.uid}`]: actual === reaccion ? fn.deleteField() : reaccion
+  });
+}
+
+// ---------- Lo que pasa en Rutas y Level caps ----------
+//
+// Al marcar un lugar en «Rutas» o un combate en «Level caps», se apunta en la actividad de tus
+// lockes abiertos de ese juego: «Alfie ha capturado en la Ruta 3», «Alfie ha vencido a Brock».
+// Sin decir qué Pokémon: en un randomlocke eso no lo tiene que saber el rival. Si lo desmarcas
+// enseguida (sin querer), se borra.
+//   campoPropio: "rutasPropias" o "capsPropios" · tipo: "ruta" o "cap"
+
+export async function apuntarEnLockesDelJuego(campoPropio, idJuego, tipo, detalle, marcado) {
+  const usuario = usuarioActual();
+  if (!usuario || !baseDeDatos()) return;
+
+  const delJuego = misLockes().filter((locke) => {
+    if (locke.estado === "cerrado" || estaEliminado(locke, usuario.uid)) return false;
+    const propio = locke[campoPropio];
+    return (propio ? propio.id : locke.juego) === idJuego;
+  });
+
+  await Promise.all(
+    delJuego.map(async (locke) => {
+      const ultimo = ultimoSuceso.get(locke.id);
+      if (!marcado) {
+        if (ultimo && ultimo.tipo === tipo && ultimo.detalle === detalle && Date.now() - ultimo.cuando < PARA_DESHACER) {
+          ultimoSuceso.delete(locke.id);
+          const { fn } = baseDeDatos();
+          await fn.deleteDoc(ultimo.referencia).catch((error) => console.error(error));
+        }
+        return;
+      }
+      await apuntarSuceso(locke.id, tipo, { detalle });
+    })
+  );
 }
 
 // ---------- Cementerio ----------
@@ -431,8 +601,9 @@ export async function reordenarMuertos(id, ids) {
 // Lo que va pasando en un locke, para verlo en orden: lockes/{id}/actividad/{suceso}.
 // Cada uno apunta solo lo suyo. Los nombres no se copian: se leen de locke.nombres al pintar.
 //
-//   { uid, tipo, cuando (hora del servidor), delta?, muerto?, ganador? }
-//   tipo: "creado" | "entra" | "vida" | "eliminado" (la vida cero) | "victoria" | "muerte" | "ganador"
+//   { uid, tipo, cuando (hora del servidor), delta?, muerto?, ganador?, detalle? }
+//   tipo: "creado" | "entra" | "vida" | "eliminado" (la vida cero) | "victoria" | "muerte" |
+//         "ganador" | "combate" | "rom" | "ruta" | "cap"
 //
 // Si apuntar falla (p. ej. faltan reglas por publicar), lo de verdad ya está hecho: solo se
 // avisa en la consola.
@@ -452,7 +623,9 @@ export async function apuntarSuceso(idLocke, tipo, datos = {}) {
       ...datos,
       cuando: fn.serverTimestamp()
     });
-    ultimoSuceso.set(idLocke, { referencia, tipo, delta: datos.delta || 0, muerto: Boolean(datos.muerto), cuando: Date.now() });
+    ultimoSuceso.set(idLocke, {
+      referencia, tipo, delta: datos.delta || 0, muerto: Boolean(datos.muerto), detalle: datos.detalle || "", cuando: Date.now()
+    });
   } catch (error) {
     console.error("No se ha podido apuntar en la actividad", error);
   }
@@ -593,6 +766,8 @@ export async function editarLocke(id, datos) {
     capsPropios: datos.capsPropios || null,
     actualizado: Date.now()
   };
+  // Con el locke cerrado los combates ya no se tocan (el resultado ya está)
+  if (datos.combates && locke.estado !== "cerrado") cambios.combates = combatesNuevos(datos.combates, combatesDe(locke));
 
   const vidasCambian =
     Boolean(datos.vidasIlimitadas) !== Boolean(locke.vidasIlimitadas) ||
@@ -627,6 +802,7 @@ export async function quitarDeLocke(id, uid) {
     [`vidas.${uid}`]: fn.deleteField(),
     [`marcador.${uid}`]: fn.deleteField(),
     [`muertos.${uid}`]: fn.deleteField(),
+    [`rom.${uid}`]: fn.deleteField(),
     actualizado: Date.now()
   });
 }
@@ -653,6 +829,8 @@ export async function salirDeTodosMisLockes() {
         [`nombres.${usuario.uid}`]: fn.deleteField(),
         [`fotos.${usuario.uid}`]: fn.deleteField(),
         [`muertos.${usuario.uid}`]: fn.deleteField(),
+        [`rom.${usuario.uid}`]: fn.deleteField(),
+        [`salon.${usuario.uid}`]: fn.deleteField(),
         actualizado: Date.now()
       });
     })

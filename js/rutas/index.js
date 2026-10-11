@@ -15,6 +15,8 @@ import { JUEGOS } from "../comun/juegos.js";
 import {
   rutasPropias, lugaresDe, seccionesDeLaWeb, lugaresDeLaWeb, MAX_LUGARES
 } from "../comun/personalizados.js";
+import { apuntarEnLockesDelJuego } from "../comun/lockes.js";
+import { plantillaCaptura, abrirCaptura, iniciarCapturas } from "./capturas.js";
 
 // NO cambiar estas claves: si se cambian, se pierden las rutas marcadas
 const CLAVE_MARCADAS = "poketeams-rutas-v2"; // { idJuego: ["rutas:Ruta 1", ...] }
@@ -75,10 +77,20 @@ function botonLugar(apartado, texto) {
   const evento = apartado === "eventos" || corte > 0;
   const contenido = corte > 0
     ? `<span class="ruta-lugar">${escaparHTML(texto.slice(0, corte))}</span><span class="ruta-detalle">${escaparHTML(texto.slice(corte + 2))}</span>`
-    : escaparHTML(texto);
+    : `<span class="ruta-lugar">${escaparHTML(texto)}</span>`;
 
+  // Marcado: qué cogiste ahí (solo lo ves tú, ver ./capturas.js)
   return `<button class="ruta ${evento ? "evento" : ""} ${usada ? "usada" : ""}" aria-pressed="${usada}"
-    data-clave="${escaparHTML(clave)}" data-buscar="${escaparHTML(quitarAcentos(texto))}">${contenido}</button>`;
+    data-clave="${escaparHTML(clave)}" data-buscar="${escaparHTML(quitarAcentos(texto))}">${contenido}${
+      usada ? plantillaCaptura(juego.id, clave) : ""
+    }</button>`;
+}
+
+// «rutas:Ruta 3» -> «Ruta 3»; en los eventos, solo el lugar («Lugar: detalle»)
+function nombreDelLugar(clave) {
+  const texto = clave.slice(clave.indexOf(":") + 1);
+  const corte = texto.indexOf(": ");
+  return corte > 0 ? texto.slice(0, corte) : texto;
 }
 
 function pintarLista() {
@@ -119,7 +131,32 @@ function filtrar() {
   for (const grupo of lista.querySelectorAll(".rutas-grupo")) {
     grupo.hidden = !grupo.querySelector(".ruta:not([hidden])");
   }
+  ajustarAnchos();
 }
+
+// ---------- Cada tarjeta, del ancho de su nombre ----------
+//
+// El nombre (y el detalle de los eventos, en la suya) va en una sola línea y cada tarjeta
+// mide lo que su texto; el CSS estira cada fila hasta llenar el ancho. Se mide como si todas
+// llevasen el ✔ (clase rutas-midiendo) y se guarda en su flex-basis, para que marcar una no
+// mueva nada. En «em»: la letra de la web cambia con la ventana y así crece con ella sin
+// volver a medir. Si ni así cabe (un móvil muy estrecho), el CSS lo corta con «...».
+
+function ajustarAnchos() {
+  if (!lista.offsetWidth) return; // la sección está escondida: se hará al volver
+  const sinMedir = [...lista.querySelectorAll(".ruta:not([hidden])")].filter((boton) => !boton.style.flexBasis);
+  if (!sinMedir.length) return;
+  lista.classList.add("rutas-midiendo");
+  const anchos = sinMedir.map((boton) => boton.getBoundingClientRect().width / parseFloat(getComputedStyle(boton).fontSize));
+  lista.classList.remove("rutas-midiendo");
+  // + un pelín, que al redondear no se coma la última letra
+  sinMedir.forEach((boton, i) => (boton.style.flexBasis = `${(anchos[i] + 0.1).toFixed(2)}em`));
+}
+
+// Las que estaban escondidas (otra sección abierta) se miden al volver
+const vigilante = new ResizeObserver(() => {
+  if (!editando) ajustarAnchos();
+});
 
 // ---------- Editor de los personalizados ----------
 //
@@ -286,17 +323,34 @@ export function iniciar() {
     const boton = e.target.closest(".ruta");
     if (!boton) return;
     const clave = boton.dataset.clave;
+
+    // La captura de un lugar marcado: se apunta, no se desmarca
+    if (e.target.closest(".ruta-captura")) {
+      abrirCaptura(juego.id, clave, nombreDelLugar(clave));
+      return;
+    }
+
     if (usadas.has(clave)) usadas.delete(clave);
     else usadas.add(clave);
-    boton.classList.toggle("usada", usadas.has(clave));
-    boton.setAttribute("aria-pressed", usadas.has(clave));
+    const apartado = clave.slice(0, clave.indexOf(":"));
+    const ancho = boton.style.flexBasis;
+    boton.outerHTML = botonLugar(apartado, clave.slice(clave.indexOf(":") + 1));
+    lista.querySelector(`.ruta[data-clave="${CSS.escape(clave)}"]`).style.flexBasis = ancho;
     guardar();
     pintarProgreso();
+
+    // A la actividad de tus lockes de este juego («ha capturado en la Ruta 3»)
+    apuntarEnLockesDelJuego("rutasPropias", juego.id, "ruta", nombreDelLugar(clave), usadas.has(clave))
+      .catch((error) => console.error(error));
   });
 
   activarEditor();
+  iniciarCapturas(() => {
+    if (juego && !editando) pintarLista();
+  });
 
   buscador.addEventListener("input", filtrar);
+  vigilante.observe(lista);
 
   vista.querySelector(".rutas-reiniciar").addEventListener("click", () => {
     if (usadas.size === 0) return;

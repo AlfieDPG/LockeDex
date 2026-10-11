@@ -945,7 +945,7 @@
 }
 
 /* Con vidas ilimitadas no hay vidas que apuntar: se esconden y sale ∞ */
-.palmares-detalles.ilimitadas .participante-vidas,
+.palmares-detalles.ilimitadas .numero:has(.participante-vidas),
 .palmares-detalles.ilimitadas .con-vidas {
   display: none;
 }

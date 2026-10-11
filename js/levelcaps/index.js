@@ -13,7 +13,9 @@ import { leer, escribir } from "../comun/almacen.js";
 import { imagenConRespaldo } from "../comun/imagenes.js";
 import { escaparHTML } from "../comun/utilidades.js";
 import { icono } from "../comun/iconos.js";
+import { campoNumero } from "../comun/numero.js";
 import { capsPropios, tipoDeCombate, MAX_COMBATES } from "../comun/personalizados.js";
+import { apuntarEnLockesDelJuego } from "../comun/lockes.js";
 
 function retrato(c) {
   const url = juego.propio ? c.imagen : retratoDeLaWeb(juego.id, c.nombre);
@@ -179,7 +181,7 @@ function filaEditor(c, indice, total) {
       </div>
       <label class="cap-ed-nivel">
         <span>Nv.</span>
-        <input data-campo="nivel" type="number" min="1" max="100" value="${c.nivel}">
+        ${campoNumero(`<input data-campo="nivel" type="number" min="1" max="100" value="${c.nivel}">`)}
       </label>
       <div class="cap-ed-acciones">
         <button class="cap-ed-subir" title="Subir" ${indice === 0 ? "disabled" : ""}>${icono("arriba")}</button>
@@ -322,6 +324,13 @@ export function iniciar() {
     guardados[juego.id] = [...superados];
     escribir(CLAVE_SUPERADOS, guardados);
     pintarResumen();
+
+    // A la actividad de tus lockes de este juego («ha vencido a Brock»)
+    const combate = combates.find((c) => claveCombate(c) === casilla.dataset.clave);
+    const quien = combate ? combate.nombre || combate.etiqueta : "";
+    if (quien) {
+      apuntarEnLockesDelJuego("capsPropios", juego.id, "cap", quien, casilla.checked).catch((error) => console.error(error));
+    }
   });
 
   activarEditor();

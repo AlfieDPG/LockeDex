@@ -2,6 +2,7 @@ import { activarRespaldoImagenes } from "./comun/imagenes.js";
 import { iniciarNavegacion, irA, vistaInicial } from "./navegacion.js";
 import { iniciarSesionUI } from "./sesion.js";
 import { sumarContador } from "./comun/contadores.js";
+import "./comun/numero.js"; // las flechas de las casillas de número (en toda la web)
 
 activarRespaldoImagenes();
 iniciarNavegacion();

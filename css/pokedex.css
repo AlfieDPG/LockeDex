@@ -48,6 +48,103 @@
   opacity: 0.7;
 }
 
+/* «Filtros»: un botón que despliega el panel (generación, formas, clase) */
+.pokedex-filtros-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: #2c2e3e;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.pokedex-filtros-boton:hover,
+.pokedex-filtros-boton.abierto {
+  background: #3a3d52;
+}
+
+.pokedex-filtros-boton.con-filtros {
+  box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.6);
+}
+
+.pokedex-filtros-cuantos {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 0.6rem;
+  background: #f1c40f;
+  color: #1e1f2b;
+  font-size: 0.75rem;
+}
+
+.pokedex-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.8rem 1.6rem;
+  margin-top: 0.7rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: 0.6rem;
+  background: #252735;
+}
+
+.pokedex-filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pokedex-filtro-titulo {
+  font-size: 0.72rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+}
+
+.pokedex-filtro-opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.pokedex-filtro-opciones button,
+.pokedex-filtros-quitar {
+  padding: 0.3rem 0.6rem;
+  border: none;
+  border-radius: 0.4rem;
+  background: #2c2e3e;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.pokedex-filtro-opciones button:hover,
+.pokedex-filtros-quitar:hover {
+  background: #3a3d52;
+}
+
+.pokedex-filtro-opciones button.activa {
+  background: #c0392b;
+  color: #fff;
+}
+
+.pokedex-filtros-quitar {
+  align-self: flex-end;
+  margin-left: auto;
+  color: #f0705f;
+}
+
 /* Centrada y de ancho fijo. «table-layout: fixed» es lo que hace que las columnas midan
    siempre lo mismo: sin esto, al filtrar por tipo la tabla se encogía o se estiraba según
    lo largos que fueran los nombres que quedaran a la vista.

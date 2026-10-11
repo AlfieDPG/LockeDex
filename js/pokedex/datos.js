@@ -22,7 +22,7 @@ import { leer, escribir } from "../comun/almacen.js";
 
 // NO cambiar esta clave sin motivo: si se cambia, se vuelve a descargar todo. Sí hay que
 // subirla al rehacer datos/pokedex.json, para que los navegadores dejen la copia vieja.
-const CLAVE_POKEDEX = "poketeams-pokedex-v7";
+const CLAVE_POKEDEX = "poketeams-pokedex-v8";
 
 // Formas que no salen aunque sus estadísticas cambien un poco. Los tamaños de Pumpkaboo y
 // Gourgeist solo se mueven unos puntos de PS y Velocidad y llenaban la tabla de filas casi
@@ -79,18 +79,22 @@ function leerVariedades(csv) {
   return variedades;
 }
 
-// pokemon_species.csv: id,identifier,... -> { idEspecie: "deoxys" }
-// Hace falta porque el nombre de la forma normal no siempre es el de la especie
+// pokemon_species.csv: id,identifier,generation_id,...,is_baby (11),...,is_legendary (16),
+// is_mythical (17),... -> { idEspecie: { slug: "deoxys", gen: 3, clase: "singular" } }
+// El nombre hace falta porque el de la forma normal no siempre es el de la especie
 // ("deoxys-normal" es la forma; "deoxys" es la especie) y etiquetaForma espera el segundo.
+// La generación y la clase (legendario, singular, bebé), para los filtros de la tabla.
 function leerEspecies(csv) {
-  const slugs = {};
+  const especies = {};
 
   for (const partes of filasCSV(csv)) {
     const id = Number(partes[0]);
-    if (id) slugs[id] = partes[1];
+    if (!id) continue;
+    const clase = partes[17] === "1" ? "singular" : partes[16] === "1" ? "legendario" : partes[11] === "1" ? "bebe" : "";
+    especies[id] = { slug: partes[1], gen: Number(partes[2]) || 0, clase };
   }
 
-  return slugs;
+  return especies;
 }
 
 // pokemon_types.csv: pokemon_id,type_id,slot -> { idForma: ["grass", "poison"] }
@@ -166,7 +170,7 @@ function formaPMD(variedad, indices) {
   return indicePMD(variedad.id, variedad.porDefecto ? 0 : indices.get(variedad.id) || 0);
 }
 
-function montarTabla(bases, variedades, slugsEspecie, tipos, nombresEspecies) {
+function montarTabla(bases, variedades, especies, tipos, nombresEspecies) {
   const porEspecie = new Map();
   for (const variedad of variedades) {
     if (!porEspecie.has(variedad.especie)) porEspecie.set(variedad.especie, []);
@@ -183,7 +187,8 @@ function montarTabla(bases, variedades, slugsEspecie, tipos, nombresEspecies) {
     const indices = indicesPMD(porEspecie.get(especie));
 
     for (const variedad of formasDistintas(porEspecie.get(especie), bases, tipos)) {
-      const etiqueta = variedad.porDefecto ? "" : etiquetaForma(variedad.slug, slugsEspecie[especie]);
+      const datosEspecie = especies[especie] || {};
+      const etiqueta = variedad.porDefecto ? "" : etiquetaForma(variedad.slug, datosEspecie.slug);
 
       filas.push({
         clave: variedad.id,   // id de PokeAPI: único, también para las formas
@@ -192,7 +197,10 @@ function montarTabla(bases, variedades, slugsEspecie, tipos, nombresEspecies) {
         tipos: (tipos[variedad.id] || []).filter(Boolean),
         nombre: etiqueta && etiqueta !== "Normal" ? `${nombre} (${etiqueta})` : nombre,
         bases: bases[variedad.id],
-        total: suma(bases[variedad.id])
+        total: suma(bases[variedad.id]),
+        normal: variedad.porDefecto,   // la forma normal de su especie (las demás: Alola, Mega...)
+        gen: datosEspecie.gen || 0,    // generación de la especie
+        clase: datosEspecie.clase || "" // "legendario", "singular", "bebe" o ""
       });
     }
   }
@@ -251,6 +259,7 @@ export async function cargarPokedex() {
     localStorage.removeItem("poketeams-pokedex-v4"); // versión antigua (con los tamaños de Pumpkaboo)
     localStorage.removeItem("poketeams-pokedex-v5"); // versión antigua (sin la hoja de retratos)
     localStorage.removeItem("poketeams-pokedex-v6"); // versión antigua (sin las formas que solo cambian de tipo)
+    localStorage.removeItem("poketeams-pokedex-v7"); // versión antigua (sin generación ni legendarios)
   } catch (error) {
     // si el navegador no deja tocar el almacén, da igual: solo es limpieza
   }

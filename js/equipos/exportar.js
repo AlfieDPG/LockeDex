@@ -1,7 +1,10 @@
 // ---------- Exportar un equipo como paste de Showdown ----------
 //
-// La web no guarda nivel, naturaleza, EVs ni IVs, pero Showdown los pide, así que se
-// rellenan siempre igual: nivel 100, naturaleza neutra, 1 EV en todo y 31 IVs en todo.
+// Nivel, naturaleza, EVs e IVs: los que se le hayan puesto (js/equipos/entreno.js). Si no se
+// han tocado, Showdown los pide igual, así que van siempre los mismos: nivel 100, naturaleza
+// neutra, 1 EV en todo y 31 IVs en todo.
+
+import { lineasShowdown } from "./entreno.js";
 
 const NIVEL = 100;
 const NATURALEZA = "Serious"; // neutra: no sube ni baja ninguna estadística
@@ -28,11 +31,20 @@ function bloque(poke) {
   const nombre = poke.mote ? `${poke.mote} (${nombreShowdown(poke)})` : nombreShowdown(poke);
   lineas.push(poke.objeto ? `${nombre} @ ${poke.objeto.en}` : nombre);
   if (poke.habilidad) lineas.push(`Ability: ${poke.habilidad.en}`);
-  lineas.push(`Level: ${NIVEL}`);
-  if (poke.shiny) lineas.push("Shiny: Yes");
-  lineas.push(`EVs: ${EVS}`);
-  lineas.push(`${NATURALEZA} Nature`);
-  lineas.push(`IVs: ${IVS}`);
+  const entreno = lineasShowdown(poke);
+  if (entreno) {
+    lineas.push(entreno.nivel);
+    if (poke.shiny) lineas.push("Shiny: Yes");
+    if (entreno.evs) lineas.push(entreno.evs);
+    lineas.push(entreno.naturaleza);
+    if (entreno.ivs) lineas.push(entreno.ivs);
+  } else {
+    lineas.push(`Level: ${NIVEL}`);
+    if (poke.shiny) lineas.push("Shiny: Yes");
+    lineas.push(`EVs: ${EVS}`);
+    lineas.push(`${NATURALEZA} Nature`);
+    lineas.push(`IVs: ${IVS}`);
+  }
 
   for (const ataque of poke.ataques) {
     if (ataque) lineas.push(`- ${ataque.en}`);

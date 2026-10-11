@@ -29,6 +29,7 @@ function textoSuceso(suceso, locke) {
   const muerto = suceso.muerto ? `<strong>${escaparHTML(nombreMuerto(suceso.muerto))}</strong>` : "";
   // «Contra quién» ya no se pregunta; solo lo llevan los de antes
   const contra = suceso.muerto && suceso.muerto.causa ? ` contra ${escaparHTML(suceso.muerto.causa)}` : "";
+  const detalle = `<strong>${escaparHTML(suceso.detalle || "")}</strong>`;
 
   switch (suceso.tipo) {
     case "creado":
@@ -48,7 +49,17 @@ function textoSuceso(suceso, locke) {
     case "victoria":
       return suceso.delta > 0 ? `${quien} ha ganado un combate` : `${quien} se ha quitado una victoria`;
     case "ganador":
-      return `${quien} ha cerrado el locke: gana <strong>${escaparHTML(nombres[suceso.ganador] || "alguien")}</strong>`;
+      return suceso.ganador
+        ? `${quien} ha cerrado el locke: gana <strong>${escaparHTML(nombres[suceso.ganador] || "alguien")}</strong>`
+        : `${quien} ha cerrado el locke: <strong>no gana nadie</strong>`;
+    case "combate":
+      return `${detalle}: gana <strong>${escaparHTML(nombres[suceso.ganador] || "alguien")}</strong>`;
+    case "rom":
+      return suceso.delta > 0 ? `${quien} se ha pasado la ROM` : `${quien} ha desmarcado la ROM`;
+    case "ruta":
+      return `${quien} ha capturado en ${detalle}`;
+    case "cap":
+      return `${quien} ha vencido a ${detalle}`;
     default:
       return "";
   }
@@ -63,6 +74,10 @@ function iconoSuceso(suceso) {
     vida: "corazon",
     eliminado: "calavera",
     victoria: "espadas",
+    combate: "espadas",
+    rom: "visto",
+    ruta: "mapa",
+    cap: "escudo",
     ganador: "corona"
   }[suceso.tipo];
   return nombre ? icono(nombre) : "";

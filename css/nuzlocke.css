@@ -308,7 +308,7 @@
 }
 
 .cap.cap-editable .cap-ed-nivel input {
-  width: 3.6rem;
+  width: 4.4rem;
   font-weight: bold;
 }
 
@@ -378,10 +378,13 @@
 .ruta-ed > span {
   flex: 1;
   min-width: 0;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .rutas-ed-grupo .ruta-ed-nuevo {
+  flex: 0 1 14rem;
   border-style: dashed;
   background: transparent;
 }
@@ -507,15 +510,31 @@
   opacity: 0.35;
 }
 
+/* Cada tarjeta del ancho de su nombre (en la lista lo mide js/rutas/index.js) y cada fila
+   estirada hasta llenar el ancho, como un texto justificado. La última no: el ::after se
+   queda con lo que sobra. Igual en el editor de los personalizados. */
 .rutas-botones {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
-  gap: 0.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.65rem; /* de lado, algo más de aire para la chapita de la captura (ver .ruta-captura) */
 }
 
-/* Eventos: tarjetas más anchas con el lugar arriba y el detalle debajo */
-.rutas-botones.eventos {
-  grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
+.rutas-botones::after {
+  content: "";
+  flex-grow: 1000;
+}
+
+.rutas-botones > .ruta,
+.rutas-botones > .ruta-ed {
+  flex-grow: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Al medir: cada una a su tamaño, sin estirar ni encoger */
+.rutas-midiendo .rutas-botones > .ruta {
+  flex: none;
+  max-width: none;
 }
 
 .ruta.evento {
@@ -523,19 +542,32 @@
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-  padding-right: 1.8rem;
-}
-
-.ruta.evento.usada::before {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.6rem;
 }
 
 .ruta-detalle {
   font-weight: normal;
   font-size: 0.82rem;
   opacity: 0.85;
+}
+
+/* El nombre y el detalle, cada uno en una sola línea. La tarjeta mide lo que ellos; esto es
+   por si ni así caben (un móvil muy estrecho: cortado con «...») */
+.ruta-lugar,
+.ruta-detalle {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* El ✔ del lugar usado, delante del nombre (y al medir, en todos: ver ajustarAnchos) */
+.ruta.usada .ruta-lugar::before,
+.rutas-midiendo .ruta-lugar::before {
+  content: "✔ ";
+  display: inline-block;
+  margin-right: 0.2rem;
+  line-height: 1; /* el ✔ sale de otra fuente, más alta: que no haga crecer la tarjeta */
+  text-decoration: none;
 }
 
 .ruta {
@@ -562,11 +594,73 @@
   text-decoration: line-through;
 }
 
-.ruta.usada::before {
-  content: "✔ ";
-  text-decoration: none;
-  display: inline-block;
-  margin-right: 0.2rem;
+/* Lo que se capturó en un lugar marcado (js/rutas/capturas.js): una chapita redonda en la
+   esquina de arriba a la derecha, sobresaliendo de la tarjeta. Así no le quita sitio al
+   nombre del lugar (ni lo parte en dos líneas) y la tarjeta mide lo mismo. Sin captura, una
+   «+» en el mismo sitio, solo al pasar el ratón. */
+.ruta {
+  position: relative;
+}
+
+.ruta-captura {
+  position: absolute;
+  top: -0.45rem;
+  right: -0.35rem;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 2px solid #27ae60;
+  border-radius: 50%;
+  background: #1e1f2b;
+  color: #b9f0cf;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s;
+}
+
+.ruta-captura:not(.con) {
+  width: 1.3rem;
+  height: 1.3rem;
+  top: -0.35rem;
+  right: -0.3rem;
+  opacity: 0;
+}
+
+.ruta:hover .ruta-captura:not(.con),
+.ruta:focus-visible .ruta-captura:not(.con) {
+  opacity: 1;
+}
+
+.ruta-captura:hover {
+  transform: scale(1.15);
+}
+
+.ruta-captura .icono {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.ruta-captura-cara {
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+#dialogo-captura {
+  overflow: visible; /* que las sugerencias no se corten */
+}
+
+.captura-campo-pokemon {
+  position: relative;
+}
+
+.captura-campo-pokemon .sugerencias {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: normal;
 }
 
 /* ---------- Level caps ---------- */

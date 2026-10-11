@@ -7,6 +7,7 @@ import { pokemonDesdeAPI, pedirVariedad, ataqueDesdeAPI } from "../comun/pokemon
 import { quitarAcentos } from "../comun/utilidades.js";
 import { irA } from "../navegacion.js";
 import { sumarContador } from "../comun/contadores.js";
+import { entrenoDesdeShowdown } from "./entreno.js";
 
 // ---------- Importar paste de Showdown ----------
 
@@ -28,8 +29,8 @@ function leerPrimeraLinea(linea) {
   return { especie: especie.trim(), mote: mote, objeto: objeto };
 }
 
-// Se leen: especie, objeto, habilidad, ataques y Shiny.
-// Se ignoran: nivel, felicidad, EVs, IVs, naturaleza, género...
+// Se leen: especie, objeto, habilidad, ataques, Shiny y nivel, naturaleza, EVs e IVs.
+// Se ignoran: felicidad, género, teratipo...
 function interpretarPaste(texto) {
   let nombre = "";
 
@@ -73,7 +74,8 @@ function interpretarPaste(texto) {
       objeto: primera.objeto,
       habilidad: habilidad,
       shiny: shiny,
-      ataques: ataques.slice(0, 4)
+      ataques: ataques.slice(0, 4),
+      entreno: entrenoDesdeShowdown(lineas.slice(1))
     });
   }
 
@@ -180,6 +182,7 @@ async function importarPaste(texto) {
 
       resuelto.shiny = p.shiny;
       resuelto.mote = p.mote || null;
+      if (p.entreno) resuelto.entreno = p.entreno;
 
       if (p.habilidad) {
         const h = buscarPorNombreIngles(datos.habilidades, p.habilidad);

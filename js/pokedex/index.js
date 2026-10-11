@@ -34,6 +34,8 @@ const barra = vista.querySelector(".barra-pokedex");
 const campoBuscar = vista.querySelector(".pokedex-buscar");
 const selectorTipo = vista.querySelector(".pokedex-tipo");
 const cuentaEl = vista.querySelector(".pokedex-cuenta");
+const botonFiltros = vista.querySelector(".pokedex-filtros-boton");
+const panelFiltros = vista.querySelector(".pokedex-filtros");
 const tabla = vista.querySelector(".tabla-pokedex");
 const cabecera = tabla.querySelector("thead");
 const cuerpo = tabla.querySelector("tbody");
@@ -158,9 +160,63 @@ function ordenarPor(clave) {
 let textoBuscado = "";
 let tipoElegido = "";
 
+// El panel de «Filtros» (para que no se llene la barra de desplegables): generación, formas y
+// legendarios. Cada grupo, una fila de botones de los que se elige uno; el primero es «todos».
+const FILTROS = [
+  {
+    clave: "gen",
+    titulo: "Generación",
+    opciones: [["", "Todas"], ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((gen) => [String(gen), `${gen}ª`])],
+    pasa: (p, valor) => String(p.gen) === valor
+  },
+  {
+    clave: "forma",
+    titulo: "Formas",
+    opciones: [["", "Todas"], ["normal", "Solo normales"], ["regional", "Regionales"], ["mega", "Megas"], ["otra", "Otras formas"]],
+    pasa: (p, valor) => claseDeForma(p) === valor
+  },
+  {
+    clave: "clase",
+    titulo: "Clase",
+    opciones: [["", "Todos"], ["legendario", "Legendarios"], ["singular", "Singulares"], ["bebe", "Bebés"], ["comun", "Ni legendarios ni singulares"]],
+    pasa: (p, valor) => (valor === "comun" ? p.clase !== "legendario" && p.clase !== "singular" : p.clase === valor)
+  }
+];
+
+const filtros = { gen: "", forma: "", clase: "" };
+
+function claseDeForma(p) {
+  if (p.normal || p.clave === p.numero) return "normal";
+  if (/\((Alola|Galar|Hisui|Paldea)/.test(p.nombre)) return "regional";
+  if (/\((Mega|Primigenia)/.test(p.nombre)) return "mega";
+  return "otra";
+}
+
 function pasaFiltros(p) {
   if (tipoElegido && !p.tipos.includes(tipoElegido)) return false;
+  if (FILTROS.some((filtro) => filtros[filtro.clave] && !filtro.pasa(p, filtros[filtro.clave]))) return false;
   return !textoBuscado || p.busqueda.includes(textoBuscado);
+}
+
+function pintarFiltros() {
+  const activos = FILTROS.filter((filtro) => filtros[filtro.clave]).length;
+  panelFiltros.innerHTML =
+    FILTROS.map(
+      (filtro) => `
+        <div class="pokedex-filtro">
+          <span class="pokedex-filtro-titulo">${filtro.titulo}</span>
+          <div class="pokedex-filtro-opciones">
+            ${filtro.opciones
+              .map(
+                ([valor, texto]) =>
+                  `<button class="${filtros[filtro.clave] === valor ? "activa" : ""}" data-filtro="${filtro.clave}" data-valor="${valor}">${texto}</button>`
+              )
+              .join("")}
+          </div>
+        </div>`
+    ).join("") + (activos ? `<button class="pokedex-filtros-quitar">Quitar filtros</button>` : "");
+  botonFiltros.innerHTML = `Filtros${activos ? ` <span class="pokedex-filtros-cuantos">${activos}</span>` : ""}`;
+  botonFiltros.classList.toggle("con-filtros", activos > 0);
 }
 
 // Se esconden filas en vez de volver a pintarlas: así no se recargan las fotos
@@ -196,6 +252,27 @@ function prepararFiltros() {
     tipoElegido = selectorTipo.value;
     aplicarFiltros();
   });
+
+  botonFiltros.addEventListener("click", () => {
+    panelFiltros.hidden = !panelFiltros.hidden;
+    botonFiltros.setAttribute("aria-expanded", String(!panelFiltros.hidden));
+    botonFiltros.classList.toggle("abierto", !panelFiltros.hidden);
+  });
+
+  panelFiltros.addEventListener("click", (e) => {
+    const boton = e.target.closest("button");
+    if (!boton) return;
+    if (boton.classList.contains("pokedex-filtros-quitar")) {
+      for (const filtro of FILTROS) filtros[filtro.clave] = "";
+    } else if (boton.dataset.filtro) {
+      filtros[boton.dataset.filtro] = boton.dataset.valor;
+    } else return;
+    cerrarEvoluciones();
+    pintarFiltros();
+    aplicarFiltros();
+  });
+
+  pintarFiltros();
 }
 
 export async function iniciar() {

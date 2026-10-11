@@ -56,6 +56,75 @@ body {
   }
 }
 
+/* ---------- Casillas de número con flechas propias (js/comun/numero.js) ---------- */
+
+.numero {
+  position: relative;
+  display: inline-flex;
+}
+
+.numero input {
+  flex: 1;
+  min-width: 0;
+  padding-right: 1.45rem !important; /* sitio para las flechas */
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.numero input::-webkit-inner-spin-button,
+.numero input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.numero-pasos {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  bottom: 3px;
+  display: flex;
+  flex-direction: column;
+  width: 1.05rem;
+  gap: 1px;
+}
+
+.numero-pasos button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 0.2rem;
+  background: #3a3d52;
+  color: #c9cbe0;
+  cursor: pointer;
+}
+
+.numero-pasos button:hover {
+  background: #f1c40f;
+  color: #1e1f2b;
+}
+
+/* La flechita: un pico hecho con dos bordes */
+.numero-pasos button::before {
+  content: "";
+  width: 0.28rem;
+  height: 0.28rem;
+  border-left: 2px solid currentColor;
+  border-top: 2px solid currentColor;
+  transform: translateY(0.07rem) rotate(45deg);
+}
+
+.numero-pasos .numero-menos::before {
+  transform: translateY(-0.07rem) rotate(225deg);
+}
+
+.numero:has(input:disabled) .numero-pasos {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
 /* ---------- Desplegable de sugerencias ---------- */
 
 .sugerencias {

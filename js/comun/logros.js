@@ -20,7 +20,7 @@
 import { leer, alCambiar } from "./almacen.js";
 import { usuarioActual, alCambiarSesion, cuandoEsteSincronizado } from "./nube.js";
 import { miPerfil, alCambiarMiPerfil, guardarMiPerfil, amigosAceptados, alCambiarAmistades } from "./perfiles.js";
-import { misLockes, estadoDe, alCambiarLockes } from "./lockes.js";
+import { misLockes, estadoDe, alCambiarLockes, victoriasDe, combatesDe, estaEliminado } from "./lockes.js";
 import { conjuntos } from "./normas.js";
 import { contadores } from "./contadores.js";
 import { icono } from "./iconos.js";
@@ -45,6 +45,40 @@ export const CATEGORIAS = [
 ];
 
 const cuantos = (lista, condicion) => lista.filter(condicion).length;
+
+// Los combates ganados de un locke cuyo marcador es uno de esos («2-0», «3-0»...)
+const combatesGanadosCon = (c, marcadores) =>
+  c.lockes.reduce((suma, locke) => {
+    const resultados = locke.resultados || {};
+    return suma + cuantos(combatesDe(locke), (combate) => {
+      const resultado = resultados[combate.id] || {};
+      return resultado.ganador === c.yo && marcadores.includes(resultado.marcador);
+    });
+  }, 0);
+
+// La racha más larga de lockes de Versus ganados seguidos (por la fecha en que se cerraron)
+function mejorRacha(c) {
+  const ordenados = [...c.terminados].sort((uno, otro) =>
+    String(uno.fechaFin || "").localeCompare(String(otro.fechaFin || "")) || (uno.creado || 0) - (otro.creado || 0));
+  let racha = 0;
+  let mejor = 0;
+  for (const locke of ordenados) {
+    racha = locke.ganador === c.yo ? racha + 1 : 0;
+    mejor = Math.max(mejor, racha);
+  }
+  return mejor;
+}
+
+// Las opciones de la ruleta de ejemplo (las de ahora y las de antes): una ruleta con solo esas
+// no es «tuya»
+const OPCIONES_DE_EJEMPLO = new Set([
+  "Caramelo raro", "Objeto a elegir", "Revivir a un Pokémon", "Una vida extra",
+  "Captura extra", "MT a elegir", "Cambiar de inicial", "Nada"
+]);
+
+const textoOpcion = (opcion) => String(typeof opcion === "string" ? opcion : (opcion && opcion.texto) || "").trim();
+
+const evsDe = (poke) => ((poke.entreno && poke.entreno.evs) || []).reduce((suma, v) => suma + (Number(v) || 0), 0);
 
 // Un locke apuntado a mano en tu palmarés: ¿era de vidas ilimitadas? Los de antes no lo
 // llevan apuntado y se deduce de las vidas de los participantes (igual que en «Amigos»)
@@ -71,6 +105,9 @@ export const LOGROS = [
   { id: "v-terminar", categoria: "versus", nivel: "bronce", icono: "visto",
     nombre: "Hasta el final", descripcion: "Termina un locke.",
     valor: (c) => c.terminados.length + c.apuntados.length },
+  { id: "v-rom", categoria: "versus", nivel: "plata", icono: "mando",
+    nombre: "Fin de la partida", descripcion: "Pásate la ROM de un locke de Versus.",
+    valor: (c) => cuantos(c.lockes, (l) => (l.rom || {})[c.yo]) },
   { id: "v-ilimitadas", categoria: "versus", nivel: "bronce", icono: "corazon",
     nombre: "Sin presión", descripcion: "Juega un locke con vidas ilimitadas.",
     valor: (c) => cuantos(c.lockes, (l) => l.vidasIlimitadas) + cuantos(c.apuntados, apuntadoIlimitado) },
@@ -108,6 +145,34 @@ export const LOGROS = [
   { id: "v-victorias-100", categoria: "versus", nivel: "oro", icono: "espadas",
     nombre: "Imparable", descripcion: "Suma 100 victorias en tus lockes.",
     valor: (c) => c.victorias, meta: 100 },
+  { id: "v-combates-crear", categoria: "versus", nivel: "bronce", icono: "espadas",
+    nombre: "Al mejor de tres", descripcion: "Crea un locke con combates.",
+    valor: (c) => cuantos(c.lockes, (l) => l.creador === c.yo && combatesDe(l).length > 0) },
+  { id: "v-combate-ganar", categoria: "versus", nivel: "bronce", icono: "espadas",
+    nombre: "Primera sangre", descripcion: "Gana un combate de un locke.",
+    valor: (c) => c.lockes.reduce((suma, l) => suma + (combatesDe(l).length ? victoriasDe(l, c.yo) : 0), 0) },
+  { id: "v-por-los-pelos", categoria: "versus", nivel: "bronce", icono: "corazon",
+    nombre: "Por los pelos", descripcion: "Gana un combate en la última ronda (2-1 o 3-2).",
+    valor: (c) => combatesGanadosCon(c, ["2-1", "3-2"]) },
+  { id: "v-barrida", categoria: "versus", nivel: "plata", icono: "rayo",
+    nombre: "Barrida", descripcion: "Gana un combate sin perder ni una ronda (2-0 o 3-0).",
+    valor: (c) => combatesGanadosCon(c, ["2-0", "3-0"]) },
+  { id: "v-eliminado", categoria: "versus", nivel: "bronce", icono: "calavera",
+    nombre: "Game over", descripcion: "Pierde un locke al perder la vida cero.",
+    valor: (c) => cuantos(c.lockes, (l) => estaEliminado(l, c.yo)) },
+  { id: "v-ganar-cuatro", categoria: "versus", nivel: "oro", icono: "corona",
+    nombre: "Rey de la colina", descripcion: "Gana un locke de 4 jugadores o más.",
+    valor: (c) => cuantos(c.mios, (l) => c.jugadoresDe(l) >= 4) +
+      cuantos(c.apuntados, (g) => (g.participantes || []).length >= 4) },
+  { id: "v-racha", categoria: "versus", nivel: "oro", icono: "rayo",
+    nombre: "En racha", descripcion: "Gana 3 lockes de Versus seguidos.",
+    valor: (c) => mejorRacha(c), meta: 3 },
+  { id: "v-salon", categoria: "versus", nivel: "bronce", icono: "trofeo",
+    nombre: "Salón de la Fama", descripcion: "Apunta tu equipo final en un locke terminado.",
+    valor: (c) => (c.perfil.salon || []).length },
+  { id: "v-salon-5", categoria: "versus", nivel: "plata", icono: "trofeo",
+    nombre: "Galería de honor", descripcion: "Apunta tu equipo final en 5 lockes.",
+    valor: (c) => (c.perfil.salon || []).length, meta: 5 },
 
   // ---------- Cementerio ----------
   { id: "c-primer-muerto", categoria: "cementerio", nivel: "bronce", icono: "calavera",
@@ -128,6 +193,22 @@ export const LOGROS = [
   { id: "c-ni-rasguno", categoria: "cementerio", nivel: "oro", icono: "estrella",
     nombre: "Ni un rasguño", descripcion: "Gana un locke sin ningún Pokémon en tu cementerio.",
     valor: (c) => cuantos(c.mios, (l) => c.muertosDe(l).length === 0) },
+  { id: "c-muertos-100", categoria: "cementerio", nivel: "platino", icono: "calavera",
+    nombre: "Valle de lágrimas", descripcion: "Pierde 100 Pokémon.",
+    valor: (c) => c.muertos.length, meta: 100 },
+  { id: "c-reaccion", categoria: "cementerio", nivel: "bronce", icono: "corazon",
+    nombre: "Presentar respetos", descripcion: "Reacciona a la tumba de un Pokémon de un rival.",
+    valor: (c) => c.lockes.reduce((suma, l) => {
+      const mios = new Set(c.muertosDe(l).map((m) => m.id));
+      return suma + cuantos(Object.entries(l.reacciones || {}), ([idMuerto, porPersona]) => !mios.has(idMuerto) && (porPersona || {})[c.yo]);
+    }, 0) },
+  { id: "c-llorado", categoria: "cementerio", nivel: "plata", icono: "corazon",
+    nombre: "Llorado por todos", descripcion: "Que todos tus rivales reaccionen a la tumba de uno de tus Pokémon.",
+    valor: (c) => c.lockes.reduce((suma, l) => {
+      const rivales = c.rivalesDe(l);
+      if (!rivales.length) return suma;
+      return suma + cuantos(c.muertosDe(l), (m) => rivales.every((uid) => ((l.reacciones || {})[m.id] || {})[uid]));
+    }, 0) },
 
   // ---------- Equipos ----------
   { id: "e-primero", categoria: "equipos", nivel: "bronce", icono: "pokeball",
@@ -160,6 +241,19 @@ export const LOGROS = [
   { id: "e-forma", categoria: "equipos", nivel: "bronce", icono: "mapa",
     nombre: "Viajero regional", descripcion: "Guarda un equipo con un Pokémon de otra forma (Alola, Mega...).",
     valor: (c) => cuantos(c.pokemonGuardados, (p) => p.forma) },
+  { id: "e-sin-repetir", categoria: "equipos", nivel: "plata", icono: "escudo",
+    nombre: "Arcoíris", descripcion: "Guarda un equipo de 6 sin ningún tipo repetido.",
+    valor: (c) => cuantos(c.equiposDeSeis, (e) => {
+      const tipos = e.pokemon.flatMap((p) => p.tipos || []);
+      return tipos.length > 0 && new Set(tipos).size === tipos.length;
+    }) },
+  { id: "e-entreno", categoria: "equipos", nivel: "bronce", icono: "actividad",
+    nombre: "Entrenamiento especial", descripcion: "Guarda un equipo con un Pokémon con su nivel, naturaleza, EVs o IVs a medida.",
+    valor: (c) => cuantos(c.pokemonGuardados, (p) => p.entreno) },
+  { id: "e-competitivo", categoria: "equipos", nivel: "oro", icono: "trofeo",
+    nombre: "Listo para competir", descripcion: "Guarda un equipo de 6 con habilidad, objeto, 4 ataques y todos los EVs repartidos en cada uno.",
+    valor: (c) => cuantos(c.equiposDeSeis, (e) => e.pokemon.every((p) =>
+      p.habilidad && p.objeto && (p.ataques || []).filter(Boolean).length === 4 && evsDe(p) >= 508)) },
   { id: "e-importar", categoria: "equipos", nivel: "bronce", icono: "importar",
     nombre: "Desde Showdown", descripcion: "Importa un equipo con «Importar paste».",
     valor: (c) => c.contadores.importar || 0 },
@@ -183,12 +277,27 @@ export const LOGROS = [
   { id: "r-completo", categoria: "rutas", nivel: "oro", icono: "mapa",
     nombre: "Cartógrafo", descripcion: "Marca todos los lugares de un juego.",
     valor: (c) => c.juegosConTodasLasRutas },
+  { id: "r-juegos-5", categoria: "rutas", nivel: "plata", icono: "mapa",
+    nombre: "Mochilero", descripcion: "Marca lugares en 5 juegos distintos.",
+    valor: (c) => c.juegosConRutas, meta: 5 },
+  { id: "r-captura", categoria: "rutas", nivel: "bronce", icono: "pokeball",
+    nombre: "Cuaderno de campo", descripcion: "Apunta qué capturaste en un lugar de «Rutas».",
+    valor: (c) => c.capturasApuntadas },
+  { id: "r-capturas-25", categoria: "rutas", nivel: "plata", icono: "pokeball",
+    nombre: "Naturalista", descripcion: "Apunta 25 capturas en «Rutas».",
+    valor: (c) => c.capturasApuntadas, meta: 25 },
   { id: "l-primero", categoria: "rutas", nivel: "bronce", icono: "escudo",
     nombre: "Primer combate", descripcion: "Supera tu primer combate en «Level caps».",
     valor: (c) => c.combatesSuperados },
   { id: "l-campeon", categoria: "rutas", nivel: "plata", icono: "corona",
     nombre: "Campeón de la Liga", descripcion: "Supera al Campeón de un juego en «Level caps».",
     valor: (c) => c.campeonesSuperados },
+  { id: "l-50", categoria: "rutas", nivel: "plata", icono: "escudo",
+    nombre: "Retador", descripcion: "Supera 50 combates en «Level caps».",
+    valor: (c) => c.combatesSuperados, meta: 50 },
+  { id: "l-campeones-3", categoria: "rutas", nivel: "oro", icono: "corona",
+    nombre: "Campeón de campeones", descripcion: "Supera al Campeón de 3 juegos en «Level caps».",
+    valor: (c) => c.campeonesSuperados, meta: 3 },
   { id: "l-completo", categoria: "rutas", nivel: "oro", icono: "escudo",
     nombre: "Sin dejar a nadie", descripcion: "Supera todos los combates de un juego.",
     valor: (c) => c.juegosConTodosLosCombates },
@@ -212,6 +321,12 @@ export const LOGROS = [
   { id: "p-imagen", categoria: "personalizados", nivel: "bronce", icono: "imagen",
     nombre: "Artista", descripcion: "Ponle una imagen personalizada a un entrenador de tus level caps.",
     valor: (c) => cuantos(c.capsPropios.flatMap((lista) => lista.combates || []), (combate) => String(combate.imagen || "").startsWith("data:")) },
+  { id: "p-ruleta", categoria: "personalizados", nivel: "bronce", icono: "ruleta",
+    nombre: "Crupier", descripcion: "Haz una ruleta con tus propias opciones.",
+    valor: (c) => cuantos(c.ruletas, (r) => {
+      const textos = (r.opciones || []).map(textoOpcion).filter(Boolean);
+      return textos.length >= 2 && textos.some((texto) => !OPCIONES_DE_EJEMPLO.has(texto));
+    }) },
   { id: "p-tipo", categoria: "personalizados", nivel: "bronce", icono: "etiqueta",
     nombre: "A mi manera", descripcion: "Crea un tipo de locke propio.",
     valor: (c) => cuantos(c.perfil.tipos || [], (tipo) => tipo.id !== "locke") },
@@ -233,6 +348,12 @@ export const LOGROS = [
   { id: "s-avatar", categoria: "social", nivel: "bronce", icono: "persona",
     nombre: "Nueva imagen", descripcion: "Pon un Pokémon como foto de perfil.",
     valor: (c) => Boolean(c.perfil.avatar) },
+  { id: "s-titulo", categoria: "social", nivel: "bronce", icono: "estrella",
+    nombre: "Con título", descripcion: "Ponte el título de un logro en tu perfil.",
+    valor: (c) => Boolean(c.perfil.titulo) },
+  { id: "s-palmares", categoria: "social", nivel: "bronce", icono: "libro",
+    nombre: "Memoria histórica", descripcion: "Apunta a mano en tu palmarés un locke de antes.",
+    valor: (c) => c.apuntados.length },
 
   // ---------- Otros ----------
   { id: "o-ruleta", categoria: "otros", nivel: "bronce", icono: "ruleta",
@@ -250,6 +371,12 @@ export const LOGROS = [
   { id: "o-ayuda", categoria: "otros", nivel: "bronce", icono: "libro",
     nombre: "Curioso", descripcion: "Lee las preguntas frecuentes.",
     valor: (c) => c.contadores.ayuda || 0 },
+  { id: "o-calculo", categoria: "otros", nivel: "bronce", icono: "calculadora",
+    nombre: "Haciendo números", descripcion: "Calcula el daño de un ataque en la calculadora.",
+    valor: (c) => c.contadores.calculos || 0 },
+  { id: "o-calculos-50", categoria: "otros", nivel: "plata", icono: "calculadora",
+    nombre: "Analista de combate", descripcion: "Haz 50 cálculos distintos en la calculadora.",
+    valor: (c) => c.contadores.calculos || 0, meta: 50 },
 
   // ---------- Logros de logros (se miran los últimos, con los demás ya contados) ----------
   { id: "m-10", categoria: "logros", nivel: "plata", icono: "trofeo",
@@ -258,6 +385,9 @@ export const LOGROS = [
   { id: "m-30", categoria: "logros", nivel: "oro", icono: "trofeo",
     nombre: "Coleccionista de logros", descripcion: "Consigue 30 logros.",
     valor: (c) => c.conseguidos, meta: 30 },
+  { id: "m-60", categoria: "logros", nivel: "oro", icono: "trofeo",
+    nombre: "Cazador de trofeos", descripcion: "Consigue 60 logros.",
+    valor: (c) => c.conseguidos, meta: 60 },
   { id: "m-todos", categoria: "logros", nivel: "platino", icono: "trofeo",
     nombre: "Completista", descripcion: "Consigue todos los demás logros.",
     valor: (c) => c.conseguidos }
@@ -300,6 +430,9 @@ async function contexto() {
   const equipos = (leer("poketeams-equipos-v1", []) || []).filter((equipo) => Array.isArray(equipo.pokemon));
   const rutasTodas = ((leer("poketeams-rutas-propias-v1", null) || {}).listas) || [];
   const capsTodos = ((leer("poketeams-levelcaps-propios-v1", null) || {}).listas) || [];
+  // Qué se capturó en cada lugar: { idJuego: { lugar: captura } } (rutas/capturas.js)
+  const capturas = leer("poketeams-capturas-v1", {}) || {};
+  const ruletas = ((leer("poketeams-ruletas-v1", null) || {}).ruletas) || [];
 
   return {
     yo,
@@ -308,6 +441,9 @@ async function contexto() {
     terminados,
     mios,
     muertosDe,
+    jugadoresDe,
+    // Los demás que juegan contigo un locke (los que han aceptado)
+    rivalesDe: (locke) => (locke.jugadores || []).filter((uid) => uid !== yo && estadoDe(locke, uid) === "aceptado"),
     vidasDe: (locke) => (locke.vidas || {})[yo] || 0,
     apuntados,
     misVidasEn,
@@ -315,7 +451,7 @@ async function contexto() {
     masJugadores: Math.max(0, ...lockes.map(jugadoresDe), ...apuntados.map((ganado) => (ganado.participantes || []).length)),
     muertos: lockes.flatMap(muertosDe),
     ganados: (perfil.ganados || []).length,
-    victorias: lockes.reduce((suma, locke) => suma + ((locke.marcador || {})[yo] || 0), 0),
+    victorias: lockes.reduce((suma, locke) => suma + victoriasDe(locke, yo), 0),
     amigos: yo ? amigosAceptados().length : 0,
     equipos,
     equiposDeSeis: equipos.filter((equipo) => equipo.pokemon.length === 6),
@@ -324,21 +460,25 @@ async function contexto() {
     rutasPropias: rutasTodas.filter((lista) => !lista.recibido),
     capsPropios: capsTodos.filter((lista) => !lista.recibido),
     multiplicadores: leer("poketeams-levelcaps-multiplicador-v1", {}) || {},
+    capturasApuntadas: Object.values(capturas).reduce((suma, delJuego) => suma + Object.keys(delJuego || {}).length, 0),
+    ruletas,
     contadores: contadores(),
     ...progresoRutas(LUGARES, rutasTodas),
     ...progresoCaps(COMBATES, capsTodos)
   };
 }
 
-// Lugares marcados en total, y en cuántos juegos están todos (de 10 lugares para arriba,
-// para que unas rutas propias de dos lugares no valgan)
+// Lugares marcados en total, en cuántos juegos hay alguno, y en cuántos están todos (de 10
+// lugares para arriba, para que unas rutas propias de dos lugares no valgan)
 function progresoRutas(LUGARES, rutasTodas) {
   const marcadas = leer("poketeams-rutas-v2", {}) || {};
   let lugaresMarcados = 0;
+  let juegosConRutas = 0;
   let juegosConTodasLasRutas = 0;
 
   for (const [idJuego, claves] of Object.entries(marcadas)) {
     lugaresMarcados += (claves || []).length;
+    if ((claves || []).length) juegosConRutas++;
     const textos = new Set((claves || []).map((clave) => clave.slice(clave.indexOf(":") + 1)));
 
     let lugares = [];
@@ -352,7 +492,7 @@ function progresoRutas(LUGARES, rutasTodas) {
     }
     if (lugares.length >= 10 && lugares.every((lugar) => textos.has(lugar))) juegosConTodasLasRutas++;
   }
-  return { lugaresMarcados, juegosConTodasLasRutas };
+  return { lugaresMarcados, juegosConRutas, juegosConTodasLasRutas };
 }
 
 // Combates superados en total, campeones superados y juegos con todos superados (de 8

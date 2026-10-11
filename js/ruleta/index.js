@@ -26,11 +26,14 @@ const MAX_HISTORIAL = 8;
 // Con la que se empieza: recompensas típicas de un locke por ganar un combate importante
 const DE_EJEMPLO = {
   nombre: "Recompensas",
-  opciones: [
-    "Caramelo raro", "Objeto a elegir", "Revivir a un Pokémon", "Una vida extra",
-    "Captura extra", "MT a elegir", "Cambiar de inicial", "Nada"
-  ]
+  opciones: ["Objeto a elegir", "Revivir a un Pokémon", "Una vida extra", "Captura extra", "MT a elegir", "Nada"]
 };
+
+// Las de ejemplo de antes: a quien las tenga tal cual (sin tocar), se le quitan esas dos
+const EJEMPLO_ANTIGUO = [
+  "Caramelo raro", "Objeto a elegir", "Revivir a un Pokémon", "Una vida extra",
+  "Captura extra", "MT a elegir", "Cambiar de inicial", "Nada"
+];
 
 const COLORES = [
   "#e74c3c", "#f39c12", "#f1c40f", "#2ecc71", "#1abc9c",
@@ -70,6 +73,10 @@ function guardado() {
   // Antes las opciones eran solo el texto
   for (const ruleta of ruletas) {
     ruleta.opciones = (ruleta.opciones || []).map((opcion) => (typeof opcion === "string" ? { texto: opcion } : opcion));
+    const textos = ruleta.opciones.map((opcion) => opcion.texto);
+    if (textos.length === EJEMPLO_ANTIGUO.length && textos.every((texto, i) => texto === EJEMPLO_ANTIGUO[i])) {
+      ruleta.opciones = ruleta.opciones.filter((opcion) => DE_EJEMPLO.opciones.includes(opcion.texto));
+    }
   }
   const activa = ruletas.some((ruleta) => ruleta.id === (valor && valor.activa)) ? valor.activa : ruletas[0].id;
   return { ruletas, activa };
@@ -167,6 +174,75 @@ function pintarRueda() {
     .join("") + `<circle r="${RADIO}" class="ruleta-borde"/>`;
 }
 
+// ---------- Sonido ----------
+//
+// Un «tac» cada vez que una casilla pasa por la flecha (como en las de verdad: rápido al
+// principio y cada vez más despacio) y un «tilín» al pararse. Hecho con Web Audio, sin
+// archivos; el primer giro es una pulsación, así que el navegador deja sonar.
+
+let audio = null;
+
+function contextoAudio() {
+  if (!audio) {
+    const Contexto = window.AudioContext || window.webkitAudioContext;
+    if (!Contexto) return null;
+    audio = new Contexto();
+  }
+  if (audio.state === "suspended") audio.resume();
+  return audio;
+}
+
+// Una nota corta: frecuencia de inicio y final, cuándo (segundos desde ya), cuánto dura y volumen
+function nota(ctx, tipo, desde, hasta, cuando, dura, volumen) {
+  const t = ctx.currentTime + cuando;
+  const oscilador = ctx.createOscillator();
+  const ganancia = ctx.createGain();
+  oscilador.type = tipo;
+  oscilador.frequency.setValueAtTime(desde, t);
+  oscilador.frequency.exponentialRampToValueAtTime(hasta, t + dura);
+  ganancia.gain.setValueAtTime(volumen, t);
+  ganancia.gain.exponentialRampToValueAtTime(0.001, t + dura);
+  oscilador.connect(ganancia).connect(ctx.destination);
+  oscilador.start(t);
+  oscilador.stop(t + dura + 0.02);
+}
+
+function tac() {
+  const ctx = contextoAudio();
+  if (ctx) nota(ctx, "triangle", 1500, 500, 0, 0.035, 0.2);
+}
+
+function tilin() {
+  const ctx = contextoAudio();
+  if (!ctx) return;
+  nota(ctx, "sine", 1046, 1040, 0, 0.35, 0.18);
+  nota(ctx, "sine", 1568, 1560, 0.09, 0.5, 0.15);
+}
+
+// Mientras gira, mira en cada fotograma qué casilla hay bajo la flecha; al cambiar, «tac»
+function sonarGiro(total) {
+  const paso = 360 / total;
+  let anterior = null;
+  let ultimo = 0;
+  const mirar = () => {
+    if (!girando) return;
+    const matriz = getComputedStyle(rueda).transform.match(/matrix\(([^,]+),([^,]+)/);
+    if (matriz) {
+      const grados = (Math.atan2(Number(matriz[2]), Number(matriz[1])) * 180) / Math.PI;
+      const bajoFlecha = Math.floor((((-grados % 360) + 360) % 360) / paso);
+      const ahora = performance.now();
+      // Muy deprisa, como mucho uno cada 25 ms (si no, se emborrona)
+      if (anterior !== null && bajoFlecha !== anterior && ahora - ultimo > 25) {
+        tac();
+        ultimo = ahora;
+      }
+      anterior = bajoFlecha;
+    }
+    requestAnimationFrame(mirar);
+  };
+  requestAnimationFrame(mirar);
+}
+
 // ---------- Girar ----------
 
 function duracion() {
@@ -200,6 +276,8 @@ function girar() {
   const tiempo = duracion();
   rueda.style.transition = `transform ${tiempo}ms cubic-bezier(0.12, 0.8, 0.18, 1)`;
   rueda.style.transform = `rotate(${rotacion}deg)`;
+  contextoAudio(); // en la misma pulsación, para que el navegador deje sonar
+  sonarGiro(total);
   setTimeout(() => terminar(casilla, texto), tiempo + 80);
 }
 
@@ -212,6 +290,7 @@ function terminar(casilla, texto) {
 
   historial.unshift({ texto, ruleta: actual().nombre });
   historial.splice(MAX_HISTORIAL);
+  tilin();
   sumarContador("ruleta"); // para los logros
 
   pintarRueda();

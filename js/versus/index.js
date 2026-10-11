@@ -34,8 +34,12 @@ import {
 import {
   alCambiarLockes, misLockes, invitacionesALockes, estadoDe, fallaLosLockes, soyCreador,
   crearLocke, editarLocke, invitarALocke, quitarDeLocke, sePuedenCambiarVidas,
-  cambiarNumero, elegirGanador, borrarLocke, lockePorId, estaEliminado
+  cambiarNumero, borrarLocke, lockePorId, estaEliminado, combatesDe, victoriasDe
 } from "../comun/lockes.js";
+import {
+  iniciarCombates, plantillaCombates, plantillaRom, plantillaSalon, abrirCombate, abrirTerminar, abrirSalon,
+  alternarRom
+} from "./combates.js";
 
 let seccion = null;
 let lista = null;
@@ -70,8 +74,10 @@ function botonesCifra(campo, editable, contenido, textoMenos, textoMas) {
     <button class="mas" data-campo="${campo}" aria-label="${textoMas}" title="${textoMas}">${icono("mas")}</button>`;
 }
 
+// Con combates, las victorias son los combates ganados: no se suman a mano
 function plantillaCifras(locke, uid, editable) {
-  const victorias = (locke.marcador || {})[uid] || 0;
+  const victorias = victoriasDe(locke, uid);
+  const victoriasAMano = editable && !combatesDe(locke).length;
   const vidas = locke.vidasIlimitadas ? "∞" : (locke.vidas || {})[uid] || 0;
 
   // Fuera del locke (perdió la vida cero): las victorias se quedan como estaban y en las vidas,
@@ -98,7 +104,7 @@ function plantillaCifras(locke, uid, editable) {
       <div class="locke-cifra victorias">
         <span class="locke-etiqueta">${icono("espadas")} Victorias</span>
         <div class="locke-numero marcador">
-          ${botonesCifra("marcador", editable, victorias, "Quitar una victoria", "Sumar una victoria")}
+          ${botonesCifra("marcador", victoriasAMano, victorias, "Quitar una victoria", "Sumar una victoria")}
         </div>
       </div>
       <div class="locke-cifra vidas ${locke.vidasIlimitadas ? "ilimitadas" : ""} ${vidas === 0 ? "vida-cero" : ""}">
@@ -120,24 +126,23 @@ function plantillaJugador(locke, uid) {
   const esMio = uid === usuario.uid;
   const eliminado = !gano && estaEliminado(locke, uid);
 
-  // Elegir ganador: solo quien creó el locke, y solo entre los que han aceptado y siguen dentro
-  const puedeGanar = !cerrado && soyCreador(locke) && !pendiente && !eliminado;
-
   return `
     <div class="locke-jugador ${gano ? "ganador" : ""} ${pendiente ? "pendiente" : ""} ${esMio ? "mio" : ""} ${eliminado ? "eliminado" : ""}"
          data-uid="${escaparHTML(uid)}">
-      <div class="locke-cara">
-        ${foto ? `<img src="${escaparHTML(foto)}" alt="" referrerpolicy="no-referrer" data-respaldo="" data-quitar-si-falla>` : ""}
-        ${eliminado ? `<span class="locke-cara-fuera">${icono("calavera")}</span>` : ""}
+      <div class="locke-persona">
+        <div class="locke-cara">
+          ${foto ? `<img src="${escaparHTML(foto)}" alt="" referrerpolicy="no-referrer" data-respaldo="" data-quitar-si-falla>` : ""}
+          ${eliminado ? `<span class="locke-cara-fuera">${icono("calavera")}</span>` : ""}
+        </div>
+        <span class="locke-quien">${nombre}${esMio ? ` <small>(tú)</small>` : ""}</span>
+        ${gano ? `<span class="locke-corona">${icono("corona")}</span>` : ""}
+        ${pendiente ? `<span class="locke-pendiente">Sin contestar</span>` : ""}
+        ${eliminado ? `<span class="locke-eliminado">Eliminado</span>` : ""}
       </div>
-      <span class="locke-quien">${nombre}${esMio ? ` <small>(tú)</small>` : ""}</span>
-      ${gano ? `<span class="locke-corona">${icono("corona")}</span>` : ""}
-      ${pendiente ? `<span class="locke-pendiente">Sin contestar</span>` : ""}
-      ${eliminado ? `<span class="locke-eliminado">Eliminado</span>` : ""}
 
       ${plantillaCifras(locke, uid, esMio && !cerrado)}
-
-      ${puedeGanar ? `<button class="locke-ganador" title="Ha ganado ${nombre}: cerrar el locke" aria-label="Ha ganado ${nombre}">${icono("corona")}</button>` : ""}
+      ${pendiente ? "" : plantillaRom(locke, uid, esMio && !cerrado && !eliminado)}
+      ${cerrado && !pendiente ? plantillaSalon(locke, uid, esMio) : ""}
     </div>`;
 }
 
@@ -167,7 +172,10 @@ function plantillaLocke(locke) {
   const cerrado = locke.estado === "cerrado";
   const tipo = locke.tipo || { nombre: "Locke", color: "#3498db" };
 
-  const ganador = cerrado ? escaparHTML((locke.nombres || {})[locke.ganador] || "alguien") : "";
+  // Cerrado sin ganador: nadie se pasó la ROM
+  const resultado = !cerrado ? "" : locke.ganador
+    ? `${icono("corona")} Ganó ${escaparHTML((locke.nombres || {})[locke.ganador] || "alguien")}`
+    : `${icono("aspa")} Nadie ganó`;
   const fecha = cerrado && locke.fechaFin ? ` · ${escaparHTML(fechaLarga(locke.fechaFin))}` : "";
 
   // Un locke cerrado ya no se toca, salvo para que quien lo creó pueda borrarlo
@@ -179,8 +187,9 @@ function plantillaLocke(locke) {
       <header class="locke-cabecera">
         <span class="locke-tipo">${escaparHTML(tipo.nombre)}</span>
         <h2 class="locke-titulo">${escaparHTML(locke.nombre)}</h2>
-        ${cerrado ? `<span class="locke-resultado">${icono("corona")} Ganó ${ganador}${fecha}</span>` : ""}
+        ${cerrado ? `<span class="locke-resultado ${locke.ganador ? "" : "sin-ganador"}">${resultado}${fecha}</span>` : ""}
         <div class="locke-acciones">
+          ${!cerrado && soyCreador(locke) ? `<button class="locke-terminar" title="Terminar el locke">${icono("corona")} Terminar</button>` : ""}
           ${puedeEditar ? `<button class="locke-editar" title="Editar locke">${icono("lapiz")}</button>` : ""}
           ${soyCreador(locke) ? `<button class="locke-borrar" title="Borrar locke">${icono("papelera")}</button>` : ""}
         </div>
@@ -188,6 +197,7 @@ function plantillaLocke(locke) {
 
       ${plantillaJuego(locke)}
       ${locke.descripcion ? `<p class="locke-descripcion">${escaparHTML(locke.descripcion)}</p>` : ""}
+      ${plantillaCombates(locke)}
 
       <div class="locke-jugadores">
         ${locke.jugadores.map((uid) => plantillaJugador(locke, uid)).join("")}
@@ -443,6 +453,27 @@ function anadirElegidos() {
   pintarIntegrantes(editando ? lockePorId(editando) : null);
 }
 
+// ---------- Combates (en la ventana) ----------
+//
+// Cuántos tendrá el locke y, debajo, una casilla por combate para ponerle nombre («Tras la 3ª
+// medalla», «Liga»...). Sin nombre sale «Combate 1», «Combate 2»...
+
+const MAX_COMBATES = 12;
+
+function pintarNombresCombates(nombres, editable) {
+  campo(".locke-combates-nombres").innerHTML = nombres
+    .map(
+      (nombre, i) =>
+        `<input class="locke-combate-nombre" type="text" maxlength="30" autocomplete="off" placeholder="Combate ${i + 1}"
+                value="${escaparHTML(nombre)}" ${editable ? "" : "disabled"}>`
+    )
+    .join("");
+}
+
+function nombresCombatesDelDialogo() {
+  return [...dialogo.querySelectorAll(".locke-combate-nombre")].map((casilla) => casilla.value.trim());
+}
+
 // locke: el que se edita; sin él, uno nuevo
 async function abrirDialogo(locke = null) {
   // Lo primero, abrir. Pase lo que pase después, el botón nunca puede quedarse sin
@@ -491,6 +522,12 @@ async function abrirDialogo(locke = null) {
   campo("#locke-vidas").disabled = !vidasLibres || campo("#locke-infinitas").checked;
   campo(".campo-vidas").title = vidasLibres ? "" : "Ya hay gente jugando: sus vidas solo las cambia cada uno.";
 
+  const combates = locke ? combatesDe(locke) : [];
+  const combatesLibres = creador && !cerrado;
+  campo("#locke-combates").value = combates.length;
+  campo("#locke-combates").disabled = !combatesLibres;
+  pintarNombresCombates(combates.map((combate) => combate.nombre || ""), combatesLibres);
+
   // Ventana recién abierta: nadie elegido todavía
   elegidos = [];
   pintarIntegrantes(locke);
@@ -518,6 +555,7 @@ async function guardar() {
   const normas = normasElegidas(locke);
   const rutasPropias = personalizadoElegido("rutas", locke);
   const capsPropios = personalizadoElegido("caps", locke);
+  const combates = nombresCombatesDelDialogo();
 
   // Lo único imprescindible es el nombre: un locke para ti solo también vale
   if (!nombre) {
@@ -538,7 +576,7 @@ async function guardar() {
 
     await crearLocke({
       nombre, descripcion, tipo, juego, juegoOtro, vidas, vidasIlimitadas, normas, rutasPropias, capsPropios,
-      invitados: nuevos.map((perfil) => perfil.uid), nombres, fotos
+      combates, invitados: nuevos.map((perfil) => perfil.uid), nombres, fotos
     });
   } else {
     // Si se acaban de cambiar las vidas de partida, los invitados entran ya con las nuevas
@@ -546,7 +584,7 @@ async function guardar() {
 
     if (soyCreador(locke)) {
       await editarLocke(locke.id, {
-        nombre, descripcion, tipo, juego, juegoOtro, vidas, vidasIlimitadas, normas, rutasPropias, capsPropios
+        nombre, descripcion, tipo, juego, juegoOtro, vidas, vidasIlimitadas, normas, rutasPropias, capsPropios, combates
       });
     }
     // Invitar va aparte: lo puede hacer cualquiera de dentro, no solo el creador
@@ -594,6 +632,7 @@ export function iniciar() {
   };
   iniciarCementerio(alFallar);
   iniciarActividad();
+  iniciarCombates(alFallar);
 
   dialogoElegir.querySelector(".elegir-ok").addEventListener("click", anadirElegidos);
   dialogoElegir.querySelector(".elegir-cancelar").addEventListener("click", () => dialogoElegir.close());
@@ -618,6 +657,13 @@ export function iniciar() {
   // Con vidas ilimitadas el número no pinta nada
   dialogo.querySelector("#locke-infinitas").addEventListener("change", (e) => {
     dialogo.querySelector("#locke-vidas").disabled = e.target.checked;
+  });
+
+  // Al cambiar cuántos combates, salen o se van sus casillas (lo escrito se conserva)
+  dialogo.querySelector("#locke-combates").addEventListener("input", (e) => {
+    const cuantos = Math.max(0, Math.min(MAX_COMBATES, Math.floor(Number(e.target.value) || 0)));
+    const nombres = nombresCombatesDelDialogo();
+    pintarNombresCombates(Array.from({ length: cuantos }, (_, i) => nombres[i] || ""), true);
   });
 
   // Enter en el nombre guarda, como en el resto de la web
@@ -704,11 +750,14 @@ export function iniciar() {
       abrir(locke);
     } else if (boton.classList.contains("locke-borrar")) {
       if (confirm(`¿Borrar «${locke.nombre}»? Lo pierden todos los que juegan.`)) tarea = borrarLocke(id);
-    } else if (boton.classList.contains("locke-ganador")) {
-      const quien = (locke.nombres || {})[jugador.dataset.uid] || "ese jugador";
-      if (confirm(`¿Cerrar «${locke.nombre}» con ${quien} como ganador?\n\nSe le sumará a sus lockes ganados y el locke dejará de poder editarse.`)) {
-        tarea = elegirGanador(id, jugador.dataset.uid);
-      }
+    } else if (boton.classList.contains("locke-terminar")) {
+      abrirTerminar(id);
+    } else if (boton.classList.contains("locke-combate")) {
+      abrirCombate(id, boton.dataset.combate);
+    } else if (boton.classList.contains("locke-rom")) {
+      alternarRom(id);
+    } else if (boton.classList.contains("locke-salon-poner") || boton.classList.contains("locke-salon-cambiar")) {
+      abrirSalon(id);
     } else if (boton.classList.contains("mas")) {
       tarea = cambiarNumero(id, jugador.dataset.uid, boton.dataset.campo, 1);
     } else if (boton.classList.contains("menos") && boton.dataset.campo === "vidas") {

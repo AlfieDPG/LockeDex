@@ -20,6 +20,7 @@ const SECCIONES = {
   amigos: () => import("./amigos/index.js"),
   versus: () => import("./versus/index.js"),
   pokedex: () => import("./pokedex/index.js"),
+  calculadora: () => import("./calculadora/index.js"),
   ruleta: () => import("./ruleta/index.js"),
   logros: () => import("./logros/index.js")
 };
@@ -34,6 +35,7 @@ const VISTAS = {
   amigos: "amigos",
   versus: "versus",
   pokedex: "pokedex",
+  calculadora: "calculadora",
   ruleta: "ruleta",
   logros: "logros"
 };

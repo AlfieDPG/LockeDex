@@ -373,6 +373,18 @@ button.locke-anadir .icono {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
+/* Foto, nombre y su marca (Sin contestar, Eliminado, la corona): ocupa el alto que sobre y se
+   centra en él. Así, si un bloque es más alto (por la marca), los de al lado no se quedan con
+   un hueco debajo: las cifras quedan todas abajo, a la misma altura. */
+.locke-persona {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
 .locke-pendiente {
   font-size: 0.7rem;
   font-weight: bold;
@@ -604,33 +616,403 @@ button.locke-anadir .icono {
   color: #e74c3c;
 }
 
-/* Corona en la esquina de cada jugador (solo la ve quien creó el locke): lo cierra con ese
-   jugador como ganador */
-.locke-ganador {
-  position: absolute;
-  top: 0.45rem;
-  left: 0.45rem;
+/* ---------- ROM (js/versus/combates.js) ---------- */
+
+.locke-rom {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.9rem;
-  height: 1.9rem;
-  padding: 0;
+  gap: 0.3rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.35rem 0.5rem;
   border: none;
   border-radius: 0.45rem;
-  background: #3a3d52;
-  color: #f1c40f;
+  background: rgba(0, 0, 0, 0.2);
+  color: rgba(242, 242, 242, 0.5);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.locke-rom .icono {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+button.locke-rom {
   cursor: pointer;
 }
 
-.locke-ganador:hover {
+button.locke-rom:hover {
+  background: #3a3d52;
+  color: #f2f2f2;
+}
+
+.locke-rom.pasada {
+  background: rgba(46, 204, 113, 0.15);
+  box-shadow: inset 0 0 0 1px rgba(46, 204, 113, 0.5);
+  color: #2ecc71;
+}
+
+button.locke-rom.pasada:hover {
+  background: rgba(46, 204, 113, 0.25);
+  color: #2ecc71;
+}
+
+/* ---------- Combates del locke ---------- */
+
+.locke-combates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding: 0.75rem 0.95rem 0;
+}
+
+.locke-combate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  min-width: 9.5rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 0.5rem;
+  background: #252735;
+  color: #f2f2f2;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.locke-combate:hover:not(:disabled) {
+  transform: scale(1.03);
+  border-color: #f1c40f;
+}
+
+.locke-combate:disabled {
+  cursor: default;
+}
+
+.locke-combate.jugado {
+  border-style: solid;
+  border-color: rgba(241, 196, 15, 0.45);
+}
+
+.combate-nombre {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #f1c40f;
+}
+
+.combate-nombre .icono {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.combate-resultado {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.5rem;
+  font-size: 0.88rem;
+  font-weight: bold;
+}
+
+.combate-pendiente {
+  font-weight: normal;
+  opacity: 0.5;
+}
+
+.combate-foto,
+.combate-opcion-foto {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: #1e1f2b;
+  object-fit: cover;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.combate-marcador {
+  padding: 0.05rem 0.4rem;
+  border-radius: 0.3rem;
+  background: #3a3d52;
+  font-size: 0.78rem;
+}
+
+.combate-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.combate-titulo .icono {
+  width: 1.2rem;
+  height: 1.2rem;
+  color: #f1c40f;
+}
+
+/* Ventana de un combate: quién ganó y el marcador */
+.combate-ganadores,
+.combate-marcadores,
+.terminar-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+}
+
+.combate-opcion,
+.combate-marcador-opcion,
+.terminar-opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.7rem;
+  border: 2px solid transparent;
+  border-radius: 0.5rem;
+  background: #252735;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.combate-opcion:hover,
+.combate-marcador-opcion:hover,
+.terminar-opcion:hover {
+  background: #32354a;
+}
+
+.combate-opcion.elegido,
+.combate-marcador-opcion.elegido,
+.terminar-opcion.elegido {
+  border-color: #f1c40f;
+  background: #34364a;
+}
+
+.combate-opcion .combate-opcion-foto,
+.terminar-opcion .combate-opcion-foto {
+  width: 1.9rem;
+  height: 1.9rem;
+}
+
+/* Terminar: cada uno en una fila, con su ROM y sus victorias */
+.terminar-propuesta {
+  margin: 0 0 0.8rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.5rem;
+  background: #252735;
+  box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.45);
+  color: #f1c40f;
+  font-weight: bold;
+}
+
+.terminar-lista {
+  flex-direction: column;
+}
+
+.terminar-opcion {
+  width: 100%;
+}
+
+.terminar-nombre {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  text-align: left;
+}
+
+.terminar-dato {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 4.2rem;
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+.terminar-dato.bien {
+  color: #2ecc71;
+  opacity: 1;
+}
+
+.terminar-opcion .icono {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.locke-acciones .locke-terminar {
+  width: auto;
+  gap: 0.3rem;
+  padding: 0 0.6rem;
+  color: #f1c40f;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.locke-acciones .locke-terminar:hover {
   background: #f1c40f;
   color: #2b2d3a;
 }
 
-.locke-ganador .icono {
-  width: 0.95rem;
-  height: 0.95rem;
+.locke-resultado.sin-ganador {
+  color: rgba(242, 242, 242, 0.6);
+}
+
+/* ---------- Salón de la fama: equipo final y MVP ---------- */
+
+.locke-salon,
+.locke-salon-poner {
+  min-height: 2.3rem;
+}
+
+.locke-salon {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+}
+
+.locke-salon-caras,
+.salon-mvp-caras {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.salon-cara {
+  position: relative;
+  display: block;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 0.4rem;
+  background: #2c2e3e;
+  font: inherit;
+  color: inherit;
+}
+
+.salon-cara img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 0.3rem;
+  image-rendering: pixelated;
+}
+
+.salon-cara.mvp {
+  border-color: #f1c40f;
+}
+
+.salon-mvp {
+  position: absolute;
+  left: 50%;
+  bottom: -0.45rem;
+  transform: translateX(-50%);
+  padding: 0 0.2rem;
+  border-radius: 0.2rem;
+  background: #f1c40f;
+  color: #1e1f2b;
+  font-size: 0.5rem;
+  font-weight: bold;
+  line-height: 1.3;
+}
+
+button.salon-cara {
+  cursor: pointer;
+}
+
+button.salon-cara:hover {
+  border-color: rgba(241, 196, 15, 0.6);
+}
+
+.salon-mvp-elegir {
+  margin-top: 0.8rem;
+}
+
+.salon-mvp-caras {
+  margin-bottom: 0.6rem;
+}
+
+.locke-salon-poner,
+.locke-salon-cambiar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.5rem;
+  border: none;
+  border-radius: 0.4rem;
+  background: #3a3d52;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.locke-salon-poner {
+  width: 100%;
+  color: #f1c40f;
+}
+
+.locke-salon-poner:hover,
+.locke-salon-cambiar:hover {
+  background: #4a4e68;
+}
+
+.locke-salon-poner .icono,
+.locke-salon-cambiar .icono {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+#dialogo-salon {
+  width: min(30rem, 92vw);
+}
+
+/* Nombres de los combates en la ventana de crear o editar */
+.campos-locke .campo-combates input {
+  width: 5rem;
+}
+
+.locke-combates-nombres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: -0.35rem 0 0.85rem;
+}
+
+.locke-combates-nombres:empty {
+  display: none;
+}
+
+.locke-combate-nombre {
+  flex: 1 1 9rem;
+  min-width: 0;
+  padding: 0.4rem 0.55rem;
+  border: none;
+  border-radius: 0.45rem;
+  font-family: inherit;
+  font-size: 0.88rem;
 }
 
 /* ---------- Diálogo de nuevo locke ---------- */
@@ -1055,6 +1437,97 @@ button.locke-anadir .icono {
 
 .tumba:hover .tumba-quitar {
   display: flex;
+}
+
+/* Reacciones a un muerto: las que hay con su cuenta y una «+» que despliega las demás */
+.tumba-reacciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.15rem;
+  margin-top: auto;
+  padding-top: 0.25rem;
+}
+
+.reaccion,
+.reaccion-abrir,
+.reaccion-opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.05rem 0.25rem;
+  border: 1px solid transparent;
+  border-radius: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.reaccion small {
+  font-size: 0.65rem;
+  font-weight: bold;
+}
+
+.reaccion.mia {
+  border-color: #f1c40f;
+  background: rgba(241, 196, 15, 0.18);
+}
+
+.reaccion:hover,
+.reaccion-abrir:hover,
+.reaccion-opcion:hover {
+  background: #4a4e68;
+}
+
+.reaccion-abrir .icono {
+  width: 0.65rem;
+  height: 0.65rem;
+}
+
+.reaccion-mas {
+  position: relative;
+}
+
+.reaccion-opciones {
+  position: absolute;
+  bottom: calc(100% + 0.25rem);
+  left: 50%;
+  z-index: 3;
+  display: none;
+  gap: 0.15rem;
+  padding: 0.25rem;
+  border-radius: 1rem;
+  background: #1e1f2b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  transform: translateX(-50%);
+}
+
+.reaccion-mas.abierto .reaccion-opciones {
+  display: flex;
+}
+
+.reaccion-opcion {
+  padding: 0.15rem 0.3rem;
+  background: transparent;
+  font-size: 1rem;
+}
+
+.reaccion-opcion:hover {
+  transform: scale(1.2);
+}
+
+/* Actividad: los sucesos nuevos */
+.suceso.combate .suceso-icono,
+.suceso.rom .suceso-icono {
+  color: #f1c40f;
+}
+
+.suceso.ruta .suceso-icono,
+.suceso.cap .suceso-icono {
+  color: #3498db;
 }
 
 .tumba-quitar:hover {

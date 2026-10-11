@@ -15,6 +15,7 @@ import {
 import { activarTooltips, actualizarTooltip, ocultarTooltip, escaparHTML } from "../comun/tooltip.js";
 import { activarAutocompletado } from "../comun/autocompletado.js";
 import { pasteDelEquipo, copiarAlPortapapeles } from "./exportar.js";
+import { iniciarEntreno, abrirEntreno, textoEntreno } from "./entreno.js";
 import { icono } from "../comun/iconos.js";
 import {
   imagenConRespaldo, urlArte, urlsArte, urlsIconoObjeto, cambiarImagen, precargarEnReposo
@@ -117,6 +118,11 @@ function refrescarTarjeta(poke) {
     ocultarTooltip();
     vieja.replaceWith(crearTarjeta(poke));
   }
+}
+
+// El botón de estadísticas de la tarjeta dice el nivel y la naturaleza («Nv. 50 · Firme»)
+function textoBotonEntreno(poke) {
+  return `${icono("actividad")} ${escaparHTML(textoEntreno(poke) || "Estadísticas")}`;
 }
 
 // ---------- Puntos débiles del equipo ----------
@@ -273,7 +279,10 @@ function crearTarjeta(poke) {
         <select class="selector-forma" title="Cambiar de forma" hidden></select>
       </div>
       <div class="chips">${chipsTipos}</div>
-      <button class="quitar-pokemon">Quitar</button>
+      <div class="tarjeta-botones">
+        <button class="abrir-entreno" title="Nivel, naturaleza, EVs e IVs">${textoBotonEntreno(poke)}</button>
+        <button class="quitar-pokemon">Quitar</button>
+      </div>
     </div>
     <div class="tarjeta-der">
       <div class="fila-superior">
@@ -295,6 +304,8 @@ function crearTarjeta(poke) {
   });
 
   tarjeta.querySelector(".nombre-editable").addEventListener("click", (e) => editarMote(e.currentTarget, poke));
+
+  tarjeta.querySelector(".abrir-entreno").addEventListener("click", () => abrirEntreno(poke));
 
   tarjeta.querySelector(".quitar-pokemon").addEventListener("click", () => {
     estado.equipo.splice(estado.equipo.indexOf(poke), 1);
@@ -679,6 +690,15 @@ function ponerIcono(id, nombre, texto) {
 
 export function iniciarCrear() {
   activarArrastreTarjetas();
+
+  // Ventana de nivel, naturaleza, EVs e IVs (./entreno.js). Al cambiar algo se guarda y su
+  // tarjeta pone al día el botón (sin volver a dibujarla entera)
+  iniciarEntreno((poke) => {
+    guardarEquipo();
+    const tarjeta = tarjetas.get(poke);
+    const boton = tarjeta && tarjeta.querySelector(".abrir-entreno");
+    if (boton) boton.innerHTML = textoBotonEntreno(poke);
+  });
 
   ponerIcono("exportar-equipo", "copiar", "Exportar: copiar el equipo como paste");
   ponerIcono("guardar", "guardar", "Guardar equipo");

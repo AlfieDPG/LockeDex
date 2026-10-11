@@ -905,6 +905,31 @@ button.perfil-avatar:hover .perfil-avatar-lapiz {
   opacity: 0.6;
 }
 
+/* Salón de la fama: el equipo final de cada locke (el MVP con borde dorado, ver versus.css) */
+.perfil-salon header strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.perfil-salon header strong .icono {
+  width: 1rem;
+  height: 1rem;
+  color: #f1c40f;
+}
+
+.perfil-salon header small {
+  opacity: 0.6;
+}
+
+.perfil-salon.gano {
+  box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.45);
+}
+
+.perfil-salon .salon-cara img {
+  border-radius: 0.3rem;
+}
+
 /* Amigos: los cinco con los que más has jugado, en una fila */
 .perfil-amigos {
   display: grid;

@@ -26,6 +26,7 @@
   <link rel="stylesheet" href="css/pokedex.css">
   <link rel="stylesheet" href="css/logros.css">
   <link rel="stylesheet" href="css/ruleta.css">
+  <link rel="stylesheet" href="css/calculadora.css">
   <script type="module" src="js/main.js"></script>
 </head>
 <body>
@@ -46,6 +47,7 @@
         <button data-vista="rutas" data-icono="mapa" class="boton-seccion">Rutas</button>
         <button data-vista="levelcaps" data-icono="escudo" class="boton-seccion">Level caps</button>
         <button data-vista="pokedex" data-icono="pokedex" class="boton-seccion">Pokédex</button>
+        <button data-vista="calculadora" data-icono="calculadora" class="boton-seccion">Calculadora</button>
         <button data-vista="normas" data-icono="libro" class="boton-seccion">Normas</button>
         <button data-vista="ruleta" data-icono="ruleta" class="boton-seccion">Ruleta</button>
         <button data-vista="amigos" data-icono="amigos" class="boton-seccion">Amigos</button>
@@ -144,12 +146,22 @@
             <select class="pokedex-tipo">
               <option value="">Todos los tipos</option>
             </select>
+            <button class="pokedex-filtros-boton" aria-expanded="false">Filtros</button>
             <span class="pokedex-cuenta"></span>
           </div>
+          <div class="pokedex-filtros" hidden></div>
           <table class="tabla-pokedex" hidden>
             <thead></thead>
             <tbody></tbody>
           </table>
+        </section>
+
+        <section id="vista-calculadora" hidden>
+          <div class="calc">
+            <div class="calc-lado" data-lado="atacante"></div>
+            <div class="calc-centro"></div>
+            <div class="calc-lado" data-lado="defensor"></div>
+          </div>
         </section>
 
         <section id="vista-normas" hidden>
@@ -216,8 +228,8 @@
 
   <dialog id="dialogo-importar">
     <h2>Importar equipo</h2>
-    <p>Pega aquí el texto (paste) de tu equipo. Reemplazará el equipo actual. Se ignoran nivel, EVs, IVs y naturaleza.</p>
-    <textarea id="texto-paste" rows="12" placeholder="Pikachu @ Light Ball&#10;Ability: Static&#10;- Thunderbolt&#10;- Surf"></textarea>
+    <p>Pega aquí el texto (paste) de tu equipo. Reemplazará el equipo actual.</p>
+    <textarea id="texto-paste" rows="12" placeholder="Pikachu @ Light Ball&#10;Ability: Static&#10;Level: 50&#10;EVs: 4 HP / 252 SpA / 252 Spe&#10;Timid Nature&#10;IVs: 0 Atk&#10;- Thunderbolt&#10;- Surf&#10;- Grass Knot&#10;- Volt Switch"></textarea>
     <div class="dialogo-botones">
       <button id="importar-cancelar">Cancelar</button>
       <button id="importar-aceptar">Importar</button>
@@ -430,13 +442,18 @@
       </div>
       <label class="campo-vidas">
         <span>Vidas</span>
-        <input id="locke-vidas" type="number" min="0" max="999" value="10">
+        <span class="numero"><input id="locke-vidas" type="number" min="0" max="999" value="10"><span class="numero-pasos" aria-hidden="true"><button type="button" class="numero-mas" tabindex="-1"></button><button type="button" class="numero-menos" tabindex="-1"></button></span></span>
       </label>
       <label class="campo-casilla">
         <input id="locke-infinitas" type="checkbox">
         <span>Vidas ilimitadas</span>
       </label>
+      <label class="campo-combates">
+        <span>Combates</span>
+        <span class="numero"><input id="locke-combates" type="number" min="0" max="12" value="0"><span class="numero-pasos" aria-hidden="true"><button type="button" class="numero-mas" tabindex="-1"></button><button type="button" class="numero-menos" tabindex="-1"></button></span></span>
+      </label>
     </div>
+    <div class="locke-combates-nombres"></div>
 
     <span class="etiqueta-campo">Integrantes</span>
     <div class="locke-dentro"></div>
@@ -466,6 +483,70 @@
       <button id="locke-borrar" hidden>Borrar locke</button>
       <button id="locke-cancelar">Cancelar</button>
       <button id="locke-crear">Crear locke</button>
+    </div>
+  </dialog>
+
+  <!-- Nivel, naturaleza, EVs e IVs de un Pokémon (js/equipos/entreno.js) -->
+  <dialog id="dialogo-entreno">
+    <div class="entreno-cuerpo"></div>
+  </dialog>
+
+  <!-- Qué capturaste en un lugar de «Rutas» (js/rutas/capturas.js) -->
+  <dialog id="dialogo-captura" class="dialogo-sesion">
+    <h2 class="captura-titulo"></h2>
+    <form class="captura-formulario">
+      <label class="captura-campo-pokemon">
+        <span>Pokémon</span>
+        <input class="captura-pokemon" type="text" autocomplete="off">
+      </label>
+      <label>
+        <span>Mote</span>
+        <input class="captura-mote" type="text" maxlength="24" autocomplete="off">
+      </label>
+      <span class="sesion-error captura-error"></span>
+      <div class="dialogo-botones">
+        <button type="button" class="boton-gris boton-izquierda captura-quitar">Quitar</button>
+        <button type="button" class="boton-gris captura-cancelar">Cancelar</button>
+        <button type="submit" class="boton-rojo captura-ok">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Combates, terminar el locke y equipo final (js/versus/combates.js) -->
+  <dialog id="dialogo-combate" class="dialogo-sesion">
+    <h2 class="combate-titulo"></h2>
+    <span class="etiqueta-campo">Ganador</span>
+    <div class="combate-ganadores"></div>
+    <span class="etiqueta-campo">Resultado</span>
+    <div class="combate-marcadores"></div>
+    <div class="dialogo-botones">
+      <button type="button" class="boton-gris boton-izquierda combate-borrar">Sin jugar</button>
+      <button type="button" class="boton-gris combate-cancelar">Cancelar</button>
+      <button type="button" class="boton-rojo combate-ok">Guardar</button>
+    </div>
+  </dialog>
+
+  <dialog id="dialogo-terminar" class="dialogo-sesion">
+    <h2>Terminar locke</h2>
+    <p class="terminar-propuesta"></p>
+    <div class="terminar-lista"></div>
+    <div class="dialogo-botones">
+      <button type="button" class="boton-gris terminar-cancelar">Cancelar</button>
+      <button type="button" class="boton-rojo terminar-ok">Cerrar locke</button>
+    </div>
+  </dialog>
+
+  <dialog id="dialogo-salon" class="dialogo-sesion">
+    <h2>Equipo final</h2>
+    <div class="escaparate-lista salon-equipos"></div>
+    <div class="salon-mvp-elegir" hidden>
+      <span class="etiqueta-campo">MVP</span>
+      <div class="salon-mvp-caras"></div>
+    </div>
+    <div class="dialogo-botones">
+      <button type="button" class="boton-gris boton-izquierda salon-quitar">Quitar</button>
+      <button type="button" class="boton-gris salon-cancelar">Cancelar</button>
+      <button type="button" class="boton-rojo salon-ok">Guardar</button>
     </div>
   </dialog>
 
@@ -603,11 +684,27 @@
       </details>
       <details>
         <summary>¿Cómo funciona un locke en «Versus»?</summary>
-        <p>Con «Nuevo locke» le pones nombre, tipo, juego y vidas, eliges las normas, las rutas y los level caps, e invitas a tus amigos (les llega a la campana). Cada uno lleva lo suyo: suma sus victorias y quita sus vidas. Al quitar una vida puedes apuntar qué Pokémon ha muerto y va a su cementerio. Cuando acaba, quien lo creó elige al ganador y se le suma a sus lockes ganados.</p>
+        <p>Con «Nuevo locke» le pones nombre, tipo, juego, vidas y combates, eliges las normas, las rutas y los level caps, e invitas a tus amigos (les llega a la campana). Cada uno lleva lo suyo: quita sus vidas (y apunta qué Pokémon ha muerto, que va a su cementerio) y marca cuándo se pasa la ROM. Cuando acaba, quien lo creó pulsa «Terminar» y se le suma al ganador a sus lockes ganados.</p>
       </details>
       <details>
-        <summary>¿Qué son las victorias y las vidas?</summary>
-        <p>Las victorias son los combates que ganas contra los demás jugadores del locke. Las vidas son las que te quedan: cada vez que pierdes un Pokémon (o lo que digan vuestras normas) se quita una. También se puede jugar con vidas ilimitadas.</p>
+        <summary>¿Quién gana un locke?</summary>
+        <p>Para ganar hay que pasarse la ROM. Si no se la pasa nadie, no gana nadie; si solo se la pasa uno, gana ese, aunque fuese perdiendo los combates; si se la pasan varios, gana el que más combates ha ganado. Al pulsar «Terminar» la web te propone el ganador según esto, y quien lo creó puede cambiarlo (por ejemplo, si empatan).</p>
+      </details>
+      <details>
+        <summary>¿Cómo funcionan los combates?</summary>
+        <p>Al crear el locke se pone cuántos combates habrá (por ejemplo, 3: tras la 3ª medalla, tras la 6ª y tras la Liga) y, si quieres, el nombre de cada uno. Se juegan fuera (en Showdown) y en el locke se pulsa cada combate para apuntar quién lo ganó y cómo (2-0, 2-1...). Con 3 o más jugadores, cada combate le suma un punto al que lo gana. Sin combates, cada uno se suma sus victorias a mano.</p>
+      </details>
+      <details>
+        <summary>¿Qué son las vidas? ¿Y la vida cero?</summary>
+        <p>Las vidas son las que te quedan: cada vez que pierdes un Pokémon (o lo que digan vuestras normas) se quita una. Con 0 vidas aún se juega: es la vida cero. Si pierdes una más, quedas eliminado y ya no puedes ganar el locke. También se puede jugar con vidas ilimitadas.</p>
+      </details>
+      <details>
+        <summary>¿Y el equipo final?</summary>
+        <p>Con el locke terminado, cada uno puede poner su equipo final (de «Mis equipos») y elegir a su MVP. Sale en el locke y en el «Salón de la fama» de tu perfil.</p>
+      </details>
+      <details>
+        <summary>¿Ven mis rivales lo que capturo?</summary>
+        <p>No. En «Rutas», al marcar un lugar puedes apuntar qué Pokémon cogiste (pulsa la «+» del lugar marcado), pero eso solo lo ves tú. En la actividad del locke solo sale que has capturado en ese lugar, nunca el Pokémon.</p>
       </details>
       <details>
         <summary>¿Puedo usar las rutas o los level caps de un fan game?</summary>
@@ -628,6 +725,14 @@
       <details>
         <summary>¿Cómo paso un equipo a Showdown, o al revés?</summary>
         <p>En el creador de equipos, «Exportar» copia el equipo en el formato de Showdown. Para traer uno, «Importar paste» en el menú de «Equipos». Pulsando el nombre de un Pokémon le pones o le cambias el mote.</p>
+      </details>
+      <details>
+        <summary>¿Cómo funciona la calculadora?</summary>
+        <p>Eliges quién ataca y quién recibe: de tus equipos (con su nivel, naturaleza, EVs, IVs, objeto y ataques) o cualquier Pokémon buscándolo (para el rival de un randomlocke). En el centro salen sus cuatro ataques con el daño de cada uno (en un hueco vacío buscas el que quieras, y con la ✕ cambias uno) y, del elegido, el daño en % y en PS, cómo queda su vida, si lo deja KO y quién ataca antes. Tiene en cuenta STAB, tipos, crítico, quemadura, parálisis, subidas y bajadas de estadísticas, clima, Reflejo, Pantalla de luz, la prioridad de los ataques, los PS que le quedan a cada uno, y los objetos y habilidades que cambian el daño o la velocidad (al lado de cada uno sale lo que hace; si no sale nada, no cuenta para el cálculo). Lo que cambies aquí no toca tus equipos.</p>
+      </details>
+      <details>
+        <summary>¿Cómo pongo nivel, naturaleza, EVs e IVs?</summary>
+        <p>En «Crear equipo», con el botón «Estadísticas» de cada Pokémon. Si no los tocas, se exporta como siempre (nivel 100, naturaleza neutra). Al importar un paste de Showdown se leen también.</p>
       </details>
       <details>
         <summary>¿Cómo veo la línea evolutiva de un Pokémon?</summary>

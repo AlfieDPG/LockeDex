@@ -19,7 +19,7 @@ import { elegirForma, datosDeForma } from "../comun/elegir-forma.js";
 import { imagenConRespaldo, urlsPMD, urlSpritePixel } from "../comun/imagenes.js";
 import {
   lockePorId, estadoDe, muertosDe, apuntarMuerto, borrarMuerto, reordenarMuertos, cambiarNumero, alCambiarLockes,
-  estaEliminado
+  estaEliminado, REACCIONES, reaccionar
 } from "../comun/lockes.js";
 
 let dialogoCementerio = null;
@@ -53,7 +53,35 @@ export function totalMuertos(locke) {
   return Object.values((locke && locke.muertos) || {}).reduce((total, lista) => total + lista.length, 0);
 }
 
-function plantillaTumba(muerto, mia) {
+// Las reacciones de los del locke a un muerto: las que hay, con cuántas (la tuya, marcada), y
+// una «+» que despliega las que se pueden poner. Una por persona.
+function plantillaReacciones(locke, muerto) {
+  const deEste = (locke.reacciones || {})[muerto.id] || {};
+  const mia = deEste[usuarioActual().uid];
+  const cuantas = new Map();
+  for (const reaccion of Object.values(deEste)) cuantas.set(reaccion, (cuantas.get(reaccion) || 0) + 1);
+
+  const usadas = REACCIONES.filter((reaccion) => cuantas.get(reaccion))
+    .map(
+      (reaccion) =>
+        `<button class="reaccion ${reaccion === mia ? "mia" : ""}" data-reaccion="${reaccion}" data-muerto="${escaparHTML(muerto.id)}">${reaccion}<small>${cuantas.get(reaccion)}</small></button>`
+    )
+    .join("");
+  const opciones = REACCIONES.map(
+    (reaccion) => `<button class="reaccion-opcion" data-reaccion="${reaccion}" data-muerto="${escaparHTML(muerto.id)}">${reaccion}</button>`
+  ).join("");
+
+  return `
+    <div class="tumba-reacciones">
+      ${usadas}
+      <span class="reaccion-mas">
+        <button class="reaccion-abrir" title="Reaccionar">${icono("mas")}</button>
+        <span class="reaccion-opciones">${opciones}</span>
+      </span>
+    </div>`;
+}
+
+function plantillaTumba(locke, muerto, mia) {
   const fecha = muerto.fecha
     ? new Date(muerto.fecha).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })
     : "";
@@ -67,6 +95,7 @@ function plantillaTumba(muerto, mia) {
       <span class="tumba-mote">${escaparHTML(muerto.mote || muerto.nombre)}</span>
       ${muerto.mote ? `<span class="tumba-especie">${escaparHTML(muerto.nombre)}</span>` : ""}
       ${mia ? `<button class="tumba-quitar" data-muerto="${escaparHTML(muerto.id)}" title="Quitar">${icono("aspa")}</button>` : ""}
+      ${plantillaReacciones(locke, muerto)}
     </div>`;
 }
 
@@ -87,7 +116,7 @@ function plantillaColumna(locke, uid) {
       </header>
       <div class="tumbas">
         ${mia && abierto ? `<button class="tumba tumba-nueva" title="Apuntar un muerto">${icono("mas")}</button>` : ""}
-        ${muertos.map((muerto) => plantillaTumba(muerto, mia)).join("")}
+        ${muertos.map((muerto) => plantillaTumba(locke, muerto, mia)).join("")}
         ${!muertos.length && !(mia && abierto) ? `<p class="cementerio-vacio">Ninguno</p>` : ""}
       </div>
     </section>`;
@@ -287,6 +316,19 @@ export function iniciarCementerio(alFallar) {
   dialogoCementerio.querySelector(".cementerio-cuerpo").addEventListener("click", (e) => {
     if (e.target.closest(".tumba-nueva")) {
       abrirMuerte(idCementerio, false);
+      return;
+    }
+    const reaccion = e.target.closest("[data-reaccion]");
+    if (reaccion) {
+      reaccionar(idCementerio, reaccion.dataset.muerto, reaccion.dataset.reaccion).catch(alFallar);
+      return;
+    }
+    const abrir = e.target.closest(".reaccion-abrir");
+    if (abrir) {
+      const mas = abrir.parentElement;
+      const yaAbierto = mas.classList.contains("abierto");
+      for (const otro of dialogoCementerio.querySelectorAll(".reaccion-mas.abierto")) otro.classList.remove("abierto");
+      mas.classList.toggle("abierto", !yaAbierto);
       return;
     }
     const quitar = e.target.closest(".tumba-quitar");

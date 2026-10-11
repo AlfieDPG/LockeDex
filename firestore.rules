@@ -135,7 +135,8 @@ service cloud.firestore {
     //
     // Todos los de dentro lo ven y pueden escribir en él, pero con límites:
     //
-    //   · vidas, marcador, estados y muertos son mapas {uid: valor}. Cada uno solo puede CAMBIAR o
+    //   · resultados de los combates y reacciones del cementerio: cualquiera de dentro.
+    //   · vidas, marcador, estados, muertos, rom y salon son mapas {uid: valor}. Cada uno solo puede CAMBIAR o
     //     QUITAR su propia entrada. Solo se pueden AÑADIR entradas de jugadores que entran
     //     en esta misma escritura (al invitar a alguien se le ponen sus vidas iniciales).
     //   · nombres y fotos: lo mismo; la propia se puede cambiar (al cambiarse el mote).
@@ -190,33 +191,40 @@ service cloud.firestore {
         return sePuedeEchar() ? soloYo().union([quitado()].toSet()) : soloYo();
       }
 
-      function soloLoMio(campo) {
-        return cambios(campo).changedKeys().difference(soloYo()).size() == 0
-          && cambios(campo).removedKeys().difference(puedenSalir()).size() == 0
-          && cambios(campo).addedKeys().difference(entran()).size() == 0;
+      // Las entradas de un mapa {uid: valor} que cambian, se quitan y se añaden con esta
+      // escritura, cada una dentro de quien puede hacerlo.
+      //
+      // OJO: Firestore no evalúa más de 1.000 expresiones por escritura, y si se pasa la
+      // rechaza aunque esté bien. Por eso quién puede qué (puedenSalir, entran...) se calcula
+      // una sola vez en mapasBien() y se pasa aquí, en vez de volver a calcularlo para cada
+      // mapa: así se rechazaba todo (guardar el locke, las reacciones...).
+      function mapaBien(campo, cambiables, quitables, anadibles) {
+        let c = cambios(campo);
+        return c.changedKeys().difference(cambiables).size() == 0
+          && c.removedKeys().difference(quitables).size() == 0
+          && c.addedKeys().difference(anadibles).size() == 0;
       }
 
-      // Igual, pero la entrada propia puede no existir todavía (el cementerio: la lista de
-      // cada uno se crea con su primer muerto)
-      function soloLoMioPuedeEmpezar(campo) {
-        return cambios(campo).changedKeys().difference(soloYo()).size() == 0
-          && cambios(campo).removedKeys().difference(puedenSalir()).size() == 0
-          && cambios(campo).addedKeys().difference(entran().union(soloYo())).size() == 0;
-      }
-
-      // Solo cambian los que entran ahora (alguien que rechazó y vuelve a ser invitado ya
-      // tenía su nombre y su foto apuntados, y pueden haber cambiado) y el propio (al
-      // cambiarse el mote)
-      function soloInvitados(campo) {
-        return cambios(campo).changedKeys().difference(entran()).difference(soloYo()).size() == 0
-          && cambios(campo).removedKeys().difference(soloYo()).size() == 0
-          && cambios(campo).addedKeys().difference(entran()).size() == 0;
-      }
-
-      // Nadie sale de la lista salvo uno mismo o un invitado sin contestar
-      function jugadoresBien() {
-        return antes().jugadores.toSet().difference(despues().jugadores.toSet())
-          .difference(puedenSalir()).size() == 0;
+      //   · vidas, marcador y estados: cada uno cambia el suyo; se añaden los que entran.
+      //   · muertos, rom y salon: igual, pero el propio puede no existir todavía (la lista
+      //     del cementerio se crea con el primer muerto).
+      //   · nombres y fotos: cambian los que entran ahora (alguien que rechazó y vuelve a ser
+      //     invitado ya los tenía, y pueden haber cambiado) y el propio (al cambiarse el mote).
+      // Y nadie sale de la lista de jugadores salvo quien puede salir.
+      function mapasBien() {
+        let mio = soloYo();
+        let salen = puedenSalir();
+        let nuevos = entran();
+        let nuevosOMio = nuevos.union(mio);
+        return mapaBien('vidas', mio, salen, nuevos)
+          && mapaBien('marcador', mio, salen, nuevos)
+          && mapaBien('estados', mio, salen, nuevos)
+          && mapaBien('muertos', mio, salen, nuevosOMio)
+          && mapaBien('rom', mio, salen, nuevosOMio)
+          && mapaBien('salon', mio, salen, nuevosOMio)
+          && mapaBien('nombres', nuevosOMio, mio, nuevos)
+          && mapaBien('fotos', nuevosOMio, mio, nuevos)
+          && antes().jugadores.toSet().difference(despues().jugadores.toSet()).difference(salen).size() == 0;
       }
 
       function contadoBien() {
@@ -232,7 +240,7 @@ service cloud.firestore {
           || !despues().diff(antes()).affectedKeys().hasAny([
             'nombre', 'descripcion', 'tipo', 'juego', 'juegoOtro', 'juegoPropio', 'estado', 'ganador',
             'fechaFin', 'creador', 'vidasIniciales', 'vidasIlimitadas', 'creado', 'normas',
-            'rutasPropias', 'capsPropios'
+            'rutasPropias', 'capsPropios', 'combates'
           ]);
       }
 
@@ -245,13 +253,7 @@ service cloud.firestore {
       allow update: if identificado()
         && yo() in antes().jugadores
         && despues().creador == antes().creador
-        && soloLoMio('vidas')
-        && soloLoMio('marcador')
-        && soloLoMio('estados')
-        && soloLoMioPuedeEmpezar('muertos')
-        && soloInvitados('nombres')
-        && soloInvitados('fotos')
-        && jugadoresBien()
+        && mapasBien()
         && contadoBien()
         && cosasDelCreador();
 
@@ -275,7 +277,7 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.cuando == request.time
         && request.resource.data.tipo is string
-        && request.resource.data.keys().hasOnly(['uid', 'tipo', 'cuando', 'delta', 'muerto', 'ganador']);
+        && request.resource.data.keys().hasOnly(['uid', 'tipo', 'cuando', 'delta', 'muerto', 'ganador', 'detalle']);
       allow delete: if identificado()
         && (resource.data.uid == request.auth.uid || locke().creador == request.auth.uid);
     }

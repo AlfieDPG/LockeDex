@@ -18,7 +18,7 @@
 // Se descarga la primera vez que se abre (ver sesion.js).
 
 import { icono } from "./comun/iconos.js";
-import { escaparHTML } from "./comun/utilidades.js";
+import { escaparHTML, fechaLarga } from "./comun/utilidades.js";
 import { usuarioActual } from "./comun/nube.js";
 import {
   miPerfil, alCambiarMiPerfil, cambiarMote, guardarMiPerfil, amigosAceptados, perfilesDeAmigos,
@@ -204,6 +204,46 @@ function plantillaAmigos() {
     </section>`;
 }
 
+// ---------- Salón de la fama ----------
+//
+// El equipo final y el MVP de cada locke terminado (perfil.salon, lo apunta cada uno desde
+// el locke: js/versus/combates.js). Los VER_SALON últimos y el resto, al pulsar «Ver todos».
+
+const VER_SALON = 3;
+let salonEntero = false;
+
+function plantillaSalon(perfil) {
+  const salon = perfil.salon || [];
+  if (!salon.length) return "";
+  const visibles = salonEntero ? salon : salon.slice(0, VER_SALON);
+
+  return `
+    <section class="perfil-apartado">
+      <h3>
+        Salón de la fama
+        ${salon.length > VER_SALON ? `<button class="perfil-ver-salon">${salonEntero ? "Ver menos" : `Ver todos (${salon.length})`}</button>` : ""}
+      </h3>
+      <div class="perfil-equipos">
+        ${visibles
+          .map(
+            (entrada) => `
+              <article class="perfil-equipo perfil-salon ${entrada.gano ? "gano" : ""}">
+                <header>
+                  <strong>${entrada.gano ? icono("corona") : ""}${escaparHTML(entrada.locke || "Locke")}</strong>
+                  ${entrada.fechaFin ? `<small>${escaparHTML(fechaLarga(entrada.fechaFin))}</small>` : ""}
+                </header>
+                <div class="perfil-equipo-caras">
+                  ${(entrada.pokemon || [])
+                    .map((p, i) => `<span class="salon-cara ${i === entrada.mvp ? "mvp" : ""}">${caraDe(p)}${i === entrada.mvp ? `<span class="salon-mvp">MVP</span>` : ""}</span>`)
+                    .join("")}
+                </div>
+              </article>`
+          )
+          .join("")}
+      </div>
+    </section>`;
+}
+
 // ---------- Pestaña de logros ----------
 //
 // Los suyos (perfil.logros: { id: fecha }, ver js/comun/logros.js), del último al primero, y
@@ -301,6 +341,8 @@ function pintar() {
         : ""}
     </section>
 
+    ${plantillaSalon(perfil)}
+
     ${mio ? plantillaAmigos() : ""}`;
 
   dialogo.querySelector(".perfil-borrar").hidden = !mio;
@@ -339,6 +381,7 @@ export function abrirMiPerfil() {
   desdeMiPerfil = false;
   editandoNombre = false;
   pestana = "perfil";
+  salonEntero = false;
   pintar();
   if (!dialogo.open) dialogo.showModal();
 }
@@ -348,6 +391,7 @@ export function abrirPerfilDe(uid, desdeElMio = false) {
   desdeMiPerfil = desdeElMio;
   editandoNombre = false;
   pestana = "perfil";
+  salonEntero = false;
   pintar();
   if (!dialogo.open) dialogo.showModal();
 }
@@ -578,6 +622,9 @@ cuerpo.addEventListener("click", (e) => {
     dialogoEscaparate.showModal();
   } else if (boton.classList.contains("perfil-ver-equipos")) {
     abrirDestacados();
+  } else if (boton.classList.contains("perfil-ver-salon")) {
+    salonEntero = !salonEntero;
+    pintar();
   } else if (boton.classList.contains("perfil-ver-amigos")) {
     dialogo.close();
     irA("amigos");

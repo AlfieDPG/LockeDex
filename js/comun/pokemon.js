@@ -223,10 +223,10 @@ export function variedadActual(poke, info) {
 }
 
 // Lo que el jugador ha elegido y que se conserva al cambiar de forma
-const CAMPOS_DEL_JUGADOR = ["mote", "shiny", "habilidad", "objeto", "ataques"];
+const CAMPOS_DEL_JUGADOR = ["mote", "shiny", "habilidad", "objeto", "ataques", "entreno"];
 
-// Cambia la forma de un Pokémon del equipo sin perder su mote, shiny, habilidad, objeto
-// ni ataques. Devuelve un Pokémon nuevo: el que llama decide dónde ponerlo.
+// Cambia la forma de un Pokémon del equipo sin perder su mote, shiny, habilidad, objeto,
+// ataques ni su nivel, naturaleza, EVs e IVs (js/equipos/entreno.js). Devuelve un Pokémon nuevo: el que llama decide dónde ponerlo.
 export async function cambiarForma(poke, slug) {
   const p = await pedirVariedad(slug);
   const nuevo = await pokemonDesdeAPI(p, { id: poke.id, es: poke.es, en: poke.en });

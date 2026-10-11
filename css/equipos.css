@@ -397,10 +397,266 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-.quitar-pokemon {
-  display: block;
-  width: 100%;
+/* Estadísticas (abre el panel de abajo) y Quitar, en la misma fila */
+.tarjeta-botones {
+  display: flex;
+  gap: 0.35rem;
   margin-top: 0.85rem;
+}
+
+.tarjeta-botones .quitar-pokemon {
+  flex: none;
+}
+
+.abrir-entreno {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 0;
+  padding: 0.45rem 0.5rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: #3a3d52;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.abrir-entreno:hover {
+  background: #4a4e68;
+}
+
+.abrir-entreno .icono {
+  flex: none;
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+/* ---------- Ventana de nivel, naturaleza, EVs e IVs (js/equipos/entreno.js) ---------- */
+
+#dialogo-entreno {
+  width: min(58rem, 94vw);
+  padding: 1rem 1.15rem;
+  box-shadow: inset 0 0 0 2px rgba(241, 196, 15, 0.5);
+}
+
+.entreno-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  margin-bottom: 0.8rem;
+  padding-right: 5rem; /* Deshacer y la ✕, en la esquina */
+}
+
+.entreno-cara {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0.5rem;
+  background: #1e1f2b;
+  image-rendering: pixelated;
+}
+
+.entreno-nombre {
+  font-size: 1.15rem;
+}
+
+.entreno-campo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.9;
+}
+
+.entreno-campo input,
+.entreno-campo select,
+.entreno-fila input[type="number"] {
+  padding: 0.35rem 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.4rem;
+  background: #1e1f2b;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.9rem;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.entreno-campo input:focus,
+.entreno-campo select:focus,
+.entreno-fila input[type="number"]:focus {
+  outline: none;
+  border-color: #f1c40f;
+}
+
+.entreno-nivel {
+  width: 4.6rem;
+}
+
+.entreno-fila .numero {
+  display: flex;
+  width: 100%;
+}
+
+.entreno-restantes {
+  margin-left: auto;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.entreno-restantes.lleno strong {
+  color: #f1c40f;
+}
+
+/* Deshacer y la ✕, juntos en la esquina y a la altura de la primera fila de la cabecera (la
+   cara mide 2,6rem y la ventana tiene 1rem de margen: su centro queda a 2,3rem) */
+.entreno-botones {
+  position: absolute;
+  top: 1.3rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.entreno-deshacer,
+.entreno-cerrar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.4rem;
+  background: #3a3d52;
+  color: #f2f2f2;
+  cursor: pointer;
+}
+
+.entreno-deshacer:hover:not(:disabled),
+.entreno-cerrar:hover {
+  background: #4a4e68;
+}
+
+.entreno-deshacer:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.entreno-deshacer .icono,
+.entreno-cerrar .icono {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+/* Una fila por estadística: nombre, base, EVs (barra y número), IVs y la final con su barra */
+.entreno-filas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.entreno-fila {
+  display: grid;
+  grid-template-columns: 7rem 3rem minmax(6rem, 1fr) 4.2rem 4.2rem minmax(6rem, 1.2fr) 3rem;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.entreno-titulos {
+  font-size: 0.7rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+}
+
+/* «EVs» ocupa la columna de la barra y la del número */
+.entreno-titulos .entreno-titulo-evs {
+  grid-column: span 2;
+}
+
+.entreno-stat {
+  font-weight: bold;
+}
+
+.entreno-fila.sube .entreno-stat {
+  color: #ff7a6b;
+}
+
+.entreno-fila.baja .entreno-stat {
+  color: #6bb7ff;
+}
+
+.entreno-base {
+  opacity: 0.7;
+}
+
+.entreno-fila input[type="number"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.entreno-ev-barra {
+  width: 100%;
+  accent-color: #f1c40f;
+  cursor: pointer;
+}
+
+.entreno-barra {
+  height: 0.55rem;
+  border-radius: 0.3rem;
+  background: rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.entreno-barra i {
+  display: block;
+  height: 100%;
+  border-radius: 0.3rem;
+  transition: width 0.15s;
+}
+
+.entreno-total {
+  text-align: right;
+  font-size: 1rem;
+}
+
+/* «Todas»: las seis a la vez */
+.entreno-todas {
+  margin-top: 0.2rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.15);
+}
+
+.entreno-todas .entreno-stat {
+  opacity: 0.7;
+}
+
+@media (max-width: 760px) {
+  .entreno-fila {
+    grid-template-columns: 5.5rem 2.4rem minmax(4rem, 1fr) 3.6rem 3.4rem 2.6rem;
+  }
+
+  .entreno-fila .entreno-barra {
+    display: none;
+  }
+
+  .entreno-titulos > :nth-child(5),
+  .entreno-todas > :nth-child(6) {
+    display: none;
+  }
 }
 
 .tarjeta-der {

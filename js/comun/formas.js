@@ -47,6 +47,13 @@ export function tieneFormasDeTipo(especie) {
   return Boolean(FORMAS_DE_TIPO[especie]);
 }
 
+// Por número de la Pokédex (493 o 773): [{ tipo, pmd, imagenForma: "493-fire" }]; [] si no las tiene
+export function formasDeTipoDe(numero) {
+  const datosEspecie = Object.values(FORMAS_DE_TIPO).find((cada) => cada.dex === numero);
+  if (!datosEspecie) return [];
+  return TIPOS_ELEGIBLES.map((tipo) => ({ tipo, pmd: datosEspecie.pmd[tipo], imagenForma: `${numero}-${tipo}` }));
+}
+
 // ---------- Formas (Alola, Galar, Héroe...) ----------
 
 // Variedades de PokeAPI que no interesan: gorras de Pikachu, Gigamax, tótems, formas que solo
