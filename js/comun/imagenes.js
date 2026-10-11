@@ -1,4 +1,7 @@
-// ---------- Imágenes (arte, HOME, Mundo Misterioso, objetos) ----------
+// ---------- Imágenes (arte, Mundo Misterioso, sprites, objetos) ----------
+//
+// Los renders 3D (los de HOME) no se usan en ninguna parte: en «Crear equipo», el arte 2D
+// oficial; en lo demás, los retratos de Mundo Misterioso y, si no los hay, sprites.
 
 import { indicePMD } from "./formas-pmd.js";
 
@@ -18,21 +21,11 @@ export function urlArte(p) {
   return `${URL_SPRITES}pokemon/other/official-artwork/${p.shiny ? "shiny/" : ""}${idImagen(p)}.png`;
 }
 
-// Render HOME (normal o shiny)
-export function urlSpriteHome(p) {
-  return `${URL_SPRITES}pokemon/other/home/${p.shiny ? "shiny/" : ""}${idImagen(p)}.png`;
-}
-
-// Hembra de una especie en la que se ve distinta (Unfezant, Pikachu...): sus imágenes propias.
-// El género se mira aquí y no en pokemon.js para no cargar con él a quien solo pinta.
+// Hembra de una especie en la que se ve distinta (Unfezant, Pikachu...): su retrato de Mundo
+// Misterioso, si lo tiene. El género se mira aquí y no en pokemon.js para no cargar con él a
+// quien solo pinta.
 function esHembraDistinta(p) {
   return p.genero === "F" && p.difGenero;
-}
-
-// El render HOME de la hembra. Solo lo hay de la forma normal: de las demás da 404 y se
-// pasa a la siguiente dirección.
-function urlHomeHembra(p) {
-  return `${URL_SPRITES}pokemon/other/home/${p.shiny ? "shiny/" : ""}female/${idImagen(p)}.png`;
 }
 
 // Artes de PokeAPI que desentonan y tienen uno mejor en Serebii. Las aves de Galar vienen
@@ -46,19 +39,20 @@ const ARTES_SEREBII = {
   10171: "146-g"  // Moltres de Galar
 };
 
-// Arte grande con sus respaldos, por orden de preferencia. De la hembra no hay arte oficial:
-// va su render HOME.
+// Arte grande con sus respaldos, por orden de preferencia (de la hembra no hay arte oficial:
+// sale el de siempre)
 export function urlsArte(p) {
   const serebii = !p.shiny && ARTES_SEREBII[p.idForma];
-  return [
-    esHembraDistinta(p) && urlHomeHembra(p),
-    serebii && `${URL_ARTE_SEREBII}${serebii}.png`, urlArte(p), p.imagen, urlSpriteHome(p)
-  ].filter(Boolean);
+  return [serebii && `${URL_ARTE_SEREBII}${serebii}.png`, urlArte(p), p.imagen].filter(Boolean);
 }
 
-// Render HOME con sus respaldos (el de la hembra si toca)
-export function urlsHome(p) {
-  return [esHembraDistinta(p) && urlHomeHembra(p), urlSpriteHome(p)].filter(Boolean);
+// Retrato de Mundo Misterioso con su respaldo: el de su forma (o el de la hembra) y, si no lo
+// hay, el de su especie, como en la Pokédex. Nunca los sprites de PokeAPI: los de las formas
+// modernas son renders 3D.
+export function urlsRetrato(p) {
+  const propias = urlsPMD(p);
+  const conForma = indicePMD(p.idForma, p.formaPMD) || esHembraDistinta(p);
+  return conForma ? [...new Set([...propias, ...urlsPMD({ id: p.id, shiny: p.shiny })])] : propias;
 }
 
 // Sprite pixelado pequeño (96x96). Sirve también para las formas alternativas,
@@ -79,10 +73,9 @@ export function urlsPMD(p) {
   const forma = indicePMD(p.idForma, p.formaPMD);
   const lista = [];
   // Hembra: carpeta 0002 dentro de la de normal (0000) o shiny (0001). Muy pocos la tienen.
-  // Si no la tiene, antes que el retrato del macho, su render HOME de hembra.
   if (esHembraDistinta(p)) {
     if (p.shiny) lista.push(`${URL_PMD}${dex}/${cuatroCifras(forma)}/0001/0002/Normal.png`);
-    lista.push(`${URL_PMD}${dex}/${cuatroCifras(forma)}/0000/0002/Normal.png`, urlHomeHembra(p));
+    lista.push(`${URL_PMD}${dex}/${cuatroCifras(forma)}/0000/0002/Normal.png`);
   }
   if (p.shiny) lista.push(`${URL_PMD}${dex}/${cuatroCifras(forma)}/0001/Normal.png`);
 
@@ -104,11 +97,8 @@ export const EMOCIONES_PMD = [
 ];
 
 // Las mismas direcciones que urlsPMD, pero con otra cara
-// (solo las de Mundo Misterioso: el render HOME no tiene caras)
 export function urlsPMDEmocion(p, emocion) {
-  return urlsPMD(p)
-    .filter((url) => url.endsWith("/Normal.png"))
-    .map((url) => url.replace(/Normal\.png$/, `${emocion}.png`));
+  return urlsPMD(p).map((url) => url.replace(/Normal\.png$/, `${emocion}.png`));
 }
 
 // Iconos de objetos, de mejor a peor:

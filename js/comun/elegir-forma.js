@@ -34,7 +34,7 @@ export function elegirForma(entrada, info) {
   });
 }
 
-// Lo justo para pintar el retrato de una forma (urlsPMD y urlSpritePixel de imagenes.js) y su
+// Lo justo para pintar el retrato de una forma (urlsRetrato de imagenes.js) y su
 // nombre: { etiqueta: "Alola", idForma, formaPMD } o, en Arceus y Silvally, con imagenForma.
 // La forma normal (la primera de la lista): {}.
 export async function datosDeForma(info, slug) {

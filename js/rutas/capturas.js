@@ -13,7 +13,7 @@ import { cargarDatos, datos } from "../comun/datos.js";
 import { activarAutocompletado, iconoPokemon } from "../comun/autocompletado.js";
 import { obtenerVariedades } from "../comun/formas.js";
 import { elegirForma, datosDeForma } from "../comun/elegir-forma.js";
-import { imagenConRespaldo, urlsPMD, urlSpritePixel } from "../comun/imagenes.js";
+import { imagenConRespaldo, urlsRetrato } from "../comun/imagenes.js";
 
 // NO cambiar esta clave: si se cambia, se pierden las capturas apuntadas
 const CLAVE = "poketeams-capturas-v1";
@@ -43,7 +43,7 @@ export function capturaDe(idJuego, clave) {
 function retrato(captura, clase) {
   const p = { id: captura.especie, idForma: captura.idForma, formaPMD: captura.formaPMD || 0 };
   return imagenConRespaldo(
-    [...urlsPMD(p), urlSpritePixel(captura.imagenForma || captura.idForma || captura.especie)],
+    urlsRetrato(p),
     `class="${clase}" alt="" loading="lazy"`
   );
 }

@@ -1,5 +1,5 @@
 import { quitarAcentos } from "./utilidades.js";
-import { imagenConRespaldo, urlsPMD, urlSpritePixel, urlsIconoObjeto } from "./imagenes.js";
+import { imagenConRespaldo, urlsRetrato, urlsIconoObjeto } from "./imagenes.js";
 
 // ---------- Desplegable de sugerencias ----------
 //
@@ -123,7 +123,7 @@ export function iconoPokemon(entrada) {
   const p = fila
     ? { id: fila.numero, idForma: fila.clave !== fila.numero ? fila.clave : undefined, formaPMD: fila.forma || 0 }
     : { id: entrada.id };
-  return imagenConRespaldo([...urlsPMD(p), urlSpritePixel(p.idForma || p.id)], `alt="" loading="lazy" data-quitar-si-falla`);
+  return imagenConRespaldo(urlsRetrato(p), `alt="" loading="lazy" data-quitar-si-falla`);
 }
 
 export function iconoObjeto(entrada) {

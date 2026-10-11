@@ -32,7 +32,7 @@ import { leerGuardados } from "./equipos/estado.js";
 import { pokemonParaCopia } from "./comun/pokemon.js";
 import { pasteDelEquipo, copiarAlPortapapeles } from "./equipos/exportar.js";
 import {
-  imagenConRespaldo, urlsPMD, urlsPMDEmocion, urlsHome, urlSpritePixel, precargarImagen
+  imagenConRespaldo, urlsPMDEmocion, urlsRetrato, precargarImagen
 } from "./comun/imagenes.js";
 import { cargarDatos, datos } from "./comun/datos.js";
 import { activarAutocompletado, iconoPokemon } from "./comun/autocompletado.js";
@@ -73,7 +73,7 @@ function caraDe(p) {
   const cara = p.cara && p.cara !== "Normal" ? p.cara : "";
   const titulo = p.mote ? `${p.mote} (${p.es})` : p.es;
   return imagenConRespaldo(
-    [...(cara ? urlsPMDEmocion(p, cara) : []), ...urlsPMD(p), ...urlsHome(p), p.sprite],
+    [...(cara ? urlsPMDEmocion(p, cara) : []), ...urlsRetrato(p)],
     `alt="${escaparHTML(p.es || "")}" title="${escaparHTML(titulo || "")}" loading="lazy"`
   );
 }
@@ -560,8 +560,7 @@ const listaPokemon = [];
 function urlsAvatar(elegido) {
   const { idForma, formaPMD, imagenForma } = elegido.forma || {};
   return [
-    ...urlsPMD({ id: elegido.id, idForma, formaPMD }),
-    urlSpritePixel(imagenForma || idForma || elegido.id)
+    ...urlsRetrato({ id: elegido.id, idForma, formaPMD })
   ];
 }
 

@@ -10,14 +10,14 @@
 
 import { escaparHTML } from "./utilidades.js";
 import { icono } from "./iconos.js";
-import { imagenConRespaldo, urlsPMD, urlsHome } from "./imagenes.js";
+import { imagenConRespaldo, urlsRetrato } from "./imagenes.js";
 import { pokemonParaCopia } from "./pokemon.js";
 import { leerGuardados, leerGrupos } from "../equipos/estado.js";
 
 // Retrato de un Pokémon de un equipo (su forma, su género) y, si no lo hay, su render
 export function caraDePokemon(p, clase = "") {
   return imagenConRespaldo(
-    [...urlsPMD(p), ...urlsHome(p), p.sprite].filter(Boolean),
+    urlsRetrato(p),
     `class="${clase}" alt="${escaparHTML(p.es || "")}" title="${escaparHTML(p.mote ? `${p.mote} (${p.es})` : p.es || "")}" loading="lazy" draggable="false"`
   );
 }

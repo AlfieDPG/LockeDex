@@ -12,7 +12,7 @@
 
 import { escaparHTML } from "../comun/tooltip.js";
 import { icono } from "../comun/iconos.js";
-import { imagenConRespaldo, urlsPMD } from "../comun/imagenes.js";
+import { imagenConRespaldo, urlsRetrato } from "../comun/imagenes.js";
 import { obtenerStats } from "../comun/pokemon.js";
 import { campoNumero } from "../comun/numero.js";
 
@@ -180,7 +180,7 @@ function pintar() {
 
   cuerpo.innerHTML = `
     <div class="entreno-cabecera">
-      ${imagenConRespaldo(urlsPMD(poke), `class="entreno-cara" alt=""`)}
+      ${imagenConRespaldo(urlsRetrato(poke), `class="entreno-cara" alt=""`)}
       <strong class="entreno-nombre">${escaparHTML(poke.mote || poke.es)}</strong>
       <label class="entreno-campo">Nivel ${campoNumero(`<input class="entreno-nivel" type="number" min="1" max="100" value="${entreno.nivel}">`)}</label>
       <label class="entreno-campo">Naturaleza <select class="entreno-naturaleza">${opciones}</select></label>

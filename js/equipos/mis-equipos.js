@@ -7,7 +7,7 @@ import { icono } from "../comun/iconos.js";
 import { copiaProfunda, escaparHTML } from "../comun/utilidades.js";
 import { activarArrastre } from "../comun/arrastrar.js";
 import {
-  imagenConRespaldo, urlsPMD, urlsHome, urlsPMDEmocion, EMOCIONES_PMD, precargarImagen
+  imagenConRespaldo, urlsPMD, urlsRetrato, urlsPMDEmocion, EMOCIONES_PMD, precargarImagen
 } from "../comun/imagenes.js";
 import { textoForma } from "../comun/pokemon.js";
 import { pasteDelEquipo, pasteDeTodos, copiarAlPortapapeles } from "./exportar.js";
@@ -337,7 +337,7 @@ function crearTarjeta(guardado) {
     .map((p, posicion) => {
       const cara = p.cara && p.cara !== "Normal" ? p.cara : "";
       return imagenConRespaldo(
-        [...(cara ? urlsPMDEmocion(p, cara) : []), ...urlsPMD(p), ...urlsHome(p), p.sprite, p.imagen],
+        [...(cara ? urlsPMDEmocion(p, cara) : []), ...urlsRetrato(p)],
         `alt="${p.es}" title="${p.es}${textoForma(p) ? " (" + textoForma(p) + ")" : ""} · pulsa para cambiarle la cara"
          data-posicion="${posicion}" ${cara ? `data-emocion="${cara}"` : ""} loading="lazy" decoding="async" draggable="false"`
       );
@@ -405,7 +405,7 @@ function crearSeccion(grupo, equipos, hayGrupos) {
     .map((g) => g.pokemon[0])
     .filter(Boolean)
     .slice(0, 12)
-    .map((p) => imagenConRespaldo([...urlsPMD(p), ...urlsHome(p), p.sprite], `alt="" loading="lazy" draggable="false"`))
+    .map((p) => imagenConRespaldo(urlsRetrato(p), `alt="" loading="lazy" draggable="false"`))
     .join("");
 
   if (grupo) {

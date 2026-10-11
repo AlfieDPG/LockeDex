@@ -16,7 +16,7 @@ import { cargarDatos, datos } from "../comun/datos.js";
 import { activarAutocompletado, iconoPokemon } from "../comun/autocompletado.js";
 import { obtenerVariedades } from "../comun/formas.js";
 import { elegirForma, datosDeForma } from "../comun/elegir-forma.js";
-import { imagenConRespaldo, urlsPMD, urlSpritePixel } from "../comun/imagenes.js";
+import { imagenConRespaldo, urlsRetrato } from "../comun/imagenes.js";
 import { activarArrastre } from "../comun/arrastrar.js";
 import {
   lockePorId, estadoDe, muertosDe, apuntarMuerto, borrarMuerto, reordenarMuertos, cambiarNumero, alCambiarLockes,
@@ -39,7 +39,7 @@ let autocompletado = null;
 export function retratoMuerto(muerto, clase = "") {
   const p = { id: muerto.especie, idForma: muerto.idForma, formaPMD: muerto.formaPMD || 0 };
   return imagenConRespaldo(
-    [...urlsPMD(p), urlSpritePixel(muerto.imagenForma || muerto.idForma || muerto.especie)],
+    urlsRetrato(p),
     `class="${clase}" alt="" loading="lazy" data-quitar-si-falla`
   );
 }

@@ -14,7 +14,7 @@
 import { icono } from "../comun/iconos.js";
 import { escaparHTML, quitarAcentos } from "../comun/utilidades.js";
 import { coloresTipo, tiposEs, iconoTipo } from "../comun/tipos.js";
-import { imagenConRespaldo, urlsPMD, urlSpritePixel, urlsIconoObjeto } from "../comun/imagenes.js";
+import { imagenConRespaldo, urlsRetrato, urlsIconoObjeto } from "../comun/imagenes.js";
 import { activarAutocompletado, iconoPokemon as iconoSugerencia, iconoObjeto } from "../comun/autocompletado.js";
 import { cargarDatos, datos } from "../comun/datos.js";
 import { leer } from "../comun/almacen.js";
@@ -270,10 +270,7 @@ function equiposDisponibles() {
 
 function retrato(c, clase) {
   return imagenConRespaldo(
-    [
-      ...urlsPMD({ id: c.id, idForma: c.idForma, formaPMD: c.formaPMD, genero: generoDe(c), difGenero: c.difGenero }),
-      urlSpritePixel(c.imagenForma || c.idForma || c.id)
-    ],
+    urlsRetrato({ id: c.id, idForma: c.idForma, formaPMD: c.formaPMD, genero: generoDe(c), difGenero: c.difGenero }),
     `class="${clase}" alt=""`
   );
 }
@@ -591,7 +588,7 @@ function pintarTodo() {
 
 // El retrato de Mundo Misterioso (como en el resto de la web); si no lo tiene, su sprite
 function iconoPokemon(p) {
-  const urls = [...urlsPMD(p), p.sprite, urlSpritePixel(p.imagenForma || p.idForma || p.id)];
+  const urls = urlsRetrato(p);
   return imagenConRespaldo(urls, `class="calc-equipo-icono" alt="" loading="lazy" data-quitar-si-falla`);
 }
 
