@@ -5,6 +5,7 @@
 // neutra, 1 EV en todo y 31 IVs en todo.
 
 import { lineasShowdown } from "./entreno.js";
+import { generoDe } from "../comun/pokemon.js";
 
 const NIVEL = 100;
 const NATURALEZA = "Serious"; // neutra: no sube ni baja ninguna estadística
@@ -18,17 +19,29 @@ function trozoForma(trozo) {
   return ABREVIATURAS[trozo] || trozo.charAt(0).toUpperCase() + trozo.slice(1);
 }
 
+// Formas por defecto que PokeAPI nombra y Showdown no: "darmanitan-standard" es "Darmanitan"
+const FORMAS_POR_DEFECTO = new Set([
+  "standard", "normal", "male", "incarnate", "altered", "land", "aria", "ordinary", "average",
+  "red-striped", "plant", "baile", "midday", "solo", "disguised", "amped", "full-belly",
+  "single-strike", "zero", "family-of-four", "green-plumage", "two-segment", "curly", "red-meteor",
+  "shield", "50", "overcast", "west", "spring"
+]);
+
 // "Meowstic" + "female-mega" -> "Meowstic-F-Mega"
 function nombreShowdown(poke) {
   if (!poke.formaSlug) return poke.en; // guardado antes de que se apuntara la forma
+  if (!poke.imagenForma && FORMAS_POR_DEFECTO.has(poke.formaSlug)) return poke.en;
   return [poke.en, ...poke.formaSlug.split("-").map(trozoForma)].join("-");
 }
 
 function bloque(poke) {
   const lineas = [];
 
-  // Con mote, Showdown espera "Mote (Especie)"
-  const nombre = poke.mote ? `${poke.mote} (${nombreShowdown(poke)})` : nombreShowdown(poke);
+  // Con mote, Showdown espera "Mote (Especie)"; y el género, detrás: "(F)". Las formas que ya
+  // son de un género (Meowstic-F) no lo llevan.
+  const genero = generoDe(poke);
+  const conGenero = genero && !/-(f|m)(-|$)/i.test(nombreShowdown(poke)) ? ` (${genero})` : "";
+  const nombre = (poke.mote ? `${poke.mote} (${nombreShowdown(poke)})` : nombreShowdown(poke)) + conGenero;
   lineas.push(poke.objeto ? `${nombre} @ ${poke.objeto.en}` : nombre);
   if (poke.habilidad) lineas.push(`Ability: ${poke.habilidad.en}`);
   const entreno = lineasShowdown(poke);
@@ -55,6 +68,21 @@ function bloque(poke) {
 
 export function pasteDelEquipo(pokemon) {
   return pokemon.map(bloque).join("\n\n");
+}
+
+// Todos los equipos, como la copia de seguridad de Showdown: cada uno con su
+// «=== [gen9] Nombre ===» delante; los de un grupo, «=== [gen9] Grupo/Nombre ===» (las carpetas
+// de Showdown). Por eso «/» no va en los nombres.
+export function pasteDeTodos(guardados, grupos = []) {
+  const nombreGrupo = new Map(grupos.map((g) => [g.id, g.nombre]));
+  const sinBarra = (texto) => texto.replace(/\//g, "-");
+  return guardados
+    .map((g) => {
+      const carpeta = nombreGrupo.get(g.grupo);
+      const nombre = (carpeta ? `${sinBarra(carpeta)}/` : "") + sinBarra(g.nombre);
+      return `=== [gen9] ${nombre} ===\n\n${pasteDelEquipo(g.pokemon)}\n`;
+    })
+    .join("\n");
 }
 
 // Copia al portapapeles. El método moderno solo va con https (GitHub Pages lo es);

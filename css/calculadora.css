@@ -305,6 +305,39 @@
   border-color: rgba(241, 196, 15, 0.6);
 }
 
+/* Género: al lado del nombre */
+.calc-genero {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  background: #252735;
+  color: #9a9cb0;
+  font-size: 0.95rem;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.calc-genero:hover:not(:disabled) {
+  border-color: rgba(241, 196, 15, 0.6);
+}
+
+.calc-genero:disabled {
+  cursor: default;
+  opacity: 0.8;
+}
+
+.calc-genero.genero-M {
+  color: #5aa2ff;
+}
+
+.calc-genero.genero-F {
+  color: #ff6fb8;
+}
+
 .calc-tipos {
   display: flex;
   flex-wrap: wrap;
@@ -947,4 +980,16 @@
   .calc {
     grid-template-columns: 1fr;
   }
+}
+
+.calc-genero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calc-genero .icono {
+  width: 0.95rem;
+  height: 0.95rem;
+  stroke-width: 2.8;
 }

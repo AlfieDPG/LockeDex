@@ -194,14 +194,18 @@
    perfil. */
 
 .ficha-jugador.fondo-plata,
-.perfil-fondo.fondo-plata {
+.perfil-fondo.fondo-plata,
+.perfil-cabeza.fondo-plata,
+.logro-premio.fondo-plata {
   background-image:
     repeating-linear-gradient(135deg, rgba(195, 202, 214, 0.11) 0 2px, transparent 2px 11px),
     linear-gradient(160deg, rgba(195, 202, 214, 0.2), transparent 55%);
 }
 
 .ficha-jugador.fondo-oro,
-.perfil-fondo.fondo-oro {
+.perfil-fondo.fondo-oro,
+.perfil-cabeza.fondo-oro,
+.logro-premio.fondo-oro {
   background-image:
     radial-gradient(circle, rgba(241, 196, 15, 0.28) 1.4px, transparent 2px),
     radial-gradient(circle, rgba(241, 196, 15, 0.14) 1.4px, transparent 2px),
@@ -212,7 +216,9 @@
 
 /* Platino: una malla de triángulos y, de vez en cuando, un brillo que la cruza */
 .ficha-jugador.fondo-platino,
-.perfil-fondo.fondo-platino {
+.perfil-fondo.fondo-platino,
+.perfil-cabeza.fondo-platino,
+.logro-premio.fondo-platino {
   background-image:
     linear-gradient(115deg, transparent 42%, rgba(200, 245, 252, 0.2) 50%, transparent 58%),
     repeating-linear-gradient(60deg, rgba(127, 224, 240, 0.12) 0 1px, transparent 1px 14px),
@@ -231,7 +237,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ficha-jugador.fondo-platino,
-  .perfil-fondo.fondo-platino {
+  .perfil-fondo.fondo-platino,
+  .perfil-cabeza.fondo-platino,
+  .logro-premio.fondo-platino {
     animation: none;
   }
 }
@@ -240,7 +248,9 @@
    img/fondos/ hace de máscara y se pinta del color del tipo). --color-tipo y --patron los
    pone js/comun/fondos.js en el propio elemento. */
 .ficha-jugador.fondo-tipo,
-.perfil-fondo.fondo-tipo {
+.perfil-fondo.fondo-tipo,
+.perfil-cabeza.fondo-tipo,
+.logro-premio.fondo-tipo {
   isolation: isolate; /* el mosaico (z-index -1) queda encima del fondo y debajo del contenido */
   background-image:
     radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--color-tipo) 32%, transparent), transparent 70%),
@@ -248,7 +258,9 @@
 }
 
 .ficha-jugador.fondo-tipo::before,
-.perfil-fondo.fondo-tipo::before {
+.perfil-fondo.fondo-tipo::before,
+.perfil-cabeza.fondo-tipo::before,
+.logro-premio.fondo-tipo::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -958,8 +970,272 @@
 
 .participante {
   display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.participante-fila {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem;
+}
+
+/* ROM superada: casilla con forma de chip */
+.participante-rom {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.participante-rom input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.participante-rom span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.4rem;
+  background: #3a3d52;
+  color: #9a9cb0;
+  font-size: 0.78rem;
+  font-weight: bold;
+}
+
+.participante-rom input:checked + span {
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+  box-shadow: inset 0 0 0 1px rgba(46, 204, 113, 0.5);
+}
+
+.participante-rom input:focus-visible + span {
+  outline: 2px solid #f1c40f;
+}
+
+.participante-rom .icono {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+/* Equipo final y MVP */
+.participante-equipo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.participante-mvp {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+}
+
+button.cara-equipo {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+button.cara-equipo:hover img {
+  box-shadow: 0 0 0 2px rgba(241, 196, 15, 0.5);
+}
+
+button.cara-equipo.mvp:hover img {
+  box-shadow: 0 0 0 2px #f1c40f;
+}
+
+.palmares-elegir-equipo,
+.palmares-anadir-combate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  border: none;
+  border-radius: 0.4rem;
+  background: #3a3d52;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.palmares-anadir-combate {
+  align-self: flex-start;
+}
+
+.palmares-elegir-equipo:hover,
+.palmares-anadir-combate:hover {
+  background: #4a4e68;
+}
+
+.palmares-elegir-equipo .icono,
+.palmares-anadir-combate .icono {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+/* Combates */
+.palmares-campo.palmares-combates {
+  flex-basis: 100%;
+}
+
+.palmares-combate {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: inset 3px 0 0 #f1c40f;
+}
+
+.palmares-combate-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.palmares-combate-nombre {
+  flex: 1 1 9rem;
+  min-width: 0;
+  max-width: 16rem;
+}
+
+.palmares-combate-ganador,
+.palmares-combate-marcador {
+  padding: 0.35rem 0.5rem;
+  border: none;
+  border-radius: 0.4rem;
+  background: #3a3d52;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.8rem;
+}
+
+.palmares-quitar-combate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.4rem;
+  background: #3a3d52;
+  color: #f2f2f2;
+  cursor: pointer;
+}
+
+.palmares-quitar-combate:hover {
+  background: #c0392b;
+}
+
+.palmares-quitar-combate .icono {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.palmares-combate-equipos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.palmares-combate-equipo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.palmares-combate-quien {
+  min-width: 5rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  opacity: 0.8;
+}
+
+.palmares-combate-equipo .cara-equipo img {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* En el recuadro de un locke: ROM, equipo final y combates */
+.flotante-participantes li {
+  flex-wrap: wrap;
+}
+
+.flotante-quien {
+  margin-right: auto;
+}
+
+.flotante-rom {
+  display: inline-flex;
+  color: #2ecc71;
+}
+
+.flotante-participantes li .flotante-rom .icono {
+  color: #2ecc71;
+}
+
+.flotante-equipo {
+  flex-basis: 100%;
+}
+
+.flotante-equipo .cara-equipo img,
+.flotante-combate-equipo .cara-equipo img {
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
+.flotante-combates {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.flotante-combates li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.35rem;
+  background: #252735;
+}
+
+.flotante-combate-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+}
+
+.flotante-combate-cabeza .icono {
+  width: 0.8rem;
+  height: 0.8rem;
+  color: #f1c40f;
+}
+
+.flotante-combate-equipos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 .participante .participante-nombre {

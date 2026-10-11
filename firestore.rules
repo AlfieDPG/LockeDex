@@ -136,7 +136,7 @@ service cloud.firestore {
     // Todos los de dentro lo ven y pueden escribir en él, pero con límites:
     //
     //   · resultados de los combates y reacciones del cementerio: cualquiera de dentro.
-    //   · vidas, marcador, estados, muertos, rom y salon son mapas {uid: valor}. Cada uno solo puede CAMBIAR o
+    //   · vidas, marcador, estados, muertos, rom, salon y equipos (de cada combate) son mapas {uid: valor}. Cada uno solo puede CAMBIAR o
     //     QUITAR su propia entrada. Solo se pueden AÑADIR entradas de jugadores que entran
     //     en esta misma escritura (al invitar a alguien se le ponen sus vidas iniciales).
     //   · nombres y fotos: lo mismo; la propia se puede cambiar (al cambiarse el mote).
@@ -206,7 +206,7 @@ service cloud.firestore {
       }
 
       //   · vidas, marcador y estados: cada uno cambia el suyo; se añaden los que entran.
-      //   · muertos, rom y salon: igual, pero el propio puede no existir todavía (la lista
+      //   · muertos, rom, salon y equipos: igual, pero el propio puede no existir todavía (la lista
       //     del cementerio se crea con el primer muerto).
       //   · nombres y fotos: cambian los que entran ahora (alguien que rechazó y vuelve a ser
       //     invitado ya los tenía, y pueden haber cambiado) y el propio (al cambiarse el mote).
@@ -222,6 +222,7 @@ service cloud.firestore {
           && mapaBien('muertos', mio, salen, nuevosOMio)
           && mapaBien('rom', mio, salen, nuevosOMio)
           && mapaBien('salon', mio, salen, nuevosOMio)
+          && mapaBien('equipos', mio, salen, nuevosOMio)
           && mapaBien('nombres', nuevosOMio, mio, nuevos)
           && mapaBien('fotos', nuevosOMio, mio, nuevos)
           && antes().jugadores.toSet().difference(despues().jugadores.toSet()).difference(salen).size() == 0;

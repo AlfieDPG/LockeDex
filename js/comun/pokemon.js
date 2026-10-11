@@ -136,9 +136,57 @@ export async function obtenerStats(poke) {
   return statsBase(p);
 }
 
+// ---------- Género ----------
+//
+// Cada Pokémon del equipo puede llevar «genero»: "M", "F" o "" (sin decir). De la especie se
+// apuntan «generoRatio» (el gender_rate de PokeAPI: -1 sin género, 0 siempre macho, 8 siempre
+// hembra, lo demás de los dos) y «difGenero» (si la hembra se ve distinta: entonces sus
+// imágenes son las de hembra, ver imagenes.js).
+
+export async function datosDeGenero(idEspecie) {
+  const sp = await pedirJSON(`${URL_API}pokemon-species/${idEspecie}`);
+  return { generoRatio: sp.gender_rate, difGenero: Boolean(sp.has_gender_differences) };
+}
+
+// Los géneros que puede tener: [], ["M"], ["F"] o ["M", "F"]. Las formas que son de un
+// género (Meowstic hembra, «female-mega»...) solo pueden ser de ese.
+export function generosPosibles(poke) {
+  const trozos = String(poke.formaSlug || "").split("-");
+  if (trozos.includes("female")) return ["F"];
+  if (trozos.includes("male")) return ["M"];
+  const ratio = poke.generoRatio;
+  if (ratio === undefined || ratio === null) return ["M", "F"];
+  if (ratio < 0) return [];
+  if (ratio === 0) return ["M"];
+  if (ratio === 8) return ["F"];
+  return ["M", "F"];
+}
+
+// El que tiene de verdad: si solo puede ser uno, ese, aunque no se haya elegido
+export function generoDe(poke) {
+  const posibles = generosPosibles(poke);
+  if (posibles.length === 1) return posibles[0];
+  return posibles.includes(poke.genero) ? poke.genero : "";
+}
+
+// Icono de js/comun/iconos.js (los caracteres ♂ y ♀ salen muy finos)
+export const ICONO_GENERO = { M: "macho", F: "hembra" };
+export const NOMBRE_GENERO = { M: "Macho", F: "Hembra" };
+
+// Lo justo de un Pokémon para pintarlo en otra parte (Versus, el perfil...). JSON de ida y
+// vuelta en quien lo guarde: Firestore no acepta «undefined».
+export function pokemonParaCopia(p) {
+  return {
+    id: p.id, idForma: p.idForma, formaPMD: p.formaPMD, imagenForma: p.imagenForma,
+    shiny: Boolean(p.shiny), es: p.es, mote: p.mote || "", sprite: p.sprite || "",
+    genero: generoDe(p), difGenero: Boolean(p.difGenero)
+  };
+}
+
 // Crea el Pokémon del equipo a partir de los datos de PokeAPI
 export async function pokemonDesdeAPI(p, entrada) {
-  if (p.formaDeTipo) return pokemonDeTipo(p, entrada);
+  const genero = await datosDeGenero(entrada.id).catch(() => ({}));
+  if (p.formaDeTipo) return { ...pokemonDeTipo(p, entrada), ...genero, genero: "" };
 
   const imagen =
     (p.sprites.other &&
@@ -172,6 +220,8 @@ export async function pokemonDesdeAPI(p, entrada) {
     imagen: imagen,
     sprite: obtenerSpriteIcono(p) || imagen,
     shiny: false,
+    genero: "",
+    ...genero,
     forma: etiqueta === "Normal" ? null : "Forma " + etiqueta,
     formaPMD: indicePMD(p.id, posicion > 0 ? posicion : 0),
     tipos: p.types.map((t) => t.type.name),
@@ -223,7 +273,7 @@ export function variedadActual(poke, info) {
 }
 
 // Lo que el jugador ha elegido y que se conserva al cambiar de forma
-const CAMPOS_DEL_JUGADOR = ["mote", "shiny", "habilidad", "objeto", "ataques", "entreno"];
+const CAMPOS_DEL_JUGADOR = ["mote", "shiny", "genero", "habilidad", "objeto", "ataques", "entreno"];
 
 // Cambia la forma de un Pokémon del equipo sin perder su mote, shiny, habilidad, objeto,
 // ataques ni su nivel, naturaleza, EVs e IVs (js/equipos/entreno.js). Devuelve un Pokémon nuevo: el que llama decide dónde ponerlo.

@@ -14,6 +14,7 @@ export const CLAVES_SINCRONIZADAS = [
   "poketeams-actual-v1",                  // nombre e id del equipo en edición
   "poketeams-equipos-orden-v1",           // si ya se ordenaron los equipos una vez
   "poketeams-equipos-vista-v1",           // tarjetas o lista
+  "poketeams-grupos-v1",                  // grupos de «Mis equipos»
   "poketeams-rutas-v2",                   // rutas marcadas
   "poketeams-capturas-v1",                // qué se capturó en cada lugar (rutas/capturas.js)
   "poketeams-rutas-juego-v1",             // juego elegido en «Rutas»

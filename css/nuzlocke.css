@@ -383,10 +383,22 @@
   text-overflow: ellipsis;
 }
 
-.rutas-ed-grupo .ruta-ed-nuevo {
+/* Añadir lugar: la casilla va en una caja para que la lista de sugerencias salga debajo */
+.ruta-ed-nuevo-caja {
+  position: relative;
+  display: flex;
   flex: 0 1 14rem;
+}
+
+.rutas-ed-grupo .ruta-ed-nuevo {
+  flex: 1;
+  width: 100%;
   border-style: dashed;
   background: transparent;
+}
+
+.ruta-ed-nuevo-caja .sugerencias {
+  min-width: 16rem;
 }
 
 .rutas-ed-anadir-apartado {

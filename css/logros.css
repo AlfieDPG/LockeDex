@@ -229,6 +229,41 @@
   opacity: 0.45;
 }
 
+/* El nivel arriba y, si da un fondo para la tarjeta, una muestra pequeña de ese fondo abajo */
+.logro-lado {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  flex: none;
+}
+
+.logro-premio {
+  position: relative;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.35rem;
+  background-color: #1e1f2b;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+  font-size: 0.66rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #f2f2f2;
+  cursor: help;
+}
+
+.logro-premio.fondo-plata { box-shadow: inset 0 0 0 1px rgba(195, 202, 214, 0.6); }
+.logro-premio.fondo-oro { box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.6); }
+.logro-premio.fondo-platino { box-shadow: inset 0 0 0 1px rgba(127, 224, 240, 0.6); }
+.logro-premio.fondo-tipo { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-tipo) 70%, transparent); }
+
+/* En los de tipo, el mosaico más pequeño (si no, en algo tan chico no se ve el icono) */
+.logro-premio.fondo-tipo::before {
+  -webkit-mask-size: 1.6rem 1.6rem;
+  mask-size: 1.6rem 1.6rem;
+  opacity: 0.45;
+}
+
 .logros-vacio {
   opacity: 0.6;
 }

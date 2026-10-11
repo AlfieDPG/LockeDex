@@ -1637,3 +1637,103 @@ button.salon-cara:hover {
   font-size: 0.9rem;
   opacity: 0.6;
 }
+
+/* ---------- Equipos de cada combate ---------- */
+
+/* En la casilla del combate de la tarjeta: los de cada uno en pequeño */
+.combate-equipos-mini {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.combate-equipos-mini .cara-equipo img {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.combate-equipos-mini .caras-equipo {
+  gap: 0.05rem;
+}
+
+.combate-vs {
+  font-size: 0.6rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+
+/* Cerrado: se abre para verlo, sin cambiar nada */
+.locke-combate.solo-ver {
+  cursor: zoom-in;
+}
+
+/* En la ventana del combate: una fila por jugador */
+.combate-equipos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+}
+
+.combate-equipo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.5rem;
+  background: #252735;
+}
+
+.combate-equipo.mio {
+  box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.35);
+}
+
+.combate-equipo .combate-opcion-foto {
+  width: 1.9rem;
+  height: 1.9rem;
+}
+
+.combate-equipo-nombre {
+  display: flex;
+  flex-direction: column;
+  min-width: 5rem;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.combate-equipo-nombre small {
+  font-weight: normal;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.combate-sin-equipo {
+  font-size: 0.85rem;
+  opacity: 0.5;
+}
+
+.combate-elegir-equipo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+
+.combate-elegir-equipo .icono {
+  width: 1rem;
+  height: 1rem;
+}
+
+#dialogo-combate.solo-ver .combate-opcion:disabled,
+#dialogo-combate.solo-ver .combate-marcador-opcion:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+#dialogo-combate.solo-ver .combate-opcion.elegido:disabled,
+#dialogo-combate.solo-ver .combate-marcador-opcion.elegido:disabled {
+  opacity: 1;
+}

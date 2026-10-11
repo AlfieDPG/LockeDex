@@ -3,6 +3,61 @@
 html {
   /* Tamaño base: crece o se encoge según la ventana. (NO TOCAR el 1.72vh) */
   font-size: clamp(12px, min(1.72vh, 1.3vw), 24px);
+  /* Los controles del navegador (listas de los desplegables, calendario, selector de color...)
+     en oscuro, y las casillas y barras en el amarillo de la web */
+  color-scheme: dark;
+  accent-color: #f1c40f;
+}
+
+/* ---------- Controles del navegador, con los colores de la web ---------- */
+
+select option,
+select optgroup {
+  background: #1e1f2b;
+  color: #f2f2f2;
+}
+
+/* La ✕ de las casillas de buscar */
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  width: 0.9rem;
+  height: 0.9rem;
+  background: #8a8fa8;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E") center / contain no-repeat;
+  cursor: pointer;
+}
+
+input[type="search"]::-webkit-search-cancel-button:hover {
+  background: #f1c40f;
+}
+
+/* El icono del calendario de las fechas */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+  cursor: pointer;
+}
+
+/* Flechas de los números: fuera en todas (las propias están en .numero) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Texto seleccionado y el contorno al moverse con el teclado */
+::selection {
+  background: rgba(241, 196, 15, 0.35);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid #f1c40f;
+  outline-offset: 2px;
 }
 
 body {
@@ -123,6 +178,18 @@ body {
 .numero:has(input:disabled) .numero-pasos {
   opacity: 0.35;
   pointer-events: none;
+}
+
+/* ---------- Fotos de jugador que abren su perfil (js/main.js) ---------- */
+
+[data-perfil] {
+  cursor: pointer;
+  transition: transform 0.15s, filter 0.15s;
+}
+
+[data-perfil]:hover {
+  transform: scale(1.06);
+  filter: brightness(1.12);
 }
 
 /* ---------- Desplegable de sugerencias ---------- */
@@ -308,4 +375,169 @@ dialog textarea {
 .ficha-titulo small {
   font-weight: normal;
   opacity: 0.75;
+}
+
+/* Al arrastrar algo para cambiarlo de sitio: dónde va a caer (js/comun/arrastrar.js) */
+.marca-soltar {
+  position: fixed;
+  z-index: 1000;
+  border-radius: 2px;
+  background: #f1c40f;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 10px rgba(241, 196, 15, 0.75);
+  pointer-events: none;
+}
+
+.marca-soltar.marco {
+  border: 3px solid #f1c40f;
+  border-radius: 0.6rem;
+  background: rgba(241, 196, 15, 0.12);
+}
+
+.marca-soltar[hidden] {
+  display: none;
+}
+
+.arrastrando {
+  opacity: 0.35;
+}
+
+/* ---------- Equipos en pequeño y elegir uno (js/comun/elegir-equipo.js) ---------- */
+
+.caras-equipo {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+}
+
+.cara-equipo {
+  position: relative;
+  display: inline-flex;
+}
+
+.cara-equipo img {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  image-rendering: pixelated;
+}
+
+.cara-equipo.mvp img {
+  box-shadow: 0 0 0 2px #f1c40f;
+}
+
+.cara-equipo.mvp::after {
+  content: "MVP";
+  position: absolute;
+  bottom: -0.35rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 0.2rem;
+  border-radius: 0.25rem;
+  background: #f1c40f;
+  color: #2b2d3a;
+  font-size: 0.5rem;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.elegir-equipo {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: max-content;
+  min-width: 15rem;
+  max-width: min(26rem, calc(100vw - 16px));
+  max-height: min(60vh, 26rem);
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.6rem;
+  background: #252735;
+  color: #f2f2f2;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+}
+
+.elegir-equipo-opcion,
+.elegir-equipo-quitar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding: 0.4rem 0.55rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.elegir-equipo-quitar {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  color: #ff8a80;
+}
+
+.elegir-equipo-quitar .icono {
+  width: 1rem;
+  height: 1rem;
+}
+
+.elegir-equipo-opcion:hover,
+.elegir-equipo-quitar:hover {
+  background: #3a3d52;
+}
+
+.elegir-equipo-opcion .cara-equipo img {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.elegir-equipo-grupo > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.45rem;
+  color: #f1c40f;
+  font-weight: bold;
+  font-size: 0.85rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.elegir-equipo-grupo > summary::-webkit-details-marker {
+  display: none;
+}
+
+.elegir-equipo-grupo > summary:hover {
+  background: #3a3d52;
+}
+
+.elegir-equipo-grupo > summary .icono {
+  width: 1rem;
+  height: 1rem;
+}
+
+.elegir-equipo-grupo > summary small {
+  color: #9a9cb0;
+}
+
+.elegir-equipo-grupo[open] {
+  padding-left: 0.6rem;
+  border-left: 2px solid rgba(241, 196, 15, 0.35);
+}
+
+.elegir-equipo-vacio {
+  margin: 0;
+  padding: 0.6rem;
+  opacity: 0.7;
+  font-size: 0.85rem;
 }

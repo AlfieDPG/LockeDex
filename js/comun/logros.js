@@ -26,6 +26,7 @@ import { contadores } from "./contadores.js";
 import { icono } from "./iconos.js";
 import { escaparHTML } from "./utilidades.js";
 import { tiposEs, urlIconoTipo } from "./tipos.js";
+import { generoDe } from "./pokemon.js";
 
 export const NIVELES = {
   bronce: "Bronce",
@@ -62,8 +63,12 @@ const NOMBRES_DE_TIPO = {
   dark: "El lado oscuro", steel: "Voluntad de acero", fairy: "Cuento de hadas"
 };
 
+// Los de logros que dan los fondos de plata y oro (el de platino, todos)
+export const LOGROS_PARA_PLATA = 25;
+export const LOGROS_PARA_ORO = 50;
+
 const LOGROS_DE_TIPO = Object.keys(tiposEs).map((tipo) => ({
-  id: `t-${tipo}`, categoria: "tipos", nivel: "plata", icono: "pokeball", tipo,
+  id: `t-${tipo}`, categoria: "tipos", nivel: "plata", icono: "pokeball", tipo, fondo: `tipo-${tipo}`,
   nombre: NOMBRES_DE_TIPO[tipo],
   descripcion: `Ten ${POKEMON_POR_TIPO} Pokémon distintos de tipo ${tiposEs[tipo]} en tus equipos guardados.`,
   valor: (c) => (c.especiesPorTipo.get(tipo) || new Set()).size, meta: POKEMON_POR_TIPO
@@ -198,6 +203,12 @@ export const LOGROS = [
   { id: "v-salon-5", categoria: "versus", nivel: "plata", icono: "trofeo",
     nombre: "Galería de honor", descripcion: "Apunta tu equipo final en 5 lockes.",
     valor: (c) => (c.perfil.salon || []).length, meta: 5 },
+  { id: "v-alineacion", categoria: "versus", nivel: "bronce", icono: "pokeball",
+    nombre: "Alineación", descripcion: "Apunta con qué equipo juegas un combate de un locke.",
+    valor: (c) => c.combatesConEquipo },
+  { id: "v-alineacion-10", categoria: "versus", nivel: "plata", icono: "pokeball",
+    nombre: "Director técnico", descripcion: "Apunta tu equipo en 10 combates.",
+    valor: (c) => c.combatesConEquipo, meta: 10 },
 
   // ---------- Cementerio ----------
   { id: "c-primer-muerto", categoria: "cementerio", nivel: "bronce", icono: "calavera",
@@ -279,12 +290,30 @@ export const LOGROS = [
     nombre: "Listo para competir", descripcion: "Guarda un equipo de 6 con habilidad, objeto, 4 ataques y todos los EVs repartidos en cada uno.",
     valor: (c) => cuantos(c.equiposDeSeis, (e) => e.pokemon.every((p) =>
       p.habilidad && p.objeto && (p.ataques || []).filter(Boolean).length === 4 && evsDe(p) >= 508)) },
+  { id: "e-genero", categoria: "equipos", nivel: "bronce", icono: "persona",
+    nombre: "¿Chico o chica?", descripcion: "Guarda un equipo eligiendo el género de un Pokémon.",
+    valor: (c) => cuantos(c.pokemonGuardados, (p) => p.genero === "M" || p.genero === "F") },
+  { id: "e-rivalidad", categoria: "equipos", nivel: "plata", icono: "persona",
+    nombre: "Rivalidad", descripcion: "Guarda un equipo de 6 Pokémon todos del mismo género.",
+    valor: (c) => cuantos(c.equiposDeSeis, (e) => ["M", "F"].some((g) => e.pokemon.every((p) => generoDe(p) === g))) },
   { id: "e-importar", categoria: "equipos", nivel: "bronce", icono: "importar",
-    nombre: "Desde Showdown", descripcion: "Importa un equipo con «Importar paste».",
+    nombre: "Desde Showdown", descripcion: "Importa un equipo de Showdown.",
     valor: (c) => c.contadores.importar || 0 },
   { id: "e-exportar", categoria: "equipos", nivel: "bronce", icono: "copiar",
     nombre: "Rumbo a Showdown", descripcion: "Exporta un equipo.",
     valor: (c) => c.contadores.exportar || 0 },
+  { id: "e-mudanza", categoria: "equipos", nivel: "bronce", icono: "importar",
+    nombre: "Mudanza", descripcion: "Importa varios equipos a la vez (la copia de seguridad de Showdown).",
+    valor: (c) => c.contadores["importar-varios"] || 0 },
+  { id: "e-copia", categoria: "equipos", nivel: "bronce", icono: "copiar",
+    nombre: "Copia de seguridad", descripcion: "Exporta todos tus equipos a la vez.",
+    valor: (c) => c.contadores["exportar-todos"] || 0 },
+  { id: "e-grupo", categoria: "equipos", nivel: "bronce", icono: "carpeta",
+    nombre: "Bien ordenado", descripcion: "Mete un equipo en un grupo de «Mis equipos».",
+    valor: (c) => c.equiposEnGrupos },
+  { id: "e-grupos-10", categoria: "equipos", nivel: "plata", icono: "carpeta",
+    nombre: "Archivador", descripcion: "Ten 10 equipos repartidos en 3 grupos o más.",
+    valor: (c) => (c.gruposConEquipos >= 3 ? c.equiposEnGrupos : 0), meta: 10 },
   { id: "e-destacar", categoria: "equipos", nivel: "bronce", icono: "estrella",
     nombre: "Escaparate", descripcion: "Destaca un equipo en tu perfil.",
     valor: (c) => (c.perfil.escaparate || []).length },
@@ -371,14 +400,20 @@ export const LOGROS = [
     nombre: "Líder de grupo", descripcion: "Ten 10 amigos.",
     valor: (c) => c.amigos, meta: 10 },
   { id: "s-avatar", categoria: "social", nivel: "bronce", icono: "persona",
-    nombre: "Nueva imagen", descripcion: "Pon un Pokémon como foto de perfil.",
+    nombre: "Nueva imagen", descripcion: "Ponte un Pokémon o una foto tuya como foto de perfil.",
     valor: (c) => Boolean(c.perfil.avatar) },
+  { id: "s-fondo", categoria: "social", nivel: "bronce", icono: "imagen",
+    nombre: "De estreno", descripcion: "Ponle un fondo a tu tarjeta de «Amigos».",
+    valor: (c) => Boolean(c.perfil.fondo) },
   { id: "s-titulo", categoria: "social", nivel: "bronce", icono: "estrella",
     nombre: "Con título", descripcion: "Ponte el título de un logro en tu perfil.",
     valor: (c) => Boolean(c.perfil.titulo) },
   { id: "s-palmares", categoria: "social", nivel: "bronce", icono: "libro",
     nombre: "Memoria histórica", descripcion: "Apunta a mano en tu palmarés un locke de antes.",
     valor: (c) => c.apuntados.length },
+  { id: "s-cronica", categoria: "social", nivel: "plata", icono: "libro",
+    nombre: "Cronista", descripcion: "Apunta a mano los combates de un locke de tu palmarés, con quién ganó cada uno.",
+    valor: (c) => cuantos(c.apuntados, (g) => (g.combates || []).some((combate) => combate.ganador)) },
 
   // ---------- Otros ----------
   { id: "o-ruleta", categoria: "otros", nivel: "bronce", icono: "ruleta",
@@ -407,16 +442,15 @@ export const LOGROS = [
   ...LOGROS_DE_TIPO,
 
   // ---------- Logros de logros (se miran los últimos, con los demás ya contados) ----------
-  { id: "m-10", categoria: "logros", nivel: "plata", icono: "trofeo",
-    nombre: "Cazalogros", descripcion: "Consigue 10 logros.",
-    valor: (c) => c.conseguidos, meta: 10 },
-  { id: "m-30", categoria: "logros", nivel: "oro", icono: "trofeo",
-    nombre: "Coleccionista de logros", descripcion: "Consigue 30 logros.",
-    valor: (c) => c.conseguidos, meta: 30 },
-  { id: "m-60", categoria: "logros", nivel: "oro", icono: "trofeo",
-    nombre: "Cazador de trofeos", descripcion: "Consigue 60 logros.",
-    valor: (c) => c.conseguidos, meta: 60 },
-  { id: "m-todos", categoria: "logros", nivel: "platino", icono: "trofeo",
+  // Cada uno da un fondo de metal para la tarjeta (fondos.js). Los id son los de antes (pedían
+  // 30 y 60): así quien ya los tenía los conserva.
+  { id: "m-30", categoria: "logros", nivel: "plata", icono: "trofeo", fondo: "plata",
+    nombre: "Brillo de plata", descripcion: `Consigue ${LOGROS_PARA_PLATA} logros.`,
+    valor: (c) => c.conseguidos, meta: LOGROS_PARA_PLATA },
+  { id: "m-60", categoria: "logros", nivel: "oro", icono: "trofeo", fondo: "oro",
+    nombre: "Toque de oro", descripcion: `Consigue ${LOGROS_PARA_ORO} logros.`,
+    valor: (c) => c.conseguidos, meta: LOGROS_PARA_ORO },
+  { id: "m-todos", categoria: "logros", nivel: "platino", icono: "trofeo", fondo: "platino",
     nombre: "Completista", descripcion: "Consigue todos los demás logros.",
     valor: (c) => c.conseguidos }
 ];
@@ -461,6 +495,9 @@ async function contexto() {
   // Qué se capturó en cada lugar: { idJuego: { lugar: captura } } (rutas/capturas.js)
   const capturas = leer("poketeams-capturas-v1", {}) || {};
   const ruletas = ((leer("poketeams-ruletas-v1", null) || {}).ruletas) || [];
+  // Equipos en grupos de «Mis equipos» (los de grupos que existen)
+  const grupos = new Set((leer("poketeams-grupos-v1", []) || []).map((grupo) => grupo.id));
+  const enGrupos = equipos.filter((equipo) => grupos.has(equipo.grupo));
 
   return {
     yo,
@@ -480,6 +517,10 @@ async function contexto() {
     muertos: lockes.flatMap(muertosDe),
     ganados: (perfil.ganados || []).length,
     victorias: lockes.reduce((suma, locke) => suma + victoriasDe(locke, yo), 0),
+    // Combates en los que has apuntado con qué equipo jugaste
+    combatesConEquipo: lockes.reduce((suma, locke) => suma + Object.keys(((locke.equipos || {})[yo]) || {}).length, 0),
+    equiposEnGrupos: enGrupos.length,
+    gruposConEquipos: new Set(enGrupos.map((equipo) => equipo.grupo)).size,
     amigos: yo ? amigosAceptados().length : 0,
     equipos,
     equiposDeSeis: equipos.filter((equipo) => equipo.pokemon.length === 6),

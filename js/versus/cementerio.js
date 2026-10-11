@@ -17,6 +17,7 @@ import { activarAutocompletado, iconoPokemon } from "../comun/autocompletado.js"
 import { obtenerVariedades } from "../comun/formas.js";
 import { elegirForma, datosDeForma } from "../comun/elegir-forma.js";
 import { imagenConRespaldo, urlsPMD, urlSpritePixel } from "../comun/imagenes.js";
+import { activarArrastre } from "../comun/arrastrar.js";
 import {
   lockePorId, estadoDe, muertosDe, apuntarMuerto, borrarMuerto, reordenarMuertos, cambiarNumero, alCambiarLockes,
   estaEliminado, REACCIONES, reaccionar
@@ -110,7 +111,7 @@ function plantillaColumna(locke, uid) {
   return `
     <section class="cementerio-jugador ${mia ? "mio" : ""}">
       <header>
-        <span class="cementerio-cara">${foto ? `<img src="${escaparHTML(foto)}" alt="" referrerpolicy="no-referrer">` : escaparHTML(nombre[0] || "?")}</span>
+        <span class="cementerio-cara" data-perfil="${escaparHTML(uid)}" title="Ver perfil">${foto ? `<img src="${escaparHTML(foto)}" alt="" referrerpolicy="no-referrer">` : escaparHTML(nombre[0] || "?")}</span>
         <span class="cementerio-nombre">${escaparHTML(nombre)}</span>
         <span class="cementerio-cuenta">${icono("calavera")} ${muertos.length}</span>
       </header>
@@ -131,41 +132,24 @@ let tumbaArrastrada = null;
 
 function activarArrastreTumbas(alFallar) {
   const cuerpo = dialogoCementerio.querySelector(".cementerio-cuerpo");
-
-  cuerpo.addEventListener("dragstart", (e) => {
-    tumbaArrastrada = e.target.closest(".tumba.movible");
-    if (!tumbaArrastrada) return;
-    tumbaArrastrada.classList.add("arrastrando");
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", "");
-  });
-
-  cuerpo.addEventListener("dragover", (e) => {
-    if (!tumbaArrastrada) return;
-    const destino = e.target.closest(".tumba.movible");
+  activarArrastre(cuerpo, {
+    elementos: ".tumba.movible",
     // Solo entre las lápidas de la misma columna (la tuya)
-    if (!destino || destino.parentElement !== tumbaArrastrada.parentElement) return;
-    e.preventDefault();
-    if (destino === tumbaArrastrada) return;
-
-    const r = destino.getBoundingClientRect();
-    if (e.clientX < r.left + r.width / 2) destino.before(tumbaArrastrada);
-    else destino.after(tumbaArrastrada);
-  });
-
-  cuerpo.addEventListener("drop", (e) => e.preventDefault());
-
-  cuerpo.addEventListener("dragend", () => {
-    if (!tumbaArrastrada) return;
-    const columna = tumbaArrastrada.parentElement;
-    tumbaArrastrada.classList.remove("arrastrando");
-    tumbaArrastrada = null;
-
-    const ids = [...columna.querySelectorAll(".tumba.movible")].map((tumba) => tumba.dataset.id).reverse();
-    reordenarMuertos(idCementerio, ids).catch((error) => {
-      alFallar(error);
-      pintarCementerio(); // vuelve a como estaba
-    });
+    zona: (destino, arrastrada) =>
+      destino.closest && destino.closest(".tumbas") === arrastrada.parentElement ? arrastrada.parentElement : null,
+    puedeEmpezar: (e, tumba) => {
+      tumbaArrastrada = tumba;
+      return true;
+    },
+    alTerminar: (tumba, movido) => {
+      tumbaArrastrada = null;
+      if (!movido) return;
+      const ids = [...tumba.parentElement.querySelectorAll(".tumba.movible")].map((cada) => cada.dataset.id).reverse();
+      reordenarMuertos(idCementerio, ids).catch((error) => {
+        alFallar(error);
+        pintarCementerio(); // vuelve a como estaba
+      });
+    }
   });
 }
 

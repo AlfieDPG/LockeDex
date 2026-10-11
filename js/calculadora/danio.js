@@ -125,7 +125,8 @@ const HABILIDADES = {
   wonderguard: "Solo le daña lo súper eficaz", filter: "Recibe súper eficaz ×¾", solidrock: "Recibe súper eficaz ×¾",
   prismarmor: "Recibe súper eficaz ×¾", multiscale: "Con todos los PS: recibe ×½",
   shadowshield: "Con todos los PS: recibe ×½", furcoat: "Defensa ×2", icescales: "Recibe especiales ×½",
-  fluffy: "Recibe contacto ×½ y Fuego ×2", marvelscale: "Con estado: Defensa ×1,5"
+  fluffy: "Recibe contacto ×½ y Fuego ×2", marvelscale: "Con estado: Defensa ×1,5",
+  rivalry: "Mismo género ×1,25; contrario ×0,75"
 };
 
 // Lo que hace una habilidad, si cuenta para el cálculo ("" si no)
@@ -319,6 +320,10 @@ export function calcularDanio(atacante, defensor, ataqueElegido, campo = {}) {
     usa();
   };
   subeP(habA === "technician" && ataque.potencia <= 60, 1.5);
+  // Rivalidad: solo si los dos tienen género
+  const conGeneros = Boolean(atacante.genero && defensor.genero);
+  subeP(habA === "rivalry" && conGeneros && atacante.genero === defensor.genero, 1.25);
+  subeP(habA === "rivalry" && conGeneros && atacante.genero !== defensor.genero, 0.75);
   subeP(habA === "toughclaws" && ataque.contacto, 5325 / 4096);
   subeP(habA === "ironfist" && ataque.punetazo, 4915 / 4096);
   subeP(habA === "strongjaw" && ataque.mordisco, 1.5);

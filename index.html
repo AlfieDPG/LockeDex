@@ -108,6 +108,9 @@
         <section id="vista-equipos" hidden>
           <div class="barra-equipos">
             <button id="cambiar-vista">Ver en lista</button>
+            <button id="nuevo-grupo" title="Un grupo para juntar varios equipos (como las carpetas de Showdown)">Nuevo grupo</button>
+            <button id="importar-varios" title="Pega uno o varios equipos (copia de seguridad de Showdown)">Importar</button>
+            <button id="exportar-todos" title="Copia todos los equipos para pegarlos en Showdown («Backup/Restore all teams»)">Exportar todos</button>
           </div>
           <div id="lista-equipos"></div>
         </section>
@@ -228,7 +231,7 @@
 
   <dialog id="dialogo-importar">
     <h2>Importar equipo</h2>
-    <p>Pega aquí el texto (paste) de tu equipo. Reemplazará el equipo actual.</p>
+    <p>Un equipo reemplaza al actual. Varios (copia de seguridad de Showdown, con «=== Nombre ===») se añaden a «Mis equipos».</p>
     <textarea id="texto-paste" rows="12" placeholder="Pikachu @ Light Ball&#10;Ability: Static&#10;Level: 50&#10;EVs: 4 HP / 252 SpA / 252 Spe&#10;Timid Nature&#10;IVs: 0 Atk&#10;- Thunderbolt&#10;- Surf&#10;- Grass Knot&#10;- Volt Switch"></textarea>
     <div class="dialogo-botones">
       <button id="importar-cancelar">Cancelar</button>
@@ -350,6 +353,9 @@
           <input class="avatar-pokemon" type="text" autocomplete="off">
         </label>
       </div>
+      <div class="avatar-o"><span>o</span></div>
+      <button type="button" class="avatar-subir">Subir una foto tuya</button>
+      <input class="avatar-archivo" type="file" accept="image/*" hidden>
       <span class="sesion-error avatar-error"></span>
       <div class="dialogo-botones">
         <button type="button" class="boton-gris boton-izquierda avatar-quitar">Quitar</button>
@@ -519,6 +525,8 @@
     <div class="combate-ganadores"></div>
     <span class="etiqueta-campo">Resultado</span>
     <div class="combate-marcadores"></div>
+    <span class="etiqueta-campo">Equipos</span>
+    <div class="combate-equipos"></div>
     <div class="dialogo-botones">
       <button type="button" class="boton-gris boton-izquierda combate-borrar">Sin jugar</button>
       <button type="button" class="boton-gris combate-cancelar">Cancelar</button>
@@ -692,7 +700,7 @@
       </details>
       <details>
         <summary>¿Cómo funcionan los combates?</summary>
-        <p>Al crear el locke se pone cuántos combates habrá (por ejemplo, 3: tras la 3ª medalla, tras la 6ª y tras la Liga) y, si quieres, el nombre de cada uno. Se juegan fuera (en Showdown) y en el locke se pulsa cada combate para apuntar quién lo ganó y cómo (2-0, 2-1...). Con 3 o más jugadores, cada combate le suma un punto al que lo gana. Sin combates, cada uno se suma sus victorias a mano.</p>
+        <p>Al crear el locke se pone cuántos combates habrá (por ejemplo, 3: tras la 3ª medalla, tras la 6ª y tras la Liga) y, si quieres, el nombre de cada uno. Se juegan fuera (en Showdown) y en el locke se pulsa cada combate para apuntar quién lo ganó, cómo (2-0, 2-1...) y con qué equipo jugó cada uno (cada uno elige el suyo de «Mis equipos»). Con 3 o más jugadores, cada combate le suma un punto al que lo gana. Sin combates, cada uno se suma sus victorias a mano.</p>
       </details>
       <details>
         <summary>¿Qué son las vidas? ¿Y la vida cero?</summary>
@@ -712,7 +720,7 @@
       </details>
       <details>
         <summary>¿Cómo se consiguen los logros?</summary>
-        <p>Solos, usando la web: ganando lockes, perdiendo Pokémon, guardando equipos, marcando rutas, creando tus normas... En «Logros» ves todos, lo que pide cada uno y lo que te falta. Hace falta tener sesión, porque se guardan en tu perfil: cualquiera de tus amigos los puede ver en su pestaña «Logros». Con 25, 50 y 80 logros desbloqueas un fondo de plata, oro y platino para tu tarjeta de «Amigos», y cada logro de tipo (15 Pokémon distintos de ese tipo en tus equipos guardados) el fondo de ese tipo; se elige en tu perfil.</p>
+        <p>Solos, usando la web: ganando lockes, perdiendo Pokémon, guardando equipos, marcando rutas, creando tus normas... En «Logros» ves todos, lo que pide cada uno y lo que te falta. Hace falta tener sesión, porque se guardan en tu perfil: cualquiera de tus amigos los puede ver en su pestaña «Logros». Con 25 logros, con 50 y con todos desbloqueas un fondo de plata, oro y platino para tu tarjeta de «Amigos», y cada logro de tipo (15 Pokémon distintos de ese tipo en tus equipos guardados) el fondo de ese tipo; se elige en tu perfil.</p>
       </details>
       <details>
         <summary>¿Para qué sirve la ruleta?</summary>
@@ -724,7 +732,7 @@
       </details>
       <details>
         <summary>¿Cómo paso un equipo a Showdown, o al revés?</summary>
-        <p>En el creador de equipos, «Exportar» copia el equipo en el formato de Showdown. Para traer uno, «Importar paste» en el menú de «Equipos». Pulsando el nombre de un Pokémon le pones o le cambias el mote.</p>
+        <p>En el creador de equipos, «Exportar» copia el equipo en el formato de Showdown. Para traer uno, «Importar paste» en el menú de «Equipos». En «Mis equipos», «Exportar todos» copia todos los equipos como la copia de seguridad de Showdown («Backup/Restore all teams»), y «Importar» con esa copia los añade todos. Con «Nuevo grupo» juntas equipos en carpetas (arrastrándolos dentro o con el botón de la carpeta de cada uno); son las mismas carpetas de Showdown al exportar e importar. Pulsando el nombre de un Pokémon le pones o le cambias el mote.</p>
       </details>
       <details>
         <summary>¿Cómo funciona la calculadora?</summary>

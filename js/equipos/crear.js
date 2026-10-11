@@ -10,13 +10,15 @@ import { elegirForma } from "../comun/elegir-forma.js";
 import { sumarContador } from "../comun/contadores.js";
 import {
   pokemonDesdeAPI, pedirVariedad, cambiarForma, variedadActual,
-  ataqueDesdeAPI, obtenerStats, obtenerDatosCombate, descripcionHabilidad, descripcionObjeto, textoForma
+  ataqueDesdeAPI, obtenerStats, obtenerDatosCombate, descripcionHabilidad, descripcionObjeto, textoForma,
+  datosDeGenero, generosPosibles, generoDe, ICONO_GENERO, NOMBRE_GENERO
 } from "../comun/pokemon.js";
 import { activarTooltips, actualizarTooltip, ocultarTooltip, escaparHTML } from "../comun/tooltip.js";
 import { activarAutocompletado, iconoPokemon, iconoObjeto } from "../comun/autocompletado.js";
 import { pasteDelEquipo, copiarAlPortapapeles } from "./exportar.js";
 import { iniciarEntreno, abrirEntreno, textoEntreno } from "./entreno.js";
 import { icono } from "../comun/iconos.js";
+import { activarArrastre } from "../comun/arrastrar.js";
 import {
   imagenConRespaldo, urlArte, urlsArte, urlsIconoObjeto, cambiarImagen, precargarEnReposo
 } from "../comun/imagenes.js";
@@ -107,8 +109,11 @@ export function renderCrear() {
   for (let i = estado.equipo.length; i < MAX_EQUIPO; i++) tarjetas.push(crearHueco());
   resultado.replaceChildren(...tarjetas);
 
-  // Deja descargada la otra versión (normal/shiny) de cada arte para que el cambio sea instantáneo
-  precargarEnReposo(estado.equipo.map((p) => urlArte({ ...p, shiny: !p.shiny })));
+  // Deja descargada la otra versión (normal/shiny, macho/hembra) de cada arte para que el cambio sea instantáneo
+  precargarEnReposo(estado.equipo.flatMap((p) => [
+    urlArte({ ...p, shiny: !p.shiny }),
+    p.difGenero ? urlsArte({ ...p, genero: p.genero === "F" ? "M" : "F" })[0] : ""
+  ]));
 }
 
 // Vuelve a dibujar solo la tarjeta de ese Pokémon (las demás no se tocan)
@@ -198,54 +203,25 @@ function crearHueco() {
 
 // ---------- Cambiar de sitio los Pokémon arrastrando su tarjeta ----------
 
-let tarjetaArrastrada = null;
-
+// La línea que marca dónde cae y el movimiento, en js/comun/arrastrar.js. Los huecos vacíos
+// no cuentan: siempre van detrás de los Pokémon.
 function activarArrastreTarjetas() {
-  resultado.addEventListener("dragstart", (e) => {
+  activarArrastre(resultado, {
+    elementos: ".tarjeta:not(.tarjeta-vacia)",
     // Desde un campo, un botón o un desplegable no se arrastra: ahí se escribe y se pulsa
-    if (e.target.closest("input, textarea, button, select")) {
-      e.preventDefault();
-      return;
+    puedeEmpezar: (e) => {
+      if (e.target.closest("input, textarea, button, select")) return false;
+      ocultarTooltip();
+      return true;
+    },
+    alTerminar: (tarjeta, movido) => {
+      if (!movido) return;
+      // El equipo pasa a estar en el orden en que han quedado las tarjetas. Se cambia el
+      // contenido del array sin sustituirlo para no perder las referencias de las tarjetas.
+      const orden = [...resultado.querySelectorAll(".tarjeta:not(.tarjeta-vacia)")].map((t) => pokemonDe.get(t));
+      estado.equipo.splice(0, estado.equipo.length, ...orden.filter(Boolean));
+      guardarEquipo();
     }
-
-    tarjetaArrastrada = e.target.closest(".tarjeta:not(.tarjeta-vacia)");
-    if (!tarjetaArrastrada) return;
-
-    ocultarTooltip();
-    tarjetaArrastrada.classList.add("arrastrando");
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", "");
-  });
-
-  resultado.addEventListener("dragover", (e) => {
-    if (!tarjetaArrastrada) return;
-    e.preventDefault();
-
-    // Los huecos vacíos no valen como destino: siempre van detrás de los Pokémon
-    const destino = e.target.closest(".tarjeta:not(.tarjeta-vacia)");
-    if (!destino || destino === tarjetaArrastrada) return;
-
-    // Con varias columnas cuenta la mitad izquierda/derecha; con una sola, la de arriba/abajo
-    const r = destino.getBoundingClientRect();
-    const columnas = getComputedStyle(resultado).gridTemplateColumns.split(" ").length;
-    const antes = columnas > 1 ? e.clientX < r.left + r.width / 2 : e.clientY < r.top + r.height / 2;
-
-    if (antes) destino.before(tarjetaArrastrada);
-    else destino.after(tarjetaArrastrada);
-  });
-
-  resultado.addEventListener("drop", (e) => e.preventDefault());
-
-  resultado.addEventListener("dragend", () => {
-    if (!tarjetaArrastrada) return;
-    tarjetaArrastrada.classList.remove("arrastrando");
-    tarjetaArrastrada = null;
-
-    // El equipo pasa a estar en el orden en que han quedado las tarjetas. Se cambia el
-    // contenido del array sin sustituirlo para no perder las referencias de las tarjetas.
-    const orden = [...resultado.querySelectorAll(".tarjeta:not(.tarjeta-vacia)")].map((t) => pokemonDe.get(t));
-    estado.equipo.splice(0, estado.equipo.length, ...orden.filter(Boolean));
-    guardarEquipo();
   });
 }
 
@@ -271,6 +247,7 @@ function crearTarjeta(poke) {
 
   tarjeta.innerHTML = `
     <button class="btn-shiny ${poke.shiny ? "activo" : ""}" title="Shiny">${poke.shiny ? "★" : "☆"}</button>
+    ${plantillaGenero(poke)}
     <div class="tarjeta-izq">
       ${arte}
       <h2 class="nombre-editable" title="${poke.mote ? "Cambiar mote" : "Poner mote"}">${escaparHTML(poke.mote || poke.es)}</h2>
@@ -302,6 +279,30 @@ function crearTarjeta(poke) {
     botonShiny.textContent = poke.shiny ? "★" : "☆";
     cambiarImagen(tarjeta.querySelector(".arte"), urlsArte(poke));
   });
+
+  // Género: sin decir -> macho -> hembra -> sin decir. Si solo puede ser uno, no se cambia.
+  // Como el shiny: cambian el botón y la imagen, sin redibujar la tarjeta
+  tarjeta.addEventListener("click", (e) => {
+    const boton = e.target.closest(".btn-genero");
+    if (!boton) return;
+    const posibles = generosPosibles(poke);
+    if (posibles.length < 2) return;
+    const orden = ["", ...posibles];
+    poke.genero = orden[(orden.indexOf(generoDe(poke)) + 1) % orden.length];
+    guardarEquipo();
+    boton.outerHTML = plantillaGenero(poke);
+    cambiarImagen(tarjeta.querySelector(".arte"), urlsArte(poke));
+  });
+  // Los guardados antes de apuntar el género de la especie: se mira ahora
+  if (poke.generoRatio === undefined) {
+    datosDeGenero(poke.id)
+      .then((datos) => {
+        Object.assign(poke, datos);
+        guardarEquipo();
+        refrescarTarjeta(poke);
+      })
+      .catch(() => {});
+  }
 
   tarjeta.querySelector(".nombre-editable").addEventListener("click", (e) => editarMote(e.currentTarget, poke));
 
@@ -344,6 +345,21 @@ function crearTarjeta(poke) {
   prepararSelectorForma(tarjeta, poke);
 
   return tarjeta;
+}
+
+// ---------- Género ----------
+
+// Debajo del de shiny. Sin género (Magnemite...), nada.
+function plantillaGenero(poke) {
+  const posibles = generosPosibles(poke);
+  if (!posibles.length) return "";
+  const genero = generoDe(poke);
+  const fijo = posibles.length === 1;
+  const titulo = fijo
+    ? `Siempre ${NOMBRE_GENERO[genero].toLowerCase()}`
+    : genero ? `${NOMBRE_GENERO[genero]} (pulsa para cambiar)` : "Género sin elegir (pulsa para elegir)";
+  return `<button class="btn-genero ${genero ? `genero-${genero}` : ""} ${fijo ? "fijo" : ""}" title="${titulo}"
+            aria-label="${titulo}">${genero ? icono(ICONO_GENERO[genero]) : "⚥︎"}</button>`;
 }
 
 // ---------- Mote ----------

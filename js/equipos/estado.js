@@ -50,10 +50,49 @@ export function escribirGuardados(lista) {
   return escribir(CLAVE_GUARDADOS, lista);
 }
 
-// Coloca los equipos guardados en el orden de esos ids (el usuario los ha arrastrado)
-export function reordenarGuardados(ids) {
-  const porId = new Map(leerGuardados().map((g) => [g.id, g]));
-  escribirGuardados(ids.map((id) => porId.get(id)).filter(Boolean));
+// Coloca los equipos guardados en ese orden y en esos grupos (el usuario los ha arrastrado):
+// [{ id, grupo }] (grupo "" = sin grupo). Los que no estén en la lista se quedan al final.
+export function colocarGuardados(orden) {
+  const guardados = leerGuardados();
+  const porId = new Map(guardados.map((g) => [g.id, g]));
+  const colocados = orden
+    .map(({ id, grupo }) => {
+      const guardado = porId.get(id);
+      if (!guardado) return null;
+      porId.delete(id);
+      if (grupo) guardado.grupo = grupo;
+      else delete guardado.grupo;
+      return guardado;
+    })
+    .filter(Boolean);
+  escribirGuardados([...colocados, ...porId.values()]);
+}
+
+// ---------- Grupos de «Mis equipos» ----------
+//
+// [{ id, nombre, plegado }], en el orden en que salen. Cada equipo guardado dice el suyo en
+// «grupo» (el id); sin él, va suelto. Como las carpetas de Showdown: al exportarlos todos van
+// como «Grupo/Equipo» y al importar se crean solos.
+
+const CLAVE_GRUPOS = "poketeams-grupos-v1";
+
+export function leerGrupos() {
+  return leer(CLAVE_GRUPOS, []);
+}
+
+export function escribirGrupos(lista) {
+  return escribir(CLAVE_GRUPOS, lista);
+}
+
+// El grupo con ese nombre (sin distinguir mayúsculas); si no hay, se crea
+export function grupoConNombre(nombre) {
+  const grupos = leerGrupos();
+  const limpio = nombre.trim();
+  const existente = grupos.find((g) => g.nombre.trim().toLowerCase() === limpio.toLowerCase());
+  if (existente) return existente;
+  const nuevo = { id: `g${Date.now()}${Math.floor(Math.random() * 1000)}`, nombre: limpio, plegado: false };
+  escribirGrupos([...grupos, nuevo]);
+  return nuevo;
 }
 
 // La cara de Mundo Misterioso elegida en «Mis equipos» (mis-equipos.js). Al guardar el

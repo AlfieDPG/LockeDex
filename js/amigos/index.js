@@ -7,6 +7,8 @@
 // tu palmarés. Lo que ganes en «Versus» se apunta solo.
 
 import { imagenConRespaldo } from "../comun/imagenes.js";
+import { activarArrastre } from "../comun/arrastrar.js";
+import { elegirEquipo, caraDePokemon, carasDeEquipo } from "../comun/elegir-equipo.js";
 import { fondoDe, claseFondo, estiloFondo } from "../comun/fondos.js";
 import { icono } from "../comun/iconos.js";
 import { campoNumero } from "../comun/numero.js";
@@ -145,8 +147,37 @@ function plantillaFlotante(ganado, ficha) {
             const gano = p.nombre === ganador;
             return `
               <li class="${gano ? "gano" : ""}">
-                <span>${gano ? icono("corona") : ""}${escaparHTML(p.nombre)}</span>
+                <span class="flotante-quien">${gano ? icono("corona") : ""}${escaparHTML(p.nombre)}</span>
+                ${p.rom ? `<span class="flotante-rom" title="Se pasó la ROM">${icono("mando")}</span>` : ""}
                 ${vidas === "" ? "" : `<span class="flotante-vidas">${icono("corazon")}${escaparHTML(vidas)}</span>`}
+                ${p.equipo ? `<span class="flotante-equipo">${carasDeEquipo(p.equipo, { mvp: p.mvp ?? -1 })}</span>` : ""}
+              </li>`;
+          })
+          .join("")}
+      </ul>`
+    : "";
+
+  // Los combates: quién ganó, cómo y con qué equipo jugó cada uno
+  const nombrePorId = new Map(participantes.map((p) => [p.id, p.nombre]));
+  const combates = (ganado.combates || []).filter((c) => c.nombre || c.ganador || Object.keys(c.equipos || {}).length);
+  const listaCombates = combates.length
+    ? `
+      <div class="flotante-titulo">Combates</div>
+      <ul class="flotante-combates">
+        ${combates
+          .map((combate, i) => {
+            const quien = nombrePorId.get(combate.ganador) || "";
+            const equipos = Object.entries(combate.equipos || {})
+              .filter(([id]) => nombrePorId.has(id))
+              .map(([id, equipo]) => `<span class="flotante-combate-equipo" title="${escaparHTML(nombrePorId.get(id))}">${carasDeEquipo(equipo)}</span>`)
+              .join(`<span class="combate-vs">vs</span>`);
+            return `
+              <li>
+                <span class="flotante-combate-cabeza">
+                  <b>${escaparHTML(combate.nombre || `Combate ${i + 1}`)}</b>
+                  ${quien ? `<span>${icono("corona")} ${escaparHTML(quien)}${combate.marcador ? ` · ${escaparHTML(combate.marcador)}` : ""}</span>` : ""}
+                </span>
+                ${equipos ? `<span class="flotante-combate-equipos">${equipos}</span>` : ""}
               </li>`;
           })
           .join("")}
@@ -154,7 +185,7 @@ function plantillaFlotante(ganado, ficha) {
     : "";
 
   const sinDatos =
-    !juego && !fecha && !participantes.length && !deVidasIlimitadas(ganado)
+    !juego && !fecha && !participantes.length && !deVidasIlimitadas(ganado) && !(ganado.combates || []).length
       ? `<p class="flotante-vacio">${
           ficha.mia ? "Sin más datos. Puedes añadirlos con el lápiz de tu ficha." : "Sin más datos."
         }</p>`
@@ -168,6 +199,7 @@ function plantillaFlotante(ganado, ficha) {
     ${ganado.nota ? `<p class="flotante-nota">${escaparHTML(ganado.nota)}</p>` : ""}
     ${filas.join("")}
     ${lista}
+    ${listaCombates}
     ${sinDatos}`;
 }
 
@@ -261,7 +293,7 @@ function plantillaLuchador(perfil, victorias, clase) {
   return `
     <div class="luchador ${clase}">
       ${clase.includes("gana") ? `<span class="luchador-corona">${icono("corona")}</span>` : ""}
-      <div class="jugador-foto" data-inicial="${escaparHTML((perfil.nombre || "?")[0])}">${imagen}</div>
+      <div class="jugador-foto" data-inicial="${escaparHTML((perfil.nombre || "?")[0])}" data-perfil="${escaparHTML(perfil.uid || "")}" title="Ver perfil">${imagen}</div>
       <span class="luchador-nombre">${nombre}</span>
       <span class="luchador-victorias">${victorias}</span>
       <span class="luchador-etiqueta">${victorias === 1 ? "victoria" : "victorias"}</span>
@@ -320,7 +352,7 @@ function plantillaFicha(ficha) {
              title="Pulsa para ver los lockes">
       ${ficha.mia ? "" : `<span class="punto-conectado" title="Tiene la web abierta"></span>`}
       ${plantillaAcciones(ficha)}
-      <div class="jugador-foto" data-inicial="${escaparHTML(ficha.nombre[0] || "?")}">${imagen}</div>
+      <div class="jugador-foto" data-inicial="${escaparHTML(ficha.nombre[0] || "?")}" data-perfil="${escaparHTML(ficha.clave)}" title="Ver perfil">${imagen}</div>
       <h2 class="jugador-nombre">${alt}</h2>
 
       <div class="contadores-locke">${tipos}</div>
@@ -582,16 +614,30 @@ function plantillaDetalles(ganado) {
     ilimitadas ? "vidas ilimitadas" : ""
   ].filter(Boolean);
 
+  // Cada participante: nombre, vidas, si se pasó la ROM y su equipo final (pulsando un
+  // Pokémon de su equipo, ese es su MVP)
   const filas = participantes
     .map(
       (p) => `
-        <div class="participante">
-          <input class="participante-nombre" type="text" value="${escaparHTML(p.nombre || "")}" placeholder="Nombre">
-          <span class="participante-corazon">${icono("corazon")}</span>
-          ${campoNumero(`<input class="participante-vidas" type="number" min="0" max="999"
-            value="${p.vidas === null || p.vidas === undefined ? "" : escaparHTML(p.vidas)}"
-            placeholder="Vidas" title="Vidas con las que acabó">`)}
-          <button class="participante-quitar" title="Quitar">${icono("aspa")}</button>
+        <div class="participante" data-participante="${escaparHTML(p.id || "")}">
+          <div class="participante-fila">
+            <input class="participante-nombre" type="text" value="${escaparHTML(p.nombre || "")}" placeholder="Nombre">
+            <span class="participante-corazon">${icono("corazon")}</span>
+            ${campoNumero(`<input class="participante-vidas" type="number" min="0" max="999"
+              value="${p.vidas === null || p.vidas === undefined ? "" : escaparHTML(p.vidas)}"
+              placeholder="Vidas" title="Vidas con las que acabó">`)}
+            <label class="participante-rom" title="Se pasó la ROM">
+              <input class="participante-rom-casilla" type="checkbox" ${p.rom ? "checked" : ""}>
+              <span>${icono("mando")} ROM</span>
+            </label>
+            <button class="participante-quitar" title="Quitar">${icono("aspa")}</button>
+          </div>
+          <div class="participante-equipo">
+            ${p.equipo ? plantillaEquipoMvp(p) : ""}
+            <button type="button" class="palmares-elegir-equipo" data-para="final">
+              ${icono("estrella")} ${p.equipo ? "Cambiar equipo final" : "Equipo final"}
+            </button>
+          </div>
         </div>`
     )
     .join("");
@@ -603,7 +649,7 @@ function plantillaDetalles(ganado) {
   return `
     <details class="palmares-mas" ${ganado.abierto ? "open" : ""}>
       <summary>
-        Juego, fecha y participantes
+        Juego, fecha, participantes y combates
         ${resumen.length ? `<span class="palmares-resumen">· ${escaparHTML(resumen.join(" · "))}</span>` : ""}
       </summary>
       <div class="palmares-detalles ${ilimitadas ? "ilimitadas" : ""}">
@@ -628,8 +674,67 @@ function plantillaDetalles(ganado) {
             <option value="${OTRA_PERSONA}">Otra persona (escribir el nombre)</option>
           </select>
         </div>
+        <div class="palmares-campo palmares-combates">
+          <span class="participantes-titulo">Combates</span>
+          ${(ganado.combates || []).map((combate, i) => plantillaCombatePalmares(combate, i, participantes)).join("")}
+          <button type="button" class="palmares-anadir-combate">${icono("mas")} Añadir combate</button>
+        </div>
       </div>
     </details>`;
+}
+
+// El equipo final de un participante; pulsando un Pokémon se marca (o desmarca) como su MVP
+function plantillaEquipoMvp(p) {
+  return `
+    <span class="participante-mvp" title="Pulsa un Pokémon para que sea su MVP">
+      ${p.equipo.pokemon
+        .map((poke, i) => `<button type="button" class="cara-equipo palmares-mvp ${i === p.mvp ? "mvp" : ""}" data-mvp="${i}">${caraDePokemon(poke)}</button>`)
+        .join("")}
+    </span>`;
+}
+
+const MARCADORES = ["2-0", "2-1", "1-0", "3-0", "3-1", "3-2"];
+
+// Un combate: nombre, quién lo ganó, cómo y con qué equipo jugó cada participante
+function plantillaCombatePalmares(combate, i, participantes) {
+  const ganadores = participantes
+    .filter((p) => (p.nombre || "").trim())
+    .map((p) => `<option value="${escaparHTML(p.id)}" ${combate.ganador === p.id ? "selected" : ""}>${escaparHTML(p.nombre)}</option>`)
+    .join("");
+  const marcadores = MARCADORES.map(
+    (marcador) => `<option value="${marcador}" ${combate.marcador === marcador ? "selected" : ""}>${marcador}</option>`
+  ).join("");
+  const equipos = participantes
+    .filter((p) => (p.nombre || "").trim())
+    .map((p) => {
+      const equipo = (combate.equipos || {})[p.id];
+      return `
+        <div class="palmares-combate-equipo" data-participante="${escaparHTML(p.id)}">
+          <span class="palmares-combate-quien">${escaparHTML(p.nombre)}</span>
+          ${equipo ? carasDeEquipo(equipo) : ""}
+          <button type="button" class="palmares-elegir-equipo" data-para="${i}" title="Equipo con el que jugó este combate">
+            ${icono("pokeball")} ${equipo ? "Cambiar" : "Equipo"}
+          </button>
+        </div>`;
+    })
+    .join("");
+
+  return `
+    <div class="palmares-combate" data-combate="${i}">
+      <div class="palmares-combate-fila">
+        <input class="palmares-combate-nombre" type="text" maxlength="30" value="${escaparHTML(combate.nombre || "")}" placeholder="Combate ${i + 1}">
+        <select class="palmares-combate-ganador" title="Quién lo ganó">
+          <option value="">Ganador...</option>
+          ${ganadores}
+        </select>
+        <select class="palmares-combate-marcador" title="Resultado">
+          <option value="">Resultado</option>
+          ${marcadores}
+        </select>
+        <button class="palmares-quitar-combate" title="Quitar combate">${icono("aspa")}</button>
+      </div>
+      ${equipos ? `<div class="palmares-combate-equipos">${equipos}</div>` : ""}
+    </div>`;
 }
 
 // Una fila del diálogo tal y como está escrita ahora mismo. «abierto» solo sirve para que
@@ -648,98 +753,111 @@ function leerFila(fila, posicion, tipos) {
     ...leerCampoJuego(fila.querySelector(".campo-juego")),
     fechaFin: fila.querySelector(".palmares-fecha").value,
     vidasIlimitadas: ilimitadas,
-    participantes: [...fila.querySelectorAll(".participante")].map((p) => {
+    participantes: [...fila.querySelectorAll(".participante")].map((p, i) => {
       const vidas = p.querySelector(".participante-vidas").value;
+      // El equipo final y el MVP no están en casillas: vienen de lo que ya había
+      const antes = (anterior.participantes || [])[i] || {};
       return {
+        ...antes,
+        id: p.dataset.participante || antes.id || nuevoId(),
         nombre: p.querySelector(".participante-nombre").value,
         // null: ilimitadas (sale ∞ en la ficha). "": no se apuntó.
-        vidas: ilimitadas ? null : vidas === "" ? "" : Number(vidas)
+        vidas: ilimitadas ? null : vidas === "" ? "" : Number(vidas),
+        rom: p.querySelector(".participante-rom-casilla").checked
       };
     }),
+    combates: [...fila.querySelectorAll(".palmares-combate")].map((c, i) => ({
+      ...((anterior.combates || [])[i] || {}), // sus equipos
+      nombre: c.querySelector(".palmares-combate-nombre").value,
+      ganador: c.querySelector(".palmares-combate-ganador").value,
+      marcador: c.querySelector(".palmares-combate-marcador").value
+    })),
     abierto: fila.querySelector(".palmares-mas").open
   };
 }
 
 function abrirPalmares() {
   const mio = miPerfil();
-  ganadosEnEdicion = (mio.ganados || []).map((ganado) => ({ ...ganado }));
+  // Copia de verdad (equipos y combates incluidos) y un id para cada participante: los
+  // combates dicen quién ganó y con qué equipo jugó cada uno por ese id
+  ganadosEnEdicion = JSON.parse(JSON.stringify(mio.ganados || [])).map((ganado) => ({
+    ...ganado,
+    participantes: (ganado.participantes || []).map((p) => ({ ...p, id: p.id || nuevoId() }))
+  }));
   pintarPalmares();
   dialogoPalmares.showModal();
 }
 
 async function guardarPalmares() {
   const ganados = leerPalmaresDelDialogo()
-    .map(({ abierto, ...ganado }) => ({
-      ...ganado,
-      nombre: ganado.nombre.trim(),
-      nota: ganado.nota.trim(),
-      juegoOtro: ganado.juegoOtro.trim(),
-      participantes: ganado.participantes
+    .map(({ abierto, ...ganado }) => {
+      const participantes = ganado.participantes
         .map((p) => ({ ...p, nombre: p.nombre.trim() }))
-        .filter((p) => p.nombre)
-    }))
+        .filter((p) => p.nombre);
+      const ids = new Set(participantes.map((p) => p.id));
+      return {
+        ...ganado,
+        nombre: ganado.nombre.trim(),
+        nota: ganado.nota.trim(),
+        juegoOtro: ganado.juegoOtro.trim(),
+        participantes,
+        // Los equipos y el ganador de cada combate, solo de los que siguen
+        combates: (ganado.combates || []).map((combate) => ({
+          nombre: (combate.nombre || "").trim(),
+          ganador: ids.has(combate.ganador) ? combate.ganador : "",
+          marcador: combate.marcador || "",
+          equipos: Object.fromEntries(Object.entries(combate.equipos || {}).filter(([id]) => ids.has(id)))
+        }))
+      };
+    })
     .filter((ganado) => ganado.nombre);
 
-  await guardarMiPerfil({ ganados });
+  // JSON de ida y vuelta: Firestore no acepta «undefined»
+  await guardarMiPerfil({ ganados: JSON.parse(JSON.stringify(ganados)) });
   dialogoPalmares.close();
+}
+
+// El equipo final de un participante o el de un combate (para = "final" o el número del combate)
+async function elegirEquipoPalmares(boton) {
+  const fila = boton.closest(".fila-palmares");
+  const posicion = Number(fila.dataset.posicion);
+  const idParticipante = boton.closest("[data-participante]").dataset.participante;
+  ganadosEnEdicion = leerPalmaresDelDialogo();
+  const ganado = ganadosEnEdicion[posicion];
+  const participante = ganado.participantes.find((p) => p.id === idParticipante);
+  if (!participante) return;
+
+  const final = boton.dataset.para === "final";
+  const combate = final ? null : ganado.combates[Number(boton.dataset.para)];
+  const actual = final ? participante.equipo : (combate.equipos || {})[idParticipante];
+  const equipo = await elegirEquipo(boton, { conQuitar: Boolean(actual) });
+  if (equipo === undefined) return;
+
+  if (final) {
+    participante.equipo = equipo;
+    participante.mvp = -1;
+  } else {
+    combate.equipos = { ...(combate.equipos || {}) };
+    if (equipo) combate.equipos[idParticipante] = equipo;
+    else delete combate.equipos[idParticipante];
+  }
+  pintarPalmares();
 }
 
 // ---------- Mover las fichas de sitio ----------
 //
 // Solo cambia el orden en pantalla y no se guarda: al recargar vuelven en el mismo orden.
 
-let arrastrada = null;
 let seAcabaDeArrastrar = false;
 
-function fichaMasCercana(x, y) {
-  let mejor = null;
-  let menorDistancia = Infinity;
-
-  for (const ficha of lista.querySelectorAll(".ficha-jugador:not(.arrastrando)")) {
-    const caja = ficha.getBoundingClientRect();
-    const dx = x - (caja.left + caja.width / 2);
-    const dy = y - (caja.top + caja.height / 2);
-    const distancia = dx * dx + dy * dy;
-
-    if (distancia < menorDistancia) {
-      menorDistancia = distancia;
-      mejor = ficha;
+// La línea que marca dónde cae, en js/comun/arrastrar.js
+function activarArrastreFichas() {
+  activarArrastre(lista, {
+    elementos: ".ficha-jugador",
+    alTerminar: () => {
+      seAcabaDeArrastrar = true; // el navegador puede soltar un click justo después
+      setTimeout(() => (seAcabaDeArrastrar = false), 0);
     }
-  }
-
-  return mejor;
-}
-
-function activarArrastre() {
-  lista.addEventListener("dragstart", (e) => {
-    arrastrada = e.target.closest(".ficha-jugador");
-    if (!arrastrada) return;
-    arrastrada.classList.add("arrastrando");
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", ""); // Firefox no arranca el arrastre sin esto
-  });
-
-  lista.addEventListener("dragover", (e) => {
-    if (!arrastrada) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-
-    const destino = fichaMasCercana(e.clientX, e.clientY);
-    if (!destino || destino === arrastrada) return;
-
-    // A la izquierda de su centro se coloca delante; a la derecha, detrás
-    const caja = destino.getBoundingClientRect();
-    const detras = e.clientX > caja.left + caja.width / 2;
-    lista.insertBefore(arrastrada, detras ? destino.nextSibling : destino);
-  });
-
-  lista.addEventListener("drop", (e) => e.preventDefault());
-
-  lista.addEventListener("dragend", () => {
-    if (arrastrada) arrastrada.classList.remove("arrastrando");
-    arrastrada = null;
-    seAcabaDeArrastrar = true; // el navegador puede soltar un click justo después
-    setTimeout(() => (seAcabaDeArrastrar = false), 0);
   });
 }
 
@@ -815,7 +933,7 @@ export function iniciar() {
     if (e.key === "Enter") agregar();
   });
 
-  activarArrastre();
+  activarArrastreFichas();
   activarFichas();
 
   // El recuadro de datos de un locke se cierra al pulsar fuera, con Escape o al moverse
@@ -876,6 +994,11 @@ export function iniciar() {
 
     const posicion = Number(fila.dataset.posicion);
 
+    if (boton.classList.contains("palmares-elegir-equipo")) {
+      elegirEquipoPalmares(boton).catch((error) => console.error(error));
+      return;
+    }
+
     // Siempre se recoge lo escrito antes de repintar, o se perdería
     if (boton.classList.contains("palmares-quitar")) {
       ganadosEnEdicion = leerPalmaresDelDialogo();
@@ -884,6 +1007,19 @@ export function iniciar() {
       const cual = [...fila.querySelectorAll(".participante")].indexOf(boton.closest(".participante"));
       ganadosEnEdicion = leerPalmaresDelDialogo();
       ganadosEnEdicion[posicion].participantes.splice(cual, 1);
+    } else if (boton.classList.contains("palmares-mvp")) {
+      // Su MVP: pulsando el que ya lo es, se quita
+      const idParticipante = boton.closest(".participante").dataset.participante;
+      ganadosEnEdicion = leerPalmaresDelDialogo();
+      const participante = ganadosEnEdicion[posicion].participantes.find((p) => p.id === idParticipante);
+      const i = Number(boton.dataset.mvp);
+      if (participante) participante.mvp = participante.mvp === i ? -1 : i;
+    } else if (boton.classList.contains("palmares-anadir-combate")) {
+      ganadosEnEdicion = leerPalmaresDelDialogo();
+      ganadosEnEdicion[posicion].combates.push({ nombre: "", ganador: "", marcador: "", equipos: {} });
+    } else if (boton.classList.contains("palmares-quitar-combate")) {
+      ganadosEnEdicion = leerPalmaresDelDialogo();
+      ganadosEnEdicion[posicion].combates.splice(Number(boton.closest(".palmares-combate").dataset.combate), 1);
     } else {
       return;
     }
@@ -900,6 +1036,13 @@ export function iniciar() {
       return;
     }
 
+    // Al cambiar un nombre, los combates lo ponen al día (quién ganó, de quién es cada equipo)
+    if (e.target.classList.contains("participante-nombre") && fila.querySelector(".palmares-combate")) {
+      ganadosEnEdicion = leerPalmaresDelDialogo();
+      pintarPalmares();
+      return;
+    }
+
     // Elegir participante: un amigo (o tú) entra con su nombre; «Otra persona», en blanco
     if (e.target.classList.contains("participante-elegir")) {
       const elegido = e.target.value;
@@ -907,6 +1050,7 @@ export function iniciar() {
       const posicion = Number(fila.dataset.posicion);
       ganadosEnEdicion = leerPalmaresDelDialogo();
       ganadosEnEdicion[posicion].participantes.push({
+        id: nuevoId(),
         nombre: elegido === OTRA_PERSONA ? "" : elegido,
         vidas: ""
       });

@@ -578,12 +578,31 @@ function resumenDeLocke(id, locke) {
   const vidas = locke.vidas || {};
   const estados = locke.estados || {};
 
-  const participantes = (locke.jugadores || [])
-    .filter((uid) => (estados[uid] || "aceptado") === "aceptado")
-    .map((uid) => ({
-      nombre: nombres[uid] || "Jugador",
-      vidas: locke.vidasIlimitadas ? null : Math.max(0, vidas[uid] || 0) // -1: eliminado (vida cero)
-    }));
+  const salon = locke.salon || {};
+  const equipos = locke.equipos || {};
+  const resultados = locke.resultados || {};
+  const dentro = (locke.jugadores || []).filter((uid) => (estados[uid] || "aceptado") === "aceptado");
+
+  // Como en los que se apuntan a mano (amigos/index.js): cada participante con su id (aquí, su
+  // uid), si se pasó la ROM y su equipo final con su MVP
+  const participantes = dentro.map((uid) => ({
+    id: uid,
+    nombre: nombres[uid] || "Jugador",
+    vidas: locke.vidasIlimitadas ? null : Math.max(0, vidas[uid] || 0), // -1: eliminado (vida cero)
+    rom: Boolean((locke.rom || {})[uid]),
+    ...(salon[uid] ? { equipo: { nombre: salon[uid].nombre || "", pokemon: salon[uid].pokemon || [] }, mvp: salon[uid].mvp ?? -1 } : {})
+  }));
+
+  // Y cada combate: quién lo ganó, cómo y con qué equipo jugó cada uno
+  const combates = (Array.isArray(locke.combates) ? locke.combates : []).map((combate, i) => {
+    const resultado = resultados[combate.id] || {};
+    return {
+      nombre: combate.nombre || `Combate ${i + 1}`,
+      ganador: dentro.includes(resultado.ganador) ? resultado.ganador : "",
+      marcador: resultado.marcador || "",
+      equipos: Object.fromEntries(dentro.filter((uid) => (equipos[uid] || {})[combate.id]).map((uid) => [uid, equipos[uid][combate.id]]))
+    };
+  });
 
   return {
     id,
@@ -596,7 +615,8 @@ function resumenDeLocke(id, locke) {
     fechaFin: locke.fechaFin || "",
     vidasIlimitadas: Boolean(locke.vidasIlimitadas),
     ganador: nombres[locke.ganador] || "",
-    participantes
+    participantes,
+    combates
   };
 }
 

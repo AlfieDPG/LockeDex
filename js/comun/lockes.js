@@ -361,6 +361,7 @@ export async function elegirGanador(id, uid) {
 //   combates: [{ id, nombre }]   // los que tendrá el locke (los pone quien lo crea; el nombre,
 //                                // opcional: «Tras la 3ª medalla», «Liga»...)
 //   resultados: { idCombate: { ganador: uid, marcador: "2-1" } }  // los apunta cualquiera de dentro
+//   equipos: { uid: { idCombate: { nombre, pokemon } } }  // con qué equipo jugó cada uno cada combate
 //   rom: { uid: true }           // se ha pasado la ROM (cada uno la suya)
 //   salon: { uid: { nombre, pokemon, mvp } }   // equipo final y MVP, ya con el locke cerrado
 //
@@ -416,6 +417,24 @@ export async function apuntarResultado(id, idCombate, ganador, marcador) {
     const detalle = `${nombreCombate(locke, idCombate)}${marcador ? ` (${marcador})` : ""}`;
     await apuntarSuceso(id, "combate", { ganador, detalle });
   }
+}
+
+// El equipo con el que juegas un combate (cada uno pone el suyo): equipos: { uid: { idCombate:
+// { nombre, pokemon } } }. equipo null: se quita.
+export function equipoDeCombate(locke, uid, idCombate) {
+  return ((locke.equipos || {})[uid] || {})[idCombate] || null;
+}
+
+export async function guardarEquipoCombate(id, idCombate, equipo) {
+  const locke = lockePorId(id);
+  const usuario = usuarioActual();
+  if (!locke || !usuario || locke.estado === "cerrado") return;
+
+  const { fn, ref } = referencia(id);
+  await fn.updateDoc(ref, {
+    [`equipos.${usuario.uid}.${idCombate}`]: equipo || fn.deleteField(),
+    actualizado: Date.now()
+  });
 }
 
 export async function cambiarRom(id, pasada) {

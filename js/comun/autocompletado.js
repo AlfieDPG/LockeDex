@@ -9,6 +9,8 @@ import { imagenConRespaldo, urlsPMD, urlSpritePixel, urlsIconoObjeto } from "./i
 //
 //   opciones.icono(entrada) -> HTML de un icono delante del nombre (ver iconoPokemon e
 //                              iconoObjeto, abajo); sin él, solo el nombre
+//   opciones.libre          -> se puede escribir algo que no esté en la lista: ninguna sale
+//                              marcada y Enter solo elige si se ha bajado con las flechas
 
 const MAXIMO = 8;
 
@@ -47,9 +49,11 @@ export function activarAutocompletado(campo, lista, alElegir, opciones = {}) {
     const texto = quitarAcentos(campo.value.trim());
     if (!texto) return;
 
+    // Primero lo que es justo lo escrito, luego lo que empieza por ello
+    const puntos = (e) => (quitarAcentos(e.es) === texto ? 2 : e.buscar.startsWith(texto) ? 1 : 0);
     actuales = lista
       .filter((e) => e.buscar.includes(texto))
-      .sort((a, b) => Number(b.buscar.startsWith(texto)) - Number(a.buscar.startsWith(texto)))
+      .sort((a, b) => puntos(b) - puntos(a))
       .slice(0, MAXIMO);
 
     actuales.forEach((entrada, i) => {
@@ -76,7 +80,8 @@ export function activarAutocompletado(campo, lista, alElegir, opciones = {}) {
       });
       caja.appendChild(opcion);
     });
-    marcar(0);
+    if (opciones.libre) marcada = -1;
+    else marcar(0);
   }
 
   campo.addEventListener("input", mostrar);
@@ -87,8 +92,10 @@ export function activarAutocompletado(campo, lista, alElegir, opciones = {}) {
         return;
       }
       e.preventDefault(); // que no mueva el cursor dentro de la casilla
-      marcar(marcada + (e.key === "ArrowDown" ? 1 : -1));
-    } else if (e.key === "Enter" && actuales.length) {
+      // (en las libres, sin ninguna marcada: ↓ va a la primera y ↑ a la última)
+      if (marcada < 0) marcar(e.key === "ArrowDown" ? 0 : -1);
+      else marcar(marcada + (e.key === "ArrowDown" ? 1 : -1));
+    } else if (e.key === "Enter" && actuales.length && (marcada >= 0 || !opciones.libre)) {
       e.preventDefault();
       elegir(actuales[marcada] || actuales[0]);
     } else if (e.key === "Escape" && actuales.length) {

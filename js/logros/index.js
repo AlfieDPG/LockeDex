@@ -7,7 +7,8 @@ import { icono } from "../comun/iconos.js";
 import { escaparHTML } from "../comun/utilidades.js";
 import { usuarioActual, alCambiarSesion, hayNube } from "../comun/nube.js";
 import { alCambiarMiPerfil } from "../comun/perfiles.js";
-import { LOGROS, CATEGORIAS, NIVELES, progreso, insignia } from "../comun/logros.js";
+import { LOGROS, CATEGORIAS, NIVELES, progreso, insignia, LOGROS_PARA_PLATA, LOGROS_PARA_ORO } from "../comun/logros.js";
+import { FONDOS, claseFondo, estiloFondo } from "../comun/fondos.js";
 
 const vista = document.getElementById("vista-logros");
 const cabecera = vista.querySelector(".logros-cabecera");
@@ -37,6 +38,13 @@ function plantillaLogro({ logro, valor, meta, conseguido }) {
       <small class="logro-cuenta">${hecho} / ${meta}</small>`;
   }
 
+  // Los que dan un fondo para la tarjeta: una muestra pequeña de ese fondo
+  const fondo = FONDOS.find((cada) => cada.id === logro.fondo);
+  const premio = fondo
+    ? `<span class="logro-premio ${claseFondo(fondo.id)}" style="${estiloFondo(fondo.id)}"
+             title="Da el fondo «${escaparHTML(fondo.nombre)}» para tu tarjeta">Fondo</span>`
+    : "";
+
   return `
     <article class="logro ${escaparHTML(logro.nivel)} ${conseguido ? "conseguido" : ""}">
       ${insignia(logro, Boolean(conseguido))}
@@ -45,8 +53,20 @@ function plantillaLogro({ logro, valor, meta, conseguido }) {
         <span class="logro-descripcion">${escaparHTML(logro.descripcion)}</span>
         ${pie}
       </div>
-      <span class="logro-nivel">${NIVELES[logro.nivel]}</span>
+      <div class="logro-lado">
+        <span class="logro-nivel">${NIVELES[logro.nivel]}</span>
+        ${premio}
+      </div>
     </article>`;
+}
+
+// El trofeo del total, del metal que llevas: bronce, plata desde 25, oro desde 50 y platino
+// con todos (lo mismo que los fondos)
+function nivelDelTotal(conseguidos) {
+  if (conseguidos >= LOGROS.length) return "platino";
+  if (conseguidos >= LOGROS_PARA_ORO) return "oro";
+  if (conseguidos >= LOGROS_PARA_PLATA) return "plata";
+  return "bronce";
 }
 
 function pintar() {
@@ -54,7 +74,7 @@ function pintar() {
   const conSesion = Boolean(usuarioActual());
 
   cabecera.innerHTML = `
-    ${insignia({ nivel: "oro", icono: "trofeo" })}
+    ${insignia({ nivel: nivelDelTotal(conseguidos), icono: "trofeo" })}
     <div class="logros-total">
       <strong>${conseguidos} <small>/ ${LOGROS.length}</small></strong>
       <div class="logro-barra grande"><span style="width:${Math.round((conseguidos / LOGROS.length) * 100)}%"></span></div>

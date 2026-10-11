@@ -19,7 +19,7 @@ import { activarAutocompletado, iconoPokemon as iconoSugerencia, iconoObjeto } f
 import { cargarDatos, datos } from "../comun/datos.js";
 import { leer } from "../comun/almacen.js";
 import { sumarContador } from "../comun/contadores.js";
-import { obtenerStats } from "../comun/pokemon.js";
+import { obtenerStats, datosDeGenero, generosPosibles, generoDe, ICONO_GENERO, NOMBRE_GENERO } from "../comun/pokemon.js";
 import { pedirJSON, URL_API } from "../comun/api.js";
 import { cargarPokedex } from "../pokedex/datos.js";
 import { formasDeTipoDe } from "../comun/formas.js";
@@ -62,7 +62,26 @@ function nuevoCombatiente(datosPoke) {
     ataques: new Array(HUECOS).fill(null), ...datosPoke
   };
   cargarHabilidades(c);
+  if (c.generoRatio === undefined) {
+    datosDeGenero(c.id)
+      .then((datosGenero) => {
+        Object.assign(c, datosGenero);
+        if (lados.atacante === c || lados.defensor === c) pintarTodo();
+      })
+      .catch(() => {});
+  }
   return c;
+}
+
+// El género, al lado del nombre: pulsando, sin decir -> macho -> hembra. Cuenta para
+// Rivalidad; y la hembra de las especies en que se ve distinta sale con su retrato.
+function plantillaGenero(c) {
+  const posibles = generosPosibles(c);
+  if (!posibles.length) return "";
+  const genero = generoDe(c);
+  const fijo = posibles.length === 1;
+  return `<button class="calc-genero ${genero ? `genero-${genero}` : ""}" ${fijo ? "disabled" : ""}
+            title="${genero ? NOMBRE_GENERO[genero] : "Género sin elegir"}">${genero ? icono(ICONO_GENERO[genero]) : "⚥︎"}</button>`;
 }
 
 // Las habilidades que puede tener (para elegirlas de un toque); sin ninguna puesta, la primera.
@@ -133,11 +152,12 @@ function cambiarDeForma(c, valor) {
     const forma = formasDeTipoDe(c.id).find((cada) => cada.tipo === dato);
     const normal = formaNormal(c.id);
     if (!forma || !normal) return;
-    Object.assign(c, { idForma: undefined, formaPMD: forma.pmd, imagenForma: forma.imagenForma, tipos: [forma.tipo], stats: normal.bases });
+    Object.assign(c, { formaSlug: undefined, idForma: undefined, formaPMD: forma.pmd, imagenForma: forma.imagenForma, tipos: [forma.tipo], stats: normal.bases });
   } else {
     const fila = (formasPorNumero.get(c.id) || []).find((cada) => String(cada.clave) === dato);
     if (!fila) return;
     Object.assign(c, {
+      formaSlug: undefined,
       idForma: fila.clave !== fila.numero ? fila.clave : undefined,
       formaPMD: fila.forma || 0,
       imagenForma: undefined,
@@ -189,6 +209,9 @@ function desdeEquipo(poke) {
     forma: poke.imagenForma ? `t:${poke.imagenForma.split("-")[1]}` : `f:${poke.idForma || poke.id}`,
     es: poke.es,
     mote: poke.mote || "",
+    genero: generoDe(poke),
+    formaSlug: poke.formaSlug,
+    ...(poke.generoRatio === undefined ? {} : { generoRatio: poke.generoRatio, difGenero: Boolean(poke.difGenero) }),
     tipos: poke.tipos || [],
     stats: poke.stats || null,
     entreno: poke.entreno ? JSON.parse(JSON.stringify(poke.entreno)) : undefined,
@@ -217,6 +240,7 @@ function paraCalcular(c) {
     etapas: c.etapas,
     objeto: c.objeto,
     habilidad: c.habilidad,
+    genero: generoDe(c),
     quemado: c.estado === "quemado",
     paralizado: c.estado === "paralizado",
     ps: c.psActual
@@ -246,7 +270,10 @@ function equiposDisponibles() {
 
 function retrato(c, clase) {
   return imagenConRespaldo(
-    [...urlsPMD({ id: c.id, idForma: c.idForma, formaPMD: c.formaPMD }), urlSpritePixel(c.imagenForma || c.idForma || c.id)],
+    [
+      ...urlsPMD({ id: c.id, idForma: c.idForma, formaPMD: c.formaPMD, genero: generoDe(c), difGenero: c.difGenero }),
+      urlSpritePixel(c.imagenForma || c.idForma || c.id)
+    ],
     `class="${clase}" alt=""`
   );
 }
@@ -308,6 +335,7 @@ function pintarLado(lado) {
       <div class="calc-poke-datos">
         <div class="calc-nombre-fila">
           <strong class="calc-nombre">${escaparHTML(nombreDe(c))}</strong>
+          ${plantillaGenero(c)}
           ${plantillaForma(c)}
         </div>
         ${c.mote ? `<small>${escaparHTML(c.es)}</small>` : ""}
@@ -699,6 +727,12 @@ function prepararColumna(lado) {
     if (!boton) return;
     if (boton.classList.contains("calc-entreno")) {
       abrirEntreno(c, () => pintarTodo());
+      return;
+    }
+    if (boton.classList.contains("calc-genero")) {
+      const orden = ["", ...generosPosibles(c)];
+      c.genero = orden[(orden.indexOf(generoDe(c)) + 1) % orden.length];
+      pintarTodo();
       return;
     }
     const i = Number(boton.dataset.stat);

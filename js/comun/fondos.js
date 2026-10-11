@@ -5,8 +5,8 @@
 // (perfiles/{uid}.fondo), que es lo que leen tus amigos; y al pintarlo se vuelve a mirar que de
 // verdad lo tenga desbloqueado.
 //
-//   · De metal (plata, oro, platino): por número de logros conseguidos. El dibujo, en CSS
-//     (css/amigos.css, .fondo-plata...).
+//   · De metal (plata, oro, platino): con los logros de conseguir 25, 50 y todos los logros.
+//     El dibujo, en CSS (css/amigos.css, .fondo-plata...).
 //   · De tipo (uno por cada uno de los 18): con su logro de tipo (logros.js, «t-fire»...). El
 //     dibujo es un mosaico con el icono del tipo (img/fondos/<tipo>.svg, hecho a partir de
 //     img/tipos/) del color del tipo: un solo estilo para todos (.fondo-tipo).
@@ -16,10 +16,11 @@ import { coloresTipo, tiposEs } from "./tipos.js";
 
 const URL_PATRONES = new URL("../../img/fondos/", import.meta.url).href;
 
+// Los de metal, con los logros de logros (25, 50 y todos: ver logros.js)
 export const FONDOS_METAL = [
-  { id: "plata", nombre: "Plata", logros: 25 },
-  { id: "oro", nombre: "Oro", logros: 50 },
-  { id: "platino", nombre: "Platino", logros: 80 }
+  { id: "plata", nombre: "Plata", logro: "m-30" },
+  { id: "oro", nombre: "Oro", logro: "m-60" },
+  { id: "platino", nombre: "Platino", logro: "m-todos" }
 ];
 
 export const FONDOS_TIPO = Object.keys(tiposEs).map((tipo) => ({
@@ -35,15 +36,20 @@ export function logrosDe(perfil) {
 }
 
 export function desbloqueado(fondo, perfil) {
-  if (fondo.logro) return Boolean(((perfil && perfil.logros) || {})[fondo.logro]);
-  return logrosDe(perfil) >= fondo.logros;
+  return Boolean(((perfil && perfil.logros) || {})[fondo.logro]);
 }
 
-// Lo que pide, para cuando aún no lo tienes
+// Lo que pide, para cuando aún no lo tienes: «Logro «Toque de oro»: Consigue 50 logros.»
 export function requisito(fondo) {
-  if (!fondo.logro) return `${fondo.logros} logros`;
   const logro = LOGROS.find((cada) => cada.id === fondo.logro);
-  return logro ? logro.descripcion : "";
+  return logro ? `Logro «${logro.nombre}»: ${logro.descripcion}` : "";
+}
+
+// Lo que pide, en corto, para debajo de la muestra («50 logros»), o "" si no hace falta
+export function requisitoCorto(fondo) {
+  const logro = LOGROS.find((cada) => cada.id === fondo.logro);
+  if (!logro || logro.tipo) return "";
+  return logro.id === "m-todos" ? "Todos los logros" : `${logro.meta} logros`;
 }
 
 // El que lleva puesto ("" si ninguno o si no lo tiene desbloqueado)

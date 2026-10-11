@@ -29,9 +29,10 @@ import { caraACara } from "./comun/cara-a-cara.js";
 import { estaConectado, alCambiarPresencia } from "./comun/presencia.js";
 import { irA } from "./navegacion.js";
 import { leerGuardados } from "./equipos/estado.js";
+import { pokemonParaCopia } from "./comun/pokemon.js";
 import { pasteDelEquipo, copiarAlPortapapeles } from "./equipos/exportar.js";
 import {
-  imagenConRespaldo, urlsPMD, urlsPMDEmocion, urlSpriteHome, urlSpritePixel, precargarImagen
+  imagenConRespaldo, urlsPMD, urlsPMDEmocion, urlsHome, urlSpritePixel, precargarImagen
 } from "./comun/imagenes.js";
 import { cargarDatos, datos } from "./comun/datos.js";
 import { activarAutocompletado, iconoPokemon } from "./comun/autocompletado.js";
@@ -39,7 +40,7 @@ import { obtenerVariedades } from "./comun/formas.js";
 import { elegirForma, datosDeForma } from "./comun/elegir-forma.js";
 import { LOGROS, insignia } from "./comun/logros.js";
 import {
-  FONDOS_METAL, FONDOS_TIPO, fondoDe, logrosDe, desbloqueado, requisito, claseFondo, estiloFondo
+  FONDOS_METAL, FONDOS_TIPO, fondoDe, logrosDe, desbloqueado, requisito, requisitoCorto, claseFondo, estiloFondo
 } from "./comun/fondos.js";
 
 const MAX_DESTACADOS = 12;   // los que caben en el perfil (cada uno es una copia dentro de él)
@@ -72,7 +73,7 @@ function caraDe(p) {
   const cara = p.cara && p.cara !== "Normal" ? p.cara : "";
   const titulo = p.mote ? `${p.mote} (${p.es})` : p.es;
   return imagenConRespaldo(
-    [...(cara ? urlsPMDEmocion(p, cara) : []), ...urlsPMD(p), urlSpriteHome(p), p.sprite],
+    [...(cara ? urlsPMDEmocion(p, cara) : []), ...urlsPMD(p), ...urlsHome(p), p.sprite],
     `alt="${escaparHTML(p.es || "")}" title="${escaparHTML(titulo || "")}" loading="lazy"`
   );
 }
@@ -166,13 +167,14 @@ function plantillaFondos(perfil) {
   const tengo = logrosDe(perfil);
   const muestra = (fondo) => {
     const libre = !fondo.id || desbloqueado(fondo, perfil);
-    const pide = fondo.logro ? requisito(fondo) : `Se desbloquea con ${fondo.logros} logros (tienes ${tengo})`;
+    const pide = `${requisito(fondo)} (tienes ${tengo} logros)`;
+    const corto = libre ? "" : requisitoCorto(fondo);
     return `
       <button class="perfil-fondo ${claseFondo(fondo.id)} ${fondo.id === puesto ? "elegido" : ""}"
               style="${estiloFondo(fondo.id)}" data-fondo="${fondo.id}" ${libre ? "" : "disabled"}
               title="${escaparHTML(libre ? fondo.nombre : pide)}">
         <span class="perfil-fondo-nombre">${libre ? "" : icono("candado")} ${fondo.nombre}</span>
-        ${libre || fondo.logro ? "" : `<small>${fondo.logros} logros</small>`}
+        ${corto ? `<small>${corto}</small>` : ""}
       </button>`;
   };
   const normal = { id: "", nombre: "Sin fondo" };
@@ -358,8 +360,10 @@ function pintar() {
   const quedan = escaparate.length - VER_DESTACADOS;
   const logros = Object.keys(perfil.logros || {}).filter((id) => LOGROS.some((logro) => logro.id === id)).length;
 
+  // Con el fondo que haya elegido para su tarjeta (el mismo que en «Amigos»)
+  const fondo = fondoDe(perfil);
   const cabeza = `
-    <header class="perfil-cabeza">
+    <header class="perfil-cabeza ${fondo ? `con-fondo ${claseFondo(fondo)}` : ""}" style="${estiloFondo(fondo)}">
       ${mio
         ? `<button class="perfil-avatar" title="Cambiar foto">${plantillaFoto(perfil, "perfil-foto")}<span class="perfil-avatar-lapiz">${icono("lapiz")}</span></button>`
         : `<div class="perfil-avatar">${plantillaFoto(perfil, "perfil-foto")}</div>`}
@@ -470,17 +474,7 @@ function copiaDeEquipo(equipo) {
     JSON.stringify({
       id: equipo.id,
       nombre: equipo.nombre || "Equipo",
-      pokemon: equipo.pokemon.map((p) => ({
-        id: p.id,
-        idForma: p.idForma,
-        formaPMD: p.formaPMD,
-        imagenForma: p.imagenForma,
-        shiny: Boolean(p.shiny),
-        es: p.es,
-        mote: p.mote || "",
-        cara: p.cara || "",
-        sprite: p.sprite || ""
-      })),
+      pokemon: equipo.pokemon.map((p) => ({ ...pokemonParaCopia(p), cara: p.cara || "" })),
       paste: pasteDelEquipo(equipo.pokemon)
     })
   );
@@ -572,9 +566,11 @@ function urlsAvatar(elegido) {
 }
 
 function pintarMuestra() {
-  dialogoAvatar.querySelector(".avatar-muestra").innerHTML = avatarElegido
-    ? imagenConRespaldo(urlsAvatar(avatarElegido), `alt=""`)
-    : plantillaFoto(miPerfil() || {}, "perfil-foto");
+  dialogoAvatar.querySelector(".avatar-muestra").innerHTML = !avatarElegido
+    ? plantillaFoto(miPerfil() || {}, "perfil-foto")
+    : avatarElegido.subida
+      ? `<img src="${avatarElegido.subida}" alt="">`
+      : imagenConRespaldo(urlsAvatar(avatarElegido), `alt=""`);
 }
 
 // Elegida la especie: si tiene varias formas, se pregunta cuál (cancelar = la normal)
@@ -617,12 +613,66 @@ function abrirAvatar() {
     .catch((error) => console.error(error));
 }
 
+// ---------- Foto (una tuya, subida) ----------
+//
+// Firebase Storage pediría el plan de pago: la foto se recorta en cuadrado (desde el centro),
+// se reduce a LADO_FOTO píxeles y se guarda como texto (data:) en el propio perfil, como los
+// retratos de los level caps propios (comun/personalizados.js). Ocupa unos pocos KB.
+
+const LADO_FOTO = 160;
+
+async function fotoRecortada(archivo) {
+  if (!archivo || !archivo.type.startsWith("image/")) throw new Error("no-es-imagen");
+  const url = URL.createObjectURL(archivo);
+  try {
+    const imagen = await new Promise((cumplir, fallar) => {
+      const elemento = new Image();
+      elemento.onload = () => cumplir(elemento);
+      elemento.onerror = fallar;
+      elemento.src = url;
+    });
+    const lado = Math.min(imagen.naturalWidth, imagen.naturalHeight);
+    const salida = Math.min(LADO_FOTO, lado);
+    const lienzo = document.createElement("canvas");
+    lienzo.width = lienzo.height = salida;
+    const contexto = lienzo.getContext("2d");
+    contexto.imageSmoothingQuality = "high";
+    contexto.drawImage(
+      imagen,
+      (imagen.naturalWidth - lado) / 2, (imagen.naturalHeight - lado) / 2, lado, lado,
+      0, 0, salida, salida
+    );
+    const webp = lienzo.toDataURL("image/webp", 0.82);
+    return webp.startsWith("data:image/webp") ? webp : lienzo.toDataURL("image/jpeg", 0.82);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function subirFoto(archivo) {
+  const error = dialogoAvatar.querySelector(".avatar-error");
+  error.textContent = "";
+  try {
+    avatarElegido = { subida: await fotoRecortada(archivo) };
+    campoAvatar.value = "";
+    pintarMuestra();
+  } catch (e) {
+    console.error(e);
+    error.textContent = "Esa imagen no se puede usar. Prueba con otra.";
+  }
+}
+
 // La foto es la dirección de su retrato (si no tiene, la del sprite pequeño): así sale igual
-// en todas partes donde ya se pinta la foto de alguien (Amigos, Versus...)
+// en todas partes donde ya se pinta la foto de alguien (Amigos, Versus...). La subida, tal cual.
 async function guardarAvatar() {
   if (eligiendoAvatar) await eligiendoAvatar;
   if (!avatarElegido) {
-    dialogoAvatar.querySelector(".avatar-error").textContent = "Elige un Pokémon de la lista.";
+    dialogoAvatar.querySelector(".avatar-error").textContent = "Elige un Pokémon de la lista o sube una foto.";
+    return;
+  }
+  if (avatarElegido.subida) {
+    await guardarMiPerfil({ avatar: "propia", foto: avatarElegido.subida });
+    dialogoAvatar.close();
     return;
   }
   const opciones = urlsAvatar(avatarElegido);
@@ -745,6 +795,12 @@ dialogoAvatar.querySelector(".avatar-formulario").addEventListener("submit", (e)
   });
 });
 dialogoAvatar.querySelector(".avatar-cancelar").addEventListener("click", () => dialogoAvatar.close());
+const archivoAvatar = dialogoAvatar.querySelector(".avatar-archivo");
+dialogoAvatar.querySelector(".avatar-subir").addEventListener("click", () => archivoAvatar.click());
+archivoAvatar.addEventListener("change", () => {
+  if (archivoAvatar.files[0]) subirFoto(archivoAvatar.files[0]).catch((error) => console.error(error));
+  archivoAvatar.value = ""; // para poder elegir la misma otra vez
+});
 dialogoAvatar.querySelector(".avatar-quitar").addEventListener("click", () => {
   quitarAvatar().catch((error) => console.error(error));
 });

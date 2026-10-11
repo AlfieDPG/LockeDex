@@ -17,11 +17,12 @@
 import { icono } from "../comun/iconos.js";
 import { escaparHTML } from "../comun/utilidades.js";
 import { usuarioActual } from "../comun/nube.js";
-import { imagenConRespaldo, urlsPMD, urlSpriteHome } from "../comun/imagenes.js";
 import { leerGuardados } from "../equipos/estado.js";
+import { elegirEquipo, caraDePokemon, carasDeEquipo, copiaDeEquipo } from "../comun/elegir-equipo.js";
 import {
   lockePorId, estadoDe, combatesDe, nombreCombate, victoriasDe, seHaPasadoLaRom, ganadorPropuesto,
-  apuntarResultado, cambiarRom, elegirGanador, guardarSalon, estaEliminado, alCambiarLockes
+  apuntarResultado, cambiarRom, elegirGanador, guardarSalon, estaEliminado, alCambiarLockes,
+  equipoDeCombate, guardarEquipoCombate
 } from "../comun/lockes.js";
 
 const MARCADORES = ["2-0", "2-1", "1-0", "3-0", "3-1", "3-2"];
@@ -45,12 +46,7 @@ function fotoDe(locke, uid, clase) {
 }
 
 // Retrato de un Pokémon de un equipo guardado (el de su forma; si no hay, su render)
-function cara(p, clase = "") {
-  return imagenConRespaldo(
-    [...urlsPMD(p), urlSpriteHome(p), p.sprite].filter(Boolean),
-    `class="${clase}" alt="${escaparHTML(p.es || "")}" title="${escaparHTML(p.mote ? `${p.mote} (${p.es})` : p.es || "")}" loading="lazy"`
-  );
-}
+const cara = caraDePokemon;
 
 // ---------- Plantillas (las usa js/versus/index.js) ----------
 
@@ -71,10 +67,22 @@ export function plantillaCombates(locke) {
                <span class="combate-ganador">${escaparHTML(nombreDe(locke, resultado.ganador))}</span>
                ${resultado.marcador ? `<span class="combate-marcador">${escaparHTML(resultado.marcador)}</span>` : ""}`
             : `<span class="combate-pendiente">Por jugar</span>`;
+          // Con qué equipo lo jugó cada uno (los que lo hayan puesto)
+          const equipos = aceptados(locke)
+            .map((uid) => ({ uid, equipo: equipoDeCombate(locke, uid, combate.id) }))
+            .filter(({ equipo }) => equipo);
+          const filaEquipos = equipos.length
+            ? `<span class="combate-equipos-mini">${equipos
+                .map(({ uid, equipo }) => `<span class="combate-equipo-mini" title="${escaparHTML(`${nombreDe(locke, uid)}: ${equipo.nombre}`)}">${carasDeEquipo(equipo)}</span>`)
+                .join(`<span class="combate-vs">vs</span>`)}</span>`
+            : "";
+          // Cerrado, se abre igual (para ver los equipos), pero sin poder cambiar nada
           return `
-            <button class="locke-combate ${resultado ? "jugado" : ""}" data-combate="${escaparHTML(combate.id)}" ${abierto ? "" : "disabled"}>
+            <button class="locke-combate ${resultado ? "jugado" : ""} ${abierto ? "" : "solo-ver"}" data-combate="${escaparHTML(combate.id)}"
+                    title="${abierto ? "Apuntar el resultado y los equipos" : "Ver el combate"}">
               <span class="combate-nombre">${icono("espadas")} ${escaparHTML(nombreCombate(locke, combate.id))}</span>
               <span class="combate-resultado">${contenido}</span>
+              ${filaEquipos}
             </button>`;
         })
         .join("")}
@@ -116,27 +124,51 @@ let enCombate = null; // { id (locke), idCombate, ganador, marcador }
 function pintarCombate() {
   const locke = lockePorId(enCombate.id);
   if (!locke) return;
+  const soloVer = locke.estado === "cerrado";
+  const desactivado = soloVer ? "disabled" : "";
+  dialogoCombate.classList.toggle("solo-ver", soloVer);
   dialogoCombate.querySelector(".combate-titulo").innerHTML =
     `${icono("espadas")} ${escaparHTML(nombreCombate(locke, enCombate.idCombate))}`;
   dialogoCombate.querySelector(".combate-ganadores").innerHTML = aceptados(locke)
     .map(
       (uid) => `
-        <button type="button" class="combate-opcion ${enCombate.ganador === uid ? "elegido" : ""}" data-ganador="${escaparHTML(uid)}">
+        <button type="button" class="combate-opcion ${enCombate.ganador === uid ? "elegido" : ""}" data-ganador="${escaparHTML(uid)}" ${desactivado}>
           ${fotoDe(locke, uid, "combate-opcion-foto")}
           <span>${escaparHTML(nombreDe(locke, uid))}</span>
         </button>`
     )
     .join("");
   dialogoCombate.querySelector(".combate-marcadores").innerHTML = MARCADORES.map(
-    (marcador) => `<button type="button" class="combate-marcador-opcion ${enCombate.marcador === marcador ? "elegido" : ""}" data-marcador="${marcador}">${marcador}</button>`
+    (marcador) => `<button type="button" class="combate-marcador-opcion ${enCombate.marcador === marcador ? "elegido" : ""}" data-marcador="${marcador}" ${desactivado}>${marcador}</button>`
   ).join("");
+
+  // Los equipos: el tuyo se elige (se guarda al momento, aparte del resultado); los de los
+  // demás, los que hayan puesto ellos
+  const yo = usuarioActual().uid;
+  dialogoCombate.querySelector(".combate-equipos").innerHTML = aceptados(locke)
+    .map((uid) => {
+      const equipo = equipoDeCombate(locke, uid, enCombate.idCombate);
+      const mio = uid === yo && !soloVer;
+      return `
+        <div class="combate-equipo ${uid === yo ? "mio" : ""}">
+          ${fotoDe(locke, uid, "combate-opcion-foto")}
+          <span class="combate-equipo-nombre">${escaparHTML(nombreDe(locke, uid))}
+            ${equipo ? `<small>${escaparHTML(equipo.nombre)}</small>` : ""}</span>
+          ${equipo ? carasDeEquipo(equipo) : `<span class="combate-sin-equipo">Sin equipo</span>`}
+          ${mio ? `<button type="button" class="boton-gris combate-elegir-equipo">${icono("pokeball")} ${equipo ? "Cambiar" : "Elegir"}</button>` : ""}
+        </div>`;
+    })
+    .join("");
+
+  dialogoCombate.querySelector(".combate-ok").hidden = soloVer;
   dialogoCombate.querySelector(".combate-ok").disabled = !enCombate.ganador;
-  dialogoCombate.querySelector(".combate-borrar").hidden = !((locke.resultados || {})[enCombate.idCombate]);
+  dialogoCombate.querySelector(".combate-borrar").hidden = soloVer || !((locke.resultados || {})[enCombate.idCombate]);
+  dialogoCombate.querySelector(".combate-cancelar").textContent = soloVer ? "Cerrar" : "Cancelar";
 }
 
 export function abrirCombate(id, idCombate) {
   const locke = lockePorId(id);
-  if (!locke || locke.estado === "cerrado") return;
+  if (!locke) return;
   const resultado = (locke.resultados || {})[idCombate] || {};
   enCombate = { id, idCombate, ganador: resultado.ganador || "", marcador: resultado.marcador || "" };
   pintarCombate();
@@ -194,19 +226,6 @@ export function abrirTerminar(id) {
 let dialogoSalon = null;
 let enSalon = null; // { id, equipo (copia), mvp }
 
-// Lo justo de cada Pokémon para pintarlo (y nada de «undefined», que Firestore no acepta)
-function copiaDeEquipo(equipo) {
-  return JSON.parse(
-    JSON.stringify({
-      nombre: equipo.nombre || "Equipo",
-      pokemon: (equipo.pokemon || []).map((p) => ({
-        id: p.id, idForma: p.idForma, formaPMD: p.formaPMD, imagenForma: p.imagenForma,
-        shiny: Boolean(p.shiny), es: p.es, mote: p.mote || "", sprite: p.sprite || ""
-      }))
-    })
-  );
-}
-
 function pintarSalon() {
   const guardados = leerGuardados().filter((equipo) => (equipo.pokemon || []).length);
   dialogoSalon.querySelector(".salon-equipos").innerHTML = guardados.length
@@ -252,9 +271,20 @@ export function iniciarCombates(fallo) {
   dialogoSalon = document.querySelector("#dialogo-salon");
 
   // Combate
-  dialogoCombate.addEventListener("click", (e) => {
+  dialogoCombate.addEventListener("click", async (e) => {
+    const elegir = e.target.closest(".combate-elegir-equipo");
+    if (elegir) {
+      const { id, idCombate } = enCombate;
+      const locke = lockePorId(id);
+      const actual = locke && equipoDeCombate(locke, usuarioActual().uid, idCombate);
+      const equipo = await elegirEquipo(elegir, { conQuitar: Boolean(actual) });
+      if (equipo === undefined) return;
+      guardarEquipoCombate(id, idCombate, equipo).catch(alFallar); // al llegar el cambio se repinta
+      return;
+    }
     const ganador = e.target.closest(".combate-opcion");
     const marcador = e.target.closest(".combate-marcador-opcion");
+    if (dialogoCombate.classList.contains("solo-ver")) return;
     if (ganador) enCombate.ganador = ganador.dataset.ganador;
     else if (marcador) enCombate.marcador = enCombate.marcador === marcador.dataset.marcador ? "" : marcador.dataset.marcador;
     else return;
@@ -324,7 +354,8 @@ export function iniciarCombates(fallo) {
   alCambiarLockes(() => {
     if (dialogoCombate.open) {
       const locke = lockePorId(enCombate.id);
-      if (!locke || locke.estado === "cerrado") dialogoCombate.close();
+      if (!locke) dialogoCombate.close();
+      else pintarCombate(); // lo que cambien los demás (sus equipos...); lo que hayas marcado tú se queda
     }
     if (dialogoTerminar.open) {
       const locke = lockePorId(terminando.id);

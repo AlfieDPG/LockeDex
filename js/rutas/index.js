@@ -11,6 +11,7 @@ import { crearSelectorJuego } from "../comun/selector-juego.js";
 import { leer, escribir } from "../comun/almacen.js";
 import { quitarAcentos, escaparHTML } from "../comun/utilidades.js";
 import { icono } from "../comun/iconos.js";
+import { activarAutocompletado } from "../comun/autocompletado.js";
 import { JUEGOS } from "../comun/juegos.js";
 import {
   rutasPropias, lugaresDe, seccionesDeLaWeb, lugaresDeLaWeb, MAX_LUGARES
@@ -195,12 +196,28 @@ function pintarEditor() {
                     </span>`
                 )
                 .join("")}
-              ${caben ? `<input class="ruta-ed-nuevo" list="lugares-web" maxlength="80" placeholder="Añadir lugar...">` : ""}
+              ${caben ? `<span class="ruta-ed-nuevo-caja"><input class="ruta-ed-nuevo" maxlength="80" placeholder="Añadir lugar..." autocomplete="off"></span>` : ""}
             </div>
           </section>`
       )
       .join("")}
     <button class="rutas-ed-anadir-apartado">${icono("mas")} Añadir apartado</button>`;
+
+  // Sugerencias al escribir un lugar: los de todos los juegos de la web (con la misma lista
+  // que el resto de buscadores)
+  for (const campo of lista.querySelectorAll(".ruta-ed-nuevo")) {
+    activarAutocompletado(campo, lugaresSugeridos(), (entrada) => {
+      campo.value = entrada.es;
+      anadirLugar(campo);
+    }, { libre: true });
+  }
+}
+
+let sugeridos = null;
+
+function lugaresSugeridos() {
+  if (!sugeridos) sugeridos = lugaresDeLaWeb().map((lugar) => ({ es: lugar, en: lugar, buscar: quitarAcentos(lugar) }));
+  return sugeridos;
 }
 
 function guardarLista() {
@@ -241,12 +258,6 @@ function copiarDe(idJuego) {
 }
 
 function activarEditor() {
-  // Sugerencias al escribir un lugar: los de todos los juegos de la web
-  const sugerencias = document.createElement("datalist");
-  sugerencias.id = "lugares-web";
-  sugerencias.innerHTML = lugaresDeLaWeb().map((lugar) => `<option value="${escaparHTML(lugar)}">`).join("");
-  vista.appendChild(sugerencias);
-
   lista.addEventListener("input", (e) => {
     if (!juego || !juego.propio || !editando) return;
     if (e.target.classList.contains("rutas-ed-nombre")) {
@@ -257,12 +268,6 @@ function activarEditor() {
       const indice = Number(e.target.closest(".rutas-ed-grupo").dataset.seccion);
       juego.secciones[indice].titulo = e.target.value;
       guardarLista();
-    } else if (
-      e.target.classList.contains("ruta-ed-nuevo") &&
-      (!(e instanceof InputEvent) || e.inputType === "insertReplacementText")
-    ) {
-      // Elegido de las sugerencias (no escrito a mano): se añade ya, sin esperar al Enter
-      anadirLugar(e.target);
     }
   });
 
@@ -276,7 +281,8 @@ function activarEditor() {
   });
 
   lista.addEventListener("keydown", (e) => {
-    if (e.key !== "Enter" || !e.target.classList.contains("ruta-ed-nuevo")) return;
+    // (Con una sugerencia marcada, ya la ha elegido el autocompletado)
+    if (e.key !== "Enter" || e.defaultPrevented || !e.target.classList.contains("ruta-ed-nuevo")) return;
     e.preventDefault();
     anadirLugar(e.target);
   });

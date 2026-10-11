@@ -130,7 +130,7 @@ function plantillaJugador(locke, uid) {
     <div class="locke-jugador ${gano ? "ganador" : ""} ${pendiente ? "pendiente" : ""} ${esMio ? "mio" : ""} ${eliminado ? "eliminado" : ""}"
          data-uid="${escaparHTML(uid)}">
       <div class="locke-persona">
-        <div class="locke-cara">
+        <div class="locke-cara" data-perfil="${escaparHTML(uid)}" title="Ver perfil">
           ${foto ? `<img src="${escaparHTML(foto)}" alt="" referrerpolicy="no-referrer" data-respaldo="" data-quitar-si-falla>` : ""}
           ${eliminado ? `<span class="locke-cara-fuera">${icono("calavera")}</span>` : ""}
         </div>
