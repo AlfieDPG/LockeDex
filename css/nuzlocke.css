@@ -531,10 +531,12 @@
   max-width: 100%;
 }
 
-/* Al medir: cada una a su tamaño, sin estirar ni encoger */
+/* Al medir: cada una a su tamaño, sin estirar ni encoger, y con sitio a la derecha para la
+   chapita de la captura (así el nombre nunca queda debajo de ella) */
 .rutas-midiendo .rutas-botones > .ruta {
   flex: none;
   max-width: none;
+  padding-right: 1.5rem;
 }
 
 .ruta.evento {
@@ -560,15 +562,6 @@
   text-overflow: ellipsis;
 }
 
-/* El ✔ del lugar usado, delante del nombre (y al medir, en todos: ver ajustarAnchos) */
-.ruta.usada .ruta-lugar::before,
-.rutas-midiendo .ruta-lugar::before {
-  content: "✔ ";
-  display: inline-block;
-  margin-right: 0.2rem;
-  line-height: 1; /* el ✔ sale de otra fuente, más alta: que no haga crecer la tarjeta */
-  text-decoration: none;
-}
 
 .ruta {
   padding: 0.55rem 0.6rem;

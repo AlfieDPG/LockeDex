@@ -137,9 +137,9 @@ function filtrar() {
 // ---------- Cada tarjeta, del ancho de su nombre ----------
 //
 // El nombre (y el detalle de los eventos, en la suya) va en una sola línea y cada tarjeta
-// mide lo que su texto; el CSS estira cada fila hasta llenar el ancho. Se mide como si todas
-// llevasen el ✔ (clase rutas-midiendo) y se guarda en su flex-basis, para que marcar una no
-// mueva nada. En «em»: la letra de la web cambia con la ventana y así crece con ella sin
+// mide lo que su texto; el CSS estira cada fila hasta llenar el ancho. Se mide con sitio para
+// la chapita de la captura (clase rutas-midiendo) y se guarda en su flex-basis, para que marcar
+// una no mueva nada. En «em»: la letra de la web cambia con la ventana y así crece con ella sin
 // volver a medir. Si ni así cabe (un móvil muy estrecho), el CSS lo corta con «...».
 
 function ajustarAnchos() {
