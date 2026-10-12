@@ -54,6 +54,11 @@ function cargarSeccion(nombre) {
   return iniciadas.get(nombre);
 }
 
+// Una sección ya iniciada, sin ir a ella (el perfil abre la ventana del palmarés de «Amigos»)
+export function prepararSeccion(nombre) {
+  return cargarSeccion(nombre);
+}
+
 // La vista abierta va en la dirección (#rutas, #pokedex...): al recargar se vuelve a ella.
 // Sin nada (entrar de nuevas) se empieza en Lockes.
 const VISTA_DE_ENTRADA = "lockes";

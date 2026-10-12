@@ -254,6 +254,7 @@ export function iniciarPerfiles() {
     dejarDeEscucharPerfilesAmigos();
 
     listaAmistades = [];
+    amistadesDelServidor = false;
     errorAmistades = "";
     falloPerfil = "";
 
@@ -431,6 +432,7 @@ function escucharMiPerfil(usuario) {
       mio = perfilLeido(usuario.uid, documento.data());
       if (mio.mote) recordarNombreDeCuenta(mio.mote, mio.foto || ""); // para la lista de cuentas
       avisar();
+      publicarAmigos();
     },
     (error) => {
       console.error("Se ha perdido la conexión con el perfil", error);
@@ -438,6 +440,18 @@ function escucharMiPerfil(usuario) {
       avisar();
     }
   );
+}
+
+// Tus amigos también van en tu perfil (perfil.amigos: [uid]), para que los vea quien mire tu
+// perfil: las amistades en sí solo las pueden leer los dos de cada una.
+let amistadesDelServidor = false;
+
+function publicarAmigos() {
+  if (!mio || !amistadesDelServidor) return;
+  const ahora = amigosAceptados().map((amistad) => amistad.otro).sort();
+  const antes = [...(mio.amigos || [])].sort();
+  if (JSON.stringify(ahora) === JSON.stringify(antes)) return;
+  guardarMiPerfil({ amigos: ahora }).catch((error) => console.error("No se han podido apuntar los amigos en el perfil", error));
 }
 
 function escucharAmistades(usuario) {
@@ -457,6 +471,11 @@ function escucharAmistades(usuario) {
       });
       escucharPerfilesAmigos();
       avisarAmistades();
+      // Solo con lo que dice el servidor: lo de la caché puede estar vacío o viejo
+      if (!instantanea.metadata.fromCache) {
+        amistadesDelServidor = true;
+        publicarAmigos();
+      }
     },
     (error) => {
       console.error("No se han podido leer las amistades", error);

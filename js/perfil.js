@@ -7,8 +7,8 @@
 //   · Título: el nombre de uno de sus logros, el que elija.
 //   · Lockes ganados y, en el tuyo, amigos; en el de un amigo, los lockes jugados juntos en
 //     total (los mismos que cuenta la rivalidad de «Amigos»: js/comun/cara-a-cara.js).
-//   · Equipos destacados: los que cada uno elige enseñar (hasta MAX_DESTACADOS). Se ven los
-//     VER_DESTACADOS primeros y el resto en otra ventana, donde el dueño los ordena. Se guarda
+//   · Equipos destacados: los que cada uno elige enseñar (hasta MAX_DESTACADOS). En otra
+//     ventana el dueño los ordena. Se guarda
 //     una copia en el perfil (escaparate), que es lo que pueden leer los demás: tus equipos de
 //     verdad son privados.
 //   · En el tuyo, tus VER_AMIGOS amigos con los que más lockes has jugado: pulsando uno se ve
@@ -22,7 +22,7 @@ import { escaparHTML, fechaLarga } from "./comun/utilidades.js";
 import { usuarioActual } from "./comun/nube.js";
 import {
   miPerfil, alCambiarMiPerfil, cambiarMote, guardarMiPerfil, amigosAceptados, perfilesDeAmigos,
-  alCambiarPerfilesAmigos
+  alCambiarPerfilesAmigos, perfilesDe
 } from "./comun/perfiles.js";
 import { alCambiarLockes } from "./comun/lockes.js";
 import { caraACara } from "./comun/cara-a-cara.js";
@@ -44,9 +44,9 @@ import {
   claseFondo, estiloFondo
 } from "./comun/fondos.js";
 
-const MAX_DESTACADOS = 12;   // los que caben en el perfil (cada uno es una copia dentro de él)
-const VER_DESTACADOS = 3;    // los que se ven sin pulsar «Ver todos»
+const MAX_DESTACADOS = 3;    // los equipos que se pueden destacar (cada uno es una copia dentro del perfil)
 const VER_AMIGOS = 5;
+const VER_GANADOS = 6;       // lockes ganados que se ven en tu perfil (el resto, al gestionarlos)
 
 const dialogo = document.querySelector("#dialogo-perfil");
 const cuerpo = dialogo.querySelector(".perfil-cuerpo");
@@ -267,6 +267,131 @@ function plantillaAmigos() {
     </section>`;
 }
 
+// ---------- En el perfil de un amigo ----------
+//
+// Sus fondos desbloqueados (solo para ver) y sus amigos. Sus amigos salen de su perfil
+// (perfil.amigos, lo apunta cada uno: ver perfiles.js), que se pide la primera vez. Los que
+// también son amigos tuyos (o tú) se pueden pulsar para ver su perfil.
+
+function plantillaFondosDe(perfil) {
+  const puesto = fondoDe(perfil);
+  const suyos = FONDOS.filter((fondo) => desbloqueado(fondo, perfil));
+  return `
+    <section class="perfil-apartado">
+      <h3>Fondos <small class="perfil-cuenta">${suyos.length}/${FONDOS.length}</small></h3>
+      ${suyos.length
+        ? `<div class="perfil-fondos perfil-fondos-suyos">${suyos
+            .map(
+              (fondo) => `
+                <span class="perfil-fondo ${claseFondo(fondo.id)} ${fondo.id === puesto ? "elegido" : ""}"
+                      style="${estiloFondo(fondo.id)}" title="${escaparHTML(fondo.nombre)}">
+                  <span class="perfil-fondo-nombre">${escaparHTML(fondo.nombre)}</span>
+                </span>`
+            )
+            .join("")}</div>`
+        : `<p class="perfil-vacio">Ninguno todavía.</p>`}
+    </section>`;
+}
+
+const amigosDeOtros = new Map(); // uid -> sus amigos (perfiles), cuando han llegado
+
+function pedirAmigosDe(perfil) {
+  const uids = perfil.amigos || [];
+  const clave = `${perfil.uid}|${uids.join(",")}`;
+  if (amigosDeOtros.has(clave)) return amigosDeOtros.get(clave);
+  amigosDeOtros.set(clave, null); // pedido: hasta que llegue, nada
+  perfilesDe(uids)
+    .then((mapa) => {
+      amigosDeOtros.set(clave, [...mapa.values()].filter((amigo) => amigo && amigo.nombre));
+      if (dialogo.open && viendo === perfil.uid) pintar();
+    })
+    .catch((error) => console.error("No se han podido leer sus amigos", error));
+  return null;
+}
+
+function plantillaAmigosDe(perfil) {
+  const uids = perfil.amigos || [];
+  const llegados = uids.length ? pedirAmigosDe(perfil) : [];
+  const yo = (usuarioActual() || {}).uid;
+  const lista = (llegados || [])
+    .slice()
+    .sort((uno, otro) => Number(otro.uid === yo) - Number(uno.uid === yo) || uno.nombre.localeCompare(otro.nombre, "es"));
+
+  return `
+    <section class="perfil-apartado">
+      <h3>Amigos <small class="perfil-cuenta">${uids.length}</small></h3>
+      ${!uids.length
+        ? `<p class="perfil-vacio">Todavía ninguno.</p>`
+        : !llegados
+          ? `<p class="perfil-vacio">Cargando...</p>`
+          : `<div class="perfil-amigos">${lista
+              .slice(0, VER_AMIGOS * 2)
+              .map((amigo) => {
+                // Se puede abrir el tuyo y el de tus amigos
+                const abrible = amigo.uid === yo || perfilesDeAmigos().has(amigo.uid);
+                const etiqueta = abrible ? "button" : "span";
+                return `
+                  <${etiqueta} class="perfil-amigo ${abrible ? "" : "ajeno"}" data-uid="${escaparHTML(amigo.uid)}" title="${escaparHTML(amigo.nombre)}">
+                    ${plantillaFoto(amigo, "perfil-amigo-foto")}
+                    <span class="perfil-amigo-nombre">${escaparHTML(amigo.uid === yo ? "Tú" : amigo.nombre)}</span>
+                  </${etiqueta}>`;
+              })
+              .join("")}</div>`}
+    </section>`;
+}
+
+// ---------- Lockes ganados ----------
+//
+// Los de tu palmarés (los de «Lockes» que ganas se apuntan solos; los de antes, a mano). Con
+// «Gestionar» se abre la misma ventana que en «Amigos» para añadirlos o corregirlos. En el de
+// un amigo, solo para ver.
+
+function plantillaPalmares(perfil, mio = true) {
+  // El más reciente primero (los que no tienen fecha, al final), como en «Amigos»
+  const ganados = (perfil.ganados || [])
+    .map((ganado, i) => ({ ganado, i }))
+    .sort((uno, otro) => String(otro.ganado.fechaFin || "").localeCompare(String(uno.ganado.fechaFin || "")) || otro.i - uno.i)
+    .map(({ ganado }) => ganado);
+  const color = (ganado) => (/^#[0-9a-f]{6}$/i.test(String((ganado.tipo || {}).color || "")) ? ganado.tipo.color : "#3498db");
+  return `
+    <section class="perfil-apartado">
+      <h3>
+        Lockes ganados
+        ${mio ? `<button class="perfil-palmares">${icono("lapiz")} Gestionar</button>` : ""}
+      </h3>
+      ${ganados.length
+        ? `<div class="perfil-ganados">
+            ${ganados
+              .slice(0, VER_GANADOS)
+              .map(
+                (ganado) => `
+                  <span class="perfil-ganado" style="--color-locke: ${color(ganado)}" title="${escaparHTML((ganado.tipo || {}).nombre || "")}">
+                    ${icono("corona")} ${escaparHTML(ganado.nombre || "Locke")}
+                  </span>`
+              )
+              .join("")}
+            ${ganados.length > VER_GANADOS ? `<span class="perfil-ganado mas">+${ganados.length - VER_GANADOS}</span>` : ""}
+          </div>`
+        : `<p class="perfil-vacio">Ninguno todavía.</p>`}
+    </section>`;
+}
+
+// «Retar a un locke» (en el perfil de un amigo): a «Lockes», con la ventana de crear uno y
+// ese amigo ya puesto para invitarlo
+async function retar(uid) {
+  dialogo.close();
+  const { prepararSeccion } = await import("./navegacion.js");
+  await irA("lockes");
+  const lockes = await prepararSeccion("versus");
+  await lockes.retarA(uid);
+}
+
+async function gestionarPalmares() {
+  const { prepararSeccion } = await import("./navegacion.js");
+  const amigos = await prepararSeccion("amigos");
+  amigos.abrirPalmares();
+}
+
 // ---------- Salón de la fama ----------
 //
 // El equipo final y el MVP de cada locke terminado (perfil.salon, lo apunta cada uno desde
@@ -367,7 +492,6 @@ function pintar() {
          ? `<span><strong>${amigos}</strong> ${amigos === 1 ? "amigo" : "amigos"}</span>`
          : `<span><strong>${juntos}</strong> ${juntos === 1 ? "locke" : "lockes"} juntos</span>`}`;
 
-  const quedan = escaparate.length - VER_DESTACADOS;
   const logros = Object.keys(perfil.logros || {}).filter((id) => LOGROS.some((logro) => logro.id === id)).length;
 
   // Con el fondo que haya elegido para su tarjeta (el mismo que en «Amigos»)
@@ -377,9 +501,12 @@ function pintar() {
       ${mio
         ? `<button class="perfil-avatar" title="Cambiar foto">${plantillaFoto(perfil, "perfil-foto")}<span class="perfil-avatar-lapiz">${icono("lapiz")}</span></button>`
         : `<div class="perfil-avatar">${plantillaFoto(perfil, "perfil-foto")}</div>`}
-      ${plantillaNombre(perfil, mio)}
-      ${plantillaTitulo(perfil, mio)}
-      <div class="perfil-cifras">${cifras}</div>
+      <div class="perfil-datos">
+        ${plantillaNombre(perfil, mio)}
+        ${plantillaTitulo(perfil, mio)}
+        <div class="perfil-cifras">${cifras}</div>
+        ${mio ? "" : `<button class="perfil-retar">${icono("espadas")} Retar a un locke</button>`}
+      </div>
     </header>
 
     <div class="perfil-pestanas">
@@ -387,9 +514,9 @@ function pintar() {
       <button data-pestana="logros" class="${pestana === "logros" ? "activa" : ""}">${icono("trofeo")} Logros <small>${logros}/${LOGROS.length}</small></button>
     </div>`;
 
-  cuerpo.innerHTML = pestana === "logros" ? cabeza + plantillaLogrosDe(perfil) : `
-    ${cabeza}
-
+  // Hasta MAX_DESTACADOS. Si alguien tiene más de antes, se ven los primeros; en «Ordenar»
+  // están todos para quitar los que sobren.
+  const destacados = `
     <section class="perfil-apartado">
       <h3>
         Equipos destacados
@@ -397,20 +524,25 @@ function pintar() {
       </h3>
       ${escaparate.length
         ? `<div class="perfil-equipos">${escaparate
-            .slice(0, VER_DESTACADOS)
+            .slice(0, MAX_DESTACADOS)
             .map((equipo, indice) => plantillaEquipo(equipo, indice, mio))
             .join("")}</div>`
         : `<p class="perfil-vacio">Ninguno todavía.</p>`}
-      ${quedan > 0 || (mio && escaparate.length > 1)
-        ? `<button class="perfil-ver-equipos">${quedan > 0 ? `Ver todos (${escaparate.length})` : "Ordenar"}</button>`
-        : ""}
-    </section>
+      ${mio && escaparate.length > 1 ? `<button class="perfil-ver-equipos">Ordenar</button>` : ""}
+    </section>`;
 
-    ${plantillaSalon(perfil)}
+  // En ancho, en dos columnas: los equipos a un lado y lo demás al otro
+  const izquierda = destacados;
+  const derecha = mio
+    ? plantillaPalmares(perfil) + plantillaSalon(perfil) + plantillaFondos(perfil) + plantillaAmigos()
+    : plantillaPalmares(perfil, false) + plantillaSalon(perfil) + plantillaFondosDe(perfil) + plantillaAmigosDe(perfil);
 
-    ${mio ? plantillaFondos(perfil) : ""}
-
-    ${mio ? plantillaAmigos() : ""}`;
+  cuerpo.innerHTML = pestana === "logros" ? cabeza + plantillaLogrosDe(perfil) : `
+    ${cabeza}
+    <div class="perfil-columnas ${derecha.trim() ? "" : "una"}">
+      <div class="perfil-columna">${izquierda}</div>
+      ${derecha.trim() ? `<div class="perfil-columna">${derecha}</div>` : ""}
+    </div>`;
 
   dialogo.querySelector(".perfil-borrar").hidden = !mio;
   dialogo.querySelector(".perfil-volver").hidden = mio || !desdeMiPerfil;
@@ -734,6 +866,10 @@ cuerpo.addEventListener("click", (e) => {
     dialogoEscaparate.showModal();
   } else if (boton.classList.contains("perfil-ver-equipos")) {
     abrirDestacados();
+  } else if (boton.classList.contains("perfil-palmares")) {
+    gestionarPalmares().catch(siFalla);
+  } else if (boton.classList.contains("perfil-retar")) {
+    retar(viendo).catch(siFalla);
   } else if (boton.classList.contains("perfil-fondos-mas")) {
     pintarFondos();
     dialogoFondos.showModal();
@@ -748,7 +884,9 @@ cuerpo.addEventListener("click", (e) => {
     dialogo.close();
     irA("amigos");
   } else if (boton.classList.contains("perfil-amigo")) {
-    abrirPerfilDe(boton.dataset.uid, true);
+    // Desde el perfil de un amigo se puede llegar al tuyo (entre sus amigos estás tú)
+    if (boton.dataset.uid === (usuarioActual() || {}).uid) abrirMiPerfil();
+    else abrirPerfilDe(boton.dataset.uid, true);
   } else {
     alPulsarEquipo(boton);
   }
@@ -772,6 +910,20 @@ cuerpo.addEventListener("submit", (e) => {
 dialogo.querySelector(".perfil-cerrar").addEventListener("click", () => dialogo.close());
 dialogo.querySelector(".perfil-volver").addEventListener("click", abrirMiPerfil);
 dialogo.addEventListener("close", () => (editandoNombre = false));
+
+// Pulsando fuera de la ventana (en lo oscuro de alrededor) se cierra. Tiene que empezar y
+// acabar fuera: así no se cierra al seleccionar texto y soltar el ratón fuera.
+const fueraDe = (e) => {
+  const caja = dialogo.getBoundingClientRect();
+  return e.target === dialogo &&
+    (e.clientX < caja.left || e.clientX > caja.right || e.clientY < caja.top || e.clientY > caja.bottom);
+};
+let empezoFuera = false;
+dialogo.addEventListener("pointerdown", (e) => (empezoFuera = fueraDe(e)));
+dialogo.addEventListener("click", (e) => {
+  if (empezoFuera && fueraDe(e)) dialogo.close();
+  empezoFuera = false;
+});
 
 dialogoTitulo.querySelector(".titulo-lista").addEventListener("click", (e) => {
   const opcion = e.target.closest(".titulo-opcion");

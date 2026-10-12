@@ -775,7 +775,8 @@ function leerFila(fila, posicion, tipos) {
   };
 }
 
-function abrirPalmares() {
+// También desde el perfil (js/perfil.js, «Lockes ganados» → «Gestionar»)
+export function abrirPalmares() {
   const mio = miPerfil();
   // Copia de verdad (equipos y combates incluidos) y un id para cada participante: los
   // combates dicen quién ganó y con qué equipo jugó cada uno por ese id

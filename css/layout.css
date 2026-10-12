@@ -567,7 +567,7 @@ button.cuenta:hover {
 
 /* En vertical: foto, nombre y cifras centrados arriba; debajo, equipos y amigos */
 #dialogo-perfil {
-  width: min(30rem, 94vw);
+  width: min(62rem, 95vw);
   max-height: 92vh;
 }
 
@@ -797,7 +797,8 @@ button.perfil-avatar:hover .perfil-avatar-lapiz {
 }
 
 .perfil-destacar,
-.perfil-ver-amigos {
+.perfil-ver-amigos,
+.perfil-palmares {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -819,11 +820,13 @@ button.perfil-avatar:hover .perfil-avatar-lapiz {
   background: #c0392b;
 }
 
-.perfil-ver-amigos:hover {
+.perfil-ver-amigos:hover,
+.perfil-palmares:hover {
   background: #4a4e68;
 }
 
-.perfil-destacar .icono {
+.perfil-destacar .icono,
+.perfil-palmares .icono {
   width: 0.85rem;
   height: 0.85rem;
 }
@@ -946,7 +949,7 @@ button.perfil-avatar:hover .perfil-avatar-lapiz {
   cursor: pointer;
 }
 
-.perfil-fondo:hover:not(:disabled) {
+button.perfil-fondo:hover:not(:disabled) {
   border-color: rgba(241, 196, 15, 0.5);
 }
 
@@ -1580,4 +1583,144 @@ button.perfil-avatar:hover .perfil-avatar-lapiz {
   align-items: flex-start;
   justify-content: flex-end;
   padding: 0.5rem 0.6rem;
+}
+
+/* ---------- Perfil a lo ancho (js/perfil.js) ----------
+   La cabecera en una fila (foto a la izquierda y los datos al lado) y debajo dos columnas:
+   los equipos a un lado y lo demás al otro. En el móvil, todo en una columna como antes. */
+
+.perfil-datos {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.perfil-columnas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 1.6rem;
+  align-items: start;
+}
+
+.perfil-columnas.una {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Lockes ganados: chapitas con el color de su tipo */
+.perfil-ganados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.perfil-ganado {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 0.4rem;
+  background: #252735;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-locke, #3498db) 50%, transparent);
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.perfil-ganado .icono {
+  width: 0.85rem;
+  height: 0.85rem;
+  color: var(--color-locke, #3498db);
+}
+
+.perfil-ganado.mas {
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+@media (min-width: 761px) {
+  .perfil-cabeza {
+    flex-direction: row;
+    gap: 1.4rem;
+    padding-left: 1.2rem;
+    padding-right: 1.2rem;
+    text-align: left;
+  }
+
+  .perfil-cabeza.con-fondo {
+    padding: 1.2rem 1.4rem;
+  }
+
+  .perfil-cabeza .perfil-datos {
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .perfil-cabeza .perfil-nombre-fila,
+  .perfil-cabeza .perfil-cifras {
+    justify-content: flex-start;
+  }
+
+  .perfil-cabeza .perfil-titulo {
+    margin-left: -0.6rem;
+  }
+
+  #dialogo-perfil .perfil-logros {
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .perfil-columnas {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* «Retar a un locke», en la cabecera del perfil de un amigo */
+.perfil-retar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: #f1c40f;
+  color: #1e1f2b;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.perfil-retar:hover {
+  background: #f5d442;
+}
+
+.perfil-retar .icono {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+/* ---------- En el perfil de un amigo: sus fondos y sus amigos, solo para ver ---------- */
+
+#dialogo-perfil h3 .perfil-cuenta {
+  font-size: 0.8rem;
+  font-weight: normal;
+  opacity: 0.6;
+}
+
+.perfil-fondos.perfil-fondos-suyos .perfil-fondo {
+  min-height: 3rem;
+  font-size: 0.76rem;
+  cursor: default;
+}
+
+.perfil-amigo.ajeno {
+  cursor: default;
+}
+
+.perfil-amigo.ajeno:hover {
+  background: transparent;
 }

@@ -540,6 +540,17 @@ async function abrirDialogo(locke = null) {
   if (!cerrado) await cargarInvitables(locke);
 }
 
+// «Retar a un locke» desde el perfil de un amigo: la ventana de «Nuevo locke» con él ya
+// puesto para invitarlo
+export async function retarA(uid) {
+  await abrirDialogo(null);
+  const perfil = invitables.find((cada) => cada.uid === uid);
+  if (perfil && !elegidos.some((cada) => cada.uid === uid)) {
+    elegidos.push(perfil);
+    pintarIntegrantes(null);
+  }
+}
+
 async function guardar() {
   const mio = miPerfilOProvisional();
   const usuario = usuarioActual();

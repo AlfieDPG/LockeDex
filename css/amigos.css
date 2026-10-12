@@ -663,6 +663,12 @@
   color: #e74c3c;
 }
 
+/* El ganador, todo en dorado: el número de vidas y su corazón */
+.flotante-participantes li.gano .flotante-vidas,
+.flotante-participantes li.gano .flotante-vidas .icono {
+  color: #f1c40f;
+}
+
 .flotante-vacio {
   margin: 0.5rem 0 0;
   font-size: 0.78rem;
