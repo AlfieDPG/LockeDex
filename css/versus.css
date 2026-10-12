@@ -1737,3 +1737,210 @@ button.salon-cara:hover {
 #dialogo-combate.solo-ver .combate-marcador-opcion.elegido:disabled {
   opacity: 1;
 }
+/* ---------- Partida vinculada (js/versus/partida.js) ---------- */
+
+.locke-partida {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  min-height: 2.3rem;
+}
+
+.locke-partida-abrir {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 0.25rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+.locke-partida-abrir:hover {
+  background: #3a3d52;
+}
+
+.locke-partida-abrir .cara-equipo img {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.locke-partida-vincular,
+.locke-partida-reanudar,
+.locke-partida-muertos {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.5rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: #3a3d52;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: bold;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.locke-partida-vincular:only-child {
+  flex: 1;
+}
+
+.locke-partida-vincular:hover,
+.locke-partida-reanudar:hover,
+.locke-partida-muertos:hover {
+  background: #4a4e68;
+}
+
+.locke-partida-reanudar {
+  color: #f1c40f;
+}
+
+.locke-partida-muertos {
+  background: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+}
+
+.locke-partida .icono {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+/* Punto verde: se está leyendo el archivo */
+.locke-partida-viva {
+  flex: none;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin: 0 0.2rem;
+  border-radius: 50%;
+  background: #2ecc71;
+  box-shadow: 0 0 0.4rem rgba(46, 204, 113, 0.7);
+}
+
+#dialogo-partida {
+  width: min(60rem, 94vw);
+}
+
+#dialogo-partida h2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#dialogo-partida h2 .icono {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+.partida-cuerpo:focus {
+  outline: none;
+}
+
+#dialogo-partida h2 small {
+  font-size: 0.75rem;
+  font-weight: normal;
+  opacity: 0.6;
+}
+
+.partida-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+.partida-caja h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+}
+
+.partida-caja h3 small {
+  opacity: 0.5;
+}
+
+.partida-pokemon {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.6rem, 1fr));
+  gap: 0.35rem;
+}
+
+.partida-ficha {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.35rem 0.2rem;
+  border-radius: 0.45rem;
+  background: rgba(0, 0, 0, 0.2);
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.partida-ficha small {
+  opacity: 0.55;
+}
+
+.partida-ficha-nombre {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.partida-cara {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  image-rendering: pixelated;
+}
+
+.partida-copiar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.partida-copiar .icono {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.partida-cementerio {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.partida-cementerio .icono {
+  width: 1rem;
+  height: 1rem;
+  color: #e74c3c;
+}
+
+.partida-muertos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  max-height: 50vh;
+  overflow-y: auto;
+  margin-bottom: 0.6rem;
+}
+
+#dialogo-partida-muertos label.partida-muerto {
+  margin-top: 0;
+}
+
+.partida-muerto .partida-cara {
+  width: 2rem;
+  height: 2rem;
+}

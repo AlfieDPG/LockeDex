@@ -24,6 +24,7 @@ import {
   apuntarResultado, cambiarRom, elegirGanador, guardarSalon, estaEliminado, alCambiarLockes,
   equipoDeCombate, guardarEquipoCombate
 } from "../comun/lockes.js";
+import { equipoParaCombate } from "../partida/partidas.js";
 
 const MARCADORES = ["2-0", "2-1", "1-0", "3-0", "3-1", "3-2"];
 
@@ -277,7 +278,7 @@ export function iniciarCombates(fallo) {
       const { id, idCombate } = enCombate;
       const locke = lockePorId(id);
       const actual = locke && equipoDeCombate(locke, usuarioActual().uid, idCombate);
-      const equipo = await elegirEquipo(elegir, { conQuitar: Boolean(actual) });
+      const equipo = await elegirEquipo(elegir, { conQuitar: Boolean(actual), primero: equipoParaCombate(id) });
       if (equipo === undefined) return;
       guardarEquipoCombate(id, idCombate, equipo).catch(alFallar); // al llegar el cambio se repinta
       return;

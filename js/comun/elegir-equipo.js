@@ -54,9 +54,12 @@ function filaEquipo(equipo) {
     </button>`;
 }
 
-export function elegirEquipo(ancla, { conQuitar = false } = {}) {
+// primero: un equipo que sale arriba del todo, aparte (el de la partida vinculada al locke)
+export function elegirEquipo(ancla, { conQuitar = false, primero = null } = {}) {
   cerrar(undefined);
-  const guardados = leerGuardados().filter((equipo) => (equipo.pokemon || []).length);
+  const deMisEquipos = leerGuardados().filter((equipo) => (equipo.pokemon || []).length);
+  const destacado = primero && (primero.pokemon || []).length ? { ...primero, id: "__primero" } : null;
+  const guardados = destacado ? [destacado, ...deMisEquipos] : deMisEquipos;
   const grupos = leerGrupos();
   const ids = new Set(grupos.map((g) => g.id));
 
@@ -71,12 +74,14 @@ export function elegirEquipo(ancla, { conQuitar = false } = {}) {
         </details>`;
     })
     .join("");
-  const sueltos = guardados.filter((equipo) => !ids.has(equipo.grupo)).map(filaEquipo).join("");
+  const sueltos = deMisEquipos.filter((equipo) => !ids.has(equipo.grupo)).map(filaEquipo).join("");
+  const arriba = destacado ? `<div class="elegir-equipo-destacado">${filaEquipo(destacado)}</div>` : "";
 
   const menu = document.createElement("div");
   menu.className = "elegir-equipo";
   menu.innerHTML = `
-    ${guardados.length ? bloques + sueltos : `<p class="elegir-equipo-vacio">No tienes equipos guardados.</p>`}
+    ${arriba}
+    ${deMisEquipos.length ? bloques + sueltos : destacado ? "" : `<p class="elegir-equipo-vacio">No tienes equipos guardados.</p>`}
     ${conQuitar ? `<button type="button" class="elegir-equipo-quitar">${icono("aspa")} Sin equipo</button>` : ""}`;
   // Dentro de la ventana si la hay: con una ventana abierta, lo de fuera no se puede pulsar
   (ancla.closest("dialog") || document.body).appendChild(menu);

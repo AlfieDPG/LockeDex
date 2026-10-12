@@ -153,7 +153,8 @@ export async function datosDeGenero(idEspecie) {
 export function generosPosibles(poke) {
   const trozos = String(poke.formaSlug || "").split("-");
   if (trozos.includes("female")) return ["F"];
-  if (trozos.includes("male")) return ["M"];
+  // Pyroar es la excepción: PokeAPI solo tiene «pyroar-male», pero también hay hembras
+  if (trozos.includes("male") && poke.id !== 668) return ["M"];
   const ratio = poke.generoRatio;
   if (ratio === undefined || ratio === null) return ["M", "F"];
   if (ratio < 0) return [];

@@ -541,3 +541,9 @@ dialog textarea {
   opacity: 0.7;
   font-size: 0.85rem;
 }
+
+.elegir-equipo-destacado {
+  padding-bottom: 0.3rem;
+  margin-bottom: 0.3rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}

@@ -42,7 +42,9 @@ const editar = vista.querySelector(".juego-editar");
 let juego = null;   // { id, nombre, region } (los propios llevan además sus secciones)
 let lugares = null; // { rutas, ciudades, postgame, eventos } del juego actual
 let usadas = new Set();
-const marcadas = leer(CLAVE_MARCADAS, {});
+// Se vuelve a leer al abrir la sección: la partida vinculada a un locke también marca
+// (js/partida/rutas.js)
+let marcadas = leer(CLAVE_MARCADAS, {});
 
 let editando = false;       // la lista propia abierta, con casillas para cambiarla
 let abrirEditando = false;  // la próxima lista que se abra, ya en modo editar (al crearla)
@@ -440,5 +442,10 @@ function elegirJuego(nuevo, seguir = false) {
 export function mostrar() {
   // Si se ha llegado desde un locke de «Versus», el juego viene apuntado en CLAVE_JUEGO.
   // Si es el mismo que ya había, no hace nada.
-  selectorJuego.elegirPorId(leer(CLAVE_JUEGO, null));
+  const antes = JSON.stringify(marcadas);
+  marcadas = leer(CLAVE_MARCADAS, {}) || {};
+  const id = leer(CLAVE_JUEGO, null);
+  selectorJuego.elegirPorId(id);
+  // Mismo juego, pero con marcas nuevas desde fuera: se vuelve a pintar
+  if (juego && !editando && JSON.stringify(marcadas) !== antes) elegirJuego(juego, true);
 }

@@ -1,0 +1,114 @@
+// ---------- Capturas de la partida en «Rutas» ----------
+//
+// Cada Pokémon de la partida dice dónde se capturó. Con eso se marca su lugar en «Rutas» y se
+// apunta qué salió ahí, igual que si se hiciera a mano. Nunca se desmarca nada, y cada Pokémon
+// se mira una sola vez: si desmarcas un lugar, no vuelve a marcarse solo.
+
+import { LUGARES } from "../rutas/datos.js";
+import { leer, escribir } from "../comun/almacen.js";
+import { apuntarEnLockesDelJuego } from "../comun/lockes.js";
+
+// Las mismas claves que js/rutas/index.js y js/rutas/capturas.js
+const CLAVE_MARCADAS = "poketeams-rutas-v2";
+const CLAVE_CAPTURAS = "poketeams-capturas-v1";
+
+const APARTADOS = ["rutas", "ciudades", "postgame", "eventos"];
+
+// Ediciones de cada juego: los Pokémon que vienen de otro juego no cuentan
+const EDICIONES = {
+  xy: ["X", "Y"], oras: ["Rubí Omega", "Zafiro Alfa"], sm: ["Sol", "Luna"], usum: ["Ultrasol", "Ultraluna"]
+};
+
+// Lugares que en «Rutas» van partidos en zonas o se llaman distinto. Por el número del lugar
+// en el juego, que es lo único que distingue las zonas.
+const ZONAS_ALOLA = {
+  8: "Ruta 1 (Afueras de Hauoli)",
+  18: "Ciudad Hauoli (Paseo Marítimo)",
+  20: "Ciudad Hauoli (Zona Comercial)",
+  36: "Colina Dequilate (Caldera Remota)",
+  192: "Ciudad Malíe (Cabo de las Afueras)"
+};
+const POR_NUMERO = {
+  sm: ZONAS_ALOLA,
+  usum: { ...ZONAS_ALOLA, 88: "Colina Saltagua (Sala del dominante)" }
+};
+const POR_NOMBRE = {
+  "Área Volcánica Wela": "Área Volcánica del Wela",
+  "Súper Ultraganga": "Supermercado Ultraganga"
+};
+
+// «Villa Raíz / Ruta 101: Pokémon inicial» -> ["Villa Raíz", "Ruta 101"]
+function lugaresDelEvento(texto) {
+  const corte = texto.indexOf(": ");
+  return (corte > 0 ? texto.slice(0, corte) : texto).split(" / ").map((lugar) => lugar.trim());
+}
+
+function captura(p) {
+  const salida = { especie: p.id, nombre: p.nombre, mote: p.mote || "" };
+  for (const campo of ["idForma", "formaPMD", "imagenForma"]) {
+    if (p[campo] !== undefined && p[campo] !== null) salida[campo] = p[campo];
+  }
+  return salida;
+}
+
+// partida: la convertida (js/partida/convertir.js). mirados: llaves de los Pokémon ya
+// mirados otras veces (se añaden los de ahora). Devuelve cuántos lugares se han marcado.
+export function marcarCapturas(partida, idJuego, mirados) {
+  const lugares = LUGARES[idJuego];
+  if (!lugares) return 0;
+
+  const apartados = (lugares.apartados || APARTADOS.map((clave) => ({ clave }))).map((a) => a.clave);
+  const porTexto = new Map(); // lugar -> clave («rutas:Ruta 1»)
+  const eventos = [];         // [{ clave, lugares }]
+  for (const apartado of apartados) {
+    for (const texto of lugares[apartado] || []) {
+      if (apartado === "eventos") eventos.push({ clave: `${apartado}:${texto}`, texto, lugares: lugaresDelEvento(texto) });
+      else porTexto.set(texto, `${apartado}:${texto}`);
+    }
+  }
+
+  const marcadas = leer(CLAVE_MARCADAS, {}) || {};
+  const capturas = leer(CLAVE_CAPTURAS, {}) || {};
+  const usadas = new Set(marcadas[idJuego] || []);
+  const usadosTexto = new Set([...usadas].map((clave) => clave.slice(clave.indexOf(":") + 1)));
+  const delJuego = { ...(capturas[idJuego] || {}) };
+  const ediciones = EDICIONES[idJuego] || [];
+
+  // Del primero capturado al último: si dos salen del mismo sitio, cuenta el primero
+  const todos = [...partida.equipo, ...partida.cajas.flatMap((caja) => caja.pokemon)]
+    .filter((p) => p.lugar && !mirados.has(p.llave) && (!p.origen || ediciones.includes(p.origen)))
+    .sort((uno, otro) => String(uno.fecha).localeCompare(String(otro.fecha)));
+
+  const nuevos = [];
+  for (const p of todos) {
+    mirados.add(p.llave);
+    const lugar = (POR_NUMERO[idJuego] || {})[p.lugarN] || POR_NOMBRE[p.lugar] || p.lugar;
+
+    let elegido = null;
+    if (porTexto.has(lugar) && !usadosTexto.has(lugar)) elegido = { clave: porTexto.get(lugar), texto: lugar, lugar };
+    else {
+      // El lugar ya está usado (o no es de los que tienen Pokémon salvajes): un evento de
+      // ese sitio, si hay uno solo libre (el inicial, un regalo...)
+      const libres = eventos.filter((e) => !usadosTexto.has(e.texto) && e.lugares.includes(lugar));
+      if (libres.length === 1) elegido = { clave: libres[0].clave, texto: libres[0].texto, lugar };
+    }
+    if (!elegido) continue;
+
+    usadas.add(elegido.clave);
+    usadosTexto.add(elegido.texto);
+    if (!delJuego[elegido.texto]) delJuego[elegido.texto] = captura(p);
+    nuevos.push(elegido);
+  }
+
+  if (nuevos.length) {
+    marcadas[idJuego] = [...usadas];
+    capturas[idJuego] = delJuego;
+    escribir(CLAVE_MARCADAS, marcadas);
+    escribir(CLAVE_CAPTURAS, capturas);
+    // A la actividad de tus lockes de este juego, como al marcar a mano
+    for (const { lugar } of nuevos) {
+      apuntarEnLockesDelJuego("rutasPropias", idJuego, "ruta", lugar, true).catch((error) => console.error(error));
+    }
+  }
+  return nuevos.length;
+}

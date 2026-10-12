@@ -79,6 +79,9 @@ const DIBUJOS = {
   macho: `<circle cx="10" cy="14" r="6"/><path d="M15 9l6-6"/><path d="M15.5 3H21v5.5"/>`,
   hembra: `<circle cx="12" cy="9" r="6"/><path d="M12 15v7"/><path d="M8.5 18.5h7"/>`,
   carpeta: `<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>`,
+  enlace: `<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+           <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>`,
+  reanudar: `<polygon points="6 3 20 12 6 21 6 3"/>`,
   carpetaMas: `<path d="M12 10v6"/><path d="M9 13h6"/>
                <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>`
 };

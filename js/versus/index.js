@@ -40,6 +40,7 @@ import {
   iniciarCombates, plantillaCombates, plantillaRom, plantillaSalon, abrirCombate, abrirTerminar, abrirSalon,
   alternarRom
 } from "./combates.js";
+import { iniciarPartida, plantillaPartida, accionPartida } from "./partida.js";
 
 let seccion = null;
 let lista = null;
@@ -141,6 +142,7 @@ function plantillaJugador(locke, uid) {
       </div>
 
       ${plantillaCifras(locke, uid, esMio && !cerrado)}
+      ${esMio && !pendiente ? plantillaPartida(locke) : ""}
       ${pendiente ? "" : plantillaRom(locke, uid, esMio && !cerrado && !eliminado)}
       ${cerrado && !pendiente ? plantillaSalon(locke, uid, esMio) : ""}
     </div>`;
@@ -633,6 +635,7 @@ export function iniciar() {
   iniciarCementerio(alFallar);
   iniciarActividad();
   iniciarCombates(alFallar);
+  iniciarPartida(pintar, (texto) => (aviso.textContent = texto));
 
   dialogoElegir.querySelector(".elegir-ok").addEventListener("click", anadirElegidos);
   dialogoElegir.querySelector(".elegir-cancelar").addEventListener("click", () => dialogoElegir.close());
@@ -735,6 +738,7 @@ export function iniciar() {
 
     let tarea = null;
 
+    if (accionPartida(boton, id)) return;
     if (boton.classList.contains("locke-ir") && boton.dataset.ir === "normas") {
       tarea = irANormas(id);
     } else if (boton.classList.contains("locke-ir") && boton.dataset.ir === "cementerio") {

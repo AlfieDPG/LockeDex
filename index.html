@@ -607,6 +607,32 @@
     </form>
   </dialog>
 
+  <!-- La partida vinculada a un locke: equipo y cajas (js/versus/partida.js) -->
+  <dialog id="dialogo-partida">
+    <h2 class="partida-titulo"></h2>
+    <div class="partida-cuerpo"></div>
+    <div class="dialogo-botones">
+      <button class="boton-gris boton-izquierda partida-desvincular">Desvincular</button>
+      <button class="partida-cerrar">Cerrar</button>
+    </div>
+  </dialog>
+
+  <!-- Muertos nuevos en la caja de los muertos de la partida (js/versus/partida.js) -->
+  <dialog id="dialogo-partida-muertos" class="dialogo-sesion">
+    <h2>¿Han muerto?</h2>
+    <form class="partida-muertos-formulario">
+      <div class="partida-muertos-lista"></div>
+      <label class="casilla-sesion partida-muertos-vida-campo">
+        <input class="partida-muertos-vida" type="checkbox">
+        <span class="partida-muertos-vida-texto">Quitar también una vida por cada uno</span>
+      </label>
+      <div class="dialogo-botones">
+        <button type="button" class="boton-gris boton-izquierda partida-muertos-descartar">No</button>
+        <button type="submit" class="boton-rojo">Apuntar</button>
+      </div>
+    </form>
+  </dialog>
+
   <!-- Lo que va pasando en un locke (js/versus/actividad.js) -->
   <dialog id="dialogo-actividad">
     <h2 class="actividad-titulo"></h2>
@@ -701,6 +727,10 @@
       <details>
         <summary>¿Cómo funcionan los combates?</summary>
         <p>Al crear el locke se pone cuántos combates habrá (por ejemplo, 3: tras la 3ª medalla, tras la 6ª y tras la Liga) y, si quieres, el nombre de cada uno. Se juegan fuera (en Showdown) y en el locke se pulsa cada combate para apuntar quién lo ganó, cómo (2-0, 2-1...) y con qué equipo jugó cada uno (cada uno elige el suyo de «Mis equipos»). Con 3 o más jugadores, cada combate le suma un punto al que lo gana. Sin combates, cada uno se suma sus victorias a mano.</p>
+      </details>
+      <details>
+        <summary>¿Qué es «Vincular partida»?</summary>
+        <p>En los lockes de X / Y, Rubí Omega / Zafiro Alfa, Sol / Luna y Ultrasol / Ultraluna puedes elegir el archivo de guardado del emulador (Citra o Lime3DS: el archivo «main» de la carpeta del juego). La web lo vuelve a leer cada vez que guardas: en tu bloque sale tu equipo, con «Ver partida» ves también las cajas, las capturas se marcan solas en «Rutas» y los que metes en la caja de los muertos te los propone para el cementerio. Al apuntar un combate, tu equipo de la partida sale el primero. Los demás no ven nada de tu partida. Vigilar el archivo solo funciona en Chrome o Edge de ordenador; en otros navegadores se puede leer a mano. Si el navegador no te deja elegirlo porque está dentro de AppData, cambia en el emulador la carpeta de la tarjeta SD (Configurar → Almacenamiento) a una normal, como Documentos.</p>
       </details>
       <details>
         <summary>¿Qué son las vidas? ¿Y la vida cero?</summary>

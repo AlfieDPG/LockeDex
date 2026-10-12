@@ -393,6 +393,19 @@ async function importarVarios(trozos, alAvanzar) {
   return true;
 }
 
+// Un equipo nuevo en «Mis equipos» a partir de un paste, sin tocar el que se está editando
+// (lo usa «Copiar a Mis equipos» de la partida de un locke). Devuelve { problemas }.
+export async function anadirEquipoDesdePaste(texto, nombre) {
+  const { validos, problemas } = await resolverEquipo(interpretarPaste(texto));
+  if (!validos.length) throw new Error("Ningún Pokémon reconocido");
+  escribirGuardados([
+    { id: String(Date.now()), nombre, pokemon: copiaProfunda(validos), actualizado: Date.now() },
+    ...leerGuardados()
+  ]);
+  sumarContador("importar");
+  return { problemas };
+}
+
 export function iniciarImportar() {
   const dialogo = document.getElementById("dialogo-importar");
   const texto = document.getElementById("texto-paste");
