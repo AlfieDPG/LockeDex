@@ -4,7 +4,7 @@
 // Nadie más sale: hasta que mandas una solicitud y te la aceptan, aquí solo estás tú.
 //
 // Nadie puede editar la ficha de otro. Tú editas la tuya: los tipos de locke que usas y
-// tu palmarés. Lo que ganes en «Versus» se apunta solo.
+// tu palmarés. Lo que ganes en «Lockes» se apunta solo.
 
 import { imagenConRespaldo } from "../comun/imagenes.js";
 import { activarArrastre } from "../comun/arrastrar.js";
@@ -252,7 +252,6 @@ function plantillaAcciones(ficha) {
 
   return `
     <div class="ficha-acciones">
-      <button class="accion-perfil" title="Ver perfil">${icono("persona")}</button>
       <button class="accion-comparar" title="Comparar conmigo">${icono("espadas")}</button>
       <button class="accion-quitar" title="Quitar de amigos">${icono("aspa")}</button>
     </div>`;
@@ -893,7 +892,6 @@ function activarFichas() {
       } else if (boton.classList.contains("accion-tipos")) abrirTipos();
       else if (boton.classList.contains("accion-palmares")) abrirPalmares();
       else if (boton.classList.contains("accion-comparar")) abrirComparacion(ficha.dataset.clave);
-      else if (boton.classList.contains("accion-perfil")) (await import("../perfil.js")).abrirPerfilDe(ficha.dataset.clave);
       else if (boton.classList.contains("accion-quitar")) await quitarAmigo(ficha);
     } catch (error) {
       console.error(error);

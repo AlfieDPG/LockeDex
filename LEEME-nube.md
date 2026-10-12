@@ -44,7 +44,7 @@ Son unos diez minutos. Todo es gratis y sin tarjeta.
 
 > **Y hay que repetirlo cada vez que cambie `firestore.rules`.** La consola no se entera
 > de que el archivo del repositorio ha cambiado: eso se pega a mano. Si «Amigos» o
-> «Versus» dan error de permisos, es que falta este paso.
+> «Lockes» dan error de permisos, es que falta este paso.
 
 ## 5. Copiar la configuración
 
@@ -128,7 +128,7 @@ Nadie entra en tu lista ni en un locke tuyo sin querer:
   salís el uno en la lista del otro. Hasta entonces en «Amigos» solo estás tú.
 - **Lockes.** Quien lo crea elige a los invitados, y puede no invitar a nadie: un locke
   para ti solo vale igual. Los invitados salen como «Sin contestar» hasta que entran, y el
-  locke no aparece en su «Versus» hasta que lo aceptan. Rechazar es salirse: se quita el
+  locke no aparece en su «Lockes» hasta que lo aceptan. Rechazar es salirse: se quita el
   uid de `jugadores` y deja de poder verlo.
 
 Las dos cosas llegan al **buzón** del panel lateral, con un número encima cuando hay algo

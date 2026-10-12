@@ -440,7 +440,7 @@ function elegirJuego(nuevo, seguir = false) {
 }
 
 export function mostrar() {
-  // Si se ha llegado desde un locke de «Versus», el juego viene apuntado en CLAVE_JUEGO.
+  // Si se ha llegado desde un locke de «Lockes», el juego viene apuntado en CLAVE_JUEGO.
   // Si es el mismo que ya había, no hace nada.
   const antes = JSON.stringify(marcadas);
   marcadas = leer(CLAVE_MARCADAS, {}) || {};

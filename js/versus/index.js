@@ -1,4 +1,4 @@
-// Sección «Versus»: el marcador compartido de un locke.
+// Sección «Lockes»: el marcador compartido de un locke.
 //
 // Creas un locke, le pones nombre, tipo, juego y vidas, y eliges a qué amigos invitas. Hasta
 // que no aceptan (desde las notificaciones) salen marcados como pendientes. A partir de ahí
@@ -621,7 +621,7 @@ function textoDeError(error, que) {
 // ---------- Arranque ----------
 
 export function iniciar() {
-  seccion = document.querySelector("#vista-versus");
+  seccion = document.querySelector("#vista-lockes");
   lista = seccion.querySelector(".versus-lista");
   aviso = seccion.querySelector(".versus-aviso");
   botonNuevo = seccion.querySelector("#nuevo-locke");

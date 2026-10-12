@@ -10,8 +10,11 @@
 //   · De tipo (uno por cada uno de los 18): con su logro de tipo (logros.js, «t-fire»...). El
 //     dibujo es un mosaico con el icono del tipo (img/fondos/<tipo>.svg, hecho a partir de
 //     img/tipos/) del color del tipo: un solo estilo para todos (.fondo-tipo).
+//   · De Eevee (uno por Eeveelution y el de Eevee): con los logros de registrarlas (logros.js,
+//     «x-vaporeon»... y «x-eeveelutions»). Cada uno con su dibujo en CSS
+//     (css/amigos.css, .fondo-eevee-vaporeon...).
 
-import { LOGROS } from "./logros.js";
+import { LOGROS, EEVEELUTIONS } from "./logros.js";
 import { coloresTipo, tiposEs } from "./tipos.js";
 
 const URL_PATRONES = new URL("../../img/fondos/", import.meta.url).href;
@@ -27,7 +30,13 @@ export const FONDOS_TIPO = Object.keys(tiposEs).map((tipo) => ({
   id: `tipo-${tipo}`, nombre: tiposEs[tipo], tipo, logro: `t-${tipo}`
 }));
 
-export const FONDOS = [...FONDOS_METAL, ...FONDOS_TIPO];
+// El de Eevee (las ocho) primero; luego cada Eeveelution
+export const FONDOS_EEVEE = [
+  { id: "eevee-eevee", nombre: "Eevee", eevee: 133, logro: "x-eeveelutions" },
+  ...EEVEELUTIONS.map((eevee) => ({ id: `eevee-${eevee.especie}`, nombre: eevee.nombre, eevee: eevee.numero, logro: `x-${eevee.especie}` }))
+];
+
+export const FONDOS = [...FONDOS_METAL, ...FONDOS_TIPO, ...FONDOS_EEVEE];
 
 // Los logros que tiene (solo los que existen)
 export function logrosDe(perfil) {
@@ -49,6 +58,7 @@ export function requisito(fondo) {
 export function requisitoCorto(fondo) {
   const logro = LOGROS.find((cada) => cada.id === fondo.logro);
   if (!logro || logro.tipo) return "";
+  if (logro.categoria === "pokedex") return logro.id === "x-eeveelutions" ? "Las 8 Eeveelutions" : "Regístralo";
   return logro.id === "m-todos" ? "Todos los logros" : `${logro.meta} logros`;
 }
 
@@ -62,11 +72,13 @@ export function fondoDe(perfil) {
 export function claseFondo(id) {
   const fondo = FONDOS.find((cada) => cada.id === id);
   if (!fondo) return "";
+  if (fondo.eevee) return `fondo-eevee fondo-${fondo.id}`;
   return fondo.tipo ? "fondo-tipo" : `fondo-${fondo.id}`;
 }
 
 export function estiloFondo(id) {
   const fondo = FONDOS.find((cada) => cada.id === id);
-  if (!fondo || !fondo.tipo) return "";
+  if (!fondo) return "";
+  if (!fondo.tipo) return "";
   return `--color-tipo: ${coloresTipo[fondo.tipo]}; --patron: url(${URL_PATRONES}${fondo.tipo}.svg)`;
 }

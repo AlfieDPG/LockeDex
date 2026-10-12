@@ -6,7 +6,7 @@
 //
 //   localStorage «poketeams-partidas-v1»:
 //     { idLocke: { juego, version, entrenador, actualizada, archivo, equipo, cajas,
-//                  cajaMuertos (posición o -1), mirados: [llaves], muertosVistos: [llaves] } }
+//                  cajasMuertos: [posiciones], mirados: [llaves], muertosVistos: [llaves] } }
 
 import { leer, escribir } from "../comun/almacen.js";
 import { pokemonParaCopia } from "../comun/pokemon.js";
@@ -45,13 +45,23 @@ export function olvidarPartida(idLocke) {
   guardarPartida(idLocke, null);
 }
 
-// La caja de los muertos: la que se elija o, la primera vez, la que se llame como tal
+// Las cajas de los muertos (con muchas vidas no caben en una): las que se marquen o, la
+// primera vez, las que se llamen como tal
 const NOMBRE_CEMENTERIO = /muert|cementerio|tumba|\brip\b|dead|grave|fallec/i;
 
-export function elegirCajaMuertos(idLocke, posicion) {
+export function cajasMuertosDe(partida) {
+  if (!partida) return [];
+  if (partida.cajasMuertos) return partida.cajasMuertos;
+  // Las guardadas cuando solo había una
+  return partida.cajaMuertos >= 0 ? [partida.cajaMuertos] : [];
+}
+
+export function alternarCajaMuertos(idLocke, posicion) {
   const partida = partidaDe(idLocke);
   if (!partida) return;
-  partida.cajaMuertos = posicion;
+  const cajas = cajasMuertosDe(partida);
+  partida.cajasMuertos = cajas.includes(posicion) ? cajas.filter((i) => i !== posicion) : [...cajas, posicion].sort((a, b) => a - b);
+  delete partida.cajaMuertos;
   guardarPartida(idLocke, partida);
 }
 
@@ -72,9 +82,9 @@ export async function procesarArchivo(locke, bytes, archivo = "") {
 
   const nueva = await convertirPartida(leida);
   const anterior = partidaDe(locke.id) || {};
-  const cajaMuertos = anterior.cajaMuertos !== undefined
-    ? anterior.cajaMuertos
-    : nueva.cajas.findIndex((caja) => NOMBRE_CEMENTERIO.test(caja.nombre));
+  const cajasMuertos = anterior.juego
+    ? cajasMuertosDe(anterior)
+    : nueva.cajas.flatMap((caja, i) => (NOMBRE_CEMENTERIO.test(caja.nombre) ? [i] : []));
 
   const mirados = new Set(anterior.mirados || []);
   const marcadas = marcarCapturas(nueva, leida.juego, mirados);
@@ -83,7 +93,7 @@ export async function procesarArchivo(locke, bytes, archivo = "") {
     ...nueva,
     actualizada: Date.now(),
     archivo,
-    cajaMuertos,
+    cajasMuertos,
     mirados: [...mirados],
     muertosVistos: anterior.muertosVistos || []
   };
@@ -95,10 +105,11 @@ export async function procesarArchivo(locke, bytes, archivo = "") {
 // están en el cementerio del locke (misma especie y mote) se dan por apuntados.
 export function muertosSinApuntar(idLocke, enCementerio) {
   const partida = partidaDe(idLocke);
-  if (!partida || partida.cajaMuertos < 0 || !partida.cajas[partida.cajaMuertos]) return [];
+  if (!partida) return [];
   const vistos = new Set(partida.muertosVistos || []);
   const yaEstan = new Set(enCementerio.map((muerto) => `${muerto.especie}|${(muerto.mote || "").toLowerCase()}`));
-  return partida.cajas[partida.cajaMuertos].pokemon.filter(
+  const enCajas = cajasMuertosDe(partida).flatMap((i) => (partida.cajas[i] ? partida.cajas[i].pokemon : []));
+  return enCajas.filter(
     (p) => !vistos.has(p.llave) && !yaEstan.has(`${p.id}|${(p.mote || "").toLowerCase()}`)
   );
 }

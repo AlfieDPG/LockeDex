@@ -1,4 +1,4 @@
-// Combates, ROM, terminar el locke y salón de la fama (sección «Versus»).
+// Combates, ROM, terminar el locke y salón de la fama (sección «Lockes»).
 //
 // Cómo se gana un locke: hay que pasarse la ROM. Si no se la pasa nadie, no gana nadie; si
 // solo uno, ese, aunque fuese perdiendo los combates; si varios, el que más combates gana. Los

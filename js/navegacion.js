@@ -33,7 +33,7 @@ const VISTAS = {
   levelcaps: "levelcaps",
   normas: "normas",
   amigos: "amigos",
-  versus: "versus",
+  lockes: "versus",
   pokedex: "pokedex",
   calculadora: "calculadora",
   ruleta: "ruleta",
@@ -55,15 +55,20 @@ function cargarSeccion(nombre) {
 }
 
 // La vista abierta va en la dirección (#rutas, #pokedex...): al recargar se vuelve a ella.
-// Sin nada (entrar de nuevas) se empieza en Versus.
-const VISTA_DE_ENTRADA = "versus";
+// Sin nada (entrar de nuevas) se empieza en Lockes.
+const VISTA_DE_ENTRADA = "lockes";
+
+// Nombres de antes, para que sigan valiendo los enlaces guardados («Lockes» se llamaba «Versus»)
+const ANTIGUAS = { versus: "lockes" };
 
 export function vistaInicial() {
   const pedida = decodeURIComponent(location.hash.slice(1));
-  return VISTAS[pedida] ? pedida : VISTA_DE_ENTRADA;
+  const vista = ANTIGUAS[pedida] || pedida;
+  return VISTAS[vista] ? vista : VISTA_DE_ENTRADA;
 }
 
 export async function irA(vista) {
+  vista = ANTIGUAS[vista] || vista;
   if (!VISTAS[vista]) vista = VISTA_DE_ENTRADA;
   // replaceState y no location.hash: así no se llena el historial de «atrás»
   if (location.hash !== `#${vista}`) history.replaceState(null, "", `#${vista}`);

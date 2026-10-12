@@ -19,7 +19,8 @@ import {
   sePuedeVigilar, cargarVinculos, vincular, reanudar, desvincular, leerUnaVez, estadoVinculo, nombreArchivo
 } from "../partida/vinculo.js";
 import {
-  sePuedeLeer, partidaDe, procesarArchivo, olvidarPartida, elegirCajaMuertos, muertosSinApuntar, marcarMuertosVistos
+  sePuedeLeer, partidaDe, procesarArchivo, olvidarPartida, cajasMuertosDe, alternarCajaMuertos, muertosSinApuntar,
+  marcarMuertosVistos
 } from "../partida/partidas.js";
 
 let repintar = () => {};
@@ -51,15 +52,16 @@ export function plantillaPartida(locke) {
     accion = `<span class="locke-partida-viva" title="${escaparHTML(`Leyendo ${nombreArchivo(locke.id)} cada vez que guardas`)}"></span>`;
   } else if (estado === "pausado") {
     accion = `<button class="locke-partida-reanudar" title="Volver a leer la partida">${icono("reanudar")} Reanudar</button>`;
-  } else if (sePuedeVigilar) {
-    accion = `<button class="locke-partida-vincular">${icono("enlace")} ${partida ? "Volver a vincular" : "Vincular partida"}</button>`;
-  } else {
-    accion = `<button class="locke-partida-vincular">${icono("subir")} ${partida ? "Actualizar partida" : "Leer partida"}</button>`;
+  } else if (!partida) {
+    // Con la partida ya leída, volver a vincular está en la ventana, junto a «Desvincular»
+    accion = sePuedeVigilar
+      ? `<button class="locke-partida-vincular">${icono("enlace")} Vincular partida</button>`
+      : `<button class="locke-partida-vincular">${icono("subir")} Leer partida</button>`;
   }
 
   return `
     <div class="locke-partida">
-      ${partida ? `<button class="locke-partida-abrir" title="Ver partida">${carasDeEquipo({ nombre: "Equipo de la partida", pokemon: partida.equipo })}</button>` : ""}
+      ${partida ? `<button class="locke-partida-abrir" title="Ver cajas">${carasDeEquipo({ nombre: "Equipo de la partida", pokemon: partida.equipo })}</button>` : ""}
       ${pendientes ? `<button class="locke-partida-muertos" title="Muertos por apuntar">${icono("calavera")} ${pendientes}</button>` : ""}
       ${accion}
     </div>`;
@@ -105,9 +107,9 @@ async function alLeer(id, bytes, archivo) {
 
   repintar();
   if (dialogo.open && idAbierto === id) pintarPartida();
-  // La ventana de los muertos sale sola si estás mirando «Versus»; si no, queda el aviso
-  const enVersus = document.visibilityState === "visible" && document.querySelector("#vista-versus").offsetParent;
-  if (enVersus) proponerMuertos(id, resultado.primera);
+  // La ventana de los muertos sale sola si estás mirando «Lockes»; si no, queda el aviso
+  const enLockes = document.visibilityState === "visible" && document.querySelector("#vista-lockes").offsetParent;
+  if (enLockes) proponerMuertos(id, resultado.primera);
   return true;
 }
 
@@ -135,32 +137,37 @@ function pintarPartida() {
     day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
   });
   dialogo.querySelector(".partida-titulo").innerHTML =
-    `${icono("mando")} ${escaparHTML(partida.entrenador || "Partida")} <small>${escaparHTML(partida.version || "")} · ${escaparHTML(cuando)}</small>`;
+    `${icono("mando")} Cajas <small>${[partida.entrenador, partida.version, cuando].filter(Boolean).map(escaparHTML).join(" · ")}</small>`;
+  dialogo.querySelector(".partida-vincular").innerHTML = sePuedeVigilar
+    ? `${icono("enlace")} Volver a vincular`
+    : `${icono("subir")} Volver a leer`;
 
-  const opciones = [
-    `<option value="-1">Ninguna</option>`,
-    ...partida.cajas.map(
-      (caja, i) => `<option value="${i}" ${i === partida.cajaMuertos ? "selected" : ""}>${escaparHTML(caja.nombre)}</option>`
-    )
-  ].join("");
+  // Cada caja con su interruptor de «Muertos» (puede haber varias)
+  const deMuertos = cajasMuertosDe(partida);
   const cajas = partida.cajas
-    .filter((caja) => caja.pokemon.length)
-    .map(
-      (caja) => `
-        <section class="partida-caja">
-          <h3>${escaparHTML(caja.nombre)} <small>${caja.pokemon.length}</small></h3>
+    .map((caja, i) => {
+      if (!caja.pokemon.length) return "";
+      const muertos = deMuertos.includes(i);
+      return `
+        <section class="partida-caja ${muertos ? "de-muertos" : ""}">
+          <h3>
+            ${escaparHTML(caja.nombre)} <small>${caja.pokemon.length}</small>
+            <button class="partida-marcar-muertos ${muertos ? "activa" : ""}" data-caja="${i}" aria-pressed="${muertos}"
+                    title="${muertos ? "Ya no es caja de muertos" : "Marcar como caja de muertos"}">${icono("calavera")} Muertos</button>
+          </h3>
           <div class="partida-pokemon">${caja.pokemon.map(ficha).join("")}</div>
-        </section>`
-    )
+        </section>`;
+    })
     .join("");
 
   dialogo.querySelector(".partida-cuerpo").innerHTML = `
     <section class="partida-caja partida-equipo">
-      <h3>Equipo</h3>
+      <h3>
+        Equipo
+        <button class="partida-copiar">${icono("copiar")} Copiar a Mis equipos</button>
+      </h3>
       <div class="partida-pokemon">${partida.equipo.map(ficha).join("")}</div>
-      <button class="partida-copiar">${icono("copiar")} Copiar a Mis equipos</button>
     </section>
-    <label class="partida-cementerio">${icono("calavera")} Caja de muertos <select class="partida-caja-muertos">${opciones}</select></label>
     ${cajas}`;
 }
 
@@ -259,13 +266,30 @@ export function iniciarPartida(alRepintar, alAvisar) {
     olvidarPartida(id);
     desvincular(id).finally(repintar);
   });
-  dialogo.querySelector(".partida-cuerpo").addEventListener("change", (e) => {
-    if (!e.target.classList.contains("partida-caja-muertos")) return;
-    elegirCajaMuertos(idAbierto, Number(e.target.value));
-    repintar();
+  // Elegir otra vez el archivo (otro emulador, otra carpeta, otro navegador...)
+  dialogo.querySelector(".partida-vincular").addEventListener("click", () => {
+    const id = idAbierto;
+    if (!sePuedeVigilar) {
+      leerUnaVez(id);
+      return;
+    }
+    vincular(id).catch((error) => {
+      if (error && error.name === "AbortError") return;
+      console.error(error);
+      avisar("No se ha podido abrir la partida.");
+    });
   });
   dialogo.querySelector(".partida-cuerpo").addEventListener("click", (e) => {
     if (e.target.closest(".partida-copiar")) copiarEquipo();
+    const marcar = e.target.closest(".partida-marcar-muertos");
+    if (marcar) {
+      alternarCajaMuertos(idAbierto, Number(marcar.dataset.caja));
+      const cuerpo = dialogo.querySelector(".partida-cuerpo");
+      const scroll = cuerpo.scrollTop; // que no salte arriba al repintar
+      pintarPartida();
+      cuerpo.scrollTop = scroll;
+      repintar();
+    }
   });
 
   dialogoMuertos.querySelector(".partida-muertos-formulario").addEventListener("submit", (e) => {

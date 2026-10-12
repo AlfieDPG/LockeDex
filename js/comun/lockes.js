@@ -1,4 +1,4 @@
-// ---------- Lockes compartidos (sección «Versus») ----------
+// ---------- Lockes compartidos (sección «Lockes») ----------
 //
 // Un locke es una partida entre varios: su marcador, sus vidas y quién acabó ganando.
 // Vive entero en Firestore porque es un dato de dos personas a la vez; si cada navegador
@@ -68,7 +68,7 @@ export function estaEliminado(locke, uid) {
   return Boolean(locke) && !locke.vidasIlimitadas && ((locke.vidas || {})[uid] || 0) <= ELIMINADO;
 }
 
-// Los que ya has aceptado: los que se enseñan en «Versus»
+// Los que ya has aceptado: los que se enseñan en «Lockes»
 export function misLockes() {
   return todos.filter((locke) => miEstado(locke) === "aceptado");
 }

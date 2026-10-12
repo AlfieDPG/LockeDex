@@ -1,7 +1,7 @@
 // ---------- Elegir uno de tus equipos ----------
 //
 // Un desplegable propio pegado a un botón: tus equipos guardados, por grupos (como en «Mis
-// equipos»), cada uno con sus Pokémon en pequeño. Lo usan los combates de «Versus» y los
+// equipos»), cada uno con sus Pokémon en pequeño. Lo usan los combates de «Lockes» y los
 // lockes del palmarés de «Amigos».
 //
 //   const equipo = await elegirEquipo(boton, { conQuitar: true });

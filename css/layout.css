@@ -1539,3 +1539,45 @@ button.perfil-avatar:hover .perfil-avatar-lapiz {
     flex: none;
   }
 }
+
+/* ---------- Ventana con todos los fondos (js/perfil.js) ---------- */
+
+#dialogo-fondos {
+  width: min(40rem, calc(100vw - 2rem));
+}
+
+.fondos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 65vh;
+  overflow-y: auto;
+  padding: 0.2rem;
+}
+
+.fondos-lista:focus {
+  outline: none;
+}
+
+.fondos-apartado h3 {
+  margin: 0 0 0.45rem;
+  font-size: 0.9rem;
+}
+
+.fondos-apartado h3 small {
+  margin-left: 0.3rem;
+  font-weight: normal;
+  opacity: 0.5;
+}
+
+/* Los de Eevee, de tres en tres (son nueve) */
+.perfil-fondos.perfil-fondos-eevee {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.perfil-fondos-eevee .perfil-fondo {
+  min-height: 4.6rem;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 0.5rem 0.6rem;
+}

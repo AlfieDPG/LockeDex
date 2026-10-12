@@ -40,7 +40,8 @@ import { obtenerVariedades } from "./comun/formas.js";
 import { elegirForma, datosDeForma } from "./comun/elegir-forma.js";
 import { LOGROS, insignia } from "./comun/logros.js";
 import {
-  FONDOS_METAL, FONDOS_TIPO, fondoDe, logrosDe, desbloqueado, requisito, requisitoCorto, claseFondo, estiloFondo
+  FONDOS, FONDOS_METAL, FONDOS_TIPO, FONDOS_EEVEE, fondoDe, logrosDe, desbloqueado, requisito, requisitoCorto,
+  claseFondo, estiloFondo
 } from "./comun/fondos.js";
 
 const MAX_DESTACADOS = 12;   // los que caben en el perfil (cada uno es una copia dentro de él)
@@ -156,53 +157,62 @@ async function ponerTitulo(id) {
   dialogoTitulo.close();
 }
 
-// El fondo de tu tarjeta de «Amigos» (js/comun/fondos.js). Plegado, solo unos pocos (el que
-// llevas y otros que ya tienes) y un «+» para verlos todos: los de metal y los 18 de tipo, los
-// que aún no tienes con un candado y lo que piden.
+// El fondo de tu tarjeta de «Amigos» (js/comun/fondos.js). En el perfil, solo unos pocos (el
+// que llevas y otros que ya tienes) y un «+» que abre una ventana con todos: los de metal, los
+// 18 de tipo y los de Eevee, los que aún no tienes con un candado y lo que piden.
 const VER_FONDOS = 3;
-let fondosEnteros = false;
+const SIN_FONDO = { id: "", nombre: "Sin fondo" };
+const dialogoFondos = document.querySelector("#dialogo-fondos");
+
+function muestraFondo(fondo, perfil) {
+  const libre = !fondo.id || desbloqueado(fondo, perfil);
+  // A los de metal les sirve saber cuántos logros llevas; a los demás, no
+  const metal = FONDOS_METAL.includes(fondo);
+  const pide = `${requisito(fondo)}${metal ? ` (tienes ${logrosDe(perfil)} logros)` : ""}`;
+  const corto = libre ? "" : requisitoCorto(fondo);
+  return `
+    <button class="perfil-fondo ${claseFondo(fondo.id)} ${fondo.id === fondoDe(perfil) ? "elegido" : ""}"
+            style="${estiloFondo(fondo.id)}" data-fondo="${fondo.id}" ${libre ? "" : "disabled"}
+            title="${escaparHTML(libre ? fondo.nombre : pide)}">
+      <span class="perfil-fondo-nombre">${libre ? "" : icono("candado")} ${fondo.nombre}</span>
+      ${corto ? `<small>${corto}</small>` : ""}
+    </button>`;
+}
 
 function plantillaFondos(perfil) {
   const puesto = fondoDe(perfil);
-  const tengo = logrosDe(perfil);
-  const muestra = (fondo) => {
-    const libre = !fondo.id || desbloqueado(fondo, perfil);
-    const pide = `${requisito(fondo)} (tienes ${tengo} logros)`;
-    const corto = libre ? "" : requisitoCorto(fondo);
-    return `
-      <button class="perfil-fondo ${claseFondo(fondo.id)} ${fondo.id === puesto ? "elegido" : ""}"
-              style="${estiloFondo(fondo.id)}" data-fondo="${fondo.id}" ${libre ? "" : "disabled"}
-              title="${escaparHTML(libre ? fondo.nombre : pide)}">
-        <span class="perfil-fondo-nombre">${libre ? "" : icono("candado")} ${fondo.nombre}</span>
-        ${corto ? `<small>${corto}</small>` : ""}
-      </button>`;
-  };
-  const normal = { id: "", nombre: "Sin fondo" };
-  const todos = [normal, ...FONDOS_METAL, ...FONDOS_TIPO];
-
-  if (!fondosEnteros) {
-    // El puesto primero; luego «Normal» y los que ya tienes (los más nuevos de metal antes)
-    const libres = [...FONDOS_METAL].reverse().concat(FONDOS_TIPO).filter((fondo) => desbloqueado(fondo, perfil));
-    const pocos = [todos.find((fondo) => fondo.id === puesto) || normal, normal, ...libres]
-      .filter((fondo, i, lista) => lista.indexOf(fondo) === i)
-      .slice(0, VER_FONDOS);
-    const quedan = todos.length - pocos.length;
-    return `
-      <section class="perfil-apartado">
-        <h3>Fondo de tu tarjeta</h3>
-        <div class="perfil-fondos">
-          ${pocos.map(muestra).join("")}
-          <button class="perfil-fondo perfil-fondos-mas" title="Ver todos los fondos">${icono("mas")}<small>${quedan} más</small></button>
-        </div>
-      </section>`;
-  }
-
+  const todos = [SIN_FONDO, ...FONDOS];
+  // El puesto primero; luego «Sin fondo» y los que ya tienes (los más nuevos de metal antes)
+  const libres = [...FONDOS_METAL].reverse().concat(FONDOS_TIPO, FONDOS_EEVEE).filter((fondo) => desbloqueado(fondo, perfil));
+  const pocos = [todos.find((fondo) => fondo.id === puesto) || SIN_FONDO, SIN_FONDO, ...libres]
+    .filter((fondo, i, lista) => lista.indexOf(fondo) === i)
+    .slice(0, VER_FONDOS);
+  const quedan = todos.length - pocos.length;
   return `
     <section class="perfil-apartado">
-      <h3>Fondo de tu tarjeta <button class="perfil-fondos-mas perfil-fondos-menos">Ver menos</button></h3>
-      <div class="perfil-fondos">${[normal, ...FONDOS_METAL].map(muestra).join("")}</div>
-      <div class="perfil-fondos perfil-fondos-tipo">${FONDOS_TIPO.map(muestra).join("")}</div>
+      <h3>Fondo de tu tarjeta</h3>
+      <div class="perfil-fondos">
+        ${pocos.map((fondo) => muestraFondo(fondo, perfil)).join("")}
+        <button class="perfil-fondo perfil-fondos-mas" title="Ver todos los fondos">${icono("mas")}<small>${quedan} más</small></button>
+      </div>
     </section>`;
+}
+
+// La ventana con todos, por apartados
+function pintarFondos() {
+  const perfil = miPerfil() || {};
+  const apartado = (titulo, fondos, clase = "") => {
+    const tengo = fondos.filter((fondo) => !fondo.id || desbloqueado(fondo, perfil)).length;
+    return `
+      <section class="fondos-apartado">
+        <h3>${titulo} <small>${tengo}/${fondos.length}</small></h3>
+        <div class="perfil-fondos ${clase}">${fondos.map((fondo) => muestraFondo(fondo, perfil)).join("")}</div>
+      </section>`;
+  };
+  dialogoFondos.querySelector(".fondos-lista").innerHTML =
+    apartado("Básicos", [SIN_FONDO, ...FONDOS_METAL]) +
+    apartado("Eevee", FONDOS_EEVEE, "perfil-fondos-eevee") +
+    apartado("Tipos", FONDOS_TIPO, "perfil-fondos-tipo");
 }
 
 // Lockes jugados juntos en total (los de Versus, en marcha o terminados, y los apuntados a
@@ -439,7 +449,6 @@ export function abrirMiPerfil() {
   editandoNombre = false;
   pestana = "perfil";
   salonEntero = false;
-  fondosEnteros = false;
   pintar();
   if (!dialogo.open) dialogo.showModal();
 }
@@ -726,8 +735,8 @@ cuerpo.addEventListener("click", (e) => {
   } else if (boton.classList.contains("perfil-ver-equipos")) {
     abrirDestacados();
   } else if (boton.classList.contains("perfil-fondos-mas")) {
-    fondosEnteros = !fondosEnteros;
-    pintar();
+    pintarFondos();
+    dialogoFondos.showModal();
   } else if (boton.classList.contains("perfil-fondo")) {
     // Se ve ya, mientras se guarda (cuando llega el perfil se vuelve a pintar igual)
     cuerpo.querySelectorAll(".perfil-fondo").forEach((cada) => cada.classList.toggle("elegido", cada === boton));
@@ -771,6 +780,16 @@ dialogoTitulo.querySelector(".titulo-lista").addEventListener("click", (e) => {
 dialogoTitulo.querySelector(".titulo-quitar").addEventListener("click", () => ponerTitulo(null).catch(siFalla));
 dialogoTitulo.querySelector(".titulo-cerrar").addEventListener("click", () => dialogoTitulo.close());
 
+// Elegir uno en la ventana de todos los fondos: se pone y se cierra
+dialogoFondos.querySelector(".fondos-cerrar").addEventListener("click", () => dialogoFondos.close());
+dialogoFondos.querySelector(".fondos-lista").addEventListener("click", (e) => {
+  const boton = e.target.closest(".perfil-fondo");
+  if (!boton || boton.disabled) return;
+  dialogoFondos.querySelectorAll(".perfil-fondo").forEach((cada) => cada.classList.toggle("elegido", cada === boton));
+  guardarMiPerfil({ fondo: boton.dataset.fondo || null }).catch(siFalla);
+  dialogoFondos.close();
+});
+
 dialogoEscaparate.querySelector(".escaparate-cerrar").addEventListener("click", () => dialogoEscaparate.close());
 dialogoEscaparate.querySelector(".escaparate-lista").addEventListener("click", (e) => {
   const equipo = e.target.closest(".escaparate-equipo");
@@ -810,6 +829,7 @@ const repintar = () => {
   if (dialogoEscaparate.open) pintarEscaparate();
   if (dialogoDestacados.open) pintarDestacados();
   if (dialogoTitulo.open) pintarTitulos();
+  if (dialogoFondos.open) pintarFondos();
 };
 alCambiarMiPerfil(repintar);
 alCambiarPerfilesAmigos(repintar);

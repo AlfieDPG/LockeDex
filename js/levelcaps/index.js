@@ -411,7 +411,7 @@ function elegirJuego(nuevo) {
 }
 
 export function mostrar() {
-  // Si se ha llegado desde un locke de «Versus», el juego viene apuntado en CLAVE_JUEGO.
+  // Si se ha llegado desde un locke de «Lockes», el juego viene apuntado en CLAVE_JUEGO.
   // Si es el mismo que ya había, no hace nada.
   selectorJuego.elegirPorId(leer(CLAVE_JUEGO, null));
 }

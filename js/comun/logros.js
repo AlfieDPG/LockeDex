@@ -27,6 +27,7 @@ import { icono } from "./iconos.js";
 import { escaparHTML } from "./utilidades.js";
 import { tiposEs, urlIconoTipo } from "./tipos.js";
 import { generoDe } from "./pokemon.js";
+import { registrados, TOTAL_ESPECIES } from "./registro.js";
 
 export const NIVELES = {
   bronce: "Bronce",
@@ -36,13 +37,14 @@ export const NIVELES = {
 };
 
 export const CATEGORIAS = [
-  { id: "versus", nombre: "Versus" },
+  { id: "versus", nombre: "Lockes" },
   { id: "cementerio", nombre: "Cementerio" },
   { id: "equipos", nombre: "Equipos" },
   { id: "rutas", nombre: "Rutas y level caps" },
   { id: "personalizados", nombre: "A tu manera" },
   { id: "social", nombre: "Amigos y perfil" },
   { id: "otros", nombre: "Otros" },
+  { id: "pokedex", nombre: "Pokédex" },
   { id: "tipos", nombre: "Tipos" },
   { id: "logros", nombre: "Logros" }
 ];
@@ -72,6 +74,29 @@ const LOGROS_DE_TIPO = Object.keys(tiposEs).map((tipo) => ({
   nombre: NOMBRES_DE_TIPO[tipo],
   descripcion: `Ten ${POKEMON_POR_TIPO} Pokémon distintos de tipo ${tiposEs[tipo]} en tus equipos guardados.`,
   valor: (c) => (c.especiesPorTipo.get(tipo) || new Set()).size, meta: POKEMON_POR_TIPO
+}));
+
+// ---------- Logros de la Pokédex ----------
+//
+// Registrar es haber tenido ese Pokémon alguna vez (registro.js): en tus equipos, en la
+// partida de un locke, en una captura de «Rutas» o en tu cementerio. Cada Eeveelution
+// registrada desbloquea su fondo para la tarjeta (fondos.js); las ocho, el de Eevee.
+
+export const EEVEELUTIONS = [
+  { especie: "vaporeon", numero: 134, nombre: "Vaporeon", logro: "Espuma de mar" },
+  { especie: "jolteon", numero: 135, nombre: "Jolteon", logro: "Pelaje eléctrico" },
+  { especie: "flareon", numero: 136, nombre: "Flareon", logro: "Llama interior" },
+  { especie: "espeon", numero: 196, nombre: "Espeon", logro: "Sol de mediodía" },
+  { especie: "umbreon", numero: 197, nombre: "Umbreon", logro: "Luz de luna" },
+  { especie: "leafeon", numero: 470, nombre: "Leafeon", logro: "Hoja perenne" },
+  { especie: "glaceon", numero: 471, nombre: "Glaceon", logro: "Polvo de diamante" },
+  { especie: "sylveon", numero: 700, nombre: "Sylveon", logro: "Lazo de hada" }
+];
+
+const LOGROS_DE_EEVEE = EEVEELUTIONS.map((eevee) => ({
+  id: `x-${eevee.especie}`, categoria: "pokedex", nivel: "plata", icono: "pokedex", fondo: `eevee-${eevee.especie}`,
+  nombre: eevee.logro, descripcion: `Registra a ${eevee.nombre}.`,
+  valor: (c) => c.registrados.has(eevee.numero)
 }));
 
 const cuantos = (lista, condicion) => lista.filter(condicion).length;
@@ -136,7 +161,7 @@ export const LOGROS = [
     nombre: "Hasta el final", descripcion: "Termina un locke.",
     valor: (c) => c.terminados.length + c.apuntados.length },
   { id: "v-rom", categoria: "versus", nivel: "plata", icono: "mando",
-    nombre: "Fin de la partida", descripcion: "Pásate la ROM de un locke de Versus.",
+    nombre: "Fin de la partida", descripcion: "Pásate la ROM de un locke.",
     valor: (c) => cuantos(c.lockes, (l) => (l.rom || {})[c.yo]) },
   { id: "v-ilimitadas", categoria: "versus", nivel: "bronce", icono: "corazon",
     nombre: "Sin presión", descripcion: "Juega un locke con vidas ilimitadas.",
@@ -195,7 +220,7 @@ export const LOGROS = [
     valor: (c) => cuantos(c.mios, (l) => c.jugadoresDe(l) >= 4) +
       cuantos(c.apuntados, (g) => (g.participantes || []).length >= 4) },
   { id: "v-racha", categoria: "versus", nivel: "oro", icono: "rayo",
-    nombre: "En racha", descripcion: "Gana 3 lockes de Versus seguidos.",
+    nombre: "En racha", descripcion: "Gana 3 lockes seguidos.",
     valor: (c) => mejorRacha(c), meta: 3 },
   { id: "v-salon", categoria: "versus", nivel: "bronce", icono: "trofeo",
     nombre: "Salón de la Fama", descripcion: "Apunta tu equipo final en un locke terminado.",
@@ -438,6 +463,30 @@ export const LOGROS = [
     nombre: "Analista de combate", descripcion: "Haz 50 cálculos distintos en la calculadora.",
     valor: (c) => c.contadores.calculos || 0, meta: 50 },
 
+  // ---------- Pokédex ----------
+  { id: "x-25", categoria: "pokedex", nivel: "bronce", icono: "pokedex",
+    nombre: "Primeras páginas", descripcion: "Registra 25 Pokémon distintos (tenerlos en un equipo, en la partida de un locke, en «Rutas» o en tu cementerio).",
+    valor: (c) => c.registrados.size, meta: 25 },
+  { id: "x-100", categoria: "pokedex", nivel: "plata", icono: "pokedex",
+    nombre: "Pokédex en marcha", descripcion: "Registra 100 Pokémon distintos.",
+    valor: (c) => c.registrados.size, meta: 100 },
+  { id: "x-250", categoria: "pokedex", nivel: "plata", icono: "pokedex",
+    nombre: "Bestiario", descripcion: "Registra 250 Pokémon distintos.",
+    valor: (c) => c.registrados.size, meta: 250 },
+  { id: "x-500", categoria: "pokedex", nivel: "oro", icono: "pokedex",
+    nombre: "Media Pokédex", descripcion: "Registra 500 Pokémon distintos.",
+    valor: (c) => c.registrados.size, meta: 500 },
+  { id: "x-800", categoria: "pokedex", nivel: "oro", icono: "pokedex",
+    nombre: "Enciclopedia andante", descripcion: "Registra 800 Pokémon distintos.",
+    valor: (c) => c.registrados.size, meta: 800 },
+  { id: "x-todos", categoria: "pokedex", nivel: "platino", icono: "pokeball",
+    nombre: "Hazte con todos", descripcion: `Registra los ${TOTAL_ESPECIES} Pokémon.`,
+    valor: (c) => c.registrados.size, meta: TOTAL_ESPECIES },
+  ...LOGROS_DE_EEVEE,
+  { id: "x-eeveelutions", categoria: "pokedex", nivel: "oro", icono: "estrella", fondo: "eevee-eevee",
+    nombre: "Eeveelución completa", descripcion: "Registra las ocho evoluciones de Eevee.",
+    valor: (c) => cuantos(EEVEELUTIONS, (eevee) => c.registrados.has(eevee.numero)), meta: EEVEELUTIONS.length },
+
   // ---------- Tipos ----------
   ...LOGROS_DE_TIPO,
 
@@ -526,6 +575,7 @@ async function contexto() {
     equiposDeSeis: equipos.filter((equipo) => equipo.pokemon.length === 6),
     pokemonGuardados: equipos.flatMap((equipo) => equipo.pokemon),
     especiesPorTipo: especiesPorTipo(equipos),
+    registrados: registrados(lockes.flatMap(muertosDe)),
     normas: conjuntos(),
     rutasPropias: rutasTodas.filter((lista) => !lista.recibido),
     capsPropios: capsTodos.filter((lista) => !lista.recibido),

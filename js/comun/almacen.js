@@ -27,6 +27,7 @@ export const CLAVES_SINCRONIZADAS = [
   "poketeams-rutas-propias-v1",           // rutas personalizadas
   "poketeams-levelcaps-propios-v1",       // level caps personalizados
   "poketeams-partidas-v1",                // partidas vinculadas a los lockes (js/partida)
+  "poketeams-registrados-v1",             // Pokémon que has tenido alguna vez (comun/registro.js)
   "poketeams-juegos-propios-v1"           // los de antes (rutas y level caps juntos): se pasan
                                           // solos a los dos de arriba (personalizados.js)
 ];

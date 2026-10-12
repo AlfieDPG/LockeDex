@@ -4,7 +4,7 @@
 // usan la rivalidad de «Amigos» y el perfil (js/perfil.js), para que digan lo mismo.
 //
 // Sale de dos sitios, sin contar nada dos veces (el id de cada locke):
-//   · los lockes de «Versus» en los que estáis los dos (aceptados): todos cuentan como
+//   · los lockes de «Lockes» en los que estáis los dos (aceptados): todos cuentan como
 //     jugados, y los cerrados tienen ganador;
 //   · los lockes ganados apuntados a mano (los de antes de Versus): si en uno tuyo sale él
 //     como participante, es una victoria tuya contra él, y al revés.

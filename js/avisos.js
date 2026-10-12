@@ -7,7 +7,7 @@
 //
 // Dentro caben dos cosas:
 //   · solicitudes de amistad que te han mandado
-//   · invitaciones a un locke de «Versus»
+//   · invitaciones a un locke de «Lockes»
 //
 // Las dos listas están escuchadas en vivo, así que el número sube y baja solo.
 

@@ -13,7 +13,7 @@ import { escaparHTML } from "./utilidades.js";
 // lista propia que está abierta). En «Personalizado» sin ninguna lista, alElegir(null).
 //
 // Devuelve { elegirPorId }: para abrir la sección ya en un juego concreto desde fuera (los
-// botones de Rutas y Level caps de un locke en «Versus»).
+// botones de Rutas y Level caps de un locke en «Lockes»).
 
 export const REGION_PROPIOS = "propios";
 
