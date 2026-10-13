@@ -1,8 +1,8 @@
 // ---------- Elegir uno de tus equipos ----------
 //
 // Un desplegable propio pegado a un botón: tus equipos guardados, por grupos (como en «Mis
-// equipos»), cada uno con sus Pokémon en pequeño. Lo usan los combates de «Lockes» y los
-// lockes del palmarés de «Amigos».
+// equipos»), cada uno con sus Pokémon en pequeño. Lo usan los combates de «Lockes», los
+// lockes del palmarés de «Amigos» y «Meter equipo» de la partida.
 //
 //   const equipo = await elegirEquipo(boton, { conQuitar: true });
 //   // { nombre, pokemon } (una copia, lo justo para pintarlo), null si se ha quitado o
@@ -54,8 +54,9 @@ function filaEquipo(equipo) {
     </button>`;
 }
 
-// primero: un equipo que sale arriba del todo, aparte (el de la partida vinculada al locke)
-export function elegirEquipo(ancla, { conQuitar = false, primero = null } = {}) {
+// primero: un equipo que sale arriba del todo, aparte (el de la partida vinculada al locke).
+// completo: el equipo entero (objetos, ataques, entreno...), no solo lo de pintarlo.
+export function elegirEquipo(ancla, { conQuitar = false, primero = null, completo = false } = {}) {
   cerrar(undefined);
   const deMisEquipos = leerGuardados().filter((equipo) => (equipo.pokemon || []).length);
   const destacado = primero && (primero.pokemon || []).length ? { ...primero, id: "__primero" } : null;
@@ -98,7 +99,7 @@ export function elegirEquipo(ancla, { conQuitar = false, primero = null } = {}) 
     const opcion = e.target.closest(".elegir-equipo-opcion");
     if (opcion) {
       const equipo = guardados.find((cada) => cada.id === opcion.dataset.id);
-      cerrar(equipo ? copiaDeEquipo(equipo) : undefined);
+      cerrar(equipo ? (completo ? JSON.parse(JSON.stringify(equipo)) : copiaDeEquipo(equipo)) : undefined);
     } else if (e.target.closest(".elegir-equipo-quitar")) cerrar(null);
   });
 

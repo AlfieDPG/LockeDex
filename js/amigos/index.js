@@ -19,6 +19,7 @@ import {
 import { hayNube, usuarioActual } from "../comun/nube.js";
 import { estaConectado, alCambiarPresencia } from "../comun/presencia.js";
 import { caraACara } from "../comun/cara-a-cara.js";
+import { soyYo } from "../comun/logros.js";
 import {
   TIPOS_POR_DEFECTO, alCambiarMiPerfil, alCambiarAmistades, miPerfil, fallaElPerfil, tiposDe, tiposParaFicha,
   amigosAceptados, solicitudesRecibidas, solicitudesEnviadas, fallaLasAmistades,
@@ -136,6 +137,7 @@ function plantillaFlotante(ganado, ficha) {
   if (deVidasIlimitadas(ganado)) filas.push(`<div class="flotante-fila">${icono("corazon")}<span>Vidas ilimitadas</span></div>`);
   filas.push(`<div class="flotante-fila ganador">${icono("corona")}<span>Ganó <b>${escaparHTML(ganador)}</b></span></div>`);
 
+  const usuario = usuarioActual();
   const lista = participantes.length
     ? `
       <div class="flotante-titulo">Participantes</div>
@@ -145,12 +147,18 @@ function plantillaFlotante(ganado, ficha) {
             // null: el locke era de vidas ilimitadas. "" o nada: no se apuntó.
             const vidas = p.vidas === null ? "∞" : p.vidas === "" || p.vidas === undefined ? "" : p.vidas;
             const gano = p.nombre === ganador;
+            const suyo = equipoPropio(ficha.clave, ganado.id, p);
+            const equipo = suyo ? suyo.equipo : p.equipo;
+            const mvp = suyo ? suyo.mvp : p.mvp;
+            // En el locke de otro en el que sales tú, pones tu equipo final
+            const tuyo = !ficha.mia && usuario && soyYo(p, usuario.uid, miPerfil() || {});
             return `
               <li class="${gano ? "gano" : ""}">
                 <span class="flotante-quien">${gano ? icono("corona") : ""}${escaparHTML(p.nombre)}</span>
                 ${p.rom ? `<span class="flotante-rom" title="Se pasó la ROM">${icono("mando")}</span>` : ""}
                 ${vidas === "" ? "" : `<span class="flotante-vidas">${icono("corazon")}${escaparHTML(vidas)}</span>`}
-                ${p.equipo ? `<span class="flotante-equipo">${carasDeEquipo(p.equipo, { mvp: p.mvp ?? -1 })}</span>` : ""}
+                ${equipo ? `<span class="flotante-equipo">${carasDeEquipo(equipo, { mvp: mvp ?? -1 })}</span>` : ""}
+                ${tuyo ? `<button class="flotante-mi-equipo">${icono("estrella")} ${suyo ? "Cambiar mi equipo" : "Poner mi equipo"}</button>` : ""}
               </li>`;
           })
           .join("")}
@@ -203,6 +211,35 @@ function plantillaFlotante(ganado, ficha) {
     ${sinDatos}`;
 }
 
+// ---------- Tu equipo en los lockes de otros ----------
+//
+// En el palmarés de un amigo, si sales de participante, pones tu equipo final. Como nadie
+// escribe en el perfil de otro, va en el tuyo: equiposAjenos[«k<dueño>_<locke>»] =
+// { equipo, mvp }. Al pintar ese locke se coge de tu perfil (o del de quien sea).
+
+function claveAjena(dueno, idGanado) {
+  return `k${dueno}_${idGanado}`;
+}
+
+// El equipo que ha puesto el propio participante (si es amigo tuyo o eres tú), o null
+function equipoPropio(dueno, idGanado, participante) {
+  const usuario = usuarioActual();
+  // Los apuntados antes de llevar uid, por el nombre
+  const uid = participante.uid || uidsPorNombre().get(String(participante.nombre || "").trim().toLowerCase());
+  if (!uid || !usuario) return null;
+  const perfil = uid === usuario.uid ? miPerfil() : perfilesDeAmigos().get(uid);
+  return ((perfil && perfil.equiposAjenos) || {})[claveAjena(dueno, idGanado)] || null;
+}
+
+async function elegirMiEquipo(boton, dueno, ganado) {
+  const clave = claveAjena(dueno, ganado.id);
+  const actual = ((miPerfil() || {}).equiposAjenos || {})[clave];
+  const equipo = await elegirEquipo(boton, { conQuitar: Boolean(actual) });
+  if (equipo === undefined) return;
+  // JSON de ida y vuelta: Firestore no acepta «undefined»
+  await guardarMiPerfil({ [`equiposAjenos.${clave}`]: equipo ? JSON.parse(JSON.stringify({ equipo, mvp: -1 })) : null });
+}
+
 function cerrarFlotante() {
   if (!flotante) return;
   flotante.remove();
@@ -220,6 +257,10 @@ function abrirFlotante(elemento, ganado, ficha) {
   flotante.className = "flotante-locke";
   flotante.style.setProperty("--color-locke", colorSeguro(tipo.color));
   flotante.innerHTML = plantillaFlotante(ganado, ficha);
+  flotante.addEventListener("click", (e) => {
+    const boton = e.target.closest(".flotante-mi-equipo");
+    if (boton) elegirMiEquipo(boton, ficha.clave, ganado).catch((error) => console.error(error));
+  });
   document.body.appendChild(flotante);
   elemento.classList.add("abierto");
 
@@ -788,11 +829,29 @@ export function abrirPalmares() {
   dialogoPalmares.showModal();
 }
 
+// Los participantes que son tus amigos (o tú) llevan su uid: así ese locke cuenta también
+// para sus logros y pueden poner su equipo (ver equipoPropio)
+function uidsPorNombre() {
+  const uids = new Map();
+  for (const [uid, perfil] of perfilesDeAmigos()) {
+    if (perfil && perfil.nombre) uids.set(perfil.nombre.trim().toLowerCase(), uid);
+  }
+  const mio = miPerfil();
+  const usuario = usuarioActual();
+  if (mio && mio.nombre && usuario) uids.set(mio.nombre.trim().toLowerCase(), usuario.uid);
+  return uids;
+}
+
 async function guardarPalmares() {
+  const uids = uidsPorNombre();
   const ganados = leerPalmaresDelDialogo()
     .map(({ abierto, ...ganado }) => {
       const participantes = ganado.participantes
-        .map((p) => ({ ...p, nombre: p.nombre.trim() }))
+        .map(({ uid, ...p }) => {
+          const nombre = p.nombre.trim();
+          const suyo = uids.get(nombre.toLowerCase());
+          return { ...p, nombre, ...(suyo ? { uid: suyo } : {}) };
+        })
         .filter((p) => p.nombre);
       const ids = new Set(participantes.map((p) => p.id));
       return {

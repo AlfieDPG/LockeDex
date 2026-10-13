@@ -1201,6 +1201,32 @@ button.cara-equipo.mvp:hover img {
   flex-basis: 100%;
 }
 
+/* En el locke de un amigo en el que sales: poner tu equipo final */
+.flotante-mi-equipo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.55rem;
+  border: none;
+  border-radius: 0.35rem;
+  background: #3a3d52;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.flotante-mi-equipo:hover {
+  background: #f1c40f;
+  color: #1e1f2b;
+}
+
+.flotante-mi-equipo .icono {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
 .flotante-equipo .cara-equipo img,
 .flotante-combate-equipo .cara-equipo img {
   width: 1.45rem;

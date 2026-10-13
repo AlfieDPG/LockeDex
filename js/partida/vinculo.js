@@ -1,7 +1,8 @@
 // ---------- Archivo de guardado vinculado ----------
 //
 // Con la File System Access API (Chrome y Edge de ordenador) se elige el archivo una vez y la
-// web lo vuelve a leer cada vez que cambia: cada vez que guardas en el emulador. Solo se lee.
+// web lo vuelve a leer cada vez que cambia: cada vez que guardas en el emulador. Para editar la
+// partida (ver escribirPartida) se pide además permiso de escritura.
 //
 // El permiso se guarda en este navegador (IndexedDB, que es donde se pueden guardar). Al
 // volver a entrar, el navegador pide confirmarlo con un clic: hasta entonces, «Reanudar».
@@ -11,6 +12,8 @@
 
 const BD = "poketeams-partidas";
 const ALMACEN = "archivos";
+const COPIAS = "copias"; // la partida tal y como estaba antes de cada edición
+const MAX_COPIAS = 5;    // por locke
 const CADA = 2000; // ms entre vistazos al archivo
 
 export const sePuedeVigilar = typeof window !== "undefined" && "showOpenFilePicker" in window;
@@ -19,18 +22,22 @@ export const sePuedeVigilar = typeof window !== "undefined" && "showOpenFilePick
 
 function abrirBD() {
   return new Promise((resolver, fallar) => {
-    const peticion = indexedDB.open(BD, 1);
-    peticion.onupgradeneeded = () => peticion.result.createObjectStore(ALMACEN);
+    const peticion = indexedDB.open(BD, 2);
+    peticion.onupgradeneeded = () => {
+      const bd = peticion.result;
+      if (!bd.objectStoreNames.contains(ALMACEN)) bd.createObjectStore(ALMACEN);
+      if (!bd.objectStoreNames.contains(COPIAS)) bd.createObjectStore(COPIAS, { autoIncrement: true });
+    };
     peticion.onsuccess = () => resolver(peticion.result);
     peticion.onerror = () => fallar(peticion.error);
   });
 }
 
-async function operar(modo, hacer) {
+async function operar(modo, hacer, almacen = ALMACEN) {
   const bd = await abrirBD();
   return new Promise((resolver, fallar) => {
-    const transaccion = bd.transaction(ALMACEN, modo);
-    const peticion = hacer(transaccion.objectStore(ALMACEN));
+    const transaccion = bd.transaction(almacen, modo);
+    const peticion = hacer(transaccion.objectStore(almacen));
     transaccion.oncomplete = () => resolver(peticion && peticion.result);
     transaccion.onerror = () => fallar(transaccion.error);
   });
@@ -107,6 +114,89 @@ export function leerUnaVez(idLocke) {
     if (archivo) alLeer(idLocke, new Uint8Array(await archivo.arrayBuffer()), archivo.name);
   });
   campo.click();
+}
+
+// ---------- Escribir ----------
+//
+// editar(original) recibe la partida tal y como está ahora en el disco y devuelve la nueva
+// (js/partida/escribir3ds.js). Antes de escribir se guarda una copia de la original: si no se
+// puede, no se escribe. Tiene que ser con un clic: la primera vez el navegador pide permiso.
+//
+// OJO: el juego solo lee la partida al arrancar y la pisa cada vez que guarda. Hay que editar
+// con la emulación parada y volver a arrancar el juego después.
+
+// El permiso para escribir. Lo pide escribirPartida, pero quien tenga que esperar a otras cosas
+// antes de escribir lo pide nada más pulsar: pasado un rato del clic, el navegador ya no lo pide.
+export async function pedirPermiso(idLocke) {
+  const vinculo = vinculos.get(idLocke);
+  if (!vinculo) throw new Error("La partida no está vinculada.");
+  if ((await vinculo.archivo.requestPermission({ mode: "readwrite" })) !== "granted") {
+    throw new Error("Sin permiso para guardar en el archivo de la partida.");
+  }
+  vinculo.permiso = "granted";
+  return vinculo;
+}
+
+export async function escribirPartida(idLocke, editar) {
+  const vinculo = await pedirPermiso(idLocke);
+  const archivo = await vinculo.archivo.getFile();
+  const original = new Uint8Array(await archivo.arrayBuffer());
+  const nuevo = await editar(original);
+
+  await guardarCopia(idLocke, original, archivo.name);
+  const escritor = await vinculo.archivo.createWritable();
+  await escritor.write(nuevo);
+  await escritor.close();
+
+  alCambiarEstado();
+  await mirar(idLocke); // la web se pone al día con lo escrito
+  return nuevo;
+}
+
+// La partida tal y como está ahora en el disco (para el editor, que siempre parte de ella)
+export async function leerArchivo(idLocke) {
+  const vinculo = vinculos.get(idLocke);
+  if (!vinculo || vinculo.permiso !== "granted") throw new Error("La partida no está vinculada.");
+  return new Uint8Array(await (await vinculo.archivo.getFile()).arrayBuffer());
+}
+
+// Sin la API: la partida editada se descarga y se pone a mano en lugar de la otra
+export function descargarPartida(bytes, nombre = "main") {
+  const enlace = document.createElement("a");
+  enlace.href = URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" }));
+  enlace.download = nombre;
+  enlace.click();
+  setTimeout(() => URL.revokeObjectURL(enlace.href), 10000);
+}
+
+// ---------- Copias de seguridad ----------
+//
+// { idLocke, nombre, cuando, bytes }: las MAX_COPIAS últimas de cada locke
+
+async function todasLasCopias() {
+  const [claves, copias] = await Promise.all([
+    operar("readonly", (almacen) => almacen.getAllKeys(), COPIAS),
+    operar("readonly", (almacen) => almacen.getAll(), COPIAS)
+  ]);
+  return (copias || []).map((copia, i) => ({ ...copia, clave: claves[i] }));
+}
+
+async function guardarCopia(idLocke, bytes, nombre) {
+  await operar("readwrite", (almacen) => almacen.add({ idLocke, nombre, cuando: Date.now(), bytes }), COPIAS);
+  const sobran = (await copiasDe(idLocke)).slice(MAX_COPIAS);
+  for (const copia of sobran) await operar("readwrite", (almacen) => almacen.delete(copia.clave), COPIAS);
+}
+
+// Las de un locke, de la más nueva a la más vieja
+export async function copiasDe(idLocke) {
+  return (await todasLasCopias()).filter((copia) => copia.idLocke === idLocke).sort((una, otra) => otra.cuando - una.cuando);
+}
+
+// Vuelve a dejar la partida como estaba en esa copia (de lo que hubiera, se guarda otra copia)
+export async function restaurarCopia(idLocke, clave) {
+  const copia = (await copiasDe(idLocke)).find((cada) => cada.clave === clave);
+  if (!copia) throw new Error("Esa copia ya no está.");
+  return escribirPartida(idLocke, () => copia.bytes);
 }
 
 // ---------- Vigilar ----------

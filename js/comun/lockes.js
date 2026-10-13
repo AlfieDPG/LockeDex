@@ -635,7 +635,7 @@ export async function reordenarMuertos(id, ids) {
 //
 //   { uid, tipo, cuando (hora del servidor), delta?, muerto?, ganador?, detalle? }
 //   tipo: "creado" | "entra" | "vida" | "eliminado" (la vida cero) | "victoria" | "muerte" |
-//         "ganador" | "combate" | "rom" | "ruta" | "cap"
+//         "ganador" | "combate" | "rom" | "ruta" | "cap" | "edicion" (editar la partida vinculada)
 //
 // Si apuntar falla (p. ej. faltan reglas por publicar), lo de verdad ya está hecho: solo se
 // avisa en la consola.

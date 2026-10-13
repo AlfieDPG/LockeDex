@@ -14,7 +14,7 @@
 import { icono } from "../comun/iconos.js";
 import { escaparHTML, fechaLarga } from "../comun/utilidades.js";
 import { hayNube, usuarioActual } from "../comun/nube.js";
-import { escribir } from "../comun/almacen.js";
+import { leer, escribir } from "../comun/almacen.js";
 import { CLAVES_JUEGO } from "../comun/selector-juego.js";
 import {
   plantillaCampoJuego, activarCamposJuego, leerCampoJuego, nombreJuego, juegoConDatos
@@ -180,8 +180,10 @@ function plantillaLocke(locke) {
     : `${icono("aspa")} Nadie ganó`;
   const fecha = cerrado && locke.fechaFin ? ` · ${escaparHTML(fechaLarga(locke.fechaFin))}` : "";
 
-  // Un locke cerrado ya no se toca, salvo para que quien lo creó pueda borrarlo
+  // Un locke cerrado ya no se toca, salvo para que quien lo creó pueda borrarlo. Terminado,
+  // cualquiera lo puede quitar de su lista (los demás lo siguen viendo).
   const puedeEditar = !cerrado || soyCreador(locke);
+  const quitado = quitados().includes(locke.id);
 
   return `
     <article class="locke ${cerrado ? "cerrado" : "abierto"}" data-id="${escaparHTML(locke.id)}"
@@ -193,6 +195,9 @@ function plantillaLocke(locke) {
         <div class="locke-acciones">
           ${!cerrado && soyCreador(locke) ? `<button class="locke-terminar" title="Terminar el locke">${icono("corona")} Terminar</button>` : ""}
           ${puedeEditar ? `<button class="locke-editar" title="Editar locke">${icono("lapiz")}</button>` : ""}
+          ${cerrado
+            ? `<button class="locke-quitar-lista" title="${quitado ? "Volver a ponerlo en tu lista" : "Quitar de tu lista"}">${icono(quitado ? "deshacer" : "aspa")}</button>`
+            : ""}
           ${soyCreador(locke) ? `<button class="locke-borrar" title="Borrar locke">${icono("papelera")}</button>` : ""}
         </div>
       </header>
@@ -231,8 +236,12 @@ function pintar() {
   }
 
   // Del más nuevo al más antiguo. Solo los MOSTRAR_DE_ENTRADA últimos; el resto detrás de
-  // un botón que los despliega todos.
-  const ordenados = [...mios].sort((uno, otro) => (otro.creado || 0) - (uno.creado || 0));
+  // un botón que los despliega todos. Los terminados que has quitado, aparte, al final.
+  const fuera = new Set(quitados());
+  const deLaLista = mios.filter((locke) => !(locke.estado === "cerrado" && fuera.has(locke.id)));
+  const apartados = mios.filter((locke) => !deLaLista.includes(locke));
+  if (!apartados.length) verQuitados = false;
+  const ordenados = [...deLaLista].sort((uno, otro) => (otro.creado || 0) - (uno.creado || 0));
   const quedan = ordenados.length - MOSTRAR_DE_ENTRADA;
   const visibles = verTodos || quedan <= 0 ? ordenados : ordenados.slice(0, MOSTRAR_DE_ENTRADA);
 
@@ -242,7 +251,28 @@ function pintar() {
       ? `<button class="versus-ver-mas">${icono(verTodos ? "menos" : "mas")} ${
           verTodos ? "Ver solo los últimos" : `Ver todos (${quedan} más)`
         }</button>`
-      : "");
+      : "") +
+    (apartados.length
+      ? `<button class="versus-ver-quitados">${icono(verQuitados ? "menos" : "mas")} ${
+          verQuitados ? "Esconder los quitados" : `Quitados de tu lista (${apartados.length})`
+        }</button>`
+      : "") +
+    (verQuitados ? apartados.map(plantillaLocke).join("") : "");
+}
+
+// ---------- Lockes quitados de tu lista ----------
+
+const CLAVE_QUITADOS = "poketeams-lockes-quitados-v1";
+let verQuitados = false;
+
+function quitados() {
+  return leer(CLAVE_QUITADOS, []) || [];
+}
+
+function alternarQuitado(id) {
+  const ids = quitados();
+  escribir(CLAVE_QUITADOS, ids.includes(id) ? ids.filter((otro) => otro !== id) : [...ids, id]);
+  pintar();
 }
 
 // ---------- Ventana de crear / editar ----------
@@ -737,6 +767,11 @@ export function iniciar() {
       pintar();
       return;
     }
+    if (e.target.closest(".versus-ver-quitados")) {
+      verQuitados = !verQuitados;
+      pintar();
+      return;
+    }
 
     const tarjeta = e.target.closest(".locke");
     const boton = e.target.closest("button");
@@ -763,6 +798,8 @@ export function iniciar() {
       irAlJuego(boton.dataset.ir, boton.dataset.juego);
     } else if (boton.classList.contains("locke-editar")) {
       abrir(locke);
+    } else if (boton.classList.contains("locke-quitar-lista")) {
+      alternarQuitado(id);
     } else if (boton.classList.contains("locke-borrar")) {
       if (confirm(`¿Borrar «${locke.nombre}»? Lo pierden todos los que juegan.`)) tarea = borrarLocke(id);
     } else if (boton.classList.contains("locke-terminar")) {

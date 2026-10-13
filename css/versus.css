@@ -34,7 +34,8 @@
 }
 
 /* Detrás de los últimos 5: despliega (o vuelve a plegar) todos los demás */
-.versus-ver-mas {
+.versus-ver-mas,
+.versus-ver-quitados {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -50,12 +51,14 @@
   cursor: pointer;
 }
 
-.versus-ver-mas:hover {
+.versus-ver-mas:hover,
+.versus-ver-quitados:hover {
   border-color: rgba(241, 196, 15, 0.7);
   background: rgba(241, 196, 15, 0.08);
 }
 
-.versus-ver-mas .icono {
+.versus-ver-mas .icono,
+.versus-ver-quitados .icono {
   width: 1rem;
   height: 1rem;
 }
@@ -139,7 +142,8 @@
   height: 1rem;
 }
 
-.locke-editar:hover {
+.locke-editar:hover,
+.locke-quitar-lista:hover {
   background: #f1c40f;
   color: #2b2d3a;
 }
@@ -1786,7 +1790,7 @@ button.salon-cara:hover {
   cursor: pointer;
 }
 
-.locke-partida-vincular:only-child {
+.locke-partida-vincular:first-child {
   flex: 1;
 }
 
@@ -1808,17 +1812,6 @@ button.salon-cara:hover {
 .locke-partida .icono {
   width: 0.85rem;
   height: 0.85rem;
-}
-
-/* Punto verde: se está leyendo el archivo */
-.locke-partida-viva {
-  flex: none;
-  width: 0.55rem;
-  height: 0.55rem;
-  margin: 0 0.2rem;
-  border-radius: 50%;
-  background: #2ecc71;
-  box-shadow: 0 0 0.4rem rgba(46, 204, 113, 0.7);
 }
 
 #dialogo-partida {
@@ -1851,8 +1844,11 @@ button.salon-cara:hover {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-  max-height: 65vh;
+  /* Alto fijo: la ventana no cambia de tamaño con lo que haya (ni al pasar de cajas a bolsa) */
+  height: min(76vh, 54rem);
   overflow-y: auto;
+  /* La barra de scroll, separada de los Pokémon (y, con el editor al lado, en medio del hueco) */
+  padding-right: 0.6rem;
 }
 
 .partida-caja h3 {
@@ -1887,6 +1883,27 @@ button.salon-cara:hover {
   opacity: 0.55;
 }
 
+/* Los huevos: su especie, con un huevo en la esquina del retrato */
+.partida-ficha {
+  position: relative;
+}
+
+.partida-huevo {
+  position: absolute;
+  top: 0.25rem;
+  left: calc(50% + 0.55rem);
+  display: flex;
+  padding: 0.12rem;
+  border-radius: 0.3rem;
+  background: #f1c40f;
+  color: #1e1f2b;
+}
+
+.partida-huevo .icono {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
 .partida-ficha-nombre {
   max-width: 100%;
   overflow: hidden;
@@ -1908,7 +1925,9 @@ button.salon-cara:hover {
   gap: 0.4rem;
 }
 
-/* Copiar a Mis equipos e interruptor de caja de muertos, en la cabecera de cada bloque */
+/* Meter equipo, copiar a Mis equipos e interruptor de caja de muertos, en la cabecera de cada bloque */
+.partida-caramelos,
+.partida-meter,
 .partida-copiar,
 .partida-marcar-muertos {
   display: inline-flex;
@@ -1926,6 +1945,14 @@ button.salon-cara:hover {
   cursor: pointer;
 }
 
+.partida-caramelos ~ .partida-meter,
+.partida-caramelos ~ .partida-copiar,
+.partida-meter + .partida-copiar {
+  margin-left: 0;
+}
+
+.partida-caramelos:hover,
+.partida-meter:hover,
 .partida-copiar:hover,
 .partida-marcar-muertos:hover {
   background: #4a4e68;
@@ -1936,6 +1963,8 @@ button.salon-cara:hover {
   cursor: progress;
 }
 
+.partida-caramelos .icono,
+.partida-meter .icono,
 .partida-copiar .icono,
 .partida-marcar-muertos .icono {
   width: 0.85rem;
@@ -1967,45 +1996,1067 @@ button.salon-cara:hover {
   filter: grayscale(0.6);
 }
 
-/* Botones de abajo: «Desvincular» en rojo, «Cerrar» como el resto de la web */
-#dialogo-partida .dialogo-botones button {
-  display: inline-flex;
+/* Arriba del todo: a la izquierda las pestañas (o el título); a la derecha, los cambios sin
+   guardar, Copias, volver a vincular, desvincular (en rojo) y la ✕ de cerrar */
+.partida-cabecera {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem;
-  font-family: inherit;
+  gap: 0.6rem 1rem;
+  margin-bottom: 0.8rem;
 }
 
-#dialogo-partida .dialogo-botones .icono {
+.partida-cabecera > h2 {
+  margin: 0;
+}
+
+.partida-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.partida-acciones button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 2.1rem;
+  padding: 0 0.75rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: #3a3d52;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.partida-acciones button.partida-icono {
+  width: 2.1rem;
+  padding: 0;
+}
+
+.partida-acciones .icono {
   width: 1rem;
   height: 1rem;
 }
 
+.partida-acciones button:hover {
+  background: #4a4e68;
+}
+
 .partida-desvincular {
+  background: rgba(231, 76, 60, 0.15) !important;
+  box-shadow: inset 0 0 0 1px rgba(231, 76, 60, 0.5);
+  color: #e74c3c !important;
+}
+
+.partida-desvincular:hover {
+  background: #c0392b !important;
+  box-shadow: none;
+  color: #fff !important;
+}
+
+/* Cambios sin guardar: se guardan al cerrar (la ✕, en verde) o se descartan */
+.partida-pendientes {
+  font-size: 0.78rem;
+  color: #f1c40f;
+}
+
+.partida-descartar {
+  display: none !important;
+}
+
+#dialogo-partida.con-cambios .partida-descartar {
+  display: inline-flex !important;
+}
+
+#dialogo-partida.con-cambios .partida-cerrar {
+  background: #27ae60;
+  color: #fff;
+}
+
+#dialogo-partida.con-cambios .partida-cerrar:hover {
+  background: #2ecc71;
+}
+
+.partida-cerrar.guardando {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* «?»: cómo funciona lo de la partida (en el título de la ventana y en tu bloque) */
+.partida-ayuda,
+.locke-partida-ayuda {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #3a3d52;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.partida-ayuda:hover,
+.locke-partida-ayuda:hover {
+  background: #f1c40f;
+  color: #1e1f2b;
+}
+
+.ayuda-partida {
+  max-height: 60vh;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.ayuda-partida h3 {
+  margin: 0.9rem 0 0.25rem;
+  font-size: 0.85rem;
+  color: #f1c40f;
+}
+
+.ayuda-partida h3:first-child {
+  margin-top: 0;
+}
+
+.ayuda-partida p {
+  margin: 0 0 0.4rem;
+}
+
+/* Editor a la derecha de las cajas (pantallas anchas, js/versus/editor.js) */
+.partida-lado {
+  display: none;
+}
+
+#dialogo-partida.con-editor {
+  width: min(104rem, 97vw);
+}
+
+#dialogo-partida.con-editor .partida-contenido {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36rem;
+  gap: 0.6rem;
+}
+
+#dialogo-partida.con-editor .partida-lado {
+  display: block;
+  max-height: min(76vh, 54rem);
+  overflow-y: auto;
+  padding: 0.9rem;
+  border-radius: 0.6rem;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+/* El panel ocupa todo el alto y sus botones van pegados abajo del todo (al bajar, se quedan) */
+#dialogo-partida.con-editor .partida-lado {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+
+.partida-lado .editor-panel {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.partida-lado .editor-panel .dialogo-botones {
+  position: sticky;
+  bottom: 0;
+  margin: auto -0.9rem 0;
+  padding: 0.7rem 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: #252736;
+}
+
+.editor-panel .editor-error:empty {
+  display: none;
+}
+
+#dialogo-partida button.partida-ficha.editando {
+  background: rgba(241, 196, 15, 0.25);
+  box-shadow: inset 0 0 0 2px #f1c40f;
+}
+
+/* Las fichas que se pueden editar, pulsables */
+button.partida-ficha {
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+button.partida-ficha:hover {
+  background: rgba(241, 196, 15, 0.15);
+  box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.5);
+}
+
+/* Hueco libre: crear uno nuevo (o soltar ahí uno arrastrado) */
+button.partida-hueco {
+  justify-content: center;
+  min-height: 4.6rem;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+  color: rgba(242, 242, 242, 0.45);
+}
+
+button.partida-hueco .icono {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+/* Pestañas «Cajas» y «Bolsa», en el título */
+.partida-pestanas {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  border-radius: 0.55rem;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.partida-pestana {
+  padding: 0.3rem 0.8rem;
+  border: none;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: rgba(242, 242, 242, 0.6);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.partida-pestana {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.partida-pestana .icono {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.partida-pestana:hover {
+  color: #f2f2f2;
+}
+
+/* Cada pestaña con su color, suave: azul las cajas, verde la bolsa (un tinte arriba de la
+   ventana y la pestaña elegida) */
+#dialogo-partida {
+  --color-pestana: 91, 141, 239;
+  background-image: linear-gradient(180deg, rgba(var(--color-pestana), 0.1), rgba(var(--color-pestana), 0) 9rem);
+  box-shadow: inset 0 3px 0 rgba(var(--color-pestana), 0.6);
+}
+
+#dialogo-partida.en-bolsa {
+  --color-pestana: 82, 183, 136;
+}
+
+.partida-pestana.activa {
+  background: rgba(var(--color-pestana), 0.28);
+  color: #f2f2f2;
+}
+
+#dialogo-partida > h2 > .icono {
+  color: rgb(var(--color-pestana));
+}
+
+/* ---------- Bolsa (js/versus/bolsa.js) ---------- */
+
+.bolsa {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.bolsa-bolsillos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.bolsa-bolsillo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 1rem;
+  background: #3a3d52;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.bolsa-bolsillo small {
+  opacity: 0.6;
+}
+
+.bolsa-bolsillo .icono {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.bolsa-bolsillo:hover {
+  background: #4a4e68;
+}
+
+.bolsa-bolsillo.activo {
+  background: rgb(var(--color-pestana));
+  color: #1e1f2b;
+}
+
+.bolsa-anadir {
+  max-width: 22rem;
+}
+
+/* Atajo de los Caramelos Raros, al final de la fila de los bolsillos */
+.bolsa-caramelos {
+  order: 99;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 0.4rem;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px rgba(var(--color-pestana), 0.5);
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.bolsa-caramelos:hover {
+  background: rgba(var(--color-pestana), 0.2);
+}
+
+.bolsa-caramelos .icono {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.bolsa-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 0.35rem;
+}
+
+.bolsa-fila {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.4rem;
+  padding: 0.2rem 0.4rem 0.2rem 0.5rem;
+  border-radius: 0.45rem;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.bolsa-icono {
+  flex: none;
+  display: flex;
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.bolsa-icono img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.bolsa-nombre {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.88rem;
+}
+
+.bolsa-fila .numero {
+  flex: none;
+  width: 5rem;
+}
+
+.bolsa-cantidad {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.35rem;
+  background: #1e1f2b;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.bolsa-cantidad:focus {
+  outline: none;
+  border-color: #f1c40f;
+}
+
+.bolsa-quitar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.3rem;
+  background: rgba(0, 0, 0, 0.25);
+  color: #f2f2f2;
+  cursor: pointer;
+}
+
+.bolsa-quitar:hover {
+  background: #c0392b;
+}
+
+.bolsa-quitar .icono {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.bolsa-vacio,
+.bolsa-lleno {
+  margin: 0;
+  opacity: 0.6;
+}
+
+/* Arrastrando uno a otro hueco: el arrastrado, en tenue; donde caería, enmarcado */
+button.partida-ficha.arrastrando {
+  opacity: 0.35;
+}
+
+#dialogo-partida button.partida-ficha.destino {
+  background: rgba(241, 196, 15, 0.25);
+  box-shadow: inset 0 0 0 2px #f1c40f;
+}
+
+/* ---------- Editar un Pokémon de la partida (js/versus/editor.js) ---------- */
+
+#dialogo-editor {
+  width: min(40rem, 94vw);
+}
+
+.editor-cargando {
+  opacity: 0.7;
+}
+
+.editor-cabecera {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.editor-retrato {
+  position: relative;
+  flex: none;
+}
+
+.editor-cara {
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 0.7rem;
+  background: #1e1f2b;
+  image-rendering: pixelated;
+}
+
+.editor-shiny,
+.editor-genero {
+  position: absolute;
+  right: -0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #3a3d52;
+  color: #f2f2f2;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.editor-shiny {
+  top: -0.4rem;
+}
+
+.editor-genero {
+  bottom: -0.4rem;
+}
+
+.editor-shiny.activo {
+  background: #f1c40f;
+  color: #1e1f2b;
+}
+
+.editor-genero .icono {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.editor-genero.genero-M {
+  color: #6bb7ff;
+}
+
+.editor-genero.genero-F {
+  color: #ff7ab8;
+}
+
+.editor-genero:disabled {
+  cursor: default;
+  opacity: 0.8;
+}
+
+/* A la derecha del retrato, en dos líneas de su misma altura: especie (forma) y mote; nivel,
+   amistad y ball */
+.editor-datos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 5.5rem;
+}
+
+.editor-linea {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.editor-linea > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.editor-titulo {
+  opacity: 0.75;
+}
+
+.editor-linea > input,
+.editor-linea > select,
+.editor-ball select,
+.editor-amistad input,
+.editor-nivel input,
+.editor-buscar input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.4rem;
+  background: #1e1f2b;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.editor-linea > input:focus,
+.editor-linea > select:focus,
+.editor-ball select:focus,
+.editor-amistad input:focus,
+.editor-nivel input:focus,
+.editor-buscar input:focus {
+  outline: none;
+  border-color: #f1c40f;
+}
+
+.editor-buscar {
+  position: relative;
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Huevo: cuadradito al final de la fila del nivel; encendido, dice que es un huevo */
+.editor-linea > .editor-huevo {
+  flex: none;
+}
+
+.editor-huevo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.4rem;
+  background: #3a3d52;
+  color: rgba(242, 242, 242, 0.6);
+  cursor: pointer;
+}
+
+.editor-huevo .icono {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.editor-huevo:hover {
+  color: #f2f2f2;
+}
+
+.editor-huevo.activo {
+  background: #f1c40f;
+  color: #1e1f2b;
+}
+
+/* Nivel: «Nv.» y el número; la naturaleza, al lado */
+.editor-linea > .editor-nivel {
+  flex: 0 0 5.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  opacity: 0.95;
+}
+
+.editor-nivel > .numero {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-nivel input {
+  width: 100%;
+}
+/* Objeto y habilidad: desplegable en el que se escribe (con el icono del objeto delante y, si
+   la habilidad es la oculta, la marca detrás) */
+.editor-combo {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.editor-oculta {
+  flex: none;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.35rem;
+  background: rgba(241, 196, 15, 0.18);
+  color: #f1c40f;
+  font-size: 0.72rem;
+  font-weight: bold;
+}
+
+/* Objeto y habilidad, uno al lado del otro */
+.editor-par {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 0 1rem;
+}
+
+.editor-solo-especie {
+  max-width: 20rem;
+}
+
+/* Debajo de las estadísticas: amistad, entrenador, dónde se conoció y juego de origen, cada uno
+   con su icono delante */
+.editor-origen {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem 0.8rem;
+  margin-top: 0.9rem;
+  padding: 0.7rem 0 0.9rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.editor-dato {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.editor-dato > .icono {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.7;
+}
+
+.editor-dato > :not(.icono) {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-dato input,
+.editor-dato select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.4rem;
+  background: #1e1f2b;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.88rem;
+}
+
+.editor-dato input:focus,
+.editor-dato select:focus {
+  outline: none;
+  border-color: #f1c40f;
+}
+
+.editor-dato input:disabled {
+  opacity: 0.5;
+}
+
+.editor-amistad,
+.editor-ball {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.editor-amistad > .icono {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.7;
+}
+
+.editor-ball .editor-icono-objeto {
+  flex: none;
+}
+
+.editor-amistad > :not(.icono),
+.editor-ball select {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-apartado {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.9rem;
+}
+
+/* Las estadísticas (js/equipos/entreno.js, incrustado): más justas que en su ventana */
+.editor-estadisticas .entreno-fila {
+  grid-template-columns: 5.2rem 2.8rem minmax(3rem, 1fr) 3.9rem 3.6rem minmax(2.4rem, 0.7fr) 2.4rem;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.editor-estadisticas .entreno-filas {
+  gap: 0.25rem;
+}
+
+.editor-estadisticas .entreno-fila input[type="number"] {
+  padding: 0.25rem 0.35rem;
+  font-size: 0.85rem;
+}
+
+.editor-estadisticas .entreno-quedan {
+  grid-column: span 2;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.editor-estadisticas .entreno-restantes {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+/* Los discos de las MT y MO (PokeAPI) traen mucho margen: algo más grandes y pixelados */
+.bolsa-icono img[src*="/items/tm-"],
+.bolsa-icono img[src*="/items/hm-"],
+.editor-icono-objeto[src*="/items/tm-"],
+.sugerencias img[src*="/items/tm-"],
+.sugerencias img[src*="/items/hm-"] {
+  transform: scale(1.5);
+  image-rendering: pixelated;
+}
+
+.editor-titulo {
+  font-size: 0.72rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.editor-elegido {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  align-self: flex-start;
+  padding: 0.35rem 0.4rem 0.35rem 0.6rem;
+  border-radius: 0.45rem;
+  background: #3a3d52;
+  font-weight: bold;
+}
+
+.editor-icono-objeto {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+}
+
+.editor-objeto-quitar,
+.editor-habilidad-quitar,
+.editor-ataque-quitar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.3rem;
+  background: rgba(0, 0, 0, 0.25);
+  color: #f2f2f2;
+  cursor: pointer;
+}
+
+.editor-objeto-quitar:hover,
+.editor-habilidad-quitar:hover,
+.editor-ataque-quitar:hover {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.editor-objeto-quitar .icono,
+.editor-habilidad-quitar .icono,
+.editor-ataque-quitar .icono {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+
+.editor-ataques {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.editor-ataque {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.3rem;
+  padding: 0 0.4rem 0 0.6rem;
+  border-radius: 0.45rem;
+  background: var(--color);
+  color: #fff;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.editor-ataque.vacio {
+  padding: 0;
+  background: none;
+}
+
+.editor-ataque-nombre {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-ataque-pp {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+.editor-panel .dialogo-botones {
+  align-items: center;
+}
+
+.editor-panel .dialogo-botones button {
+  font-family: inherit;
+}
+
+/* Borrar y clonar, a la izquierda (no en uno nuevo) */
+.editor-borrar,
+.editor-clonar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #3a3d52;
+  color: #f2f2f2;
+}
+
+.editor-borrar .icono,
+.editor-clonar .icono {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.editor-clonar:hover {
+  background: #4a4e68;
+}
+
+.editor-borrar {
   background: rgba(231, 76, 60, 0.15);
   box-shadow: inset 0 0 0 1px rgba(231, 76, 60, 0.5);
   color: #e74c3c;
 }
 
-.partida-desvincular:hover {
+.editor-borrar:hover {
   background: #c0392b;
   box-shadow: none;
   color: #fff;
 }
 
-/* «Volver a vincular», pegado a «Desvincular»; «Cerrar», al otro lado */
-.partida-vincular {
+.editor-clonar {
   margin-right: auto;
 }
 
-.partida-vincular,
-.partida-cerrar {
+.editor-panel.nuevo .editor-borrar,
+.editor-panel.nuevo .editor-clonar {
+  display: none;
+}
+
+.editor-panel.nuevo .editor-cancelar {
+  margin-left: auto;
+}
+
+.editor-cancelar {
   background: #3a3d52;
   color: #f2f2f2;
 }
 
-.partida-vincular:hover,
-.partida-cerrar:hover {
+.editor-cancelar:hover {
   background: #4a4e68;
+}
+
+.editor-guardar {
+  background: #27ae60;
+  color: #fff;
+}
+
+.editor-guardar:hover:not(:disabled) {
+  background: #2ecc71;
+}
+
+.editor-guardar:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+@media (max-width: 560px) {
+  .editor-par {
+    grid-template-columns: 1fr;
+  }
+
+  .editor-ataques {
+    grid-template-columns: 1fr;
+  }
+
+  /* Borrar, clonar y mover, solo con el icono */
+  .editor-borrar span,
+  .editor-clonar span {
+    display: none;
+  }
+}
+
+/* ---------- Meter equipo (js/versus/meter-equipo.js) ---------- */
+
+#dialogo-meter {
+  width: min(34rem, 94vw);
+}
+
+.meter-equipo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.45rem;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.meter-equipo strong {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meter-quitar {
+  display: inline-flex;
+  padding: 0.3rem;
+  border: none;
+  border-radius: 0.3rem;
+  background: rgba(0, 0, 0, 0.25);
+  color: #f2f2f2;
+  cursor: pointer;
+}
+
+.meter-quitar .icono {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.meter-destino {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.2rem;
+}
+
+/* ---------- Copias de la partida ---------- */
+
+.copias-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.copias-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.45rem;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.copias-restaurar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+}
+
+.copias-restaurar .icono {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.copias-vacio {
+  opacity: 0.7;
 }
 
 .partida-muertos-lista {

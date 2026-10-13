@@ -60,6 +60,8 @@ function textoSuceso(suceso, locke) {
       return `${quien} ha capturado en ${detalle}`;
     case "cap":
       return `${quien} ha vencido a ${detalle}`;
+    case "edicion":
+      return `${quien} ha editado su partida: ${detalle}`;
     default:
       return "";
   }
@@ -78,6 +80,7 @@ function iconoSuceso(suceso) {
     rom: "visto",
     ruta: "mapa",
     cap: "escudo",
+    edicion: "lapiz",
     ganador: "corona"
   }[suceso.tipo];
   return nombre ? icono(nombre) : "";

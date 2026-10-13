@@ -617,13 +617,86 @@
   </dialog>
 
   <!-- La partida vinculada a un locke: equipo y cajas (js/versus/partida.js) -->
-  <dialog id="dialogo-partida">
-    <h2 class="partida-titulo"></h2>
-    <div class="partida-cuerpo"></div>
+  <dialog id="dialogo-partida" autofocus>
+    <!-- Arriba: las pestañas (o el título) y, a la derecha, lo demás; así las cajas llegan hasta abajo -->
+    <div class="partida-cabecera">
+      <h2 class="partida-titulo"></h2>
+      <div class="partida-acciones">
+        <span class="partida-pendientes"></span>
+        <button class="partida-descartar">Descartar</button>
+        <button class="partida-copias" hidden title="Volver a como estaba antes de guardar"><svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/></svg> Copias</button>
+        <button class="partida-vincular partida-icono"></button>
+        <button class="partida-desvincular partida-icono" title="Desvincular la partida" aria-label="Desvincular"><svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18.84 12.25 1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71"/><path d="m5.17 11.75-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71"/><path d="M8 2v3"/><path d="M2 8h3"/><path d="M16 19v3"/><path d="M19 16h3"/></svg></button>
+        <button class="partida-cerrar partida-icono" title="Cerrar" aria-label="Cerrar"><svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </div>
+    </div>
+    <div class="partida-contenido">
+      <div class="partida-cuerpo"></div>
+      <aside class="partida-lado"></aside>
+    </div>
+  </dialog>
+
+  <!-- Editar o crear un Pokémon de la partida (js/versus/editor.js) -->
+  <!-- En pantallas anchas, el panel se pasa a la derecha de la ventana «Partida» -->
+  <dialog id="dialogo-editor">
+    <div class="editor-panel">
+      <div class="editor-cuerpo"></div>
+      <span class="sesion-error editor-error"></span>
+      <div class="dialogo-botones">
+        <button class="editor-borrar" title="Borrar de la partida"></button>
+        <button class="editor-clonar" title="Una copia en la primera caja con sitio"></button>
+        <button class="editor-cancelar" autofocus>Cancelar</button>
+        <button class="editor-guardar">Aceptar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Meter un equipo de «Mis equipos» o de Showdown en la partida (js/versus/meter-equipo.js) -->
+  <dialog id="dialogo-meter" class="dialogo-sesion">
+    <h2>Meter equipo</h2>
+    <div class="meter-elegido"></div>
+    <textarea class="meter-paste" rows="9" placeholder="Pega un equipo de Showdown o elige uno de «Mis equipos»" spellcheck="false"></textarea>
+    <div class="meter-destino">
+      <label class="casilla-sesion"><input type="radio" name="meter-destino" value="cajas" checked><span>A las cajas</span></label>
+      <label class="casilla-sesion"><input type="radio" name="meter-destino" value="equipo"><span>Al equipo (el de ahora, a las cajas)</span></label>
+    </div>
+    <span class="sesion-error meter-error"></span>
     <div class="dialogo-botones">
-      <button class="partida-desvincular"><svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18.84 12.25 1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71"/><path d="m5.17 11.75-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71"/><path d="M8 2v3"/><path d="M2 8h3"/><path d="M16 19v3"/><path d="M19 16h3"/></svg> Desvincular</button>
-      <button class="partida-vincular"></button>
-      <button class="partida-cerrar">Cerrar</button>
+      <button type="button" class="boton-gris boton-izquierda meter-mis-equipos">Mis equipos</button>
+      <button type="button" class="boton-gris meter-cancelar">Cancelar</button>
+      <button type="button" class="boton-rojo meter-ok">Meter</button>
+    </div>
+  </dialog>
+
+  <!-- Cómo funciona lo de la partida vinculada (botón «?» de js/versus/partida.js) -->
+  <dialog id="dialogo-ayuda-partida" class="dialogo-sesion">
+    <h2>Tu partida en el locke</h2>
+    <div class="ayuda-partida">
+      <h3>Vincular</h3>
+      <p>En X / Y, Rubí Omega / Zafiro Alfa, Sol / Luna y Ultrasol / Ultraluna eliges el archivo «main» de la partida del emulador (Citra o Lime3DS). La web lo vuelve a leer cada vez que guardas en el juego. Solo en Chrome o Edge de ordenador; en otros navegadores se lee a mano.</p>
+      <h3>Cajas</h3>
+      <p>Pulsa tu equipo en tu bloque para ver el equipo y las cajas. Las capturas se marcan solas en «Rutas».</p>
+      <h3>Cajas de muertos</h3>
+      <p>Pulsa «Muertos» en las cajas donde guardas a los que mueren. Los que entren nuevos en ellas te los propone para el cementerio (y quitar la vida, si quieres).</p>
+      <h3>Editar (X / Y y Rubí Omega / Zafiro Alfa)</h3>
+      <p>Pulsa un Pokémon para cambiarle lo que quieras, borrarlo o clonarlo; arrástralo encima de otro para cambiarlos de sitio, o a un hueco «+» para moverlo. En un hueco «+» creas uno nuevo y con «Meter equipo» metes uno de «Mis equipos» o de Showdown.</p>
+      <h3>Bolsa</h3>
+      <p>En la pestaña «Bolsa», cada bolsillo (objetos, medicinas, MT, bayas y objetos clave): cambia cuántos tienes, quítalos o mete otros.</p>
+      <p>Los cambios se guardan todos juntos al cerrar la ventana de las cajas. Hazlo con el juego cerrado en el emulador: el juego solo lee la partida al arrancar. Con «Copias» vuelves a como estaba antes de guardar.</p>
+      <h3>Qué ven los demás</h3>
+      <p>Nada de tu partida: solo el cementerio, las vidas y, en la actividad, lo que has editado.</p>
+    </div>
+    <div class="dialogo-botones">
+      <button class="boton-gris ayuda-partida-cerrar" autofocus>Cerrar</button>
+    </div>
+  </dialog>
+
+  <!-- La partida como estaba antes de cada edición (js/versus/partida.js) -->
+  <dialog id="dialogo-copias" class="dialogo-sesion">
+    <h2>Copias de la partida</h2>
+    <div class="copias-lista"></div>
+    <div class="dialogo-botones">
+      <button class="boton-gris copias-cerrar">Cerrar</button>
     </div>
   </dialog>
 
@@ -740,7 +813,7 @@
       </details>
       <details>
         <summary>¿Qué es «Vincular partida»?</summary>
-        <p>En los lockes de X / Y, Rubí Omega / Zafiro Alfa, Sol / Luna y Ultrasol / Ultraluna puedes elegir el archivo de guardado del emulador (Citra o Lime3DS: el archivo «main» de la carpeta del juego). La web lo vuelve a leer cada vez que guardas: en tu bloque sale tu equipo, al pulsarlo ves también las cajas, las capturas se marcan solas en «Rutas» y los que metes en las cajas que marques como de muertos te los propone para el cementerio. Al apuntar un combate, tu equipo de la partida sale el primero. Los demás no ven nada de tu partida. Vigilar el archivo solo funciona en Chrome o Edge de ordenador; en otros navegadores se puede leer a mano. Si el navegador no te deja elegirlo porque está dentro de AppData, cambia en el emulador la carpeta de la tarjeta SD (Configurar → Almacenamiento) a una normal, como Documentos.</p>
+        <p>En los lockes de X / Y, Rubí Omega / Zafiro Alfa, Sol / Luna y Ultrasol / Ultraluna puedes elegir el archivo de guardado del emulador (Citra o Lime3DS: el archivo «main» de la carpeta del juego). La web lo vuelve a leer cada vez que guardas: en tu bloque sale tu equipo, al pulsarlo ves también las cajas, las capturas se marcan solas en «Rutas» y los que metes en las cajas que marques como de muertos te los propone para el cementerio. Al apuntar un combate, tu equipo de la partida sale el primero. Los demás no ven nada de tu partida. En X / Y y Rubí Omega / Zafiro Alfa, pulsando un Pokémon de las cajas lo puedes editar (especie, nivel, naturaleza, objeto, habilidad, ataques, EVs, IVs...), borrar o clonar, y arrastrándolo lo mueves; en un hueco libre creas uno nuevo, con «Meter equipo» metes uno de «Mis equipos» o de Showdown y en la pestaña «Bolsa» cambias los objetos que llevas. Los cambios se guardan todos juntos al cerrar la ventana de las cajas: hazlo con el juego cerrado en el emulador. Cada edición sale en la actividad del locke, y con «Copias» vuelves a como estaba. Vigilar el archivo solo funciona en Chrome o Edge de ordenador; en otros navegadores se puede leer a mano. Si el navegador no te deja elegirlo porque está dentro de AppData, cambia en el emulador la carpeta de la tarjeta SD (Configurar → Almacenamiento) a una normal, como Documentos.</p>
       </details>
       <details>
         <summary>¿Qué son las vidas? ¿Y la vida cero?</summary>

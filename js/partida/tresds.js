@@ -1,22 +1,22 @@
 // ---------- Partidas de 3DS (X / Y, Rubí Omega / Zafiro Alfa, Sol / Luna, Ultrasol / Ultraluna) ----------
 //
-// Lee el archivo «main» que guardan Citra y Lime3DS. Solo se lee: nunca se escribe nada.
-// El formato es el que documenta PKHeX (github.com/kwsch/PKHeX).
+// Lee el archivo «main» que guardan Citra y Lime3DS. Aquí solo se lee; escribir está en
+// ./escribir3ds.js, que usa estas mismas piezas.
 //
 // La partida va por bloques. Al final del archivo hay una tabla con el tamaño de cada uno
 // (tras la marca «BEEF»); cada bloque empieza donde acaba el anterior, redondeado a 0x200.
 
-const TAM_POKEMON = 0xe8; // en las cajas
-const TAM_POKEMON_EQUIPO = 0x104; // en el equipo (con nivel, PS, estado...)
-const POR_CAJA = 30;
+export const TAM_POKEMON = 0xe8; // en las cajas
+export const TAM_POKEMON_EQUIPO = 0x104; // en el equipo (con nivel, PS, estado...)
+export const POR_CAJA = 30;
 
 // Juegos por tamaño del archivo (id: el de js/comun/juegos.js). Los bloques, por su número
-// en la tabla.
-const JUEGOS = {
+// en la tabla. firma: dónde va la firma de las partidas de gen 7 (ver escribir3ds.js).
+export const JUEGOS = {
   0x65600: { id: "xy", gen: 6, bloques: { entrenador: 0x11, equipo: 0x12, cajasInfo: 0x0c, cajas: 0x35 }, cajas: 31 },
   0x76000: { id: "oras", gen: 6, bloques: { entrenador: 0x11, equipo: 0x12, cajasInfo: 0x0c, cajas: 0x38 }, cajas: 31 },
-  0x6be00: { id: "sm", gen: 7, bloques: { entrenador: 0x03, equipo: 0x04, cajasInfo: 0x0d, cajas: 0x0e }, cajas: 32 },
-  0x6cc00: { id: "usum", gen: 7, bloques: { entrenador: 0x03, equipo: 0x04, cajasInfo: 0x0d, cajas: 0x0e }, cajas: 32 }
+  0x6be00: { id: "sm", gen: 7, bloques: { entrenador: 0x03, equipo: 0x04, cajasInfo: 0x0d, cajas: 0x0e }, cajas: 32, firma: 0x6bb00 },
+  0x6cc00: { id: "usum", gen: 7, bloques: { entrenador: 0x03, equipo: 0x04, cajasInfo: 0x0d, cajas: 0x0e }, cajas: 32, firma: 0x6c100 }
 };
 
 // Edición (byte 0xDF de cada Pokémon y 0x04 del entrenador)
@@ -28,7 +28,9 @@ export function esPartida3DS(bytes) {
 
 // ---------- Bloques ----------
 
-function bloques(bytes) {
+// [{ inicio, largo, entrada }]: entrada es dónde está su fila en la tabla (largo, número y
+// checksum, 8 bytes)
+export function bloques(bytes) {
   const vista = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   // La marca «BEEF» (0x42454546) está casi al final; la tabla, justo detrás
   let marca = -1;
@@ -46,7 +48,7 @@ function bloques(bytes) {
     const largo = vista.getUint32(i, true);
     const id = vista.getUint16(i + 4, true);
     if (!largo || id !== lista.length) break;
-    lista.push({ inicio, largo });
+    lista.push({ inicio, largo, entrada: i });
     inicio += Math.ceil(largo / 0x200) * 0x200;
   }
   return lista;
@@ -55,36 +57,48 @@ function bloques(bytes) {
 // ---------- Pokémon ----------
 
 // Orden de los cuatro trozos de 56 bytes según la llave de cifrado
-const ORDEN = [
+export const ORDEN = [
   [0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 1, 3], [0, 3, 1, 2], [0, 2, 3, 1], [0, 3, 2, 1],
   [1, 0, 2, 3], [1, 0, 3, 2], [2, 0, 1, 3], [3, 0, 1, 2], [2, 0, 3, 1], [3, 0, 2, 1],
   [1, 2, 0, 3], [1, 3, 0, 2], [2, 1, 0, 3], [3, 1, 0, 2], [2, 3, 0, 1], [3, 2, 0, 1],
   [1, 2, 3, 0], [1, 3, 2, 0], [2, 1, 3, 0], [3, 1, 2, 0], [2, 3, 1, 0], [3, 2, 1, 0]
 ];
-const TROZO = 0x38;
+export const TROZO = 0x38;
 
-// Descifra un Pokémon (232 o 260 bytes). Devuelve null si el hueco está vacío o no cuadra.
-function descifrar(cifrado) {
-  const datos = new Uint8Array(cifrado);
-  const vista = new DataView(datos.buffer);
-  const llave = vista.getUint32(0, true);
+export function ordenDe(llave) {
+  return ORDEN[((llave >>> 13) & 31) % 24];
+}
 
-  // XOR con un generador lineal que empieza en la llave
+// XOR con un generador lineal que empieza en la llave. Cifra y descifra igual.
+export function xorPokemon(vista, llave) {
   let semilla = llave;
-  for (let i = 8; i < datos.length; i += 2) {
+  for (let i = 8; i < vista.byteLength; i += 2) {
     if (i === TAM_POKEMON) semilla = llave; // los datos de equipo vuelven a empezar
     semilla = (Math.imul(semilla, 0x41c64e6d) + 0x6073) >>> 0;
     vista.setUint16(i, vista.getUint16(i, true) ^ (semilla >>> 16), true);
   }
+}
 
-  // Deshacer el barajado
-  const orden = ORDEN[((llave >>> 13) & 31) % 24];
-  const copia = datos.slice(8, 8 + TROZO * 4);
-  orden.forEach((origen, destino) => datos.set(copia.subarray(origen * TROZO, (origen + 1) * TROZO), 8 + destino * TROZO));
-
+// La suma que va en 0x06: la de los datos de caja, de dos en dos bytes
+export function sumaPokemon(vista) {
   let suma = 0;
   for (let i = 8; i < TAM_POKEMON; i += 2) suma = (suma + vista.getUint16(i, true)) & 0xffff;
-  if (suma !== vista.getUint16(6, true)) return null;
+  return suma;
+}
+
+// Descifra un Pokémon (232 o 260 bytes). Devuelve null si el hueco está vacío o no cuadra.
+export function descifrar(cifrado) {
+  const datos = new Uint8Array(cifrado);
+  const vista = new DataView(datos.buffer);
+  const llave = vista.getUint32(0, true);
+
+  xorPokemon(vista, llave);
+
+  // Deshacer el barajado
+  const copia = datos.slice(8, 8 + TROZO * 4);
+  ordenDe(llave).forEach((origen, destino) => datos.set(copia.subarray(origen * TROZO, (origen + 1) * TROZO), 8 + destino * TROZO));
+
+  if (sumaPokemon(vista) !== vista.getUint16(6, true)) return null;
   return vista;
 }
 
@@ -102,7 +116,11 @@ function texto(vista, inicio, maximo) {
 
 function leerPokemon(cifrado, enEquipo) {
   const v = descifrar(cifrado);
-  if (!v) return null;
+  return v ? interpretar(v, enEquipo) : null;
+}
+
+// Lo que se usa de un Pokémon ya descifrado (null si el hueco está vacío)
+export function interpretar(v, enEquipo) {
   const especie = v.getUint16(0x08, true);
   if (!especie) return null;
 
@@ -143,6 +161,42 @@ function leerPokemon(cifrado, enEquipo) {
 
 // ---------- Partida ----------
 
+// Dónde está un hueco dentro del archivo. sitio: { equipo: 0..5 } o { caja, hueco }
+export function posicionHueco(bytes, sitio) {
+  const juego = JUEGOS[bytes.length];
+  const tabla = bloques(bytes);
+  if (sitio.equipo !== undefined) {
+    return { inicio: tabla[juego.bloques.equipo].inicio + sitio.equipo * TAM_POKEMON_EQUIPO, largo: TAM_POKEMON_EQUIPO };
+  }
+  return { inicio: tabla[juego.bloques.cajas].inicio + (sitio.caja * POR_CAJA + sitio.hueco) * TAM_POKEMON, largo: TAM_POKEMON };
+}
+
+// Dónde está cuántos Pokémon hay en el equipo (un byte, detrás de los seis huecos)
+export function posicionCuantos(bytes) {
+  const juego = JUEGOS[bytes.length];
+  return bloques(bytes)[juego.bloques.equipo].inicio + 6 * TAM_POKEMON_EQUIPO;
+}
+
+// El entrenador, para los Pokémon que se crean (de momento, solo en gen 6). nombre: los bytes
+// tal cual (13 letras de 2 bytes con el 0 del final), que van igual en el Pokémon.
+export function entrenadorDe(bytes) {
+  const juego = JUEGOS[bytes.length];
+  if (!juego || juego.gen !== 6) throw new Error("Todavía no se pueden crear Pokémon en este juego.");
+  const b = bloques(bytes)[juego.bloques.entrenador];
+  const v = new DataView(bytes.buffer, bytes.byteOffset + b.inicio, b.largo);
+  return {
+    tid: v.getUint16(0x00, true),
+    sid: v.getUint16(0x02, true),
+    version: v.getUint8(0x04),
+    genero: v.getUint8(0x05),
+    region: v.getUint8(0x26),
+    pais: v.getUint8(0x27),
+    consola: v.getUint8(0x2c),
+    idioma: v.getUint8(0x2d),
+    nombre: bytes.slice(b.inicio + 0x48, b.inicio + 0x48 + 0x1a)
+  };
+}
+
 export function leerPartida3DS(bytes) {
   const juego = JUEGOS[bytes.length];
   if (!juego) throw new Error("No parece una partida de 3DS.");
@@ -157,7 +211,7 @@ export function leerPartida3DS(bytes) {
   const version = VERSIONES[ent.getUint8(0x04)];
 
   const eq = bloque("equipo");
-  const cuantos = Math.min(6, eq.getUint8(6 * TAM_POKEMON_EQUIPO));
+  const cuantos = Math.min(6, bytes[posicionCuantos(bytes)]);
   const equipo = [];
   for (let i = 0; i < cuantos; i++) {
     const inicio = eq.byteOffset + i * TAM_POKEMON_EQUIPO;

@@ -406,6 +406,14 @@ export async function anadirEquipoDesdePaste(texto, nombre) {
   return { problemas };
 }
 
+// Los Pokémon de un paste, como los de «Mis equipos», sin guardarlos (lo usa «Meter equipo» de
+// la partida de un locke). Devuelve { nombre, pokemon, problemas }.
+export async function pokemonDePaste(texto) {
+  const interpretado = interpretarPaste(texto);
+  const { validos, problemas } = await resolverEquipo(interpretado);
+  return { nombre: interpretado.nombre, pokemon: validos, problemas };
+}
+
 export function iniciarImportar() {
   const dialogo = document.getElementById("dialogo-importar");
   const texto = document.getElementById("texto-paste");

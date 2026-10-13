@@ -624,6 +624,38 @@
   grid-column: span 2;
 }
 
+/* El botón de al lado de «EVs» e «IVs»: todos al azar */
+.entreno-azar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-left: 0.3rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.3rem;
+  background: #3a3d52;
+  color: #f2f2f2;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.entreno-azar:hover {
+  background: #f1c40f;
+  color: #1e1f2b;
+}
+
+.entreno-azar .icono {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.entreno-titulos > span {
+  display: inline-flex;
+  align-items: center;
+}
+
 .entreno-stat {
   font-weight: bold;
 }
@@ -1356,6 +1388,13 @@
 }
 
 .forma-opciones button:hover {
+  background: #f7d44a;
+}
+
+/* La marcada con las flechas (Enter la elige) */
+.forma-opciones button:focus {
+  outline: 2px solid #f2f2f2;
+  outline-offset: 2px;
   background: #f7d44a;
 }
 /* ---------- Pantallas estrechas (móvil) ---------- */

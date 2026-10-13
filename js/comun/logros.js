@@ -19,7 +19,9 @@
 
 import { leer, alCambiar } from "./almacen.js";
 import { usuarioActual, alCambiarSesion, cuandoEsteSincronizado } from "./nube.js";
-import { miPerfil, alCambiarMiPerfil, guardarMiPerfil, amigosAceptados, alCambiarAmistades } from "./perfiles.js";
+import {
+  miPerfil, alCambiarMiPerfil, guardarMiPerfil, amigosAceptados, alCambiarAmistades, perfilesDeAmigos, alCambiarPerfilesAmigos
+} from "./perfiles.js";
 import { misLockes, estadoDe, alCambiarLockes, victoriasDe, combatesDe, estaEliminado } from "./lockes.js";
 import { conjuntos } from "./normas.js";
 import { contadores } from "./contadores.js";
@@ -133,6 +135,14 @@ const OPCIONES_DE_EJEMPLO = new Set([
 
 const textoOpcion = (opcion) => String(typeof opcion === "string" ? opcion : (opcion && opcion.texto) || "").trim();
 
+// Un participante de un locke apuntado en un palmarés: ¿eres tú? Por tu uid (los que se
+// eligen de tus amigos lo llevan) o, en los de antes, por tu nombre
+export function soyYo(participante, yo, perfil) {
+  if (participante.uid) return participante.uid === yo;
+  const nombre = String(participante.nombre || "").trim().toLowerCase();
+  return Boolean(nombre) && [perfil.nombre, perfil.mote].some((mio) => String(mio || "").trim().toLowerCase() === nombre);
+}
+
 const evsDe = (poke) => ((poke.entreno && poke.entreno.evs) || []).reduce((suma, v) => suma + (Number(v) || 0), 0);
 
 // Un locke apuntado a mano en tu palmarés: ¿era de vidas ilimitadas? Los de antes no lo
@@ -159,13 +169,13 @@ export const LOGROS = [
     valor: (c) => c.masJugadores, meta: 4 },
   { id: "v-terminar", categoria: "versus", nivel: "bronce", icono: "visto",
     nombre: "Hasta el final", descripcion: "Termina un locke.",
-    valor: (c) => c.terminados.length + c.apuntados.length },
+    valor: (c) => c.terminados.length + c.apuntados.length + c.participados.length },
   { id: "v-rom", categoria: "versus", nivel: "plata", icono: "mando",
     nombre: "Fin de la partida", descripcion: "Pásate la ROM de un locke.",
     valor: (c) => cuantos(c.lockes, (l) => (l.rom || {})[c.yo]) },
   { id: "v-ilimitadas", categoria: "versus", nivel: "bronce", icono: "corazon",
     nombre: "Sin presión", descripcion: "Juega un locke con vidas ilimitadas.",
-    valor: (c) => cuantos(c.lockes, (l) => l.vidasIlimitadas) + cuantos(c.apuntados, apuntadoIlimitado) },
+    valor: (c) => cuantos(c.lockes, (l) => l.vidasIlimitadas) + cuantos([...c.apuntados, ...c.participados], apuntadoIlimitado) },
   { id: "v-jugar-5", categoria: "versus", nivel: "plata", icono: "espadas",
     nombre: "Veterano", descripcion: "Juega 5 lockes.",
     valor: (c) => c.jugados, meta: 5 },
@@ -224,10 +234,10 @@ export const LOGROS = [
     valor: (c) => mejorRacha(c), meta: 3 },
   { id: "v-salon", categoria: "versus", nivel: "bronce", icono: "trofeo",
     nombre: "Salón de la Fama", descripcion: "Apunta tu equipo final en un locke terminado.",
-    valor: (c) => (c.perfil.salon || []).length },
+    valor: (c) => c.equiposFinales },
   { id: "v-salon-5", categoria: "versus", nivel: "plata", icono: "trofeo",
     nombre: "Galería de honor", descripcion: "Apunta tu equipo final en 5 lockes.",
-    valor: (c) => (c.perfil.salon || []).length, meta: 5 },
+    valor: (c) => c.equiposFinales, meta: 5 },
   { id: "v-alineacion", categoria: "versus", nivel: "bronce", icono: "pokeball",
     nombre: "Alineación", descripcion: "Apunta con qué equipo juegas un combate de un locke.",
     valor: (c) => c.combatesConEquipo },
@@ -532,11 +542,23 @@ async function contexto() {
   // también se copian ahí: esos ya están en «lockes» y no se cuentan dos veces.
   const deVersus = new Set(lockes.map((locke) => locke.id));
   const apuntados = (perfil.ganados || []).filter((ganado) => !deVersus.has(ganado.id));
-  const miNombre = String(perfil.nombre || "").trim().toLowerCase();
   const misVidasEn = (ganado) => {
-    const yoEn = (ganado.participantes || []).find((p) => String(p.nombre || "").trim().toLowerCase() === miNombre);
+    const yoEn = (ganado.participantes || []).find((p) => soyYo(p, yo, perfil));
     return yoEn && typeof yoEn.vidas === "number" ? yoEn.vidas : null;
   };
+
+  // Los que un amigo ha apuntado en su palmarés contigo de participante: también los has
+  // jugado y terminado tú, aunque no los ganaras (cada uno una vez)
+  const vistos = new Set([...deVersus, ...apuntados.map((ganado) => ganado.id)]);
+  const participados = [];
+  for (const otro of (perfilesDeAmigos() || new Map()).values()) {
+    for (const ganado of (otro && otro.ganados) || []) {
+      if (vistos.has(ganado.id) || !(ganado.participantes || []).some((p) => soyYo(p, yo, perfil))) continue;
+      vistos.add(ganado.id);
+      participados.push(ganado);
+    }
+  }
+  const deOtros = [...apuntados, ...participados];
 
   const equipos = (leer("poketeams-equipos-v1", []) || []).filter((equipo) => Array.isArray(equipo.pokemon));
   const rutasTodas = ((leer("poketeams-rutas-propias-v1", null) || {}).listas) || [];
@@ -560,9 +582,12 @@ async function contexto() {
     rivalesDe: (locke) => (locke.jugadores || []).filter((uid) => uid !== yo && estadoDe(locke, uid) === "aceptado"),
     vidasDe: (locke) => (locke.vidas || {})[yo] || 0,
     apuntados,
+    participados,
+    // Equipos finales apuntados: en tus lockes (salón) y en los de amigos en los que sales
+    equiposFinales: (perfil.salon || []).length + Object.values(perfil.equiposAjenos || {}).filter(Boolean).length,
     misVidasEn,
-    jugados: lockes.length + apuntados.length,
-    masJugadores: Math.max(0, ...lockes.map(jugadoresDe), ...apuntados.map((ganado) => (ganado.participantes || []).length)),
+    jugados: lockes.length + deOtros.length,
+    masJugadores: Math.max(0, ...lockes.map(jugadoresDe), ...deOtros.map((ganado) => (ganado.participantes || []).length)),
     muertos: lockes.flatMap(muertosDe),
     ganados: (perfil.ganados || []).length,
     victorias: lockes.reduce((suma, locke) => suma + victoriasDe(locke, yo), 0),
@@ -724,6 +749,7 @@ export function iniciarLogros() {
   alCambiarMiPerfil(programar);
   alCambiarLockes(programar);
   alCambiarAmistades(programar);
+  alCambiarPerfilesAmigos(programar); // sus palmarés: los lockes en los que sales tú
   alCambiar(programar); // equipos, rutas, normas, contadores...
 }
 

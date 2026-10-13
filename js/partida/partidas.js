@@ -95,7 +95,8 @@ export async function procesarArchivo(locke, bytes, archivo = "") {
     archivo,
     cajasMuertos,
     mirados: [...mirados],
-    muertosVistos: anterior.muertosVistos || []
+    muertosVistos: anterior.muertosVistos || [],
+    creados: anterior.creados || []
   };
   guardarPartida(locke.id, partida);
   return { partida, marcadas, primera: !anterior.juego };
@@ -119,6 +120,34 @@ export function marcarMuertosVistos(idLocke, llaves) {
   if (!partida) return;
   partida.muertosVistos = [...new Set([...(partida.muertosVistos || []), ...llaves])];
   guardarPartida(idLocke, partida);
+}
+
+// Los Pokémon metidos desde la web (nuevos, clonados, de un equipo): no son capturas de
+// ninguna ruta ni muertos que apuntar. Se apuntan antes de escribirlos, para que la lectura de
+// después ya los encuentre.
+export function marcarMetidos(idLocke, llaves) {
+  const partida = partidaDe(idLocke);
+  if (!partida) return;
+  partida.mirados = [...new Set([...(partida.mirados || []), ...llaves])];
+  partida.muertosVistos = [...new Set([...(partida.muertosVistos || []), ...llaves])];
+  guardarPartida(idLocke, partida);
+}
+
+// Los creados de cero en la web (no los clonados): su juego de origen se ve como «LockeDex»
+export function marcarCreados(idLocke, llaves, creados = true) {
+  const partida = partidaDe(idLocke);
+  if (!partida) return;
+  const antes = new Set(partida.creados || []);
+  for (const llave of llaves) {
+    if (creados) antes.add(llave);
+    else antes.delete(llave);
+  }
+  partida.creados = [...antes];
+  guardarPartida(idLocke, partida);
+}
+
+export function esCreado(idLocke, llave) {
+  return ((partidaDe(idLocke) || {}).creados || []).includes(llave);
 }
 
 // El equipo de la partida para un combate (como los de «Mis equipos» en elegir-equipo.js)

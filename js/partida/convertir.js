@@ -13,7 +13,7 @@ import { LUGARES_GEN6, LUGARES_GEN7, OBJETOS_EN, CRECIMIENTO } from "./datos-3ds
 // juego: [id de PokeAPI, nombre en Showdown]. Las que no están (Vivillon, Pikachu con gorra,
 // los dominantes...) salen como la normal.
 const ALOLA = (id, ...otras) => Object.fromEntries([1, ...otras].map((n) => [n, [id, "Alola"]]));
-const FORMAS = {
+export const FORMAS = {
   19: ALOLA(10091), 20: ALOLA(10092, 2), 26: ALOLA(10100), 27: ALOLA(10101), 28: ALOLA(10102),
   37: ALOLA(10103), 38: ALOLA(10104), 50: ALOLA(10105), 51: ALOLA(10106), 52: ALOLA(10107),
   53: ALOLA(10108), 74: ALOLA(10109), 75: ALOLA(10110), 76: ALOLA(10111), 88: ALOLA(10112),
@@ -49,7 +49,7 @@ const NATURALEZAS = [
 
 // ---------- Nivel ----------
 
-function experienciaPara(ritmo, n) {
+export function experienciaPara(ritmo, n) {
   const cubo = n ** 3;
   switch (ritmo) {
     case 1: return Math.floor((5 * cubo) / 4);
@@ -68,8 +68,12 @@ function experienciaPara(ritmo, n) {
   }
 }
 
-function nivelDe(especie, experiencia) {
-  const ritmo = Number(CRECIMIENTO[especie - 1]) || 2;
+export function ritmoDe(especie) {
+  return Number(CRECIMIENTO[especie - 1]) || 2;
+}
+
+export function nivelDe(especie, experiencia) {
+  const ritmo = ritmoDe(especie);
   let nivel = 1;
   while (nivel < 100 && experienciaPara(ritmo, nivel + 1) <= experiencia) nivel++;
   return nivel;

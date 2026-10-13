@@ -2,6 +2,7 @@
 //   datos/nombres.json          -> nombres de Pokémon, ataques, habilidades y objetos
 //   datos/pokedex.json          -> la tabla de la Pokédex, con la casilla de cada retrato
 //   datos/ataques.json          -> potencia, tipo, categoría y prioridad de los ataques (calculadora)
+//   datos/partida-3ds.json      -> PP, habilidades, especies y ataques por nivel (editor de partidas)
 //   img/pokedex/retratos-N.webp -> las hojas con los retratos de la Pokédex
 //
 // Usa el mismo código que la web, así que sale exactamente lo que la web montaría sola.
@@ -10,6 +11,7 @@ import { descargarNombresDePokeAPI } from "../js/comun/datos.js";
 import { montarPokedexDePokeAPI, RETRATOS, archivoHoja } from "../js/pokedex/datos.js";
 import { urlsPMD } from "../js/comun/imagenes.js";
 import { montarAtaquesDePokeAPI } from "../js/calculadora/ataques.js";
+import { montarDatosEditor } from "../js/partida/datos-editor.js";
 
 const estado = document.querySelector(".estado");
 const enlaces = document.querySelector(".enlaces");
@@ -134,6 +136,7 @@ async function generar() {
   await entregar("datos/nombres.json", json(nombres));
   await entregar("datos/pokedex.json", json(tabla));
   await entregar("datos/ataques.json", json(await montarAtaquesDePokeAPI()));
+  await entregar("datos/partida-3ds.json", json(await montarDatosEditor()));
   for (const [numero, hoja] of hojas.entries()) await entregar(archivoHoja(numero), hoja);
 
   const sinRetrato = tabla.filter((p) => p.retrato < 0).map((p) => p.nombre);

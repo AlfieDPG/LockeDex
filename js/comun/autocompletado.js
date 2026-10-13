@@ -11,6 +11,8 @@ import { imagenConRespaldo, urlsRetrato, urlsIconoObjeto } from "./imagenes.js";
 //                              iconoObjeto, abajo); sin él, solo el nombre
 //   opciones.libre          -> se puede escribir algo que no esté en la lista: ninguna sale
 //                              marcada y Enter solo elige si se ha bajado con las flechas
+//   opciones.sinTexto()     -> como un desplegable: lo que sale al entrar en la casilla, si no
+//                              hay nada escrito o lo escrito es opciones.actual (lo elegido)
 
 const MAXIMO = 8;
 
@@ -47,14 +49,17 @@ export function activarAutocompletado(campo, lista, alElegir, opciones = {}) {
   function mostrar() {
     limpiar();
     const texto = quitarAcentos(campo.value.trim());
-    if (!texto) return;
+    const sinEscribir = !texto || (opciones.actual && texto === quitarAcentos(opciones.actual));
+    if (sinEscribir && !opciones.sinTexto) return;
 
     // Primero lo que es justo lo escrito, luego lo que empieza por ello
     const puntos = (e) => (quitarAcentos(e.es) === texto ? 2 : e.buscar.startsWith(texto) ? 1 : 0);
-    actuales = lista
-      .filter((e) => e.buscar.includes(texto))
-      .sort((a, b) => puntos(b) - puntos(a))
-      .slice(0, MAXIMO);
+    actuales = sinEscribir
+      ? opciones.sinTexto().slice(0, MAXIMO)
+      : lista
+          .filter((e) => e.buscar.includes(texto))
+          .sort((a, b) => puntos(b) - puntos(a))
+          .slice(0, MAXIMO);
 
     actuales.forEach((entrada, i) => {
       const opcion = document.createElement("div");
@@ -85,6 +90,7 @@ export function activarAutocompletado(campo, lista, alElegir, opciones = {}) {
   }
 
   campo.addEventListener("input", mostrar);
+  if (opciones.sinTexto) campo.addEventListener("focus", mostrar);
   campo.addEventListener("keydown", (e) => {
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       if (!actuales.length) {

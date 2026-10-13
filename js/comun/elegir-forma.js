@@ -28,9 +28,25 @@ export function elegirForma(entrada, info) {
       contenedor.appendChild(b);
     }
 
+    // Con las flechas se va de una a otra (como en los buscadores) y con Enter se elige
+    const opciones = [...contenedor.querySelectorAll("button")];
+    const conFlechas = (e) => {
+      const paso = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
+      if (!paso) return;
+      e.preventDefault();
+      const ahora = opciones.indexOf(document.activeElement);
+      const siguiente = ahora < 0 ? (paso > 0 ? 0 : opciones.length - 1) : (ahora + paso + opciones.length) % opciones.length;
+      opciones[siguiente].focus();
+    };
+    dialogo.addEventListener("keydown", conFlechas);
+
     document.getElementById("forma-cancelar").onclick = () => dialogo.close();
-    dialogo.addEventListener("close", () => resolver(elegido), { once: true });
+    dialogo.addEventListener("close", () => {
+      dialogo.removeEventListener("keydown", conFlechas);
+      resolver(elegido);
+    }, { once: true });
     dialogo.showModal();
+    if (opciones.length) opciones[0].focus();
   });
 }
 

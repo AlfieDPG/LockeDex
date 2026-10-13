@@ -128,13 +128,15 @@ export function entrenoDesdeShowdown(lineas) {
   return hay ? entreno : null;
 }
 
-// ---------- La ventana ----------
+// ---------- La ventana (o el mismo cuadro, metido en otra parte) ----------
+//
+// Cada sitio donde se pinta es un «cuadro»: { cuerpo, poke, original, alCambiar, ventana }.
+// La ventana de siempre lleva arriba el retrato, el nivel, la naturaleza, Deshacer y Cerrar;
+// incrustado (el editor de partidas, js/versus/editor.js), solo las filas (los EVs que quedan, abajo):
+// el nivel y la naturaleza los pone quien lo incrusta.
 
 let dialogo = null;
-let cuerpo = null;
-let abierto = null;              // el Pokémon cuya ventana está abierta
-let original = "null";           // su entreno al abrir la ventana (JSON), para «Deshacer»
-let alCambiar = () => {};        // (poke) lo que hay que hacer al cambiar algo (guardar...)
+let ventana = null;               // el cuadro de la ventana
 let alCambiarPorDefecto = () => {};
 
 // Barra de una estadística final: se llena hasta 400 (las de nivel 100 rondan ahí)
@@ -152,17 +154,21 @@ function iguales(valores) {
   return valores.every((v) => v === valores[0]) ? String(valores[0]) : "";
 }
 
-function pintar() {
-  const poke = abierto;
+// Las opciones de naturaleza («Firme (+Ataque, −At. Esp.)»), con la elegida marcada.
+// corta: solo el nombre (lo que sube y baja ya se ve en las filas)
+export function opcionesNaturaleza(elegida, corta = false) {
+  return NATURALEZAS.map((cada) => {
+    const efecto = cada.sube && !corta ? ` (+${STATS[cada.sube]}, −${STATS[cada.baja]})` : "";
+    return `<option value="${cada.id}" ${cada.id === elegida ? "selected" : ""}>${cada.es}${efecto}</option>`;
+  }).join("");
+}
+
+function pintar(cuadro) {
+  const poke = cuadro.poke;
   const entreno = entrenoDe(poke);
   const nat = naturaleza(entreno.naturaleza);
   const usados = entreno.evs.reduce((suma, v) => suma + v, 0);
   const finales = statsFinales(poke) || [];
-
-  const opciones = NATURALEZAS.map((cada) => {
-    const efecto = cada.sube ? ` (+${STATS[cada.sube]}, −${STATS[cada.baja]})` : "";
-    return `<option value="${cada.id}" ${cada.id === nat.id ? "selected" : ""}>${cada.es}${efecto}</option>`;
-  }).join("");
 
   const filas = STATS.map((nombre, i) => {
     const marca = nat.sube === i ? "sube" : nat.baja === i ? "baja" : "";
@@ -178,37 +184,47 @@ function pintar() {
       </div>`;
   }).join("");
 
-  cuerpo.innerHTML = `
-    <div class="entreno-cabecera">
-      ${imagenConRespaldo(urlsRetrato(poke), `class="entreno-cara" alt=""`)}
-      <strong class="entreno-nombre">${escaparHTML(poke.mote || poke.es)}</strong>
-      <label class="entreno-campo">Nivel ${campoNumero(`<input class="entreno-nivel" type="number" min="1" max="100" value="${entreno.nivel}">`)}</label>
-      <label class="entreno-campo">Naturaleza <select class="entreno-naturaleza">${opciones}</select></label>
-      <span class="entreno-restantes">EVs: <strong>${usados}</strong> / ${MAX_EVS}</span>
-      <div class="entreno-botones">
-        <button class="entreno-deshacer" title="Deshacer: dejarlo como estaba al abrir la ventana" aria-label="Deshacer">${icono("deshacer")}</button>
-        <button class="entreno-cerrar" title="Cerrar" aria-label="Cerrar">${icono("aspa")}</button>
-      </div>
-    </div>
+  const restantes = `<span class="entreno-restantes">EVs: <strong>${usados}</strong> / ${MAX_EVS}</span>`;
+  const cabecera = cuadro.ventana
+    ? `
+      <div class="entreno-cabecera">
+        ${imagenConRespaldo(urlsRetrato(poke), `class="entreno-cara" alt=""`)}
+        <strong class="entreno-nombre">${escaparHTML(poke.mote || poke.es)}</strong>
+        <label class="entreno-campo">Nivel ${campoNumero(`<input class="entreno-nivel" type="number" min="1" max="100" value="${entreno.nivel}">`)}</label>
+        <label class="entreno-campo">Naturaleza <select class="entreno-naturaleza">${opcionesNaturaleza(nat.id)}</select></label>
+        ${restantes}
+        <div class="entreno-botones">
+          <button class="entreno-deshacer" title="Deshacer: dejarlo como estaba al abrir la ventana" aria-label="Deshacer">${icono("deshacer")}</button>
+          <button class="entreno-cerrar" title="Cerrar" aria-label="Cerrar">${icono("aspa")}</button>
+        </div>
+      </div>`
+    : "";
+
+  cuadro.cuerpo.innerHTML = `
+    ${cabecera}
     <div class="entreno-filas">
       <div class="entreno-fila entreno-titulos">
-        <span></span><span>Base</span><span class="entreno-titulo-evs">EVs</span><span>IVs</span><span></span><span>Total</span>
+        <span></span><span>Base</span>
+        <span class="entreno-titulo-evs">EVs <button class="entreno-azar" data-azar="evs" title="EVs al azar" aria-label="EVs al azar">${icono("mezclar")}</button></span>
+        <span>IVs <button class="entreno-azar" data-azar="ivs" title="IVs al azar" aria-label="IVs al azar">${icono("mezclar")}</button></span>
+        <span></span><span>Total</span>
       </div>
       ${filas}
       <div class="entreno-fila entreno-todas">
         <span class="entreno-stat">Todas</span><span></span><span></span>
         ${campoNumero(`<input class="entreno-todos-ev" type="number" min="0" max="${Math.floor(MAX_EVS / 6)}" placeholder="—" aria-label="EVs de todas" title="Las seis a este valor">`)}
         ${campoNumero(`<input class="entreno-todos-iv" type="number" min="0" max="${MAX_IV}" placeholder="—" aria-label="IVs de todas" title="Las seis a este valor">`)}
-        <span></span><span></span>
+        ${cuadro.ventana ? "<span></span><span></span>" : `<span class="entreno-quedan">${restantes}</span>`}
       </div>
     </div>`;
-  pintarBarras();
+  pintarBarras(cuadro);
 }
 
 // Solo los números y las barras (al arrastrar no se vuelve a pintar todo: se perdería el foco)
-function pintarBarras() {
-  const entreno = entrenoDe(abierto);
-  const finales = statsFinales(abierto) || [];
+function pintarBarras(cuadro) {
+  const { cuerpo, poke } = cuadro;
+  const entreno = entrenoDe(poke);
+  const finales = statsFinales(poke) || [];
   cuerpo.querySelectorAll(".entreno-fila[data-stat]").forEach((fila) => {
     const i = Number(fila.dataset.stat);
     const total = finales[i];
@@ -227,13 +243,25 @@ function pintarBarras() {
     const campo = cuerpo.querySelector(clase);
     if (campo !== document.activeElement) campo.value = iguales(valores);
   }
-  cuerpo.querySelector(".entreno-deshacer").disabled = JSON.stringify(abierto.entreno ?? null) === original;
+  const deshacer = cuerpo.querySelector(".entreno-deshacer");
+  if (deshacer) deshacer.disabled = JSON.stringify(poke.entreno ?? null) === cuadro.original;
+}
+
+// Todos los EVs repartidos al azar, de 4 en 4 (lo que da un punto de estadística), sin pasarse
+// de 252 en ninguna
+function evsAlAzar() {
+  const evs = [0, 0, 0, 0, 0, 0];
+  for (let quedan = Math.floor(MAX_EVS / 4); quedan > 0; quedan--) {
+    const libres = evs.map((v, i) => (v + 4 <= MAX_EV ? i : -1)).filter((i) => i >= 0);
+    evs[libres[Math.floor(Math.random() * libres.length)]] += 4;
+  }
+  return evs;
 }
 
 // Las casillas de las seis filas, con lo que hay ahora (tras cambiar «Todas»)
-function ponerValoresEnFilas() {
-  const entreno = entrenoDe(abierto);
-  cuerpo.querySelectorAll(".entreno-fila[data-stat]").forEach((fila) => {
+function ponerValoresEnFilas(cuadro) {
+  const entreno = entrenoDe(cuadro.poke);
+  cuadro.cuerpo.querySelectorAll(".entreno-fila[data-stat]").forEach((fila) => {
     const i = Number(fila.dataset.stat);
     fila.querySelector(".entreno-ev-barra").value = entreno.evs[i];
     fila.querySelector(".entreno-ev").value = entreno.evs[i];
@@ -241,20 +269,93 @@ function ponerValoresEnFilas() {
   });
 }
 
-function cambiar(cambio) {
-  const entreno = entrenoDe(abierto);
+function cambiar(cuadro, cambio) {
+  const entreno = entrenoDe(cuadro.poke);
   cambio(entreno);
-  abierto.entreno = entreno;
-  alCambiar(abierto);
+  cuadro.poke.entreno = entreno;
+  cuadro.alCambiar(cuadro.poke);
+}
+
+// Lo que hacen las casillas y los botones de un cuadro (cuadro.poke puede cambiar: es el de ahora)
+function escuchar(cuadro) {
+  const { cuerpo } = cuadro;
+  cuerpo.addEventListener("input", (e) => {
+    if (!cuadro.poke) return;
+    const fila = e.target.closest(".entreno-fila[data-stat]");
+    const i = fila ? Number(fila.dataset.stat) : -1;
+
+    if (e.target.matches(".entreno-ev-barra, .entreno-ev")) {
+      cambiar(cuadro, (entreno) => {
+        const otros = entreno.evs.reduce((suma, v, j) => (j === i ? suma : suma + v), 0);
+        const pedido = Math.max(0, Math.floor(Number(e.target.value) || 0));
+        entreno.evs[i] = Math.min(pedido, MAX_EV, MAX_EVS - otros);
+      });
+      const valor = cuadro.poke.entreno.evs[i];
+      // La otra casilla de la misma fila, al día (y esta, si se ha pasado del máximo)
+      fila.querySelector(".entreno-ev-barra").value = valor;
+      if (e.target.matches(".entreno-ev-barra") || Number(e.target.value) !== valor) fila.querySelector(".entreno-ev").value = valor;
+    } else if (e.target.matches(".entreno-iv")) {
+      if (e.target.value === "") return; // escribiendo: se espera al número
+      cambiar(cuadro, (entreno) => {
+        entreno.ivs[i] = Math.max(0, Math.min(MAX_IV, Math.floor(Number(e.target.value) || 0)));
+      });
+    } else if (e.target.matches(".entreno-nivel")) {
+      if (e.target.value === "") return;
+      cambiar(cuadro, (entreno) => {
+        entreno.nivel = Math.max(1, Math.min(100, Math.floor(Number(e.target.value) || 1)));
+      });
+    } else if (e.target.matches(".entreno-todos-ev, .entreno-todos-iv")) {
+      // «Todas»: las seis al mismo valor (los EVs, sin pasarse de los 510 entre todas)
+      if (e.target.value === "") return;
+      const valor = Math.max(0, Math.floor(Number(e.target.value) || 0));
+      cambiar(cuadro, (entreno) => {
+        if (e.target.matches(".entreno-todos-ev")) entreno.evs = entreno.evs.map(() => Math.min(valor, MAX_EV, Math.floor(MAX_EVS / 6)));
+        else entreno.ivs = entreno.ivs.map(() => Math.min(valor, MAX_IV));
+      });
+      ponerValoresEnFilas(cuadro);
+    } else return;
+    pintarBarras(cuadro);
+  });
+
+  // Al salir de una casilla, lo que se haya quedado fuera de rango vuelve a su valor
+  cuerpo.addEventListener("change", (e) => {
+    if (!cuadro.poke) return;
+    if (e.target.matches(".entreno-naturaleza")) {
+      cambiar(cuadro, (entreno) => (entreno.naturaleza = e.target.value));
+      pintar(cuadro);
+    } else if (e.target.matches(".entreno-iv, .entreno-nivel, .entreno-ev, .entreno-todos-ev, .entreno-todos-iv")) {
+      pintar(cuadro);
+    }
+  });
+
+  cuerpo.addEventListener("click", (e) => {
+    if (!cuadro.poke) return;
+    const azar = e.target.closest(".entreno-azar");
+    if (azar) {
+      cambiar(cuadro, (entreno) => {
+        if (azar.dataset.azar === "evs") entreno.evs = evsAlAzar();
+        else entreno.ivs = entreno.ivs.map(() => Math.floor(Math.random() * (MAX_IV + 1)));
+      });
+      ponerValoresEnFilas(cuadro);
+      pintarBarras(cuadro);
+    } else if (e.target.closest(".entreno-cerrar")) dialogo.close();
+    else if (e.target.closest(".entreno-deshacer")) {
+      const antes = JSON.parse(cuadro.original);
+      if (antes) cuadro.poke.entreno = antes;
+      else delete cuadro.poke.entreno;
+      cuadro.alCambiar(cuadro.poke);
+      pintar(cuadro);
+    }
+  });
 }
 
 // poke: { id, es, mote?, stats (las base), entreno?, idForma?, formaPMD? }. alCambiarEste: lo
 // que se hace al cambiar algo; sin él, el de iniciarEntreno (el de «Crear equipo»).
 export function abrirEntreno(poke, alCambiarEste = null) {
-  abierto = poke;
-  original = JSON.stringify(poke.entreno ?? null);
-  alCambiar = alCambiarEste || alCambiarPorDefecto;
-  pintar();
+  ventana.poke = poke;
+  ventana.original = JSON.stringify(poke.entreno ?? null);
+  ventana.alCambiar = alCambiarEste || alCambiarPorDefecto;
+  pintar(ventana);
   if (!dialogo.open) dialogo.showModal();
 
   // Las stats base de un Pokémon añadido antes de que se guardaran
@@ -262,11 +363,22 @@ export function abrirEntreno(poke, alCambiarEste = null) {
     obtenerStats(poke)
       .then((stats) => {
         poke.stats = stats;
-        alCambiar(poke);
-        if (abierto === poke && dialogo.open) pintar();
+        ventana.alCambiar(poke);
+        if (ventana.poke === poke && dialogo.open) pintar(ventana);
       })
       .catch((error) => console.error(error));
   }
+}
+
+// Las filas (EVs, IVs, base y totales) metidas en «contenedor», sin ventana. alCambiar(poke):
+// al tocar algo. Se puede volver a llamar sobre el mismo contenedor (repinta).
+export function incrustarEntreno(contenedor, poke, alCambiar = () => {}) {
+  if (!contenedor.cuadroEntreno) {
+    contenedor.cuadroEntreno = { cuerpo: contenedor, ventana: false };
+    escuchar(contenedor.cuadroEntreno);
+  }
+  Object.assign(contenedor.cuadroEntreno, { poke, original: JSON.stringify(poke.entreno ?? null), alCambiar });
+  pintar(contenedor.cuadroEntreno);
 }
 
 // alCambiarPorDefecto(poke): lo que hace «Crear equipo» al cambiar algo (guardar y poner al
@@ -276,69 +388,9 @@ export function iniciarEntreno(alCambiarDelEquipo = null) {
   if (alCambiarDelEquipo) alCambiarPorDefecto = alCambiarDelEquipo;
   if (dialogo) return;
   dialogo = document.getElementById("dialogo-entreno");
-  cuerpo = dialogo.querySelector(".entreno-cuerpo");
-  dialogo.addEventListener("close", () => (abierto = null));
-
-  cuerpo.addEventListener("input", (e) => {
-    if (!abierto) return;
-    const fila = e.target.closest(".entreno-fila[data-stat]");
-    const i = fila ? Number(fila.dataset.stat) : -1;
-
-    if (e.target.matches(".entreno-ev-barra, .entreno-ev")) {
-      cambiar((entreno) => {
-        const otros = entreno.evs.reduce((suma, v, j) => (j === i ? suma : suma + v), 0);
-        const pedido = Math.max(0, Math.floor(Number(e.target.value) || 0));
-        entreno.evs[i] = Math.min(pedido, MAX_EV, MAX_EVS - otros);
-      });
-      const valor = abierto.entreno.evs[i];
-      // La otra casilla de la misma fila, al día (y esta, si se ha pasado del máximo)
-      fila.querySelector(".entreno-ev-barra").value = valor;
-      if (e.target.matches(".entreno-ev-barra") || Number(e.target.value) !== valor) fila.querySelector(".entreno-ev").value = valor;
-    } else if (e.target.matches(".entreno-iv")) {
-      if (e.target.value === "") return; // escribiendo: se espera al número
-      cambiar((entreno) => {
-        entreno.ivs[i] = Math.max(0, Math.min(MAX_IV, Math.floor(Number(e.target.value) || 0)));
-      });
-    } else if (e.target.matches(".entreno-nivel")) {
-      if (e.target.value === "") return;
-      cambiar((entreno) => {
-        entreno.nivel = Math.max(1, Math.min(100, Math.floor(Number(e.target.value) || 1)));
-      });
-    } else if (e.target.matches(".entreno-todos-ev, .entreno-todos-iv")) {
-      // «Todas»: las seis al mismo valor (los EVs, sin pasarse de los 510 entre todas)
-      if (e.target.value === "") return;
-      const valor = Math.max(0, Math.floor(Number(e.target.value) || 0));
-      cambiar((entreno) => {
-        if (e.target.matches(".entreno-todos-ev")) entreno.evs = entreno.evs.map(() => Math.min(valor, MAX_EV, Math.floor(MAX_EVS / 6)));
-        else entreno.ivs = entreno.ivs.map(() => Math.min(valor, MAX_IV));
-      });
-      ponerValoresEnFilas();
-    } else return;
-    pintarBarras();
-  });
-
-  // Al salir de una casilla, lo que se haya quedado fuera de rango vuelve a su valor
-  cuerpo.addEventListener("change", (e) => {
-    if (!abierto) return;
-    if (e.target.matches(".entreno-naturaleza")) {
-      cambiar((entreno) => (entreno.naturaleza = e.target.value));
-      pintar();
-    } else if (e.target.matches(".entreno-iv, .entreno-nivel, .entreno-ev, .entreno-todos-ev, .entreno-todos-iv")) {
-      pintar();
-    }
-  });
-
-  cuerpo.addEventListener("click", (e) => {
-    if (!abierto) return;
-    if (e.target.closest(".entreno-cerrar")) dialogo.close();
-    else if (e.target.closest(".entreno-deshacer")) {
-      const antes = JSON.parse(original);
-      if (antes) abierto.entreno = antes;
-      else delete abierto.entreno;
-      alCambiar(abierto);
-      pintar();
-    }
-  });
+  ventana = { cuerpo: dialogo.querySelector(".entreno-cuerpo"), ventana: true, poke: null, original: "null", alCambiar: () => {} };
+  dialogo.addEventListener("close", () => (ventana.poke = null));
+  escuchar(ventana);
 
   // Pulsando fuera de la ventana, se cierra
   dialogo.addEventListener("click", (e) => {
