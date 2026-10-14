@@ -11,15 +11,16 @@
   padding: 0.5rem 1.1rem;
   border: none;
   border-radius: 0.45rem;
-  background: #f1c40f;
-  color: #2b2d3a;
+  background: rgb(var(--color-vista));
+  color: #fff;
   font-family: inherit;
   font-weight: bold;
   cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
 }
 
 #nuevo-locke:hover {
-  background: #f4d03f;
+  background: color-mix(in srgb, rgb(var(--color-vista)) 85%, white);
 }
 
 .versus-aviso {
@@ -53,8 +54,8 @@
 
 .versus-ver-mas:hover,
 .versus-ver-quitados:hover {
-  border-color: rgba(241, 196, 15, 0.7);
-  background: rgba(241, 196, 15, 0.08);
+  border-color: rgba(var(--color-vista), 0.7);
+  background: rgba(var(--color-vista), 0.08);
 }
 
 .versus-ver-mas .icono,
@@ -144,8 +145,8 @@
 
 .locke-editar:hover,
 .locke-quitar-lista:hover {
-  background: #f1c40f;
-  color: #2b2d3a;
+  background: #4a4e68; /* neutro: el rojo es el de borrar */
+  color: #fff;
 }
 
 .locke-acciones .locke-borrar:hover {
@@ -177,8 +178,8 @@
 .locke-dentro-uno {
   padding: 0.35rem 0.65rem;
   border-radius: 0.45rem;
-  background: rgba(241, 196, 15, 0.12);
-  box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.4);
+  background: rgba(var(--color-vista), 0.12);
+  box-shadow: inset 0 0 0 1px rgba(var(--color-vista), 0.4);
   font-size: 0.85rem;
   font-weight: bold;
 }
@@ -350,7 +351,7 @@ button.locke-anadir .icono {
    justo eso; los que no quepan bajan a la siguiente fila. */
 .locke-jugadores {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 15rem);
+  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 15rem)); /* que quepan 4 en una fila */
   gap: 0.85rem;
   padding: 0.95rem;
 }
@@ -367,7 +368,7 @@ button.locke-anadir .icono {
 }
 
 .locke-jugador.ganador {
-  background: #2f3142;
+  background-color: #2f3142; /* solo el color: el dibujo de su fondo, si tiene, se queda */
   box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.5);
 }
 
@@ -394,7 +395,7 @@ button.locke-anadir .icono {
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #f1c40f;
+  color: rgba(242, 242, 242, 0.6);
 }
 
 .locke-cara {
@@ -402,7 +403,7 @@ button.locke-anadir .icono {
   width: 4.2rem;
   height: 4.2rem;
   border-radius: 50%;
-  border: 0.18rem solid #c0392b;
+  border: 0.18rem solid var(--color-locke, #c0392b);
   background: #1e1f2b;
   overflow: hidden;
 }
@@ -516,7 +517,7 @@ button.locke-anadir .icono {
 
 /* Tu bloque, un poco destacado: es el único que puedes tocar */
 .locke-jugador.mio {
-  box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.35);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-locke, rgb(var(--color-vista))) 35%, transparent);
 }
 
 /* ---------- Victorias y vidas ---------- */
@@ -690,7 +691,7 @@ button.locke-rom.pasada:hover {
 
 .locke-combate:hover:not(:disabled) {
   transform: scale(1.03);
-  border-color: #f1c40f;
+  border-color: var(--color-locke, rgb(var(--color-vista)));
 }
 
 .locke-combate:disabled {
@@ -699,7 +700,7 @@ button.locke-rom.pasada:hover {
 
 .locke-combate.jugado {
   border-style: solid;
-  border-color: rgba(241, 196, 15, 0.45);
+  border-color: color-mix(in srgb, var(--color-locke, rgb(var(--color-vista))) 45%, transparent);
 }
 
 .combate-nombre {
@@ -710,7 +711,7 @@ button.locke-rom.pasada:hover {
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #f1c40f;
+  color: var(--color-locke, rgb(var(--color-vista)));
 }
 
 .combate-nombre .icono {
@@ -763,7 +764,7 @@ button.locke-rom.pasada:hover {
 .combate-titulo .icono {
   width: 1.2rem;
   height: 1.2rem;
-  color: #f1c40f;
+  color: var(--color-locke, rgb(var(--color-vista)));
 }
 
 /* Ventana de un combate: quién ganó y el marcador */
@@ -1120,7 +1121,7 @@ button.salon-cara:hover {
 .campos-locke .campo-casilla input {
   width: auto;
   padding: 0;
-  accent-color: #f1c40f;
+  accent-color: rgb(var(--color-vista));
   cursor: pointer;
 }
 
@@ -1178,7 +1179,7 @@ button.salon-cara:hover {
 }
 
 .locke-amigo input {
-  accent-color: #f1c40f;
+  accent-color: rgb(var(--color-vista));
   cursor: pointer;
 }
 
@@ -1286,7 +1287,7 @@ button.salon-cara:hover {
 
 /* La tuya, con el borde dorado de lo tuyo en Versus */
 .cementerio-jugador.mio {
-  box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.4);
+  box-shadow: inset 0 0 0 1px rgba(var(--color-vista), 0.4);
 }
 
 .cementerio-jugador header {
@@ -1383,7 +1384,7 @@ button.salon-cara:hover {
 
 .tumba.arrastrando {
   opacity: 0.4;
-  outline: 2px dashed #f1c40f;
+  outline: 2px dashed rgb(var(--color-vista));
 }
 
 .tumba-mote {
@@ -1472,8 +1473,8 @@ button.salon-cara:hover {
 }
 
 .reaccion.mia {
-  border-color: #f1c40f;
-  background: rgba(241, 196, 15, 0.18);
+  border-color: rgb(var(--color-vista));
+  background: rgba(var(--color-vista), 0.18);
 }
 
 .reaccion:hover,
@@ -1692,7 +1693,7 @@ button.salon-cara:hover {
 }
 
 .combate-equipo.mio {
-  box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(var(--color-vista), 0.35);
 }
 
 .combate-equipo .combate-opcion-foto {
@@ -1801,7 +1802,7 @@ button.salon-cara:hover {
 }
 
 .locke-partida-reanudar {
-  color: #f1c40f;
+  color: var(--color-locke, rgb(var(--color-vista)));
 }
 
 .locke-partida-muertos {
@@ -2063,7 +2064,7 @@ button.salon-cara:hover {
 /* Cambios sin guardar: se guardan al cerrar (la ✕, en verde) o se descartan */
 .partida-pendientes {
   font-size: 0.78rem;
-  color: #f1c40f;
+  color: rgb(var(--color-vista));
 }
 
 .partida-descartar {
@@ -2110,7 +2111,7 @@ button.salon-cara:hover {
 
 .partida-ayuda:hover,
 .locke-partida-ayuda:hover {
-  background: #f1c40f;
+  background: var(--color-locke, rgb(var(--color-vista)));
   color: #1e1f2b;
 }
 
@@ -2124,7 +2125,7 @@ button.salon-cara:hover {
 .ayuda-partida h3 {
   margin: 0.9rem 0 0.25rem;
   font-size: 0.85rem;
-  color: #f1c40f;
+  color: rgb(var(--color-vista));
 }
 
 .ayuda-partida h3:first-child {
@@ -2186,8 +2187,8 @@ button.salon-cara:hover {
 }
 
 #dialogo-partida button.partida-ficha.editando {
-  background: rgba(241, 196, 15, 0.25);
-  box-shadow: inset 0 0 0 2px #f1c40f;
+  background: rgba(var(--color-pestana), 0.25);
+  box-shadow: inset 0 0 0 2px rgb(var(--color-pestana));
 }
 
 /* Las fichas que se pueden editar, pulsables */
@@ -2199,8 +2200,8 @@ button.partida-ficha {
 }
 
 button.partida-ficha:hover {
-  background: rgba(241, 196, 15, 0.15);
-  box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.5);
+  background: rgba(var(--color-pestana), 0.15);
+  box-shadow: inset 0 0 0 1px rgba(var(--color-pestana), 0.5);
 }
 
 /* Hueco libre: crear uno nuevo (o soltar ahí uno arrastrado) */
@@ -2410,7 +2411,7 @@ button.partida-hueco .icono {
 
 .bolsa-cantidad:focus {
   outline: none;
-  border-color: #f1c40f;
+  border-color: rgb(var(--color-pestana));
 }
 
 .bolsa-quitar {
@@ -2449,8 +2450,8 @@ button.partida-ficha.arrastrando {
 }
 
 #dialogo-partida button.partida-ficha.destino {
-  background: rgba(241, 196, 15, 0.25);
-  box-shadow: inset 0 0 0 2px #f1c40f;
+  background: rgba(var(--color-pestana), 0.25);
+  box-shadow: inset 0 0 0 2px rgb(var(--color-pestana));
 }
 
 /* ---------- Editar un Pokémon de la partida (js/versus/editor.js) ---------- */
@@ -2585,7 +2586,7 @@ button.partida-ficha.arrastrando {
 .editor-nivel input:focus,
 .editor-buscar input:focus {
   outline: none;
-  border-color: #f1c40f;
+  border-color: rgb(var(--color-vista));
 }
 
 .editor-buscar {
@@ -2659,8 +2660,8 @@ button.partida-ficha.arrastrando {
   flex: none;
   padding: 0.15rem 0.45rem;
   border-radius: 0.35rem;
-  background: rgba(241, 196, 15, 0.18);
-  color: #f1c40f;
+  background: rgba(var(--color-vista), 0.18);
+  color: rgb(var(--color-vista));
   font-size: 0.72rem;
   font-weight: bold;
 }
@@ -2721,7 +2722,7 @@ button.partida-ficha.arrastrando {
 .editor-dato input:focus,
 .editor-dato select:focus {
   outline: none;
-  border-color: #f1c40f;
+  border-color: rgb(var(--color-vista));
 }
 
 .editor-dato input:disabled {
@@ -3075,4 +3076,58 @@ button.partida-ficha.arrastrando {
 .partida-muerto .partida-cara {
   width: 2rem;
   height: 2rem;
+}
+
+/* ---------- Las partes del bloque de cada jugador, sobre su fondo ----------
+   Como en Amigos: macizas (no transparentes, que según el fondo no se leían), con una
+   sombrita y un reborde fino que las separa */
+
+.locke-jugador :is(.locke-cifra, .locke-rom, .locke-partida-abrir, .locke-salon-poner) {
+  background: #1e1f2b;
+}
+
+.locke-jugador :is(.locke-cifra, .locke-rom:not(.pasada), .locke-partida-abrir, .locke-salon-poner, .locke-partida-vincular, .locke-partida-reanudar, .locke-partida-ayuda) {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.locke-jugador .locke-rom.pasada {
+  background: color-mix(in srgb, #2ecc71 15%, #1e1f2b);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(46, 204, 113, 0.5);
+}
+
+.locke-jugador .locke-partida-muertos {
+  background: color-mix(in srgb, #e74c3c 20%, #1e1f2b);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(231, 76, 60, 0.45);
+}
+
+.locke-jugador :is(button.locke-rom, .locke-partida-abrir, .locke-salon-poner):hover {
+  background: #3a3d52;
+}
+/* ---------- Sombritas de la tarjeta de un locke ---------- */
+
+.locke-ir,
+.locke-acciones button {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+/* Cada bloque de jugador, con su sombra (y el reborde que ya tuviera) */
+.locke-jugador {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.locke-jugador.mio {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 0 0 1px color-mix(in srgb, var(--color-locke, rgb(var(--color-vista))) 35%, transparent);
+}
+
+.locke-jugador.ganador {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(241, 196, 15, 0.5);
+}
+
+.locke-jugador.pendiente {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.locke-jugador.eliminado,
+.locke-jugador.mio.eliminado {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(231, 76, 60, 0.55);
 }

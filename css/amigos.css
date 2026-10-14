@@ -23,7 +23,7 @@
   padding: 0.5rem 1.1rem;
   border: none;
   border-radius: 0.45rem;
-  background: #f1c40f;
+  background: rgb(var(--color-vista));
   color: #2b2d3a;
   font-family: inherit;
   font-weight: bold;
@@ -37,7 +37,7 @@
 .amigos-aviso {
   font-size: 0.85rem;
   font-weight: bold;
-  color: #f1c40f;
+  color: rgb(var(--color-vista));
 }
 
 /* ---------- Solicitudes ---------- */
@@ -62,7 +62,7 @@
 
 /* Las que te han mandado a ti se ven: son las que hay que contestar */
 .solicitud.entrante {
-  border-left-color: #f1c40f;
+  border-left-color: rgb(var(--color-vista));
 }
 
 .solicitud button {
@@ -139,7 +139,7 @@
 }
 
 .ficha-jugador:hover {
-  outline: 2px solid rgba(241, 196, 15, 0.5);
+  outline: 2px solid rgba(var(--color-vista), 0.5);
 }
 
 .ficha-jugador.arrastrando {
@@ -151,7 +151,7 @@
 /* La tuya, un poco destacada */
 .ficha-jugador.mia {
   background: #32354a;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(241, 196, 15, 0.35);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(var(--color-vista), 0.35);
 }
 
 /* Amigo con la web abierta ahora mismo: el fondo de la tuya, borde verde y un punto verde
@@ -333,7 +333,7 @@
 }
 
 .ficha-acciones .accion-comparar:hover {
-  background: #f1c40f;
+  background: rgb(var(--color-vista));
   color: #2b2d3a;
 }
 
@@ -356,7 +356,7 @@
 }
 
 .accion-soy-yo:hover {
-  background: #f1c40f;
+  background: rgb(var(--color-vista));
   color: #2b2d3a;
 }
 
@@ -403,7 +403,7 @@
 }
 
 .ficha-jugador.mia .jugador-foto {
-  border-color: #f1c40f;
+  border-color: rgb(var(--color-vista));
 }
 
 .ficha-jugador.conectado .jugador-foto {
@@ -415,7 +415,7 @@
 }
 
 .ficha-jugador.mia .jugador-nombre {
-  color: #f1c40f;
+  color: rgb(var(--color-vista));
 }
 
 .jugador-etiqueta {
@@ -424,7 +424,7 @@
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #f1c40f;
+  color: rgb(var(--color-vista));
 }
 
 /* ---------- Contadores por tipo de locke ---------- */
@@ -486,6 +486,8 @@
   border-left: 0.3rem solid var(--color-locke, #3498db);
   border-radius: 0.45rem;
   background: #252735;
+  /* Sombra y reborde fino del color del tipo: que no se funda con el fondo de la ficha */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), inset 0 0 0 1px color-mix(in srgb, var(--color-locke, #3498db) 45%, transparent);
 }
 
 /* Se pueden pulsar: abren el recuadro con sus datos */
@@ -533,8 +535,8 @@
 }
 
 .ver-todos:hover {
-  border-color: rgba(241, 196, 15, 0.7);
-  background: rgba(241, 196, 15, 0.08);
+  border-color: rgba(var(--color-vista), 0.7);
+  background: rgba(var(--color-vista), 0.08);
 }
 
 .ver-todos .icono {
@@ -586,7 +588,7 @@
   font-size: 0.75rem;
   font-weight: bold;
   text-transform: uppercase;
-  color: #f1c40f;
+  color: rgb(var(--color-vista));
 }
 
 .flotante-fila {
@@ -679,7 +681,7 @@
   font-size: 0.78rem;
   font-weight: bold;
   text-transform: uppercase;
-  color: #f1c40f;
+  color: rgb(var(--color-vista));
   opacity: 0.85;
 }
 
@@ -718,7 +720,7 @@
 }
 
 .luchador.mio .jugador-foto {
-  border-color: #f1c40f;
+  border-color: rgb(var(--color-vista));
 }
 
 .luchador-nombre {
@@ -731,7 +733,7 @@
 }
 
 .luchador.mio .luchador-nombre {
-  color: #f1c40f;
+  color: rgb(var(--color-vista));
 }
 
 .luchador-victorias {
@@ -852,7 +854,7 @@
 }
 
 .comparar-resultado.mia {
-  color: #f1c40f;
+  color: rgb(var(--color-vista));
   opacity: 1;
 }
 
@@ -1024,7 +1026,7 @@
 }
 
 .participante-rom input:focus-visible + span {
-  outline: 2px solid #f1c40f;
+  outline: 2px solid rgb(var(--color-vista));
 }
 
 .participante-rom .icono {
@@ -1054,7 +1056,7 @@ button.cara-equipo {
 }
 
 button.cara-equipo:hover img {
-  box-shadow: 0 0 0 2px rgba(241, 196, 15, 0.5);
+  box-shadow: 0 0 0 2px rgba(var(--color-vista), 0.5);
 }
 
 button.cara-equipo.mvp:hover img {
@@ -1104,7 +1106,7 @@ button.cara-equipo.mvp:hover img {
   padding: 0.45rem 0.5rem;
   border-radius: 0.5rem;
   background: rgba(255, 255, 255, 0.03);
-  box-shadow: inset 3px 0 0 #f1c40f;
+  box-shadow: inset 3px 0 0 rgb(var(--color-vista));
 }
 
 .palmares-combate-fila {
@@ -1218,7 +1220,7 @@ button.cara-equipo.mvp:hover img {
 }
 
 .flotante-mi-equipo:hover {
-  background: #f1c40f;
+  background: rgb(var(--color-vista));
   color: #1e1f2b;
 }
 
@@ -1547,3 +1549,4 @@ button.cara-equipo.mvp:hover img {
       color-mix(in srgb, var(--c2) 11%, transparent) 22px 27px, transparent 27px 44px),
     radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--c1) 30%, transparent), transparent 70%);
 }
+

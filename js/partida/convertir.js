@@ -8,6 +8,7 @@ import { cargarPokedex } from "../pokedex/datos.js";
 import { cargarDatos, datos } from "../comun/datos.js";
 import { formasDeTipoDe } from "../comun/formas.js";
 import { LUGARES_GEN6, LUGARES_GEN7, OBJETOS_EN, CRECIMIENTO } from "./datos-3ds.js";
+import { LUGARES_GEN4, LUGARES_GEN4_OTROS, LUGARES_GEN5, LUGARES_GEN5_OTROS } from "./datos-ds.js";
 
 // Formas que importan (las que cambian el aspecto o los tipos), por el número que les da el
 // juego: [id de PokeAPI, nombre en Showdown]. Las que no están (Vivillon, Pikachu con gorra,
@@ -96,6 +97,8 @@ export async function prepararConversion() {
 }
 
 function nombreLugar(gen, numero) {
+  if (gen === 4) return LUGARES_GEN4[numero] || LUGARES_GEN4_OTROS[numero] || "";
+  if (gen === 5) return LUGARES_GEN5[numero] || LUGARES_GEN5_OTROS[numero] || "";
   return (gen === 7 ? LUGARES_GEN7 : LUGARES_GEN6)[numero / 2] || "";
 }
 

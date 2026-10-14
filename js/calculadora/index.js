@@ -3,8 +3,8 @@
 // Tres columnas: el atacante, el ataque y el resultado en el centro, y el defensor. Cada
 // Pokémon sale de tus equipos (con su nivel, naturaleza, EVs, IVs, objeto y ataques) o de
 // la Pokédex entera (para el rival de un randomlocke, del que solo se sabe qué es). Su nivel,
-// naturaleza, EVs e IVs se cambian en la misma ventana que en «Crear equipo»; lo que se
-// cambie aquí no toca tus equipos.
+// naturaleza, EVs e IVs se cambian en la misma tarjeta (los EVs e IVs, en cada fila de
+// estadística); lo que se cambie aquí no toca tus equipos.
 //
 // En el centro, los cuatro huecos de ataques del atacante (los vacíos, para buscar uno) con
 // el daño que hace cada uno y, del elegido, el daño en % y en PS, la barra de vida del
@@ -24,7 +24,9 @@ import { pedirJSON, URL_API } from "../comun/api.js";
 import { cargarPokedex } from "../pokedex/datos.js";
 import { formasDeTipoDe } from "../comun/formas.js";
 import { leerGuardados } from "../equipos/estado.js";
-import { iniciarEntreno, abrirEntreno, statsFinales, entrenoDe, naturaleza, STATS } from "../equipos/entreno.js";
+import {
+  statsFinales, entrenoDe, naturaleza, opcionesNaturaleza, STATS, MAX_EV, MAX_EVS, MAX_IV
+} from "../equipos/entreno.js";
 import { cargarAtaques } from "./ataques.js";
 import { calcularDanio, resumenKO, efectoObjeto, textoHabilidad, velocidad, statEnCombate, habilidadAnulada } from "./danio.js";
 
@@ -317,6 +319,7 @@ function pintarLado(lado) {
 
   const entreno = entrenoDe(c);
   const nat = naturaleza(entreno.naturaleza);
+  const usados = entreno.evs.reduce((suma, v) => suma + v, 0);
   const finales = statsFinales(c) || [];
   // Las que importan para el ataque elegido, resaltadas
   const ataque = ataqueElegido();
@@ -339,10 +342,17 @@ function pintarLado(lado) {
         <div class="calc-tipos">${chipsTipos(c.tipos)}</div>
       </div>
     </div>
-    <button class="calc-entreno" title="Nivel, naturaleza, EVs e IVs">
-      ${icono("actividad")} Nv. ${entreno.nivel} · ${nat.es}
-    </button>
+    <div class="calc-entreno-fila">
+      <label class="calc-entreno-campo">Nv.
+        <input class="calc-nivel" type="text" inputmode="numeric" maxlength="3" value="${entreno.nivel}" aria-label="Nivel">
+      </label>
+      <select class="calc-naturaleza" aria-label="Naturaleza" title="${escaparHTML(nat.es)}">${opcionesNaturaleza(entreno.naturaleza)}</select>
+      <span class="calc-evs-usados ${usados >= MAX_EVS ? "lleno" : ""}" title="EVs repartidos">${usados}/${MAX_EVS}</span>
+    </div>
     <div class="calc-stats">
+      <div class="calc-stat calc-stat-cabecera">
+        <span></span><span></span><span></span><span>EV</span><span>IV</span><span>Etapa</span>
+      </div>
       ${STATS.map((nombre, i) => {
         // Como está en combate: su etapa, el objeto, la habilidad (si se cumple lo que pide),
         // el clima y la parálisis. Pasando el ratón, de dónde sale.
@@ -357,6 +367,8 @@ function pintarLado(lado) {
             <span class="calc-stat-nombre">${nombre}</span>
             <span class="calc-stat-barra"><i style="width:${Math.min(100, ((valor || 0) / 450) * 100)}%"></i></span>
             <strong class="calc-stat-valor" ${explicacion ? `title="${escaparHTML(explicacion)}"` : ""}>${valor ?? "…"}</strong>
+            <input class="calc-ev" data-stat="${i}" type="text" inputmode="numeric" maxlength="3" value="${entreno.evs[i]}" aria-label="EVs de ${nombre}">
+            <input class="calc-iv" data-stat="${i}" type="text" inputmode="numeric" maxlength="2" value="${entreno.ivs[i]}" aria-label="IVs de ${nombre}">
             ${plantillaEtapa(c, i)}
           </div>`;
       }).join("")}
@@ -722,10 +734,6 @@ function prepararColumna(lado) {
     if (!c) return;
     const boton = e.target.closest("button");
     if (!boton) return;
-    if (boton.classList.contains("calc-entreno")) {
-      abrirEntreno(c, () => pintarTodo());
-      return;
-    }
     if (boton.classList.contains("calc-genero")) {
       const orden = ["", ...generosPosibles(c)];
       c.genero = orden[(orden.indexOf(generoDe(c)) + 1) % orden.length];
@@ -754,14 +762,71 @@ function prepararColumna(lado) {
   // Los PS de ahora: al arrastrar solo cambia el resultado (para no perder la barra)
   columna.addEventListener("change", (e) => {
     if (e.target.matches(".calc-forma") && lados[lado]) cambiarDeForma(lados[lado], e.target.value);
+    if (e.target.matches(".calc-naturaleza") && lados[lado]) {
+      cambiarEntreno(lados[lado], (entreno) => (entreno.naturaleza = e.target.value));
+      pintarTodo();
+    }
   });
 
   columna.addEventListener("input", (e) => {
-    if (!e.target.matches(".calc-ps") || !lados[lado]) return;
-    lados[lado].psActual = Number(e.target.value);
-    columna.querySelector(".calc-ps-valor").textContent = `${lados[lado].psActual}%`;
+    const c = lados[lado];
+    if (!c) return;
+    if (e.target.matches(".calc-ev, .calc-iv, .calc-nivel")) {
+      cambiarCifra(c, e.target);
+      repintarSinPerderLaCasilla(columna, e.target);
+      return;
+    }
+    if (!e.target.matches(".calc-ps")) return;
+    c.psActual = Number(e.target.value);
+    columna.querySelector(".calc-ps-valor").textContent = `${c.psActual}%`;
     pintarCentro();
   });
+
+  // Flechas del teclado en las casillas de nivel, EVs e IVs (los EVs, de 4 en 4)
+  columna.addEventListener("keydown", (e) => {
+    if (!e.target.matches(".calc-ev, .calc-iv, .calc-nivel") || !["ArrowUp", "ArrowDown"].includes(e.key)) return;
+    e.preventDefault();
+    const salto = (e.target.matches(".calc-ev") ? 4 : 1) * (e.key === "ArrowUp" ? 1 : -1);
+    e.target.value = Math.max(0, (Number(e.target.value) || 0) + salto);
+    e.target.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
+// ---------- Nivel, naturaleza, EVs e IVs (en la tarjeta) ----------
+
+function cambiarEntreno(c, hacer) {
+  const entreno = entrenoDe(c);
+  hacer(entreno);
+  c.entreno = entreno;
+}
+
+// Lo escrito en una casilla, dentro de sus límites (los EVs, sin pasar de 510 entre todas)
+function cambiarCifra(c, campo) {
+  if (campo.value.trim() === "") return;
+  const pedido = Math.max(0, Math.floor(Number(campo.value.replace(/\D/g, "")) || 0));
+  cambiarEntreno(c, (entreno) => {
+    if (campo.matches(".calc-nivel")) entreno.nivel = Math.max(1, Math.min(100, pedido));
+    else if (campo.matches(".calc-iv")) entreno.ivs[Number(campo.dataset.stat)] = Math.min(MAX_IV, pedido);
+    else {
+      const i = Number(campo.dataset.stat);
+      const otros = entreno.evs.reduce((suma, v, j) => (j === i ? suma : suma + v), 0);
+      entreno.evs[i] = Math.min(pedido, MAX_EV, MAX_EVS - otros);
+    }
+  });
+}
+
+// Se repinta todo (las estadísticas y el daño cambian) y se vuelve a la misma casilla, con el
+// cursor al final, para seguir escribiendo
+function repintarSinPerderLaCasilla(columna, campo) {
+  const clase = [".calc-ev", ".calc-iv", ".calc-nivel"].find((cada) => campo.matches(cada));
+  const selector = campo.dataset.stat !== undefined ? `${clase}[data-stat="${campo.dataset.stat}"]` : clase;
+  const vacio = campo.value.trim() === "";
+  pintarTodo();
+  const nuevo = columna.querySelector(selector);
+  if (!nuevo) return;
+  if (vacio) nuevo.value = "";
+  nuevo.focus();
+  nuevo.setSelectionRange(nuevo.value.length, nuevo.value.length);
 }
 
 export async function iniciar() {
@@ -776,7 +841,6 @@ export async function iniciar() {
     formasPorNumero.get(fila.numero).push(fila);
   }
 
-  iniciarEntreno();
   prepararColumna("atacante");
   prepararColumna("defensor");
 

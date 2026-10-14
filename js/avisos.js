@@ -15,7 +15,7 @@ import { icono } from "./comun/iconos.js";
 import { escaparHTML } from "./comun/utilidades.js";
 import { hayNube, usuarioActual } from "./comun/nube.js";
 import {
-  alCambiarAmistades, solicitudesRecibidas, aceptarAmistad, borrarAmistad, perfilesDe
+  alCambiarAmistades, solicitudesRecibidas, aceptarAmistad, borrarAmistad, perfilesDe, colorDeTipo
 } from "./comun/perfiles.js";
 import {
   alCambiarLockes, invitacionesALockes, aceptarLocke, rechazarLocke
@@ -28,10 +28,6 @@ let listaDialogo = null;
 
 // uid -> nombre, para las solicitudes de amistad (las de locke ya traen el nombre dentro)
 let nombres = new Map();
-
-function colorSeguro(color) {
-  return /^#[0-9a-f]{6}$/i.test(String(color || "")) ? color : "#3498db";
-}
 
 // ---------- Pintar ----------
 
@@ -52,7 +48,7 @@ function plantillaLocke(locke) {
 
   return `
     <div class="aviso" data-tipo="locke" data-id="${escaparHTML(locke.id)}">
-      <span class="aviso-icono de-locke" style="--color-locke: ${colorSeguro(tipo.color)}">${icono("espadas")}</span>
+      <span class="aviso-icono de-locke" style="--color-locke: ${colorDeTipo(tipo)}">${icono("espadas")}</span>
       <span class="aviso-texto">
         <b>${quien}</b> te mete en <b>${escaparHTML(locke.nombre)}</b>
         <small>${escaparHTML(tipo.nombre)} · ${locke.vidasIniciales} vidas</small>

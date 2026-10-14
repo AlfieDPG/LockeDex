@@ -24,8 +24,9 @@ import {
   TIPOS_POR_DEFECTO, alCambiarMiPerfil, alCambiarAmistades, miPerfil, fallaElPerfil, tiposDe, tiposParaFicha,
   amigosAceptados, solicitudesRecibidas, solicitudesEnviadas, fallaLasAmistades,
   perfilesDeAmigos, alCambiarPerfilesAmigos, buscarAmigo, pedirAmistad, aceptarAmistad, borrarAmistad,
-  guardarMiPerfil, nuevoId
+  guardarMiPerfil, nuevoId, colorDeTipo
 } from "../comun/perfiles.js";
+import { confirmar } from "../comun/ventanas.js";
 
 let seccion = null;
 let lista = null;
@@ -53,7 +54,7 @@ function etiquetaTipo(nombre, total) {
 
 function plantillaContador(tipo, total) {
   return `
-    <div class="contador-locke" style="--color-locke: ${colorSeguro(tipo.color)}">
+    <div class="contador-locke" style="--color-locke: ${colorDeTipo(tipo)}">
       <span class="contador-numero">${total}</span>
       <span class="contador-tipo">${escaparHTML(etiquetaTipo(tipo.nombre, total))}</span>
     </div>`;
@@ -65,7 +66,7 @@ const MOSTRAR_DE_ENTRADA = 5;
 function plantillaLocke(ganado, posicion, extra) {
   const tipo = ganado.tipo || TIPOS_POR_DEFECTO[0];
   return `
-    <li class="locke-ganado ${extra ? "extra" : ""}" data-posicion="${posicion}" style="--color-locke: ${colorSeguro(tipo.color)}"
+    <li class="locke-ganado ${extra ? "extra" : ""}" data-posicion="${posicion}" style="--color-locke: ${colorDeTipo(tipo)}"
         title="Pulsa para ver los datos de este locke">
       <span class="locke-nombre">${escaparHTML(ganado.nombre)}</span>
       ${ganado.nota ? `<span class="locke-nota">${escaparHTML(ganado.nota)}</span>` : ""}
@@ -255,7 +256,7 @@ function abrirFlotante(elemento, ganado, ficha) {
   const tipo = ganado.tipo || TIPOS_POR_DEFECTO[0];
   flotante = document.createElement("div");
   flotante.className = "flotante-locke";
-  flotante.style.setProperty("--color-locke", colorSeguro(tipo.color));
+  flotante.style.setProperty("--color-locke", colorDeTipo(tipo));
   flotante.innerHTML = plantillaFlotante(ganado, ficha);
   flotante.addEventListener("click", (e) => {
     const boton = e.target.closest(".flotante-mi-equipo");
@@ -315,7 +316,7 @@ function plantillaListaCaraACara(lista, mio, suyo) {
     const fecha = locke.fecha ? `<span class="comparar-fecha">${escaparHTML(fechaLarga(locke.fecha))}</span>` : "";
 
     return `
-      <li class="comparar-locke ${i >= MOSTRAR_DE_ENTRADA ? "extra" : ""}" style="--color-locke: ${colorSeguro(tipo.color)}">
+      <li class="comparar-locke ${i >= MOSTRAR_DE_ENTRADA ? "extra" : ""}" style="--color-locke: ${colorDeTipo(tipo)}">
         <span class="comparar-locke-nombre">${escaparHTML(locke.nombre)}${fecha}</span>
         <span class="comparar-resultado ${locke.resultado}">${resultado}</span>
       </li>`;
@@ -549,7 +550,7 @@ function pintarTipos() {
     .map(
       (tipo, posicion) => `
         <div class="fila-tipo" data-posicion="${posicion}">
-          <input class="tipo-color" type="color" value="${colorSeguro(tipo.color)}" title="Color">
+          <input class="tipo-color" type="color" value="${colorDeTipo(tipo)}" title="Color">
           <input class="tipo-nombre" type="text" value="${escaparHTML(tipo.nombre)}" placeholder="Nombre del tipo">
           <button class="tipo-quitar" title="Quitar">${icono("aspa")}</button>
         </div>`
@@ -962,7 +963,7 @@ function activarFichas() {
 
 async function quitarAmigo(ficha) {
   const nombre = ficha.querySelector(".jugador-nombre").textContent;
-  if (!confirm(`¿Quitar a ${nombre} de tus amigos?`)) return;
+  if (!(await confirmar(`¿Quitar a ${nombre} de tus amigos?`))) return;
 
   const amistad = amigosAceptados().find((cada) => cada.otro === ficha.dataset.clave);
   if (amistad) await borrarAmistad(amistad.id);

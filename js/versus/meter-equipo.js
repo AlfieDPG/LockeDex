@@ -8,11 +8,10 @@
 import { escaparHTML } from "../comun/utilidades.js";
 import { icono } from "../comun/iconos.js";
 import { carasDeEquipo, elegirEquipo } from "../comun/elegir-equipo.js";
-import { poner, huecoLibre, llaveDe } from "../partida/huecos3ds.js";
-import { crearPokemon } from "../partida/pokemon3ds.js";
-import { entrenadorDe } from "../partida/tresds.js";
+import { poner, huecoLibre, llaveDe } from "../partida/huecos.js";
 import { partidaDe } from "../partida/partidas.js";
 import { prepararDatos, nombreEspecie, nombreHuevo, editableDeEquipo, cambiarHuecos } from "./editor-comun.js";
+import { confirmar } from "../comun/ventanas.js";
 
 let dialogo = null;
 let idLocke = null;
@@ -66,16 +65,16 @@ async function meter() {
     }
   }
   if (!listos.length) throw new Error(problemas.join(" ") || "No hay nada que meter.");
-  if (problemas.length && !confirm(`Algunas cosas no van en este juego:\n\n• ${problemas.join("\n• ")}\n\n¿Meterlo igual?`)) return;
+  if (problemas.length && !(await confirmar(`Algunas cosas no van en este juego:\n\n• ${problemas.join("\n• ")}\n\n¿Meterlo igual?`, { aceptar: "Meterlo igual" }))) return;
 
   const alEquipo = dialogo.querySelector('input[name="meter-destino"]:checked').value === "equipo";
   const nombres = listos.map(({ editable }) => editable.mote || nombreEspecie(editable.especie)).join(", ");
   const cual = equipo.nombre ? ` (equipo «${equipo.nombre}»)` : "";
   await cambiarHuecos(idLocke, (h) => {
-    const entrenador = entrenadorDe(h.bytes);
-    const crudos = listos.map(({ editable, base }) =>
-      crearPokemon(entrenador, editable, {
-        base, nombreEspecie: nombreEspecie(editable.especie, entrenador.idioma), nombreHuevo: nombreHuevo(entrenador.idioma)
+    const entrenador = h.formato.entrenadorDe(h.bytes);
+    const crudos = listos.map(({ editable, base, generoRatio }) =>
+      h.formato.pokemon.crearPokemon(entrenador, editable, {
+        base, generoRatio, nombreEspecie: nombreEspecie(editable.especie, entrenador.idioma), nombreHuevo: nombreHuevo(entrenador.idioma)
       })
     );
     const aLasCajas = (crudo) => {

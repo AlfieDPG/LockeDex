@@ -22,6 +22,7 @@ import { activarArrastre } from "../comun/arrastrar.js";
 import {
   imagenConRespaldo, urlArte, urlsArte, urlsIconoObjeto, cambiarImagen, precargarEnReposo
 } from "../comun/imagenes.js";
+import { confirmar } from "../comun/ventanas.js";
 
 const resultado = document.getElementById("resultado");
 const dialogoDebilidades = document.getElementById("dialogo-debilidades");
@@ -471,13 +472,46 @@ function pintarCasilla(casilla, valor, placeholder, etiqueta, lista, clase, alCa
       </div>
     `;
     casilla.querySelector(".quitar").addEventListener("click", () => alCambiar(null));
+    // Pulsando la tarjeta se escribe otro encima, sin quitarlo antes
+    alPulsarCambiar(casilla.querySelector(".ataque"), () => {
+      const campo = campoCasilla(casilla, valor.es, lista, clase, alCambiar);
+      alSalirSinElegir(campo, () => pintarCasilla(casilla, valor, placeholder, etiqueta, lista, clase, alCambiar));
+    });
   } else {
-    casilla.innerHTML = `<input type="text" placeholder="${placeholder}">`;
-    const campo = casilla.querySelector("input");
-    activarAutocompletado(campo, lista, (entrada) => {
-      alCambiar({ id: entrada.id, es: entrada.es, en: entrada.en });
-    }, { icono: clase === "objeto" ? iconoObjeto : null });
+    campoCasilla(casilla, placeholder, lista, clase, alCambiar);
   }
+}
+
+function campoCasilla(casilla, placeholder, lista, clase, alCambiar) {
+  casilla.innerHTML = `<input type="text" placeholder="${escaparHTML(placeholder)}">`;
+  const campo = casilla.querySelector("input");
+  activarAutocompletado(campo, lista, (entrada) => {
+    alCambiar({ id: entrada.id, es: entrada.es, en: entrada.en });
+  }, { icono: clase === "objeto" ? iconoObjeto : null });
+  return campo;
+}
+
+// Al pulsar una tarjeta de ataque, habilidad u objeto (no sus botones), se cambia por la
+// casilla para escribir otro
+function alPulsarCambiar(tarjeta, cambiar) {
+  tarjeta.classList.add("cambiable");
+  tarjeta.addEventListener("click", (e) => {
+    if (e.target.closest("button")) return;
+    ocultarTooltip();
+    cambiar();
+  });
+}
+
+// La casilla que sale al pulsar la tarjeta: con el cursor dentro y, si se sale sin elegir
+// nada (o con Escape), vuelve la tarjeta como estaba
+function alSalirSinElegir(campo, volver) {
+  campo.focus();
+  campo.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !e.defaultPrevented) campo.blur();
+  });
+  campo.addEventListener("blur", () => {
+    if (campo.isConnected) volver();
+  });
 }
 
 // ---------- Ataques (búsqueda manual) ----------
@@ -486,19 +520,7 @@ function pintarAtaque(hueco, poke, i) {
   const ataque = poke.ataques[i];
 
   if (!ataque) {
-    hueco.innerHTML = `<input type="text" placeholder="Ataque ${i + 1}">`;
-    const campo = hueco.querySelector("input");
-
-    activarAutocompletado(campo, datos.ataques, async (entrada) => {
-      try {
-        poke.ataques[i] = await ataqueDesdeAPI(entrada);
-        guardarEquipo();
-        refrescarTarjeta(poke);
-      } catch (error) {
-        campo.value = "";
-        campo.placeholder = "No se pudo cargar, prueba otra vez";
-      }
-    });
+    campoAtaque(hueco, poke, i, `Ataque ${i + 1}`);
     return;
   }
 
@@ -535,6 +557,28 @@ function pintarAtaque(hueco, poke, i) {
     guardarEquipo();
     refrescarTarjeta(poke);
   });
+
+  alPulsarCambiar(hueco.querySelector(".ataque"), () => {
+    const campo = campoAtaque(hueco, poke, i, ataque.es);
+    alSalirSinElegir(campo, () => pintarAtaque(hueco, poke, i));
+  });
+}
+
+function campoAtaque(hueco, poke, i, placeholder) {
+  hueco.innerHTML = `<input type="text" placeholder="${escaparHTML(placeholder)}">`;
+  const campo = hueco.querySelector("input");
+
+  activarAutocompletado(campo, datos.ataques, async (entrada) => {
+    try {
+      poke.ataques[i] = await ataqueDesdeAPI(entrada);
+      guardarEquipo();
+      refrescarTarjeta(poke);
+    } catch (error) {
+      campo.value = "";
+      campo.placeholder = "No se pudo cargar, prueba otra vez";
+    }
+  });
+  return campo;
 }
 
 // ---------- Fichas al pasar el ratón (stats base y descripción de ataques) ----------
@@ -752,11 +796,11 @@ export function iniciarCrear() {
     mostrarAviso(guardarEnMisEquipos() ? "Equipo guardado ✔" : "No se ha podido guardar en el navegador.");
   });
 
-  document.getElementById("vaciar").addEventListener("click", () => {
+  document.getElementById("vaciar").addEventListener("click", async () => {
     if (estado.equipo.length === 0) return;
     // Solo se pregunta si se perdería algo (cambios sin guardar en «Mis equipos»)
     if (hayCambiosSinGuardar()) {
-      const seguro = confirm("Tienes cambios sin guardar en este equipo. ¿Vaciarlo de todas formas?");
+      const seguro = await confirmar("Tienes cambios sin guardar en este equipo. ¿Vaciarlo de todas formas?", { aceptar: "Vaciar", peligro: true });
       if (!seguro) return;
     }
 

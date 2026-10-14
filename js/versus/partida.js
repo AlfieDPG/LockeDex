@@ -15,6 +15,7 @@
 
 import { icono } from "../comun/iconos.js";
 import { escaparHTML } from "../comun/utilidades.js";
+import { confirmar, avisar as avisarVentana } from "../comun/ventanas.js";
 import { usuarioActual } from "../comun/nube.js";
 import { caraDePokemon, carasDeEquipo } from "../comun/elegir-equipo.js";
 import { cargarDatos } from "../comun/datos.js";
@@ -23,10 +24,10 @@ import {
   sePuedeVigilar, cargarVinculos, vincular, reanudar, desvincular, leerUnaVez, estadoVinculo,
   copiasDe, restaurarCopia
 } from "../partida/vinculo.js";
-import { JUEGOS_EDITABLES } from "../partida/escribir3ds.js";
+import { EDITABLES } from "../partida/formato.js";
 import { POR_CAJA } from "../partida/tresds.js";
 import { pintarBolsa, activarBolsa } from "./bolsa.js";
-import { mover } from "../partida/huecos3ds.js";
+import { mover } from "../partida/huecos.js";
 import { iniciarEditor, abrirEditor, cerrarEditor, editorEnLado, sitioEditando } from "./editor.js";
 import { iniciarMeter, abrirMeter } from "./meter-equipo.js";
 import {
@@ -135,7 +136,7 @@ async function alLeer(id, bytes, archivo) {
 // Se puede editar: partida vigilada (con el archivo a mano), de un juego que se sabe escribir
 // y con el locke en marcha
 function editable(locke) {
-  return estadoVinculo(locke.id) === "vigilando" && JUEGOS_EDITABLES.includes(locke.juego) && locke.estado !== "cerrado";
+  return estadoVinculo(locke.id) === "vigilando" && EDITABLES.includes(locke.juego) && locke.estado !== "cerrado";
 }
 
 // sitio: "e2" (tercero del equipo) o "c4-17" (caja 5, hueco 18); con él, se puede pulsar
@@ -299,7 +300,7 @@ async function moverA(desde, hasta) {
     });
   } catch (error) {
     console.error(error);
-    alert(error.message || "No se ha podido mover.");
+    avisarVentana(error.message || "No se ha podido mover.");
   }
 }
 
@@ -356,7 +357,7 @@ async function cerrarPartida() {
       pintarPartida();
       if (error && error.name === "AbortError") return;
       console.error(error);
-      alert(error.message || "No se ha podido guardar.");
+      avisarVentana(error.message || "No se ha podido guardar.");
       return;
     }
     boton.disabled = false;
@@ -379,12 +380,12 @@ async function copiarEquipo() {
     ]);
     await prepararConversion();
     const { problemas } = await anadirEquipoDesdePaste(pasteDeEquipo(partida.equipo), locke.nombre);
-    alert(problemas.length
+    avisarVentana(problemas.length
       ? `Copiado a «Mis equipos», pero algunas cosas no se han podido reconocer:\n\n• ${problemas.join("\n• ")}`
       : "Copiado a «Mis equipos» ✔");
   } catch (error) {
     console.error(error);
-    alert("No se ha podido copiar el equipo.");
+    avisarVentana("No se ha podido copiar el equipo.");
   } finally {
     boton.disabled = false;
   }
@@ -419,7 +420,7 @@ async function abrirCopias(id) {
 async function restaurar(boton) {
   const id = dialogoCopias.dataset.id;
   const fecha = fechaCopia(Number(boton.dataset.cuando));
-  if (!confirm(`¿Dejar la partida como estaba el ${fecha}?\n\nCierra antes el juego en el emulador.`)) return;
+  if (!(await confirmar(`¿Volver a como estaba el ${fecha}?\n\nCierra antes el juego en el emulador.`, { aceptar: "Volver a esta" }))) return;
   boton.disabled = true;
   try {
     await restaurarCopia(id, Number(boton.dataset.clave));
@@ -429,7 +430,7 @@ async function restaurar(boton) {
     boton.disabled = false;
     if (error && error.name === "AbortError") return;
     console.error(error);
-    alert(error.message || "No se ha podido.");
+    avisarVentana(error.message || "No se ha podido.");
   }
 }
 
@@ -502,8 +503,8 @@ export function iniciarPartida(alRepintar, alAvisar) {
     if (hayCambios(idAbierto)) descartarCambios();
     idAbierto = null;
   });
-  dialogo.querySelector(".partida-descartar").addEventListener("click", () => {
-    if (!confirm("¿Descartar los cambios sin guardar?")) return;
+  dialogo.querySelector(".partida-descartar").addEventListener("click", async () => {
+    if (!(await confirmar("¿Descartar los cambios sin guardar?"))) return;
     descartarCambios();
   });
   dialogo.querySelector(".partida-titulo").addEventListener("click", (e) => {
@@ -529,19 +530,19 @@ export function iniciarPartida(alRepintar, alAvisar) {
   window.addEventListener("beforeunload", (e) => {
     if (idAbierto && hayCambios(idAbierto)) e.preventDefault();
   });
-  dialogo.querySelector(".partida-desvincular").addEventListener("click", () => {
+  dialogo.querySelector(".partida-desvincular").addEventListener("click", async () => {
     const aviso = hayCambios(idAbierto) ? "\n\nLos cambios sin guardar se pierden." : "";
-    if (!confirm(`¿Desvincular la partida de este locke?\n\nLo apuntado en el cementerio y en «Rutas» se queda.${aviso}`)) return;
+    if (!(await confirmar(`¿Desvincular la partida de este locke?\n\nLo apuntado en el cementerio y en «Rutas» se queda.${aviso}`))) return;
     const id = idAbierto;
     dialogo.close();
     olvidarPartida(id);
     desvincular(id).finally(repintar);
   });
   // Elegir otra vez el archivo (otro emulador, otra carpeta, otro navegador...)
-  dialogo.querySelector(".partida-vincular").addEventListener("click", () => {
+  dialogo.querySelector(".partida-vincular").addEventListener("click", async () => {
     const id = idAbierto;
     if (hayCambios(id)) {
-      if (!confirm("Los cambios sin guardar se pierden. ¿Seguir?")) return;
+      if (!(await confirmar("Los cambios sin guardar se pierden. ¿Seguir?", { aceptar: "Seguir", peligro: true }))) return;
       descartarCambios();
     }
     if (!sePuedeVigilar) {

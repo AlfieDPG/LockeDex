@@ -49,7 +49,7 @@
   white-space: nowrap;
   font-size: 0.85rem;
   font-weight: bold;
-  color: #f1c40f;
+  color: rgb(var(--color-vista));
 }
 
 .buscador {
@@ -71,7 +71,8 @@
   padding: 0.6rem 1.15rem;
   border: none;
   border-radius: 0.45rem;
-  background: #f1c40f;
+  background: rgb(var(--color-vista));
+  color: #fff;
   cursor: pointer;
   font-weight: bold;
 }
@@ -113,12 +114,12 @@
 }
 
 #exportar-equipo {
-  background: #f1c40f;
+  background: rgb(var(--color-vista));
   color: #2b2d3a;
 }
 
 #exportar-equipo:hover {
-  background: #f4d03f;
+  background: color-mix(in srgb, rgb(var(--color-vista)) 80%, white);
 }
 
 #guardar {
@@ -143,15 +144,15 @@
   padding: 0.45rem 0.85rem;
   border: none;
   border-radius: 0.45rem;
-  background: #2c2e3e;
-  color: #f2f2f2;
+  background: rgb(var(--color-vista));
+  color: #fff;
   font-weight: bold;
   cursor: pointer;
   white-space: nowrap;
 }
 
 #ver-debilidades:hover {
-  background: #3a3d52;
+  background: color-mix(in srgb, rgb(var(--color-vista)) 80%, white);
 }
 
 /* ---------- Cuadrícula de tarjetas ---------- */
@@ -207,7 +208,7 @@
 }
 
 .tarjeta:hover {
-  outline: 2px solid rgba(241, 196, 15, 0.5);
+  outline: 2px solid rgba(var(--color-vista), 0.5);
 }
 
 /* Hueco de un Pokémon que todavía no está. No lleva alto propio: lo da su fila. */
@@ -223,8 +224,8 @@
 }
 
 .tarjeta-vacia:hover {
-  border-color: #f1c40f;
-  color: #f1c40f;
+  border-color: rgb(var(--color-vista));
+  color: rgb(var(--color-vista));
   outline: none;
 }
 
@@ -237,7 +238,7 @@
 /* Tarjeta que se está arrastrando para cambiarla de sitio */
 .tarjeta.arrastrando {
   opacity: 0.4;
-  outline: 2px dashed #f1c40f;
+  outline: 2px dashed rgb(var(--color-vista));
 }
 
 /* El dibujo se queda con el alto que dejan libre el nombre, la forma, los tipos y el botón
@@ -284,7 +285,7 @@
   margin: 0;
   padding: 0 0.3rem;
   border: none;
-  border-bottom: 2px solid #f1c40f;
+  border-bottom: 2px solid rgb(var(--color-vista));
   border-radius: 0;
   background: transparent;
   color: inherit;
@@ -341,7 +342,7 @@
 }
 
 .selector-forma:hover {
-  border-color: rgba(241, 196, 15, 0.6);
+  border-color: rgba(var(--color-vista), 0.6);
 }
 
 .selector-forma:disabled {
@@ -481,7 +482,7 @@
 #dialogo-entreno {
   width: min(58rem, 94vw);
   padding: 1rem 1.15rem;
-  box-shadow: inset 0 0 0 2px rgba(241, 196, 15, 0.5);
+  box-shadow: inset 0 0 0 2px rgba(var(--color-vista), 0.5);
 }
 
 .entreno-cabecera {
@@ -534,7 +535,7 @@
 .entreno-campo select:focus,
 .entreno-fila input[type="number"]:focus {
   outline: none;
-  border-color: #f1c40f;
+  border-color: rgb(var(--color-vista));
 }
 
 .entreno-nivel {
@@ -553,7 +554,7 @@
 }
 
 .entreno-restantes.lleno strong {
-  color: #f1c40f;
+  color: rgb(var(--color-vista));
 }
 
 /* Deshacer y la ✕, juntos en la esquina y a la altura de la primera fila de la cabecera (la
@@ -642,7 +643,7 @@
 }
 
 .entreno-azar:hover {
-  background: #f1c40f;
+  background: rgb(var(--color-vista));
   color: #1e1f2b;
 }
 
@@ -679,7 +680,7 @@
 
 .entreno-ev-barra {
   width: 100%;
-  accent-color: #f1c40f;
+  accent-color: rgb(var(--color-vista));
   cursor: pointer;
 }
 
@@ -761,6 +762,7 @@
   padding: 0.5rem 0.6rem;
   border-radius: 0.45rem;
   border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
   font-size: 0.93rem;
 }
 
@@ -804,8 +806,15 @@
   padding: 0;
   border: none;
   border-radius: 50%;
+  /* Como la ✕: oscurecen el color del tipo del ataque */
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
   cursor: pointer;
   font-weight: bold;
+}
+
+.pp button:hover {
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .pp-valor {
@@ -996,7 +1005,7 @@
 .grupo-flecha,
 .grupo-icono {
   display: inline-flex;
-  color: #f1c40f;
+  color: rgb(var(--color-vista));
 }
 
 .grupo-flecha .icono {
@@ -1031,7 +1040,7 @@
 .grupo-nombre-campo {
   width: min(18rem, 60vw);
   padding: 0.2rem 0.45rem;
-  border: 1px solid rgba(241, 196, 15, 0.6);
+  border: 1px solid rgba(var(--color-vista), 0.6);
   border-radius: 0.4rem;
   background: #252735;
   color: #f2f2f2;
@@ -1081,18 +1090,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.9rem;
-  height: 1.9rem;
+  width: 2rem;
+  height: 2rem;
   padding: 0;
   border: none;
   border-radius: 0.45rem;
-  background: #2c2e3e;
-  color: #f2f2f2;
+  background: rgb(var(--color-vista));
+  color: #2b2d3a;
   cursor: pointer;
 }
 
 .grupo-botones button:hover:not(:disabled) {
-  background: #3a3d52;
+  background: color-mix(in srgb, rgb(var(--color-vista)) 80%, white);
 }
 
 .grupo-botones button:disabled {
@@ -1100,13 +1109,18 @@
   opacity: 0.4;
 }
 
-.grupo-botones .grupo-borrar:hover {
+.grupo-botones .grupo-borrar {
   background: #c0392b;
+  color: #fff;
+}
+
+.grupo-botones .grupo-borrar:hover:not(:disabled) {
+  background: #e74c3c;
 }
 
 .grupo-botones .icono {
-  width: 1rem;
-  height: 1rem;
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 /* Mover un equipo a un grupo: el menú del botón de la carpeta */
@@ -1151,14 +1165,14 @@
 }
 
 .menu-grupos button.actual {
-  color: #f1c40f;
+  color: rgb(var(--color-vista));
   font-weight: bold;
 }
 
 .menu-grupos .icono {
   flex: none;
-  width: 1rem;
-  height: 1rem;
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 .equipo-botones .mover {
@@ -1239,7 +1253,7 @@
 /* Tarjeta que se está arrastrando para cambiarla de sitio */
 .equipo-guardado.arrastrando {
   opacity: 0.4;
-  outline: 2px dashed #f1c40f;
+  outline: 2px dashed rgb(var(--color-vista));
 }
 
 .equipo-cabecera {
@@ -1284,16 +1298,16 @@
 }
 
 .equipo-guardado:hover {
-  outline: 2px solid rgba(241, 196, 15, 0.5);
+  outline: 2px solid rgba(var(--color-vista), 0.5);
 }
 
 .equipo-botones .exportar {
-  background: #f1c40f;
+  background: rgb(var(--color-vista));
   color: #2b2d3a;
 }
 
 .equipo-botones .exportar:hover {
-  background: #f4d03f;
+  background: color-mix(in srgb, rgb(var(--color-vista)) 80%, white);
 }
 
 .equipo-botones .exportar:disabled {
@@ -1332,8 +1346,8 @@
   position: relative;
   z-index: 1;
   transform: scale(1.12);
-  background: rgba(241, 196, 15, 0.18);
-  box-shadow: 0 0 0 2px rgba(241, 196, 15, 0.7), 0 4px 12px rgba(0, 0, 0, 0.45);
+  background: rgba(var(--color-vista), 0.18);
+  box-shadow: 0 0 0 2px rgba(var(--color-vista), 0.7), 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 
 /* Pokémon con una sola cara: se sacude al pulsarlo */
@@ -1381,7 +1395,7 @@
   padding: 0.55rem 1rem;
   border: none;
   border-radius: 0.45rem;
-  background: #f1c40f;
+  background: rgb(var(--color-vista));
   color: #2b2d3a;
   font-weight: bold;
   cursor: pointer;
@@ -1554,7 +1568,7 @@
 }
 
 #dialogo-debilidades h2 {
-  color: #f1c40f;
+  color: rgb(var(--color-vista));
 }
 
 .debilidades-vacio {
@@ -1696,4 +1710,21 @@
   width: 1.1rem;
   height: 1.1rem;
   stroke-width: 2.8;
+}
+
+/* ---------- Sombras de la tarjeta de un Pokémon y de sus partes ---------- */
+
+.tarjeta:not(.tarjeta-vacia) {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.tarjeta .ataque,
+.tarjeta .abrir-entreno,
+.tarjeta .quitar-pokemon {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+/* Las tarjetas de ataque, habilidad y objeto se pulsan para escribir otro encima */
+.ataque.cambiable {
+  cursor: pointer;
 }

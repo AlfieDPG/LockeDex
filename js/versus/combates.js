@@ -25,6 +25,7 @@ import {
   equipoDeCombate, guardarEquipoCombate
 } from "../comun/lockes.js";
 import { equipoParaCombate } from "../partida/partidas.js";
+import { confirmar } from "../comun/ventanas.js";
 
 const MARCADORES = ["2-0", "2-1", "1-0", "3-0", "3-1", "3-2"];
 
@@ -312,12 +313,12 @@ export function iniciarCombates(fallo) {
     pintarTerminar();
   });
   dialogoTerminar.querySelector(".terminar-cancelar").addEventListener("click", () => dialogoTerminar.close());
-  dialogoTerminar.querySelector(".terminar-ok").addEventListener("click", () => {
+  dialogoTerminar.querySelector(".terminar-ok").addEventListener("click", async () => {
     const { id, elegido } = terminando;
     const locke = lockePorId(id);
     if (!locke || elegido === null) return;
     const texto = elegido ? `con ${nombreDe(locke, elegido)} como ganador` : "sin ganador";
-    if (!confirm(`¿Cerrar «${locke.nombre}» ${texto}?\n\nEl locke dejará de poder editarse.`)) return;
+    if (!(await confirmar(`¿Terminar «${locke.nombre}» ${texto}?\n\nEl locke dejará de poder editarse.`, { aceptar: "Terminar" }))) return;
     dialogoTerminar.close();
     elegirGanador(id, elegido).catch(alFallar);
   });

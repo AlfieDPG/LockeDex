@@ -17,6 +17,8 @@ import {
   guardarNorma, quitarNorma, alCambiarNormas
 } from "../comun/normas.js";
 import { alCambiarLockes, lockePorId } from "../comun/lockes.js";
+import { colorDeTipo } from "../comun/perfiles.js";
+import { confirmar } from "../comun/ventanas.js";
 
 const PESTANA_LOCKE = "__locke";
 
@@ -34,10 +36,6 @@ let editandoConjunto = null; // id del conjunto que se renombra, o null si es nu
 export function verNormasDeLocke(id) {
   idLocke = id;
   pestana = PESTANA_LOCKE;
-}
-
-function colorSeguro(color) {
-  return /^#[0-9a-f]{6}$/i.test(String(color || "")) ? color : "#3498db";
 }
 
 // ---------- Pintar ----------
@@ -77,7 +75,7 @@ function pintarPestanas() {
       : "",
     boton(ID_GENERALES, NOMBRE_GENERALES),
     ...conjuntos().map((conjunto) => boton(conjunto.id, escaparHTML(conjunto.nombre))),
-    `<button class="pestana-nueva" title="Crear un conjunto de normas">${icono("mas")} Nuevo conjunto</button>`
+    `<button class="pestana-nueva" title="Nuevo conjunto de normas" aria-label="Nuevo conjunto de normas">${icono("mas")}</button>`
   ].join("");
 }
 
@@ -122,7 +120,7 @@ function cuerpoLocke(locke) {
   const normas = normasCompletas(delLocke);
   const tipo = locke.tipo || {};
   return `
-    <section class="normas-grupo del-locke" style="--color-apartado: ${colorSeguro(tipo.color)}">
+    <section class="normas-grupo del-locke" style="--color-apartado: ${colorDeTipo(tipo)}">
       <h2>${icono("libro")} ${escaparHTML(locke.nombre)}${delLocke ? ` <small>· ${escaparHTML(delLocke.nombre)}</small>` : ""}</h2>
       ${normas.length
         ? plantillaLista(normas, false)
@@ -260,7 +258,7 @@ export function iniciar() {
     }
   });
 
-  cuerpo.addEventListener("click", (e) => {
+  cuerpo.addEventListener("click", async (e) => {
     const boton = e.target.closest("button");
     if (!boton) return;
     const conjunto = conjuntoPorId(pestana);
@@ -270,14 +268,14 @@ export function iniciar() {
     } else if (boton.classList.contains("conjunto-renombrar")) {
       abrirConjunto(conjunto);
     } else if (boton.classList.contains("conjunto-borrar")) {
-      if (conjunto && confirm(`¿Borrar el conjunto «${conjunto.nombre}» con todas sus normas?\n\nLos lockes que ya lo usan lo conservan.`)) {
+      if (conjunto && (await confirmar(`¿Borrar el conjunto «${conjunto.nombre}» con todas sus normas?\n\nLos lockes que ya lo usan lo conservan.`))) {
         borrarConjunto(conjunto.id);
       }
     } else if (boton.classList.contains("norma-editar")) {
       abrirNorma(conjunto && conjunto.normas.find((norma) => norma.id === boton.dataset.id));
     } else if (boton.classList.contains("norma-borrar")) {
       const norma = conjunto && conjunto.normas.find((cada) => cada.id === boton.dataset.id);
-      if (norma && confirm(`¿Borrar «${norma.nombre}» de «${conjunto.nombre}»?`)) quitarNorma(conjunto.id, norma.id);
+      if (norma && (await confirmar(`¿Borrar «${norma.nombre}» de «${conjunto.nombre}»?`))) quitarNorma(conjunto.id, norma.id);
     }
   });
 

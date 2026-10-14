@@ -13,6 +13,7 @@ import { textoForma } from "../comun/pokemon.js";
 import { pasteDelEquipo, pasteDeTodos, copiarAlPortapapeles } from "./exportar.js";
 import { sumarContador } from "../comun/contadores.js";
 import { irA } from "../navegacion.js";
+import { confirmar } from "../comun/ventanas.js";
 
 const lista = document.getElementById("lista-equipos");
 
@@ -52,10 +53,11 @@ botonTodos.addEventListener("click", async () => {
   }, 1500);
 });
 
-function abrirEquipo(guardado) {
+async function abrirEquipo(guardado) {
   if (hayCambiosSinGuardar()) {
-    const seguro = confirm(
-      "Tienes cambios sin guardar en el equipo actual. ¿Abrir otro equipo y descartarlos?"
+    const seguro = await confirmar(
+      "Tienes cambios sin guardar en el equipo actual. ¿Abrir otro equipo y descartarlos?",
+      { aceptar: "Descartar y abrir", peligro: true }
     );
     if (!seguro) return;
   }
@@ -64,8 +66,8 @@ function abrirEquipo(guardado) {
   irA("crear");
 }
 
-function borrarEquipo(guardado) {
-  if (!confirm(`¿Borrar el equipo «${guardado.nombre}»?`)) return;
+async function borrarEquipo(guardado) {
+  if (!(await confirmar(`¿Borrar el equipo «${guardado.nombre}»?`))) return;
 
   escribirGuardados(leerGuardados().filter((g) => g.id !== guardado.id));
 
@@ -200,10 +202,10 @@ function renombrarGrupo(titulo, id) {
   campo.addEventListener("click", (e) => e.stopPropagation());
 }
 
-function borrarGrupo(id) {
+async function borrarGrupo(id) {
   const grupo = leerGrupos().find((g) => g.id === id);
   if (!grupo) return;
-  if (!confirm(`¿Borrar el grupo «${grupo.nombre}»?\n\nSus equipos no se borran: pasan a estar sueltos.`)) return;
+  if (!(await confirmar(`¿Borrar el grupo «${grupo.nombre}»?\n\nSus equipos no se borran: pasan a estar sueltos.`))) return;
   escribirGuardados(
     leerGuardados().map((g) => {
       if (g.grupo !== id) return g;

@@ -17,6 +17,7 @@ import { leer, escribir } from "../comun/almacen.js";
 import { icono } from "../comun/iconos.js";
 import { escaparHTML } from "../comun/utilidades.js";
 import { sumarContador } from "../comun/contadores.js";
+import { confirmar } from "../comun/ventanas.js";
 
 const CLAVE = "poketeams-ruletas-v1";
 const MAX_RULETAS = 20;
@@ -336,7 +337,7 @@ function pintarPestanas() {
           `<button data-ruleta="${escaparHTML(ruleta.id)}" class="${ruleta.id === estado.activa ? "activa" : ""}">${escaparHTML(ruleta.nombre || "Sin nombre")}</button>`
       )
       .join("") +
-    (estado.ruletas.length < MAX_RULETAS ? `<button class="ruleta-nueva-pestana">${icono("mas")} Nueva</button>` : "");
+    (estado.ruletas.length < MAX_RULETAS ? `<button class="ruleta-nueva-pestana" title="Nueva ruleta" aria-label="Nueva ruleta">${icono("mas")}</button>` : "");
 }
 
 function pintarHistorial() {
@@ -413,8 +414,8 @@ export function iniciar() {
     pintarPestanas();
   });
 
-  vista.querySelector(".ruleta-borrar").addEventListener("click", () => {
-    if (!confirm(`¿Borrar la ruleta «${actual().nombre}»?`)) return;
+  vista.querySelector(".ruleta-borrar").addEventListener("click", async () => {
+    if (!(await confirmar(`¿Borrar la ruleta «${actual().nombre}»?`))) return;
     estado.ruletas = estado.ruletas.filter((ruleta) => ruleta.id !== estado.activa);
     if (!estado.ruletas.length) estado.ruletas.push({ id: nuevoId(), nombre: "Ruleta", opciones: [] });
     estado.activa = estado.ruletas[0].id;
@@ -471,8 +472,8 @@ export function iniciar() {
     pintarRueda();
   });
 
-  vista.querySelector(".ruleta-vaciar").addEventListener("click", () => {
-    if (!actual().opciones.length || !confirm("¿Quitar todas las opciones de esta ruleta?")) return;
+  vista.querySelector(".ruleta-vaciar").addEventListener("click", async () => {
+    if (!actual().opciones.length || !(await confirmar("¿Quitar todas las opciones de esta ruleta?"))) return;
     actual().opciones = [];
     guardar();
     olvidarResultado();

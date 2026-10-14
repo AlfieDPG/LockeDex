@@ -29,7 +29,8 @@ import {
   ID_GENERALES, NOMBRE_GENERALES, conjuntos, copiaParaLocke, normasDeLocke, normasCompletas
 } from "../comun/normas.js";
 import {
-  tiposDe, miPerfilOProvisional, fallaElPerfil, amigosAceptados, perfilesDe, fallaLasAmistades
+  tiposDe, miPerfilOProvisional, fallaElPerfil, amigosAceptados, perfilesDe, fallaLasAmistades,
+  colorDeTipo
 } from "../comun/perfiles.js";
 import {
   alCambiarLockes, misLockes, invitacionesALockes, estadoDe, fallaLosLockes, soyCreador,
@@ -41,6 +42,7 @@ import {
   alternarRom
 } from "./combates.js";
 import { iniciarPartida, plantillaPartida, accionPartida } from "./partida.js";
+import { confirmar } from "../comun/ventanas.js";
 
 let seccion = null;
 let lista = null;
@@ -56,10 +58,6 @@ let invitables = []; // perfiles que salen para invitar, para copiar su nombre y
 let elegidos = [];   // los que se van a meter al guardar (perfiles)
 let dialogoElegir = null;
 let editando = null; // id del locke que se está editando, o null si se está creando uno
-
-function colorSeguro(color) {
-  return /^#[0-9a-f]{6}$/i.test(String(color || "")) ? color : "#3498db";
-}
 
 // ---------- Pintar ----------
 //
@@ -187,7 +185,7 @@ function plantillaLocke(locke) {
 
   return `
     <article class="locke ${cerrado ? "cerrado" : "abierto"}" data-id="${escaparHTML(locke.id)}"
-             style="--color-locke: ${colorSeguro(tipo.color)}">
+             style="--color-locke: ${colorDeTipo(tipo)}">
       <header class="locke-cabecera">
         <span class="locke-tipo">${escaparHTML(tipo.nombre)}</span>
         <h2 class="locke-titulo">${escaparHTML(locke.nombre)}</h2>
@@ -350,7 +348,7 @@ async function quitarDesdeElDialogo(uid) {
   // A quien ya juega se le pregunta: pierde sus vidas y victorias en este locke
   if (estadoDe(locke, uid) !== "pendiente") {
     const nombre = (locke.nombres || {})[uid] || "este jugador";
-    if (!confirm(`¿Expulsar a ${nombre} de «${locke.nombre}»? Perderá sus vidas y victorias en este locke.`)) return;
+    if (!(await confirmar(`¿Expulsar a ${nombre} de «${locke.nombre}»?`+"\n\n"+`Perderá sus vidas y victorias en este locke.`))) return;
   }
 
   await quitarDeLocke(locke.id, uid);
@@ -640,7 +638,7 @@ async function guardar() {
 async function borrarDesdeElDialogo() {
   const locke = editando ? lockePorId(editando) : null;
   if (!locke) return;
-  if (!confirm(`¿Borrar «${locke.nombre}»? Lo pierden todos los que juegan.`)) return;
+  if (!(await confirmar(`¿Borrar «${locke.nombre}»?`+"\n\n"+"Lo pierden todos los que juegan."))) return;
 
   await borrarLocke(locke.id);
   dialogo.close();
@@ -761,7 +759,7 @@ export function iniciar() {
     });
   });
 
-  lista.addEventListener("click", (e) => {
+  lista.addEventListener("click", async (e) => {
     if (e.target.closest(".versus-ver-mas")) {
       verTodos = !verTodos;
       pintar();
@@ -801,7 +799,7 @@ export function iniciar() {
     } else if (boton.classList.contains("locke-quitar-lista")) {
       alternarQuitado(id);
     } else if (boton.classList.contains("locke-borrar")) {
-      if (confirm(`¿Borrar «${locke.nombre}»? Lo pierden todos los que juegan.`)) tarea = borrarLocke(id);
+      if (await confirmar(`¿Borrar «${locke.nombre}»?`+"\n\n"+"Lo pierden todos los que juegan.")) tarea = borrarLocke(id);
     } else if (boton.classList.contains("locke-terminar")) {
       abrirTerminar(id);
     } else if (boton.classList.contains("locke-combate")) {

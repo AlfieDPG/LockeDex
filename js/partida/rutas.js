@@ -16,7 +16,8 @@ const APARTADOS = ["rutas", "ciudades", "postgame", "eventos"];
 
 // Ediciones de cada juego: los Pokémon que vienen de otro juego no cuentan
 const EDICIONES = {
-  xy: ["X", "Y"], oras: ["Rubí Omega", "Zafiro Alfa"], sm: ["Sol", "Luna"], usum: ["Ultrasol", "Ultraluna"]
+  dp: ["Diamante", "Perla"], platino: ["Platino"], hgss: ["HeartGold", "SoulSilver"], bw: ["Negro", "Blanco"],
+  b2w2: ["Negro 2", "Blanco 2"], xy: ["X", "Y"], oras: ["Rubí Omega", "Zafiro Alfa"], sm: ["Sol", "Luna"], usum: ["Ultrasol", "Ultraluna"]
 };
 
 // Lugares que en «Rutas» van partidos en zonas o se llaman distinto. Por el número del lugar
@@ -34,7 +35,21 @@ const POR_NUMERO = {
 };
 const POR_NOMBRE = {
   "Área Volcánica Wela": "Área Volcánica del Wela",
-  "Súper Ultraganga": "Supermercado Ultraganga"
+  "Súper Ultraganga": "Supermercado Ultraganga",
+  "Zona de Descanso": "Zona Descanso",
+  "Torre BELLSPROUT": "Torre Bellsprout",
+  "Pozo SLOWPOKE": "Pozo Slowpoke",
+  "Torre Campana": "Torre Campana (Torre Hojalata)",
+  "Mt. Mortero": "Monte Mortero",
+  "Entrada Safari": "Entrada Zona Safari",
+  "Alm. Frigoríficos": "Almacenes Frigoríficos",
+  "Torre Duodraco": "Torre Dracoespiral",
+  "Puente Villa": "Puente Aldea",
+  "Puente Progreso": "Puente Maravilla",
+  "Laboratorio P+P": "Laboratorio P2",
+  "Estancia Orientación": "Cámara Orientación",
+  "Bosque Blanco": "Bosque Blanco (solo Edición Blanca)",
+  "Villa Horroris": "Quinta Horroris"
 };
 
 // «Villa Raíz / Ruta 101: Pokémon inicial» -> ["Villa Raíz", "Ruta 101"]
@@ -82,7 +97,8 @@ export function marcarCapturas(partida, idJuego, mirados) {
   const nuevos = [];
   for (const p of todos) {
     mirados.add(p.llave);
-    const lugar = (POR_NUMERO[idJuego] || {})[p.lugarN] || POR_NOMBRE[p.lugar] || p.lugar;
+    const alias = POR_NOMBRE[p.lugar];
+    const lugar = (POR_NUMERO[idJuego] || {})[p.lugarN] || (alias && (porTexto.has(alias) || eventos.some((e) => e.lugares.includes(alias))) ? alias : p.lugar);
 
     let elegido = null;
     if (porTexto.has(lugar) && !usadosTexto.has(lugar)) elegido = { clave: porTexto.get(lugar), texto: lugar, lugar };

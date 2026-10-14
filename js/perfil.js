@@ -22,7 +22,7 @@ import { escaparHTML, fechaLarga } from "./comun/utilidades.js";
 import { usuarioActual } from "./comun/nube.js";
 import {
   miPerfil, alCambiarMiPerfil, cambiarMote, guardarMiPerfil, amigosAceptados, perfilesDeAmigos,
-  alCambiarPerfilesAmigos, perfilesDe
+  alCambiarPerfilesAmigos, perfilesDe, colorDeTipo
 } from "./comun/perfiles.js";
 import { alCambiarLockes } from "./comun/lockes.js";
 import { caraACara } from "./comun/cara-a-cara.js";
@@ -352,7 +352,7 @@ function plantillaPalmares(perfil, mio = true) {
     .map((ganado, i) => ({ ganado, i }))
     .sort((uno, otro) => String(otro.ganado.fechaFin || "").localeCompare(String(uno.ganado.fechaFin || "")) || otro.i - uno.i)
     .map(({ ganado }) => ganado);
-  const color = (ganado) => (/^#[0-9a-f]{6}$/i.test(String((ganado.tipo || {}).color || "")) ? ganado.tipo.color : "#3498db");
+  const color = (ganado) => colorDeTipo(ganado.tipo);
   return `
     <section class="perfil-apartado">
       <h3>

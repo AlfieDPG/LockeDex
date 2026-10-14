@@ -18,6 +18,7 @@ import {
 } from "../comun/personalizados.js";
 import { apuntarEnLockesDelJuego } from "../comun/lockes.js";
 import { plantillaCaptura, abrirCaptura, iniciarCapturas, quitarCaptura, quitarCapturasDelJuego } from "./capturas.js";
+import { confirmar, avisar } from "../comun/ventanas.js";
 
 // NO cambiar estas claves: si se cambian, se pierden las rutas marcadas
 const CLAVE_MARCADAS = "poketeams-rutas-v2"; // { idJuego: ["rutas:Ruta 1", ...] }
@@ -289,13 +290,13 @@ function activarEditor() {
     anadirLugar(e.target);
   });
 
-  lista.addEventListener("click", (e) => {
+  lista.addEventListener("click", async (e) => {
     if (!juego || !juego.propio || !editando) return;
     const boton = e.target.closest("button");
     if (!boton) return;
 
     if (boton.classList.contains("rutas-ed-borrar")) {
-      if (!confirm(`¿Borrar «${juego.nombre}»?`)) return;
+      if (!(await confirmar(`¿Borrar «${juego.nombre}»?`))) return;
       delete marcadas[juego.id];
       escribir(CLAVE_MARCADAS, marcadas);
       rutasPropias.borrar(juego.id);
@@ -314,7 +315,7 @@ function activarEditor() {
 
     if (boton.classList.contains("rutas-ed-quitar-apartado")) {
       const seccion = juego.secciones[indice];
-      if (seccion.lugares.length && !confirm(`¿Quitar «${seccion.titulo || "este apartado"}» y sus ${seccion.lugares.length} lugares?`)) return;
+      if (seccion.lugares.length && !(await confirmar(`¿Quitar «${seccion.titulo || "este apartado"}» y sus ${seccion.lugares.length} lugares?`))) return;
       cambiarSecciones((secciones) => secciones.splice(indice, 1));
     } else if (boton.classList.contains("ruta-ed-quitar")) {
       const posicion = Number(boton.closest(".ruta-ed").dataset.lugar);
@@ -362,9 +363,9 @@ export function iniciar() {
   buscador.addEventListener("input", filtrar);
   vigilante.observe(lista);
 
-  vista.querySelector(".rutas-reiniciar").addEventListener("click", () => {
+  vista.querySelector(".rutas-reiniciar").addEventListener("click", async () => {
     if (usadas.size === 0) return;
-    if (!confirm(`¿Desmarcar todos los lugares de ${juego.nombre}?`)) return;
+    if (!(await confirmar(`¿Desmarcar todos los lugares de ${juego.nombre}?`))) return;
     usadas.clear();
     quitarCapturasDelJuego(juego.id);
     guardar();
@@ -382,7 +383,7 @@ export function iniciar() {
     alNuevo() {
       const nueva = rutasPropias.crear("Nuevo juego");
       if (!nueva) {
-        alert("Has llegado al máximo de listas personalizadas.");
+        avisar("Has llegado al máximo de listas personalizadas.");
         return;
       }
       rutasPropias.guardar({ ...nueva, secciones: [{ titulo: "Rutas", lugares: [] }] });

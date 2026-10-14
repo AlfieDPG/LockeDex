@@ -39,6 +39,12 @@ export const TIPOS_POR_DEFECTO = [
   { id: "locke", nombre: "Locke", color: "#3498db" }
 ];
 
+// El color con el que se pinta un tipo de locke (el de por defecto si no tiene uno válido)
+export function colorDeTipo(tipo) {
+  const color = String((tipo && tipo.color) || "");
+  return /^#[0-9a-f]{6}$/i.test(color) ? color : TIPOS_POR_DEFECTO[0].color;
+}
+
 const PERFIL_VACIO = { nombre: "Jugador", foto: "", tipos: [], ganados: [] };
 
 // Un perfil tal como lo enseña la web. Si tiene mote, su nombre ES el mote, ponga lo que

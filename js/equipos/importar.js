@@ -10,6 +10,7 @@ import { quitarAcentos, normalizarNombre, copiaProfunda } from "../comun/utilida
 import { irA } from "../navegacion.js";
 import { sumarContador } from "../comun/contadores.js";
 import { entrenoDesdeShowdown } from "./entreno.js";
+import { confirmar, avisar } from "../comun/ventanas.js";
 
 // ---------- Importar paste de Showdown ----------
 
@@ -284,20 +285,21 @@ async function importarPaste(texto) {
   const interpretado = interpretarPaste(texto);
 
   if (interpretado.pokemon.length === 0) {
-    alert("No he encontrado ningún Pokémon en ese texto. Revisa que sea un paste de Showdown.");
+    await avisar("No he encontrado ningún Pokémon en ese texto. Revisa que sea un paste de Showdown.");
     return false;
   }
 
   if (hayCambiosSinGuardar()) {
-    const seguro = confirm(
-      "Tienes cambios sin guardar en el equipo actual. ¿Reemplazarlo con el equipo importado?"
+    const seguro = await confirmar(
+      "Tienes cambios sin guardar en el equipo actual. ¿Reemplazarlo con el equipo importado?",
+      { aceptar: "Reemplazar", peligro: true }
     );
     if (!seguro) return false;
   }
 
   const { validos, problemas } = await resolverEquipo(interpretado);
   if (validos.length === 0) {
-    alert("No he podido reconocer ningún Pokémon de ese texto:\n\n• " + problemas.join("\n• "));
+    await avisar("No he podido reconocer ningún Pokémon de ese texto:\n\n• " + problemas.join("\n• "));
     return false;
   }
 
@@ -306,7 +308,7 @@ async function importarPaste(texto) {
   irA("crear");
 
   if (problemas.length > 0) {
-    alert("Equipo importado, pero algunas cosas no se han podido reconocer:\n\n• " + problemas.join("\n• "));
+    await avisar("Equipo importado, pero algunas cosas no se han podido reconocer:\n\n• " + problemas.join("\n• "));
   } else {
     mostrarAviso("Equipo importado ✔");
   }
@@ -365,7 +367,7 @@ async function importarVarios(trozos, alAvanzar) {
   }
 
   if (nuevos.length === 0) {
-    alert(
+    await avisar(
       repetidos
         ? "Esos equipos ya estaban en «Mis equipos»."
         : "No he podido reconocer ningún equipo de ese texto." + (problemas.length ? "\n\n• " + problemas.join("\n• ") : "")
@@ -386,9 +388,9 @@ async function importarVarios(trozos, alAvanzar) {
     const MAX = 20;
     const lista = problemas.slice(0, MAX).join("\n• ") +
       (problemas.length > MAX ? `\n…y ${problemas.length - MAX} más` : "");
-    alert(`${resumen}, pero algunas cosas no se han podido reconocer:\n\n• ${lista}`);
+    await avisar(`${resumen}, pero algunas cosas no se han podido reconocer:\n\n• ${lista}`);
   } else {
-    alert(`${resumen} ✔`);
+    await avisar(`${resumen} ✔`);
   }
   return true;
 }

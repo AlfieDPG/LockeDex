@@ -16,6 +16,7 @@ import { icono } from "../comun/iconos.js";
 import { campoNumero } from "../comun/numero.js";
 import { capsPropios, tipoDeCombate, MAX_COMBATES } from "../comun/personalizados.js";
 import { apuntarEnLockesDelJuego } from "../comun/lockes.js";
+import { confirmar, avisar } from "../comun/ventanas.js";
 
 function retrato(c) {
   const url = juego.propio ? c.imagen : retratoDeLaWeb(juego.id, c.nombre);
@@ -277,7 +278,7 @@ function activarEditor() {
     }
   });
 
-  lista.addEventListener("click", (e) => {
+  lista.addEventListener("click", async (e) => {
     if (!juego || !juego.propio || !editando) return;
     const boton = e.target.closest("button");
     if (!boton) return;
@@ -287,7 +288,7 @@ function activarEditor() {
       return;
     }
     if (boton.classList.contains("caps-ed-borrar")) {
-      if (!confirm(`¿Borrar «${juego.nombre}»?`)) return;
+      if (!(await confirmar(`¿Borrar «${juego.nombre}»?`))) return;
       delete guardados[juego.id];
       delete multiplicadores[juego.id];
       escribir(CLAVE_SUPERADOS, guardados);
@@ -335,9 +336,9 @@ export function iniciar() {
 
   activarEditor();
 
-  vista.querySelector(".caps-reiniciar").addEventListener("click", () => {
+  vista.querySelector(".caps-reiniciar").addEventListener("click", async () => {
     if (superados.size === 0) return;
-    if (!confirm(`¿Desmarcar todos los combates de ${juego.nombre}?`)) return;
+    if (!(await confirmar(`¿Desmarcar todos los combates de ${juego.nombre}?`))) return;
     superados.clear();
     guardados[juego.id] = [];
     escribir(CLAVE_SUPERADOS, guardados);
@@ -358,7 +359,7 @@ export function iniciar() {
     alNuevo() {
       const nueva = capsPropios.crear("Nuevo juego");
       if (!nueva) {
-        alert("Has llegado al máximo de listas personalizadas.");
+        avisar("Has llegado al máximo de listas personalizadas.");
         return;
       }
       abrirEditando = true;

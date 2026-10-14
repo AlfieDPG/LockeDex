@@ -11,6 +11,7 @@
 import { leer, escribir } from "../comun/almacen.js";
 import { pokemonParaCopia } from "../comun/pokemon.js";
 import { leerPartida3DS, esPartida3DS } from "./tresds.js";
+import { leerPartidaDS, esPartidaDS } from "./nds.js";
 import { convertirPartida } from "./convertir.js";
 import { marcarCapturas } from "./rutas.js";
 
@@ -18,9 +19,12 @@ import { marcarCapturas } from "./rutas.js";
 const CLAVE = "poketeams-partidas-v1";
 
 // Juegos que se saben leer (ids de js/comun/juegos.js)
-export const JUEGOS_LEIBLES = ["xy", "oras", "sm", "usum"];
+export const JUEGOS_LEIBLES = ["dp", "platino", "hgss", "bw", "b2w2", "xy", "oras", "sm", "usum"];
 
-const NOMBRES = { xy: "X / Y", oras: "Rubí Omega / Zafiro Alfa", sm: "Sol / Luna", usum: "Ultrasol / Ultraluna" };
+const NOMBRES = {
+  dp: "Diamante / Perla", platino: "Platino", hgss: "HeartGold / SoulSilver", bw: "Negro / Blanco",
+  b2w2: "Negro 2 / Blanco 2", xy: "X / Y", oras: "Rubí Omega / Zafiro Alfa", sm: "Sol / Luna", usum: "Ultrasol / Ultraluna"
+};
 
 export function sePuedeLeer(locke) {
   return Boolean(locke && JUEGOS_LEIBLES.includes(locke.juego));
@@ -67,11 +71,12 @@ export function alternarCajaMuertos(idLocke, posicion) {
 
 // Lee el archivo y lo guarda. Devuelve { partida } o { error } (texto para enseñar).
 export async function procesarArchivo(locke, bytes, archivo = "") {
-  if (!esPartida3DS(bytes)) return { error: "Ese archivo no es una partida que se sepa leer." };
+  const deDS = !esPartida3DS(bytes) && esPartidaDS(bytes);
+  if (!deDS && !esPartida3DS(bytes)) return { error: "Ese archivo no es una partida que se sepa leer." };
 
   let leida;
   try {
-    leida = leerPartida3DS(bytes);
+    leida = deDS ? leerPartidaDS(bytes) : leerPartida3DS(bytes);
   } catch (error) {
     // Lo normal: el emulador estaba a mitad de guardar
     return { error: "No se ha podido leer la partida.", reintentar: true };

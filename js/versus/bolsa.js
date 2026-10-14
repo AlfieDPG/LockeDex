@@ -8,14 +8,16 @@ import { escaparHTML, quitarAcentos } from "../comun/utilidades.js";
 import { activarAutocompletado } from "../comun/autocompletado.js";
 import { imagenConRespaldo } from "../comun/imagenes.js";
 import { campoNumero } from "../comun/numero.js";
-import { JUEGOS } from "../partida/tresds.js";
-import { leerMochila, escribirMochila, bolsillosDe, cantidadEnMochila, CARAMELO_RARO } from "../partida/mochila3ds.js";
+import { formatoDeSeguro, CARAMELO_RARO } from "../partida/formato.js";
 import {
   prepararDatos, partidaDeTrabajo, cambiarPartida, objetosDe, nombreObjeto, bolsilloDe, urlsIconoDe, iconoDe, LIMITES
 } from "./editor-comun.js";
+import { avisar, preguntar } from "../comun/ventanas.js";
 
-const NOMBRES = { objetos: "Objetos", medicinas: "Medicinas", mt: "MT y MO", bayas: "Bayas", clave: "Objetos clave" };
-const ICONOS = { objetos: "objeto", medicinas: "pocion", mt: "disco", bayas: "baya", clave: "llave" };
+const NOMBRES = {
+  objetos: "Objetos", medicinas: "Medicinas", balls: "Balls", mt: "MT y MO", bayas: "Bayas", cartas: "Cartas", combate: "Combate", clave: "Objetos clave"
+};
+const ICONOS = { objetos: "objeto", medicinas: "pocion", balls: "pokeball", mt: "disco", bayas: "baya", cartas: "etiqueta", combate: "espadas", clave: "llave" };
 
 let elegido = "objetos"; // el bolsillo que se ve
 
@@ -35,9 +37,9 @@ function fila(e, bolsillo, juego) {
 export async function pintarBolsa(contenedor, idLocke) {
   await prepararDatos();
   const bytes = await partidaDeTrabajo(idLocke);
-  const juego = JUEGOS[bytes.length].id;
-  const bolsillos = bolsillosDe(bytes);
-  const mochila = leerMochila(bytes);
+  const { id: juego, mochila: m } = formatoDeSeguro(bytes);
+  const bolsillos = m.bolsillosDe(bytes);
+  const mochila = m.leerMochila(bytes);
   if (!bolsillos.some((b) => b.id === elegido)) elegido = bolsillos[0].id;
   const bolsillo = bolsillos.find((b) => b.id === elegido);
   const lista = mochila[elegido];
@@ -64,7 +66,7 @@ export async function pintarBolsa(contenedor, idLocke) {
     // Los de este bolsillo que existen en el juego y no están ya
     const ya = new Set(lista.map((e) => e.objeto));
     const opciones = objetosDe(juego)
-      .filter((o) => o.id <= LIMITES[juego].objetos && !ya.has(o.id) && bolsilloDe(o.id) === elegido)
+      .filter((o) => o.id <= LIMITES[juego].objetos && !ya.has(o.id) && bolsilloDe(o.id, juego) === elegido)
       .map((o) => {
         const es = nombreObjeto(o.id, juego);
         return { ...o, es, buscar: quitarAcentos(`${es} ${o.en}`) };
@@ -78,23 +80,23 @@ export async function pintarBolsa(contenedor, idLocke) {
 // Cambia la bolsa de la copia en memoria: hacer(mochila) la toca
 function cambiar(idLocke, hacer, contenedor) {
   cambiarPartida(idLocke, (original) => {
-    const mochila = leerMochila(original);
+    const m = formatoDeSeguro(original).mochila;
+    const mochila = m.leerMochila(original);
     const antes = JSON.stringify(mochila);
     hacer(mochila);
     if (JSON.stringify(mochila) === antes) throw new Error(""); // nada que cambiar
-    return { nuevo: escribirMochila(original, mochila) };
+    return { nuevo: m.escribirMochila(original, mochila) };
   }, "bolsa").catch((error) => {
     if (!error.message) return;
     console.error(error);
-    alert(error.message || "No se ha podido cambiar la bolsa.");
+    avisar(error.message || "No se ha podido cambiar la bolsa.");
     pintarBolsa(contenedor, idLocke).catch((otro) => console.error(otro));
   });
 }
 
 // Atajo: cuántos Caramelos Raros llevas (van en las medicinas)
 async function caramelos(contenedor, idLocke) {
-  const antes = cantidadEnMochila(await partidaDeTrabajo(idLocke), CARAMELO_RARO);
-  const texto = prompt("¿Cuántos Caramelos Raros quieres llevar? (hasta 999)", String(antes));
+  const texto = await preguntar("¿Cuántos Caramelos Raros quieres llevar? (hasta 999)", "999");
   if (texto === null || texto.trim() === "") return;
   const cantidad = Math.max(0, Math.min(999, Math.floor(Number(texto)) || 0));
   cambiar(idLocke, (m) => {

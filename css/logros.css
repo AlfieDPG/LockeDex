@@ -133,8 +133,51 @@
   background: linear-gradient(90deg, #e67e22, #f1c40f);
 }
 
+/* Todos / Conseguidos / Por conseguir: pestañas que salen de la línea dorada de debajo (como
+   las de Rutas, pero al revés), con una curva a cada lado que las une a ella */
 .logros-filtro {
+  gap: 1.3rem;
   margin-bottom: 0.4rem;
+  padding: 0 0 0 1.3rem;
+  border-bottom: 3px solid rgb(var(--color-vista));
+}
+
+.logros-filtro button {
+  --fondo: transparent;
+  position: relative;
+  padding: 0.55rem 1rem 0.5rem;
+  border-radius: 0.65rem 0.65rem 0 0;
+  background: var(--fondo);
+}
+
+.logros-filtro button:hover {
+  --fondo: rgba(255, 255, 255, 0.08);
+  background: var(--fondo);
+}
+
+.logros-filtro button.activa {
+  --fondo: rgb(var(--color-vista));
+  background: var(--fondo);
+  color: #1e1f2b;
+}
+
+.logros-filtro button:is(:hover, .activa)::before,
+.logros-filtro button:is(:hover, .activa)::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.logros-filtro button:is(:hover, .activa)::before {
+  right: 100%;
+  background: radial-gradient(circle at 0 0, transparent 1.1rem, var(--fondo) calc(1.1rem + 0.5px));
+}
+
+.logros-filtro button:is(:hover, .activa)::after {
+  left: 100%;
+  background: radial-gradient(circle at 100% 0, transparent 1.1rem, var(--fondo) calc(1.1rem + 0.5px));
 }
 
 .logros-grupo h2 {

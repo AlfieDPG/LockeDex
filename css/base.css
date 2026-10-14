@@ -6,7 +6,7 @@ html {
   /* Los controles del navegador (listas de los desplegables, calendario, selector de color...)
      en oscuro, y las casillas y barras en el amarillo de la web */
   color-scheme: dark;
-  accent-color: #f1c40f;
+  accent-color: rgb(var(--color-vista));
 }
 
 /* ---------- Controles del navegador, con los colores de la web ---------- */
@@ -28,7 +28,7 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 input[type="search"]::-webkit-search-cancel-button:hover {
-  background: #f1c40f;
+  background: rgb(var(--color-vista));
 }
 
 /* El icono del calendario de las fechas */
@@ -51,12 +51,12 @@ input[type="number"] {
 
 /* Texto seleccionado y el contorno al moverse con el teclado */
 ::selection {
-  background: rgba(241, 196, 15, 0.35);
+  background: rgba(var(--color-vista), 0.35);
   color: #fff;
 }
 
 :focus-visible {
-  outline: 2px solid #f1c40f;
+  outline: 2px solid rgb(var(--color-vista));
   outline-offset: 2px;
 }
 
@@ -157,7 +157,7 @@ body {
 }
 
 .numero-pasos button:hover {
-  background: #f1c40f;
+  background: rgb(var(--color-vista));
   color: #1e1f2b;
 }
 
@@ -217,7 +217,7 @@ body {
 
 .sugerencias:not(:empty) {
   padding: 0.25rem;
-  border: 1px solid rgba(241, 196, 15, 0.4);
+  border: 1px solid rgba(var(--color-vista), 0.4);
 }
 
 .sugerencias .opcion {
@@ -230,7 +230,7 @@ body {
 }
 
 .sugerencias .opcion.marcada {
-  background: #f1c40f;
+  background: rgb(var(--color-vista));
   color: #1e1f2b;
 }
 
@@ -382,15 +382,15 @@ dialog textarea {
   position: fixed;
   z-index: 1000;
   border-radius: 2px;
-  background: #f1c40f;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 10px rgba(241, 196, 15, 0.75);
+  background: rgb(var(--color-vista));
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 10px rgba(var(--color-vista), 0.75);
   pointer-events: none;
 }
 
 .marca-soltar.marco {
-  border: 3px solid #f1c40f;
+  border: 3px solid rgb(var(--color-vista));
   border-radius: 0.6rem;
-  background: rgba(241, 196, 15, 0.12);
+  background: rgba(var(--color-vista), 0.12);
 }
 
 .marca-soltar[hidden] {
@@ -506,7 +506,7 @@ dialog textarea {
   gap: 0.4rem;
   padding: 0.4rem 0.55rem;
   border-radius: 0.45rem;
-  color: #f1c40f;
+  color: rgb(var(--color-vista));
   font-weight: bold;
   font-size: 0.85rem;
   cursor: pointer;
@@ -532,7 +532,7 @@ dialog textarea {
 
 .elegir-equipo-grupo[open] {
   padding-left: 0.6rem;
-  border-left: 2px solid rgba(241, 196, 15, 0.35);
+  border-left: 2px solid rgba(var(--color-vista), 0.35);
 }
 
 .elegir-equipo-vacio {
@@ -546,4 +546,154 @@ dialog textarea {
   padding-bottom: 0.3rem;
   margin-bottom: 0.3rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ---------- Avisos y preguntas (js/comun/ventanas.js) ---------- */
+
+.ventana-web {
+  width: min(26rem, 92vw);
+  padding: 1.15rem 1.2rem 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 3px 0 rgb(var(--color-vista));
+}
+
+.ventana-texto p {
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  opacity: 1;
+}
+
+.ventana-texto p:first-child {
+  font-weight: bold;
+}
+
+.ventana-texto p:last-child {
+  margin-bottom: 0;
+}
+
+.ventana-campo {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0.7rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 0.45rem;
+  background: #1e1f2b;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.ventana-campo:focus {
+  outline: none;
+  border-color: rgb(var(--color-vista));
+}
+
+.ventana-web .dialogo-botones button {
+  font-family: inherit;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.ventana-cancelar {
+  background: #3a3d52;
+  color: #f2f2f2;
+}
+
+.ventana-cancelar:hover {
+  background: #4a4e68;
+}
+
+.ventana-aceptar {
+  background: rgb(var(--color-vista));
+  color: #fff;
+}
+
+.ventana-aceptar:hover {
+  background: color-mix(in srgb, rgb(var(--color-vista)) 85%, white);
+}
+
+.ventana-peligro {
+  background: #c0392b;
+  color: #fff;
+}
+
+.ventana-peligro:hover {
+  background: #e74c3c;
+}
+/* ---------- Desplegables (<select>) con el estilo de la web ----------
+   La lista que se abre, como la de las sugerencias al escribir. Solo en los navegadores que
+   dejan cambiarla (Chrome y Edge recientes); en los demás sale la del sistema, como antes. */
+
+@supports (appearance: base-select) {
+  select,
+  ::picker(select) {
+    appearance: base-select;
+  }
+
+  select {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-color: transparent;
+    cursor: pointer;
+  }
+
+  select::picker-icon {
+    color: rgba(242, 242, 242, 0.6);
+    transition: rotate 0.15s;
+  }
+
+  select:open::picker-icon {
+    rotate: 180deg;
+  }
+
+  ::picker(select) {
+    margin-top: 0.25rem;
+    max-height: min(22rem, 55vh);
+    padding: 0.25rem;
+    border: 1px solid rgba(var(--color-vista), 0.4);
+    border-radius: 0.5rem;
+    background: #1e1f2b;
+    color: #f2f2f2;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
+    font-size: 0.92rem;
+  }
+
+  select option {
+    padding: 0.4rem 0.55rem;
+    border-radius: 0.35rem;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  select option::checkmark {
+    display: none;
+  }
+
+  select option:checked {
+    color: rgb(var(--color-vista));
+  }
+
+  select option:hover,
+  select option:focus-visible {
+    outline: none;
+    background: rgb(var(--color-vista));
+    color: #1e1f2b;
+  }
+
+  select optgroup {
+    padding-top: 0.2rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: rgba(242, 242, 242, 0.55);
+  }
+
+  select optgroup option {
+    font-size: 0.92rem;
+    text-transform: none;
+    letter-spacing: normal;
+    color: #f2f2f2;
+  }
 }

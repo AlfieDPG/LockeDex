@@ -25,7 +25,7 @@ main {
   border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Un poco más oscuro que el panel (#171822), para que se note dónde acaba el título */
+/* Del mismo color que el panel; solo una línea fina separa el título del menú */
 .logo {
   display: flex;
   align-items: center;
@@ -33,7 +33,7 @@ main {
   gap: 0.55rem;
   margin: 0;
   padding: 0.8rem 1rem;
-  background: #0f1017;
+  background: #171822;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 1.45rem;
 }
@@ -71,34 +71,59 @@ main {
   cursor: pointer;
 }
 
-.menu-lateral button:hover {
-  background: rgba(255, 255, 255, 0.08);
+/* Cada botón con el color de su sección, pero solo en el icono: el texto en blanco y sin
+   recuadro (así no queda un arcoíris). Al pasar el ratón, un tinte de su color; la sección
+   abierta, el tinte más fuerte y una rayita de su color a la izquierda. */
+.menu-lateral [data-vista],
+.menu-lateral .grupo-menu {
+  --color-boton: 231, 76, 60;
+}
+
+.menu-lateral [data-vista="lockes"]      { --color-boton: 214, 88, 76; }
+.menu-lateral .grupo-menu,
+.menu-lateral .submenu button            { --color-boton: 91, 141, 239; }
+.menu-lateral [data-vista="rutas"]       { --color-boton: 82, 183, 136; }
+.menu-lateral [data-vista="levelcaps"]   { --color-boton: 0, 184, 169; }
+.menu-lateral [data-vista="pokedex"]     { --color-boton: 240, 100, 130; }
+.menu-lateral [data-vista="calculadora"] { --color-boton: 155, 110, 230; }
+.menu-lateral [data-vista="normas"]      { --color-boton: 205, 165, 100; }
+.menu-lateral [data-vista="ruleta"]      { --color-boton: 240, 150, 60; }
+.menu-lateral [data-vista="amigos"]      { --color-boton: 80, 190, 215; }
+.menu-lateral [data-vista="logros"]      { --color-boton: 241, 196, 15; }
+
+.menu-lateral :is(button, summary) .icono {
+  color: rgb(var(--color-boton, 242, 242, 242));
+}
+
+.menu-lateral button:hover,
+.grupo-menu summary:hover {
+  background: rgba(var(--color-boton, 255, 255, 255), 0.12);
 }
 
 .menu-lateral button.activa {
-  background: #c0392b;
+  background: rgba(var(--color-boton), 0.22);
+  box-shadow: inset 3px 0 0 rgb(var(--color-boton));
   color: #fff;
 }
 
-/* Versus: arriba del todo y en amarillo, para que se vea que es lo principal */
+/* Lockes: arriba del todo y destacado, en su rojo (es lo principal) */
 .menu-lateral .boton-destacado {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
   margin-bottom: 0.35rem;
-  background: rgba(241, 196, 15, 0.12);
-  color: #f1c40f;
-  box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.45);
+  background: rgba(var(--color-boton), 0.14);
+  box-shadow: inset 0 0 0 1px rgba(var(--color-boton), 0.45);
 }
 
 .menu-lateral .boton-destacado:hover {
-  background: rgba(241, 196, 15, 0.22);
+  background: rgba(var(--color-boton), 0.24);
 }
 
 .menu-lateral .boton-destacado.activa {
-  background: #f1c40f;
-  color: #2b2d3a;
-  box-shadow: none;
+  background: rgb(var(--color-boton));
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.menu-lateral .boton-destacado.activa .icono {
+  color: #fff;
 }
 
 .menu-lateral .icono {
@@ -107,24 +132,7 @@ main {
   height: 1.05rem;
 }
 
-/* El resto de secciones, como Versus pero todas en el mismo rojo de la web (sin arcoíris) */
-.menu-lateral .boton-seccion {
-  background: rgba(231, 76, 60, 0.1);
-  color: #f0705f;
-  box-shadow: inset 0 0 0 1px rgba(231, 76, 60, 0.4);
-}
-
-.menu-lateral .boton-seccion:hover {
-  background: rgba(231, 76, 60, 0.2);
-}
-
-.menu-lateral button.boton-seccion.activa {
-  background: #c0392b;
-  color: #fff;
-  box-shadow: none;
-}
-
-/* Lo de dentro de «Equipos»: más pequeño y sin recuadro, colgando del grupo */
+/* Lo de dentro de «Equipos»: más pequeño, colgando del grupo con una rayita de su color */
 .submenu button {
   padding: 0.45rem 0.7rem;
   font-size: 0.88rem;
@@ -134,7 +142,6 @@ main {
 .submenu .icono {
   width: 0.9rem;
   height: 0.9rem;
-  opacity: 0.8;
 }
 
 /* ---------- Campana de invitaciones (a la derecha de tu nombre) ---------- */
@@ -714,7 +721,7 @@ button.perfil-avatar:hover .perfil-avatar-lapiz {
 
 #dialogo-perfil .perfil-nombre-campo:focus {
   outline: none;
-  border-color: #f1c40f;
+  border-color: rgb(var(--color-vista));
 }
 
 .perfil-nombre-form button {
@@ -950,11 +957,11 @@ button.perfil-avatar:hover .perfil-avatar-lapiz {
 }
 
 button.perfil-fondo:hover:not(:disabled) {
-  border-color: rgba(241, 196, 15, 0.5);
+  border-color: rgba(var(--color-vista), 0.5);
 }
 
 .perfil-fondo.elegido {
-  border-color: #f1c40f;
+  border-color: rgb(var(--color-vista));
 }
 
 /* El «+» para verlos todos, en el hueco de una muestra más; y «Ver menos», junto al título */
@@ -1245,8 +1252,8 @@ button.perfil-fondo:hover:not(:disabled) {
 }
 
 .avatar-subir:hover {
-  border-color: #f1c40f;
-  background: rgba(241, 196, 15, 0.08);
+  border-color: rgb(var(--color-vista));
+  background: rgba(var(--color-vista), 0.08);
 }
 
 /* Las fotos subidas (data:) son fotos, no sprites: suavizadas, no pixeladas */
@@ -1382,8 +1389,8 @@ button.perfil-fondo:hover:not(:disabled) {
 }
 
 .boton-ayuda:hover {
-  border-color: #f1c40f;
-  color: #f1c40f;
+  border-color: rgb(var(--color-vista));
+  color: rgb(var(--color-vista));
 }
 
 /* ---------- Preguntas frecuentes ---------- */
@@ -1431,7 +1438,7 @@ button.perfil-fondo:hover:not(:disabled) {
 }
 
 .ayuda-lista summary:hover {
-  color: #f1c40f;
+  color: rgb(var(--color-vista));
 }
 
 .ayuda-lista p {
@@ -1484,10 +1491,27 @@ button.perfil-fondo:hover:not(:disabled) {
   color: inherit;
 }
 
+:root { --color-vista: 91, 141, 239; }
+
 .contenido {
   flex: 1;
   min-width: 0;
+  /* Cada sección con su color, suave: un tinte arriba y los acentos de la sección (en :root\r\n   para que lo vean también los recuadros) */
+  background-image: linear-gradient(180deg, rgba(var(--color-vista), 0.1), rgba(var(--color-vista), 0) 12rem);
+  box-shadow: inset 0 3px 0 rgb(var(--color-vista));
 }
+
+:root:has(#vista-lockes:not([hidden])) { --color-vista: 214, 88, 76; }
+:root:has(#vista-crear:not([hidden])),
+:root:has(#vista-equipos:not([hidden])) { --color-vista: 91, 141, 239; }
+:root:has(#vista-rutas:not([hidden])) { --color-vista: 82, 183, 136; }
+:root:has(#vista-levelcaps:not([hidden])) { --color-vista: 0, 184, 169; }
+:root:has(#vista-pokedex:not([hidden])) { --color-vista: 240, 100, 130; }
+:root:has(#vista-calculadora:not([hidden])) { --color-vista: 155, 110, 230; }
+:root:has(#vista-normas:not([hidden])) { --color-vista: 205, 165, 100; }
+:root:has(#vista-ruleta:not([hidden])) { --color-vista: 240, 150, 60; }
+:root:has(#vista-amigos:not([hidden])) { --color-vista: 80, 190, 215; }
+:root:has(#vista-logros:not([hidden])) { --color-vista: 241, 196, 15; }
 
 /* Grupos desplegables del menú */
 
@@ -1518,15 +1542,14 @@ button.perfil-fondo:hover:not(:disabled) {
   transform: rotate(-90deg);
 }
 
-.grupo-menu summary.boton-seccion:hover {
-  background: rgba(231, 76, 60, 0.2);
-}
 
 .submenu {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  padding: 0.3rem 0 0.3rem 0.8rem;
+  margin-left: 1.25rem;
+  padding: 0.3rem 0 0.3rem 0.5rem;
+  border-left: 2px solid rgba(var(--color-boton), 0.35);
 }
 
 /* ---------- Pantallas estrechas (móvil) ---------- */
@@ -1686,7 +1709,7 @@ button.perfil-fondo:hover:not(:disabled) {
   padding: 0.4rem 0.8rem;
   border: none;
   border-radius: 0.45rem;
-  background: #f1c40f;
+  background: rgb(var(--color-vista));
   color: #1e1f2b;
   font-family: inherit;
   font-size: 0.85rem;
@@ -1723,4 +1746,38 @@ button.perfil-fondo:hover:not(:disabled) {
 
 .perfil-amigo.ajeno:hover {
   background: transparent;
+}
+
+/* Las casillas de texto, en el oscuro de la web (poco específicas: las que tienen el suyo, lo
+   mantienen). Dentro de un recuadro o una tarjeta, que ya son de ese color, más oscuras. */
+:where(input:not([type]), input[type="text"], input[type="search"], input[type="number"], input[type="email"], input[type="date"], textarea, select) {
+  background-color: #2c2e3e;
+  color: #f2f2f2;
+}
+
+:where(dialog, .tarjeta, .calc-lado, .calc-centro, .ruleta-panel, .pokedex-filtros) :where(input:not([type]), input[type="text"], input[type="search"], input[type="number"], input[type="email"], input[type="date"], textarea, select) {
+  background-color: #1e1f2b;
+}
+
+/* Sombrita en los botones y casillas de las barras de cada sección (no en las tarjetas de los Pokémon) */
+#vista-crear .barra-superior :is(input, button),
+#vista-equipos .barra-equipos :is(input, button, select),
+#vista-rutas .barra-nuzlocke :is(input, button),
+#vista-levelcaps .barra-nuzlocke button,
+.barra-pokedex :is(input, select, button),
+.barra-amigos :is(input, button),
+.ruleta-cabecera :is(input, button),
+.ruleta-nueva,
+.conjunto-barra button,
+.selector-juegos button {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+:is(.ruta, .logro, .logros-cabecera, .pokedex-filtros) {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* La casilla grande de los recuadros (importar...): casi como la tarjeta, sin teñir */
+dialog textarea {
+  background-color: #252735;
 }

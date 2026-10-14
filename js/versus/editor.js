@@ -7,7 +7,7 @@
 //
 // «Aceptar» no escribe: el cambio va a la copia en memoria de la partida (./editor-comun.js),
 // y todo se guarda junto al cerrar la ventana «Partida», con una línea en la actividad del
-// locke. Lo de escribir está en js/partida/ (vinculo, escribir3ds, huecos3ds y pokemon3ds).
+// locke. Lo de escribir está en js/partida/ (vinculo, formato, huecos y las piezas de cada consola).
 
 import { icono } from "../comun/iconos.js";
 import { escaparHTML } from "../comun/utilidades.js";
@@ -17,16 +17,16 @@ import { imagenConRespaldo, urlsRetrato, urlsIconoObjeto } from "../comun/imagen
 import { generosPosibles, ICONO_GENERO, NOMBRE_GENERO } from "../comun/pokemon.js";
 import { campoNumero } from "../comun/numero.js";
 import { NATURALEZAS, incrustarEntreno, opcionesNaturaleza } from "../equipos/entreno.js";
-import { leerHueco } from "../partida/escribir3ds.js";
-import { mirar, poner, huecoLibre, llaveDe } from "../partida/huecos3ds.js";
-import { leerEditable, aplicarEditable, crearPokemon, conLlaveNueva, ppMaximos } from "../partida/pokemon3ds.js";
+import { mirar, poner, huecoLibre, llaveDe } from "../partida/huecos.js";
+import { ppMaximos } from "../partida/pokemon3ds.js";
+import { formatoDeSeguro } from "../partida/formato.js";
 import { partidaDe } from "../partida/partidas.js";
-import { JUEGOS, entrenadorDe } from "../partida/tresds.js";
 import {
   LIMITES, infoAtaques, prepararDatos, nombreEspecie, nombreHuevo, objetosDe, hastaLimite, objeto, habilidad,
   ataque, balls, cargarInfoAtaque, formasDe, datosEspecie, ataquesDeNivel, generoAlAzar, comprobarSitio, cambiarHuecos, partidaDeTrabajo, urlsIconoDe, iconoDe,
-  VERSIONES, lugaresGen6, nombreLugar, creadoEnWeb
+  VERSIONES, versionesDe, lugaresDe, lugarIntercambio, nombreLugar, creadoEnWeb
 } from "./editor-comun.js";
+import { confirmar } from "../comun/ventanas.js";
 
 let dialogo = null;
 let panel = null; // lo de dentro: va en su ventana o en el lado de la ventana «Partida»
@@ -41,9 +41,6 @@ const ANCHO_PARA_LADO = "(min-width: 1100px)";
 // { idLocke, sitio, juego, llave (0 si es nuevo), antes (null si es nuevo), poke, nivelInicial }
 let abierto = null;
 let editando = null; // el sitio que se abre (ya mientras carga)
-
-// Donde se conocen los creados aquí (el lugar especial de gen 6 de los intercambios)
-const LUGAR_LOCKEDEX = 30001;
 
 // Pone la especie (y su forma): estadísticas base, habilidades posibles, géneros posibles...
 // cambiando: si viene de elegir otra especie u otra forma (habilidad y género se ajustan)
@@ -110,7 +107,7 @@ function plantillaObjeto(poke) {
 }
 
 function plantillaBall(poke) {
-  const lista = balls();
+  const lista = balls(abierto.juego);
   const suya = lista.find((b) => b.id === poke.ball);
   return `
     <span class="editor-ball" title="Ball">
@@ -159,8 +156,8 @@ function plantillaOrigen(poke) {
   const creado = poke.creado && poke.version === "lockedex";
   const versiones = [
     ...(poke.creado ? [{ id: "lockedex", es: "LockeDex" }] : []),
-    ...(VERSIONES.some((v) => v.id === poke.version) || poke.version === "lockedex" ? [] : [{ id: poke.version, es: `Juego ${poke.version}` }]),
-    ...VERSIONES
+    ...(versionesDe(abierto.juego).some((v) => v.id === poke.version) || poke.version === "lockedex" ? [] : [{ id: poke.version, es: (VERSIONES.find((v) => v.id === poke.version) || { es: `Juego ${poke.version}` }).es }]),
+    ...versionesDe(abierto.juego)
   ];
   return `
     <div class="editor-origen">
@@ -170,12 +167,12 @@ function plantillaOrigen(poke) {
       </label>
       <label class="editor-dato" title="Entrenador original">
         ${icono("persona")}
-        <input class="editor-entrenador-campo" type="text" maxlength="12" autocomplete="off" placeholder="Entrenador" aria-label="Entrenador original" value="${escaparHTML(poke.entrenador || "")}">
+        <input class="editor-entrenador-campo" type="text" maxlength="${abierto.maxEntrenador}" autocomplete="off" placeholder="Entrenador" aria-label="Entrenador original" value="${escaparHTML(poke.entrenador || "")}">
       </label>
       <span class="editor-dato" title="${poke.huevo ? "Los huevos aún no tienen dónde se conocieron" : "Dónde se conoció"}">
         ${icono("mapa")}
         <span class="editor-buscar"><input class="editor-lugar-campo" type="text" autocomplete="off" placeholder="Lugar" aria-label="Dónde se conoció"
-          value="${escaparHTML(poke.huevo ? "" : nombreLugar(poke.lugar, creado))}" ${poke.huevo ? "disabled" : ""}></span>
+          value="${escaparHTML(poke.huevo ? "" : nombreLugar(poke.lugar, creado, abierto.juego))}" ${poke.huevo ? "disabled" : ""}></span>
       </span>
       <label class="editor-dato" title="Juego de origen">
         ${icono("mando")}
@@ -223,7 +220,7 @@ function pintar() {
             : ""}
           ${poke.huevo
             ? ""
-            : `<input class="editor-mote" type="text" maxlength="12" autocomplete="off" placeholder="Mote" aria-label="Mote" title="Mote" value="${escaparHTML(poke.mote)}">`}
+            : `<input class="editor-mote" type="text" maxlength="${abierto.maxMote}" autocomplete="off" placeholder="Mote" aria-label="Mote" title="Mote" value="${escaparHTML(poke.mote)}">`}
         </div>
         <div class="editor-linea">
           <label class="editor-nivel" title="Nivel">
@@ -301,11 +298,11 @@ function activarCampos() {
     sinTexto: () => propias.map((h) => ({ ...h, es: h.num === 4 ? `${h.es} (oculta)` : h.es, buscar: "" }))
   });
 
-  // Dónde se conoció: los lugares de gen 6
+  // Dónde se conoció: los lugares del juego
   const campoLugar = cuerpo.querySelector(".editor-lugar-campo");
   if (!campoLugar.disabled) {
     comoDesplegable(campoLugar);
-    activarAutocompletado(campoLugar, lugaresGen6(), (entrada) => {
+    activarAutocompletado(campoLugar, lugaresDe(juego), (entrada) => {
       poke.lugar = entrada.id;
       pintar();
     }, { actual: campoLugar.value });
@@ -390,7 +387,7 @@ function nivelInicial(idLocke) {
 // sitio: { equipo } o { caja, hueco }. Si está vacío, es para crear uno. recargar: el mismo
 // que ya estaba abierto, tras aceptar (sin el «Cargando...» de en medio).
 export async function abrirEditor(idLocke, sitio, recargar = false) {
-  if (!recargar && editorEnLado() && sinAceptar() && !confirm("Lo que has cambiado sin pulsar «Aceptar» se pierde. ¿Seguir?")) return;
+  if (!recargar && editorEnLado() && sinAceptar() && !(await confirmar("Lo que has cambiado sin pulsar «Aceptar» se pierde. ¿Seguir?", { aceptar: "Seguir", peligro: true }))) return;
   abierto = null;
   editando = sitio;
   error.textContent = "";
@@ -402,21 +399,25 @@ export async function abrirEditor(idLocke, sitio, recargar = false) {
 
   try {
     const [bytes] = await Promise.all([partidaDeTrabajo(idLocke), prepararDatos()]);
-    const juego = JUEGOS[bytes.length];
-    if (!juego || !LIMITES[juego.id]) throw new Error("Todavía no se puede editar la partida de este juego.");
-    const crudo = leerHueco(bytes, sitio);
-    const base = { idLocke, sitio, juego: juego.id, nivelInicial: nivelInicial(idLocke), versionEntrenador: entrenadorDe(bytes).version };
+    const formato = formatoDeSeguro(bytes);
+    if (!LIMITES[formato.id]) throw new Error("Todavía no se puede editar la partida de este juego.");
+    const crudo = formato.leerHueco(bytes, sitio);
+    const pk = formato.pokemon;
+    const base = {
+      idLocke, sitio, juego: formato.id, pk, nivelInicial: nivelInicial(idLocke), versionEntrenador: formato.entrenadorDe(bytes).version,
+      maxMote: pk.maxMote, maxEntrenador: pk.maxEntrenador
+    };
 
     if (!crudo) {
       // Los creados aquí: conocidos «en LockeDex», del entrenador de la partida
       const poke = { especie: 0, mote: "", shiny: false, objeto: 0, huevo: false, ball: 4, ataques: [null, null, null, null] };
-      Object.assign(poke, { lugar: LUGAR_LOCKEDEX, version: "lockedex", entrenador: (partidaDe(idLocke) || {}).entrenador || "", creado: true });
+      Object.assign(poke, { lugar: lugarIntercambio(formato.id), version: "lockedex", entrenador: (partidaDe(idLocke) || {}).entrenador || "", creado: true });
       abierto = { ...base, llave: 0, antes: null, poke };
       pintar();
       return;
     }
 
-    const antes = leerEditable(crudo);
+    const antes = pk.leerEditable(crudo);
     const poke = {
       ...antes,
       evs: undefined,
@@ -439,7 +440,7 @@ export async function abrirEditor(idLocke, sitio, recargar = false) {
 
 // ---------- Guardar ----------
 
-// Lo que se escribe (los nombres de js/partida/pokemon3ds.js)
+// Lo que se escribe (los nombres de js/partida/pokemon3ds.js y pokemonds.js)
 function editableDe(poke) {
   const posibles = generosPosibles(poke);
   return {
@@ -466,7 +467,7 @@ function editableDe(poke) {
 }
 
 function opcionesDe(poke, idioma) {
-  return { base: poke.stats, nombreEspecie: nombreEspecie(poke.especie, idioma), nombreHuevo: nombreHuevo(idioma) };
+  return { base: poke.stats, nombreEspecie: nombreEspecie(poke.especie, idioma), nombreHuevo: nombreHuevo(idioma), generoRatio: poke.generoRatio };
 }
 
 // Cómo se llama en la actividad: «Misty» o «Charizard»
@@ -492,8 +493,8 @@ function resumenCambios(antes, despues) {
   if (despues.amistad !== antes.amistad && despues.huevo === antes.huevo) {
     partes.push(`${despues.huevo ? "ciclos" : "amistad"} ${antes.amistad} → ${despues.amistad}`);
   }
-  if (despues.ball !== antes.ball) partes.push((balls().find((b) => b.id === despues.ball) || { es: "ball" }).es);
-  if (despues.lugar !== undefined && despues.lugar !== antes.lugar) partes.push(`conocido en ${nombreLugar(despues.lugar)}`);
+  if (despues.ball !== antes.ball) partes.push((balls(abierto.juego).find((b) => b.id === despues.ball) || { es: "ball" }).es);
+  if (despues.lugar !== undefined && despues.lugar !== antes.lugar) partes.push(`conocido en ${nombreLugar(despues.lugar, false, abierto.juego)}`);
   if (despues.version !== antes.version) partes.push(`origen ${(VERSIONES.find((v) => v.id === despues.version) || { es: "otro juego" }).es}`);
   if (despues.entrenador && despues.entrenador !== antes.entrenador) partes.push(`entrenador «${despues.entrenador}»`);
   const nuevos = despues.ataques.filter((a) => a.id && !antes.ataques.some((b) => b.id === a.id));
@@ -516,14 +517,23 @@ async function guardar() {
 
   await cambiarHuecos(idLocke, (h) => {
     comprobarSitio(h, sitio, llave);
-    const idioma = antes ? antes.idioma : entrenadorDe(h.bytes).idioma;
+    const pk = h.formato.pokemon;
+    const idioma = antes ? antes.idioma : h.formato.entrenadorDe(h.bytes).idioma;
     const opciones = opcionesDe(poke, idioma);
     if (antes) {
-      poner(h, sitio, aplicarEditable(mirar(h, sitio), despues, opciones));
+      const cambiado = pk.aplicarEditable(mirar(h, sitio), despues, opciones);
+      poner(h, sitio, cambiado);
+      // En DS, cambiar el género, la naturaleza, la habilidad o el shiny cambia el PID, que es
+      // su llave: para la web es otro, y no es una captura ni un muerto nuevo
+      const nueva = llaveDe(cambiado);
+      if (nueva !== llave) {
+        const sigueCreado = poke.creado && poke.version === "lockedex";
+        return { metidos: [nueva], creados: sigueCreado ? [nueva] : [], noCreados: poke.creado ? [llave] : [] };
+      }
       // Creado aquí, pero con otro juego de origen: ya no sale como «LockeDex»
       return poke.creado && poke.version !== "lockedex" ? { noCreados: [llave] } : [];
     }
-    const crudo = crearPokemon(entrenadorDe(h.bytes), despues, opciones);
+    const crudo = pk.crearPokemon(h.formato.entrenadorDe(h.bytes), despues, opciones);
     poner(h, sitio, crudo);
     return poke.version === "lockedex" ? { metidos: [llaveDe(crudo)], creados: [llaveDe(crudo)] } : [llaveDe(crudo)];
   }, resumen);
@@ -534,7 +544,7 @@ async function guardar() {
 
 async function borrar() {
   const { idLocke, sitio, llave, antes } = abierto;
-  if (!confirm(`¿Borrar a ${nombreDe(antes)} de la partida?`)) return;
+  if (!(await confirmar(`¿Borrar a ${nombreDe(antes)} de la partida?`))) return;
   await cambiarHuecos(idLocke, (h) => {
     comprobarSitio(h, sitio, llave);
     poner(h, sitio, null);
@@ -551,8 +561,9 @@ async function clonar() {
     comprobarSitio(h, sitio, llave);
     const destino = huecoLibre(h, sitio.caja || 0);
     if (!destino) throw new Error("Las cajas están llenas.");
+    const pk = h.formato.pokemon;
     const crudo = mirar(h, sitio);
-    const copia = conLlaveNueva(cambiado ? aplicarEditable(crudo, despues, opcionesDe(poke, antes.idioma)) : crudo);
+    const copia = pk.conLlaveNueva(cambiado ? pk.aplicarEditable(crudo, despues, opcionesDe(poke, antes.idioma)) : crudo);
     poner(h, destino, copia);
     return [llaveDe(copia)];
   }, `clon de ${nombreDe(despues)}`);

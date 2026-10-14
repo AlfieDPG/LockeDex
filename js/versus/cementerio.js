@@ -22,6 +22,7 @@ import {
   lockePorId, estadoDe, muertosDe, apuntarMuerto, borrarMuerto, reordenarMuertos, cambiarNumero, alCambiarLockes,
   estaEliminado, REACCIONES, reaccionar
 } from "../comun/lockes.js";
+import { confirmar } from "../comun/ventanas.js";
 
 let dialogoCementerio = null;
 let dialogoMuerte = null;
@@ -297,7 +298,7 @@ export function iniciarCementerio(alFallar) {
   dialogoCementerio.addEventListener("close", () => (idCementerio = null));
   activarArrastreTumbas(alFallar);
 
-  dialogoCementerio.querySelector(".cementerio-cuerpo").addEventListener("click", (e) => {
+  dialogoCementerio.querySelector(".cementerio-cuerpo").addEventListener("click", async (e) => {
     if (e.target.closest(".tumba-nueva")) {
       abrirMuerte(idCementerio, false);
       return;
@@ -316,7 +317,7 @@ export function iniciarCementerio(alFallar) {
       return;
     }
     const quitar = e.target.closest(".tumba-quitar");
-    if (quitar && confirm("¿Quitar este Pokémon del cementerio?\n\nLa vida no se devuelve: eso se hace con el «+».")) {
+    if (quitar && (await confirmar("¿Quitar este Pokémon del cementerio?\n\nLa vida no se devuelve: eso se hace con el «+»."))) {
       borrarMuerto(idCementerio, quitar.dataset.muerto).catch(alFallar);
     }
   });

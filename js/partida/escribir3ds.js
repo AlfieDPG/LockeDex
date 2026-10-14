@@ -2,7 +2,7 @@
 //
 // Lo contrario de ./tresds.js: meter un Pokémon (ya descifrado y cambiado) en un hueco del
 // equipo o de una caja, o vaciarlo, y dejar la partida como la dejaría el juego. Mover cosas
-// de sitio está en ./huecos3ds.js.
+// de sitio está en ./huecos.js.
 //
 //   1) El Pokémon: su suma (0x06), el barajado de sus cuatro trozos y el XOR.
 //   2) Los checksums de bloque de la tabla del final (tras «BEEF»). Comprobados contra

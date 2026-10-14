@@ -6,9 +6,9 @@
 //   ataques:     [tipo, pp] por número de ataque (null los que no hay)
 //   especies:    { especie: [gender_rate, base_happiness, hatch_counter, diferencias de hembra 0/1] }
 //   habilidades: { pokemon (id de PokeAPI, formas incluidas): [[habilidad, hueco 1-3], ...] }
-//   aprende:     { xy | oras: { pokemon: [[ataque, nivel], ...] } } (subiendo de nivel)
+//   aprende:     { juego: { pokemon: [[ataque, nivel], ...] } } (subiendo de nivel; juegos de GRUPOS)
 //   bolsillos:   { objeto (número en el juego, gen 6): bolsillo de PokeAPI (1-8) }
-//   maquinas:    { xy | oras: { objeto: ataque } } (qué enseña cada MT / MO)
+//   maquinas:    { juego: { objeto: ataque } } (qué enseña cada MT / MO)
 //
 // Sale de los CSV de PokeAPI (moves, pokemon_species, pokemon, pokemon_abilities, version_groups,
 // pokemon_moves, items, item_categories, item_game_indices y machines). Solo hasta la gen 7.
@@ -17,7 +17,10 @@ import { descargarCSV } from "../comun/datos.js";
 import { TIPOS_POR_ID } from "../calculadora/ataques.js";
 
 const ULTIMA_ESPECIE = 807;
-const GRUPOS = { xy: "x-y", oras: "omega-ruby-alpha-sapphire" };
+// Los juegos que se editan y su grupo de versiones en PokeAPI
+export const GRUPOS = {
+  platino: "platinum", bw: "black-white", b2w2: "black-2-white-2", xy: "x-y", oras: "omega-ruby-alpha-sapphire"
+};
 const SUBIENDO_DE_NIVEL = 1; // pokemon_move_methods.csv
 
 function filas(csv) {

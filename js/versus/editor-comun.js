@@ -13,23 +13,30 @@ import { cargarPokedex } from "../pokedex/datos.js";
 import { NATURALEZAS, entrenoDe } from "../equipos/entreno.js";
 import { apuntarSuceso } from "../comun/lockes.js";
 import { leerArchivo, escribirPartida } from "../partida/vinculo.js";
-import { editarHuecos } from "../partida/escribir3ds.js";
-import { abrirHuecos, cambiosDe, mirar, llaveDe } from "../partida/huecos3ds.js";
+import { abrirHuecos, escribirHuecos, mirar, llaveDe } from "../partida/huecos.js";
+import { formatoDeSeguro } from "../partida/formato.js";
 import { marcarMetidos, marcarCreados, esCreado } from "../partida/partidas.js";
-import { JUEGOS, leerPartida3DS } from "../partida/tresds.js";
-import { leerMochila } from "../partida/mochila3ds.js";
 import { FORMAS, convertirPartida } from "../partida/convertir.js";
 import { OBJETOS_EN, LUGARES_GEN6 } from "../partida/datos-3ds.js";
-import { cargarDatosEditor } from "../partida/datos-editor.js";
+import { LUGARES_GEN4, LUGARES_GEN4_OTROS, LUGARES_GEN5, LUGARES_GEN5_OTROS } from "../partida/datos-ds.js";
+import { cargarDatosEditor, GRUPOS } from "../partida/datos-editor.js";
 
-// Lo último que existe en cada juego (números de especie, objeto, ataque y habilidad)
+// Cada juego que se edita: su generación y lo último que existe en él (números de especie,
+// objeto, ataque, habilidad y ball). lugares: hasta qué número de lugar es suyo (gen 4 y 5).
 export const LIMITES = {
-  xy: { especies: 721, objetos: 717, ataques: 617, habilidades: 188 },
-  oras: { especies: 721, objetos: 775, ataques: 621, habilidades: 191 }
+  platino: { gen: 4, especies: 493, objetos: 467, ataques: 467, habilidades: 123, balls: 16, lugares: 125 },
+  bw: { gen: 5, especies: 649, objetos: 632, ataques: 559, habilidades: 164, balls: 25, lugares: 116 },
+  b2w2: { gen: 5, especies: 649, objetos: 638, ataques: 559, habilidades: 164, balls: 25, lugares: Infinity },
+  xy: { gen: 6, especies: 721, objetos: 717, ataques: 617, habilidades: 188, balls: 25 },
+  oras: { gen: 6, especies: 721, objetos: 775, ataques: 621, habilidades: 191, balls: 25 }
 };
 
-// Los ataques que aprende subiendo de nivel, en PokeAPI
-const GRUPOS = { xy: "x-y", oras: "omega-ruby-alpha-sapphire" };
+function genDe(juego) {
+  return (LIMITES[juego] || {}).gen || 6;
+}
+
+// Los lugares especiales «intercambio» de cada generación (los creados en la web)
+const INTERCAMBIO = { 4: 2002, 5: 30003, 6: 30001 };
 
 // Las formas que se pueden elegir en gen 6: las que no son de Alola ni de gen 7
 const ULTIMA_FORMA_GEN6 = 10090;
@@ -114,35 +121,51 @@ export function ataque(id) {
 
 // ---------- Origen: dónde se conoció, juego y entrenador ----------
 
-// Los juegos de origen que puede llevar un Pokémon en gen 6 (número en el juego)
+// Los juegos de origen que puede llevar un Pokémon (número en el juego), con la generación
+// en que salieron
 export const VERSIONES = [
-  [24, "X"], [25, "Y"], [27, "Rubí Omega"], [26, "Zafiro Alfa"],
-  [21, "Negro"], [20, "Blanco"], [23, "Negro 2"], [22, "Blanco 2"],
-  [10, "Diamante"], [11, "Perla"], [12, "Platino"], [7, "Oro HeartGold"], [8, "Plata SoulSilver"],
-  [2, "Rubí"], [1, "Zafiro"], [3, "Esmeralda"], [4, "Rojo Fuego"], [5, "Verde Hoja"], [15, "Colosseum / XD"]
-].map(([id, es]) => ({ id, es }));
+  [24, "X", 6], [25, "Y", 6], [27, "Rubí Omega", 6], [26, "Zafiro Alfa", 6],
+  [21, "Negro", 5], [20, "Blanco", 5], [23, "Negro 2", 5], [22, "Blanco 2", 5],
+  [10, "Diamante", 4], [11, "Perla", 4], [12, "Platino", 4], [7, "Oro HeartGold", 4], [8, "Plata SoulSilver", 4],
+  [2, "Rubí", 3], [1, "Zafiro", 3], [3, "Esmeralda", 3], [4, "Rojo Fuego", 3], [5, "Verde Hoja", 3], [15, "Colosseum / XD", 3]
+].map(([id, es, gen]) => ({ id, es, gen }));
 
-const LUGAR_INTERCAMBIO = 30001;
-
-// Los lugares de gen 6 (el N, en la posición N / 2), sin repetir nombre
-export function lugaresGen6() {
-  if (!listas.has("lugares")) {
-    const vistos = new Set();
-    const lista = [];
-    LUGARES_GEN6.forEach((es, i) => {
-      if (!es || vistos.has(es)) return;
-      vistos.add(es);
-      lista.push({ id: i * 2, es, en: "", buscar: quitarAcentos(es) });
-    });
-    lista.push({ id: LUGAR_INTERCAMBIO, es: "Intercambio", en: "", buscar: "intercambio" });
-    listas.set("lugares", lista);
-  }
-  return listas.get("lugares");
+// Los que caben en una partida de ese juego (los de su generación o de antes)
+export function versionesDe(juego) {
+  return VERSIONES.filter((v) => v.gen <= genDe(juego));
 }
 
-export function nombreLugar(numero, creado = false) {
-  if (creado && numero === LUGAR_INTERCAMBIO) return "LockeDex";
-  if (numero === LUGAR_INTERCAMBIO || numero === 30002) return "Intercambio";
+export function lugarIntercambio(juego) {
+  return INTERCAMBIO[genDe(juego)];
+}
+
+// Los lugares del juego, sin repetir nombre. En gen 6, el N está en la posición N / 2; en gen 4
+// y 5, en la N (y los especiales, aparte).
+export function lugaresDe(juego) {
+  const clave = `lugares-${juego}`;
+  if (!listas.has(clave)) {
+    const gen = genDe(juego);
+    const tabla = gen === 4 ? LUGARES_GEN4 : gen === 5 ? LUGARES_GEN5 : LUGARES_GEN6;
+    const hasta = (LIMITES[juego] || {}).lugares ?? Infinity;
+    const vistos = new Set();
+    const lista = [];
+    tabla.forEach((es, i) => {
+      if (!es || vistos.has(es) || !i || i > hasta) return;
+      vistos.add(es);
+      lista.push({ id: gen === 6 ? i * 2 : i, es, en: "", buscar: quitarAcentos(es) });
+    });
+    lista.push({ id: INTERCAMBIO[gen], es: "Intercambio", en: "", buscar: "intercambio" });
+    listas.set(clave, lista);
+  }
+  return listas.get(clave);
+}
+
+export function nombreLugar(numero, creado = false, juego = "xy") {
+  const gen = genDe(juego);
+  if (creado && numero === INTERCAMBIO[gen]) return "LockeDex";
+  if (gen === 4) return LUGARES_GEN4[numero] || LUGARES_GEN4_OTROS[numero] || (numero ? `Lugar ${numero}` : "");
+  if (gen === 5) return LUGARES_GEN5[numero] || LUGARES_GEN5_OTROS[numero] || (numero ? `Lugar ${numero}` : "");
+  if (numero === INTERCAMBIO[6] || numero === 30002) return "Intercambio";
   return (numero % 2 === 0 && LUGARES_GEN6[numero / 2]) || (numero ? `Lugar ${numero}` : "");
 }
 
@@ -155,13 +178,18 @@ export function creadoEnWeb(idLocke, llave) {
 
 // ---------- Bolsa ----------
 
-// Bolsillo de PokeAPI -> el de la bolsa de gen 6 (js/partida/mochila3ds.js)
+// Bolsillo de PokeAPI -> el de la bolsa (js/partida/mochila3ds.js y mochilads.js). Gen 4 tiene
+// además bolsillos para las balls, las cartas y los objetos de combate.
 const BOLSILLO_POKEAPI = { 1: "objetos", 2: "medicinas", 3: "objetos", 4: "mt", 5: "bayas", 6: "objetos", 7: "objetos", 8: "clave" };
+const BOLSILLO_GEN4 = { 3: "balls", 6: "cartas", 7: "combate" };
 // Los que en gen 6 van en otro: Repartir Experiencia (clave) y Caramelo Furia (medicinas)
 const BOLSILLO_EN_GEN6 = { 216: "clave", 504: "medicinas" };
 
-export function bolsilloDe(objetoId) {
-  return BOLSILLO_EN_GEN6[objetoId] || BOLSILLO_POKEAPI[((delEditor && delEditor.bolsillos) || {})[objetoId]] || "objetos";
+export function bolsilloDe(objetoId, juego = "xy") {
+  const gen = genDe(juego);
+  const dePokeAPI = ((delEditor && delEditor.bolsillos) || {})[objetoId];
+  if (gen === 6 && BOLSILLO_EN_GEN6[objetoId]) return BOLSILLO_EN_GEN6[objetoId];
+  return (gen === 4 && BOLSILLO_GEN4[dePokeAPI]) || BOLSILLO_POKEAPI[dePokeAPI] || "objetos";
 }
 
 // El nombre, y en las MT y MO el ataque que enseñan: «MT26 Terremoto»
@@ -207,11 +235,11 @@ function resumenMochila(antes, despues, juego) {
   return partes.length ? `bolsa: ${partes.join(", ")}` : "";
 }
 
-export function balls() {
+export function balls(juego = "xy") {
   if (!listas.has("balls")) {
     listas.set("balls", BALLS.map((en, i) => ({ id: i + 1, en, es: (buscarPorNombreIngles(datos.objetos, en) || {}).es || en })));
   }
-  return listas.get("balls");
+  return listas.get("balls").slice(0, (LIMITES[juego] || {}).balls || BALLS.length);
 }
 
 export async function cargarInfoAtaque(id) {
@@ -276,7 +304,7 @@ export async function datosEspecie(especie, forma, juego) {
       bases: basesDe(especie, forma),
       habilidades: (delEditor.habilidades[id] || delEditor.habilidades[especie])
         .map(([hab, hueco]) => ({ num: numero[hueco], ...habilidad(hab) }))
-        .filter((h) => h.id <= LIMITES[juego].habilidades)
+        .filter((h) => h.id <= LIMITES[juego].habilidades && (h.num !== 4 || genDe(juego) >= 5))
         .sort((a, b) => a.num - b.num),
       generoRatio,
       difGenero: Boolean(diferencias),
@@ -295,7 +323,7 @@ export async function datosEspecie(especie, forma, juego) {
   ]);
   const habilidades = p.abilities
     .map((h) => ({ num: numero[h.slot], ...habilidad(idDeUrl(h.ability.url)) }))
-    .filter((h) => h.id <= LIMITES[juego].habilidades)
+    .filter((h) => h.id <= LIMITES[juego].habilidades && (h.num !== 4 || genDe(juego) >= 5))
     .sort((a, b) => a.num - b.num);
   const aprende = p.moves
     .flatMap((m) =>
@@ -384,7 +412,7 @@ export async function editableDeEquipo(p, juego) {
       especie: p.id,
       forma,
       genero,
-      mote: String(p.mote || "").slice(0, 12),
+      mote: String(p.mote || "").slice(0, genDe(juego) === 6 ? 12 : 10),
       shiny: Boolean(p.shiny),
       objeto: idObjeto,
       habilidad: hab.id,
@@ -397,6 +425,7 @@ export async function editableDeEquipo(p, juego) {
       ataques
     },
     base: especie.bases,
+    generoRatio: especie.generoRatio,
     problemas
   };
 }
@@ -450,7 +479,7 @@ export function comprobarSitio(h, sitio, llave) {
   if (llaveDe(mirar(h, sitio)) !== llave) throw new Error("La partida ha cambiado. Ciérrala y vuelve a abrirla.");
 }
 
-// Mover, borrar, meter...: hacer(h) cambia los huecos (js/partida/huecos3ds.js) y devuelve las
+// Mover, borrar, meter...: hacer(h) cambia los huecos (js/partida/huecos.js) y devuelve las
 // llaves de los Pokémon que mete (no cuentan como capturas ni como muertos). detalle: lo que
 // se apunta en la actividad al guardar (mover no apunta nada).
 // hacer(h) puede devolver también { metidos, creados, noCreados }: los creados de cero en la
@@ -459,8 +488,7 @@ export function cambiarHuecos(idLocke, hacer, detalle = "") {
   return cambiarPartida(idLocke, (original) => {
     const h = abrirHuecos(original, basesDe);
     const r = hacer(h) || [];
-    const { cambios, cuantosEquipo } = cambiosDe(h);
-    return { nuevo: editarHuecos(original, cambios, cuantosEquipo), ...(Array.isArray(r) ? { metidos: r } : r) };
+    return { nuevo: escribirHuecos(h), ...(Array.isArray(r) ? { metidos: r } : r) };
   }, detalle);
 }
 
@@ -469,7 +497,7 @@ export async function cambiarPartida(idLocke, transformar, detalle = "") {
   await prepararDatos();
   const original = await partidaDeTrabajo(idLocke);
   const { nuevo, metidos = [], creados = [], noCreados = [] } = transformar(original);
-  const vista = await convertirPartida(leerPartida3DS(nuevo));
+  const vista = await convertirPartida(formatoDeSeguro(nuevo).leer(nuevo));
   borrador.bytes = nuevo;
   borrador.vista = vista;
   borrador.metidos.push(...metidos);
@@ -496,8 +524,9 @@ export async function guardarCambios(idLocke) {
   alCambiar();
   // En la actividad, una sola línea (los cambios de sitio no cuentan, salvo si no hay más). Lo
   // de la bolsa, como ha quedado al final.
-  const juego = (JUEGOS[b.bytes.length] || {}).id;
-  const bolsa = b.detalles.includes("bolsa") ? resumenMochila(leerMochila(b.base), leerMochila(b.bytes), juego) : "";
+  const formato = formatoDeSeguro(b.bytes);
+  const { leerMochila } = formato.mochila;
+  const bolsa = b.detalles.includes("bolsa") ? resumenMochila(leerMochila(b.base), leerMochila(b.bytes), formato.id) : "";
   const detalles = [...new Set(b.detalles.filter((d) => d !== "cambios de sitio" && d !== "bolsa")), ...(bolsa ? [bolsa] : [])];
   await apuntarSuceso(idLocke, "edicion", { detalle: detalles.length ? detalles.join("; ") : "cambios de sitio" });
 }
