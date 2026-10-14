@@ -81,7 +81,7 @@ const PESTANAS = [
         campos: [
           { k: "modo", tipo: "opciones", opciones: ALEATORIO, ayuda: "Aleatorio: cada uno evoluciona en otro de fuerza parecida, con tres fases como mucho" },
           { k: "dificiles", tipo: "casilla", texto: "Convertir evoluciones complejas en evoluciones por nivel", ayuda: "Las de intercambio, saber un ataque, llevar a otro en el equipo..." },
-          { k: "piedras", tipo: "casilla", texto: "Convertir evoluciones por piedra en evoluciones por nivel", ayuda: "El nivel sale de su fuerza" }
+          { k: "piedras", tipo: "casilla", texto: "Convertir evoluciones por piedra en evoluciones por nivel", ayuda: "La piedra se mantiene y se le suma el nivel: puede evolucionar de las dos formas. Lista de cambios en docs/evoluciones-randomizer-b2w2.txt" }
         ]
       }
     ]
@@ -315,6 +315,14 @@ function elegirNormas(valor) {
   else pintar();
 }
 
+// Todo sin cambios, para empezar de nuevo (también en las normas guardadas que estén elegidas)
+async function vaciarNormas() {
+  if (idLocke || !(await confirmar("¿Borrar todo lo elegido para randomizar?", { aceptar: "Borrar todo" }))) return;
+  mias = completarReglas();
+  guardarMias();
+  pintar();
+}
+
 async function accionNormas(que) {
   if (que === "guardar") {
     const nombre = await preguntar("Nombre para estas normas:", "");
@@ -441,6 +449,7 @@ function pintar() {
     <div class="random-barra">
       <button class="random-elegir">${icono("subir")} ${rom ? "Otra ROM" : "Elegir ROM"}</button>
       <span class="random-rom ${rom && rom.error ? "con-error" : ""}">${rom ? escaparHTML(rom.error || `${rom.nombre} · ${rom.archivo.name}`) : ""}</span>
+      <button class="random-vaciar" ${!idLocke && hayAlgo(reglas) ? "" : "disabled"}>${icono("deshacer")} Borrar todo</button>
       <button class="random-ir" ${rom && !rom.error && !trabajando && hayAlgo(reglas) ? "" : "disabled"} title="${hayAlgo(reglas) ? "" : "Cambia algo primero"}">${icono("mezclar")} ${trabajando ? "Randomizando..." : "Randomizar"}</button>
     </div>
     <span class="random-estado"></span>
@@ -558,6 +567,7 @@ export function iniciar() {
     else if (boton.classList.contains("random-elegir")) vista.querySelector(".random-archivo").click();
     else if (boton.classList.contains("random-ir")) randomizar();
     else if (boton.dataset.normas) accionNormas(boton.dataset.normas);
+    else if (boton.classList.contains("random-vaciar")) vaciarNormas();
   });
 
   vista.addEventListener("change", (e) => {

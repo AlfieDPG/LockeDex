@@ -1208,24 +1208,41 @@ button.salon-cara:hover {
   min-width: 0;
 }
 
+.locke-randomizer-fila {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.locke-randomizer-fila .locke-normas-elegir {
+  flex: 1;
+  align-self: auto;
+}
+
 .locke-randomizer-editar {
-  align-self: flex-start;
+  flex: none;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.8rem;
+  gap: 0.35rem;
+  padding: 0.45rem 0.7rem;
   border: none;
   border-radius: 0.45rem;
   background: #363949;
   color: #f2f2f2;
   font-size: 0.9rem;
+  white-space: nowrap;
   cursor: pointer;
+}
+
+.locke-randomizer-editar svg {
+  width: 1em;
+  height: 1em;
+  flex: none;
 }
 
 .locke-randomizer-editar:hover {
   background: #424559;
 }
-
 .locke-randomizer-resumen {
   margin: 0;
   font-size: 0.85rem;

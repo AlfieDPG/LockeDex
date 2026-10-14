@@ -37,6 +37,7 @@
 }
 
 .random-elegir,
+.random-vaciar,
 .random-ir {
   display: inline-flex;
   align-items: center;
@@ -49,17 +50,28 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
 }
 
-.random-elegir {
+.random-elegir,
+.random-vaciar {
   background: #2c2e3e;
   color: #f2f2f2;
 }
 
-.random-elegir:hover {
+.random-elegir:hover,
+.random-vaciar:hover:not(:disabled) {
   background: #363949;
 }
 
-.random-ir {
+/* «Borrar todo» y «Randomizar» juntos, a la derecha */
+.random-vaciar {
   margin-left: auto;
+}
+
+.random-vaciar:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.random-ir {
   padding: 0.6rem 1.4rem;
   background: rgb(var(--color-vista));
   color: #1e1f2b;

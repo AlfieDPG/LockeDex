@@ -31,7 +31,7 @@ const HABILIDADES_NUNCA = new Set([25, 59, 121, 122, 161]);
 const HABILIDADES_MALAS = new Set([54, 112, 129, 103, 100, 118, 50, 35, 57, 58, 132, 140]);
 const ATAQUES_MALOS = new Set([165]); // Forcejeo
 const PIEDRAS = [80, 81, 82, 83, 84, 85]; // Solar, Lunar, Fuego, Trueno, Agua, Hoja
-const PIEDRAS_EVOLUTIVAS = [...PIEDRAS, 107, 108, 109]; // y Día, Noche, Alba
+const PIEDRAS_EVOLUTIVAS = [...PIEDRAS, 107, 108, 109]; // y Piedra Brillante, Noche y Alba
 const CARAMELO_RARO = 50;
 const PRECIO_CARAMELO = 10; // en decenas: 100
 const NINCADA = 290;
@@ -185,9 +185,10 @@ function randomizarHabilidades(datos, reglas, azar) {
 
 // ---------- Evoluciones ----------
 
-// El nivel al que tiene sentido evolucionar a «destino»: más fuerte, más tarde
+// El nivel al que tiene sentido evolucionar a «destino»: más fuerte, más tarde. Sale del total de
+// estadísticas que tenía en el juego (aunque se cambien después): así es siempre el mismo.
 function nivelParaEvolucion(destino) {
-  return Math.max(18, Math.min(58, Math.round(destino.total / 12.5 - 6)));
+  return Math.max(18, Math.min(58, Math.round((destino.totalOriginal || destino.total) / 12.5 - 6)));
 }
 
 // Cada evolución lleva a otra especie de fuerza parecida a la de antes (con el mismo método).
@@ -239,27 +240,43 @@ function esAntepasada(id, de, madre) {
 const METODOS_DIFICILES = new Set([EVO.intercambio, EVO.intercambioObjeto, EVO.intercambioEspecial, EVO.ataque, EVO.otroEnEquipo, EVO.belleza]);
 const METODOS_PIEDRA = new Set([EVO.piedra, EVO.piedraMacho, EVO.piedraHembra]);
 
+// · Complejas → nivel: la evolución pasa a ser por nivel (al que tiene sentido por la fuerza del
+//   destino). Si la especie ya evolucionaba por nivel a otra (Poliwhirl, Slowpoke...), la que era
+//   compleja pasa a ser con una piedra que no use ya.
+// · Piedra → nivel: la piedra SE QUEDA y se le suma el nivel (puede evolucionar de las dos
+//   formas). Solo si la especie no evolucionaba ya por nivel, si le queda sitio en su tabla (7
+//   evoluciones, Eevee las llena) y, si tiene varias por piedra, la primera.
 function randomizarEvoluciones(datos, reglas) {
+  const { dificiles, piedras } = reglas.evoluciones;
   for (const e of todas(datos)) {
-    // Solo una evolución por especie pasa a ser por nivel; si otra también tenía que cambiar
-    // (Poliwhirl, Slowpoke...), esa pasa a piedra
-    let hayNivel = e.evoluciones.some((evo) => evo.metodo === EVO.nivel);
-    const piedrasUsadas = new Set(e.evoluciones.filter((evo) => evo.metodo === EVO.piedra).map((evo) => evo.dato));
-    for (const evo of e.evoluciones) {
-      const destino = datos.especies[evo.especie];
-      if (!destino) continue;
-      const dificil = reglas.evoluciones.dificiles && METODOS_DIFICILES.has(evo.metodo);
-      const piedra = reglas.evoluciones.piedras && METODOS_PIEDRA.has(evo.metodo);
-      if (!dificil && !piedra) continue;
-      if (!hayNivel) {
-        evo.metodo = EVO.nivel;
-        evo.dato = nivelParaEvolucion(destino);
-        hayNivel = true;
-      } else if (dificil) {
-        const piedraLibre = PIEDRAS.find((p) => !piedrasUsadas.has(p));
-        evo.metodo = EVO.piedra;
-        evo.dato = piedraLibre;
-        piedrasUsadas.add(piedraLibre);
+    if (dificiles) {
+      let hayNivel = e.evoluciones.some((evo) => evo.metodo === EVO.nivel);
+      const piedrasUsadas = new Set(e.evoluciones.filter((evo) => evo.metodo === EVO.piedra).map((evo) => evo.dato));
+      for (const evo of e.evoluciones) {
+        const destino = datos.especies[evo.especie];
+        if (!destino || !METODOS_DIFICILES.has(evo.metodo)) continue;
+        // Otra forma de llegar al mismo (Feebas: belleza y Escama Bella): sobra
+        if (e.evoluciones.some((otra) => otra !== evo && otra.especie === evo.especie && otra.metodo === EVO.nivel)) {
+          evo.quitar = true;
+          continue;
+        }
+        if (!hayNivel) {
+          evo.metodo = EVO.nivel;
+          evo.dato = nivelParaEvolucion(destino);
+          hayNivel = true;
+        } else {
+          const piedraLibre = PIEDRAS.find((p) => !piedrasUsadas.has(p));
+          evo.metodo = EVO.piedra;
+          evo.dato = piedraLibre;
+          piedrasUsadas.add(piedraLibre);
+        }
+      }
+      e.evoluciones = e.evoluciones.filter((evo) => !evo.quitar);
+    }
+    if (piedras && e.evoluciones.length < 7 && !e.evoluciones.some((evo) => evo.metodo === EVO.nivel)) {
+      const conPiedra = e.evoluciones.find((evo) => METODOS_PIEDRA.has(evo.metodo) && datos.especies[evo.especie]);
+      if (conPiedra) {
+        e.evoluciones.push({ metodo: EVO.nivel, dato: nivelParaEvolucion(datos.especies[conPiedra.especie]), especie: conPiedra.especie });
       }
     }
   }
@@ -271,7 +288,6 @@ function randomizarEvoluciones(datos, reglas) {
     if (evo && previaNivel && evo.dato <= previaNivel.dato) evo.dato = Math.min(60, previaNivel.dato + 8);
   }
 }
-
 // ---------- Iniciales ----------
 
 function randomizarIniciales(datos, reglas, azar) {

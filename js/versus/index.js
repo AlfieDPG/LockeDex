@@ -15,7 +15,7 @@ import { icono } from "../comun/iconos.js";
 import { escaparHTML, fechaLarga } from "../comun/utilidades.js";
 import { hayNube, usuarioActual } from "../comun/nube.js";
 import { leer, escribir } from "../comun/almacen.js";
-import { CLAVES_JUEGO } from "../comun/selector-juego.js";
+import { CLAVES_JUEGO, CLAVE_MULTIPLICADOR_CAPS } from "../comun/selector-juego.js";
 import {
   plantillaCampoJuego, activarCamposJuego, leerCampoJuego, nombreJuego, juegoConDatos
 } from "../comun/campo-juego.js";
@@ -42,7 +42,7 @@ import {
   alternarRom
 } from "./combates.js";
 import { iniciarPartida, plantillaPartida, accionPartida } from "./partida.js";
-import { hayAlgo, misReglas, normasGuardadas, resumenNormas } from "../randomizer/reglas.js";
+import { completarReglas, hayAlgo, misReglas, normasGuardadas, resumenNormas } from "../randomizer/reglas.js";
 import { confirmar } from "../comun/ventanas.js";
 
 let seccion = null;
@@ -453,13 +453,15 @@ function pintarRandomizer(locke, creador) {
     `<option value="${escaparHTML(valor)}" ${valor === elegido ? "selected" : ""}>${escaparHTML(texto)}</option>`;
   const guardadas = normasGuardadas();
   campo(".locke-randomizer").innerHTML = `
-    <select class="locke-normas-elegir locke-randomizer-elegir" ${creador ? "" : "disabled"}>
-      ${opcion(SIN_RANDOMIZER, "Sin randomizer")}
-      ${delLocke ? opcion(LAS_DEL_LOCKE, `Las del locke${delLocke.nombre ? ` (${delLocke.nombre})` : ""}`) : ""}
-      ${guardadas.map((n) => opcion(`${GUARDADA}${n.id}`, n.nombre)).join("")}
-      ${mias && hayAlgo(mias) ? opcion(LAS_MIAS, "Las sueltas de mi sección Randomizer") : ""}
-    </select>
-    ${creador ? `<button type="button" class="locke-randomizer-editar">${icono("lapiz")} Preparar normas</button>` : ""}
+    <div class="locke-randomizer-fila">
+      <select class="locke-normas-elegir locke-randomizer-elegir" ${creador ? "" : "disabled"}>
+        ${opcion(SIN_RANDOMIZER, "Sin randomizer")}
+        ${delLocke ? opcion(LAS_DEL_LOCKE, `Las del locke${delLocke.nombre ? ` (${delLocke.nombre})` : ""}`) : ""}
+        ${guardadas.map((n) => opcion(`${GUARDADA}${n.id}`, n.nombre)).join("")}
+        ${mias && hayAlgo(mias) ? opcion(LAS_MIAS, "Las sueltas de mi sección Randomizer") : ""}
+      </select>
+      ${creador ? `<button type="button" class="locke-randomizer-editar">${icono("lapiz")} Preparar normas</button>` : ""}
+    </div>
     <p class="locke-randomizer-resumen"></p>`;
   resumenRandomizer(locke);
 }
@@ -708,8 +710,17 @@ async function borrarDesdeElDialogo() {
 
 // Atajos del locke a Rutas o Level caps: se deja apuntado el juego y se abre la sección,
 // que al mostrarse lo lee (ver mostrar() en js/rutas y js/levelcaps).
-function irAlJuego(seccionDestino, idJuego) {
+function irAlJuego(seccionDestino, idJuego, locke) {
   escribir(CLAVES_JUEGO[seccionDestino], idJuego);
+  // Level caps de un locke con randomizer: el multiplicador de niveles de sus normas, el mismo
+  // para todos (sale de las normas del locke, no de la ROM de cada uno)
+  if (seccionDestino === "levelcaps" && locke && locke.randomizer) {
+    const subida = Number(completarReglas(locke.randomizer.reglas).entrenadores.nivel) || 0;
+    const multiplicadores = leer(CLAVE_MULTIPLICADOR_CAPS, {}) || {};
+    if (subida) multiplicadores[idJuego] = 1 + subida / 100;
+    else delete multiplicadores[idJuego];
+    escribir(CLAVE_MULTIPLICADOR_CAPS, multiplicadores);
+  }
   irA(seccionDestino);
 }
 
@@ -870,7 +881,7 @@ export function iniciar() {
       // Unos personalizados que no tienes (o borraste): se apuntan antes de abrirlos
       const personalizado = PERSONALIZADOS[boton.dataset.ir === "rutas" ? "rutas" : "caps"];
       if (locke[personalizado.campo]) personalizado.almacen.recibirDeLocke(locke[personalizado.campo], true);
-      irAlJuego(boton.dataset.ir, boton.dataset.juego);
+      irAlJuego(boton.dataset.ir, boton.dataset.juego, locke);
     } else if (boton.classList.contains("locke-editar")) {
       abrir(locke);
     } else if (boton.classList.contains("locke-quitar-lista")) {

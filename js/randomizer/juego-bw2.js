@@ -135,7 +135,7 @@ function leerEspecies(narcs) {
       if (metodo && especie) evoluciones.push({ metodo, dato: u16(e, k * 6 + 2), especie });
     }
     especies[id] = {
-      id, stats, total: stats.reduce((a, b) => a + b, 0),
+      id, stats, total: stats.reduce((a, b) => a + b, 0), totalOriginal: stats.reduce((a, b) => a + b, 0),
       tipos: [...new Set([TIPOS[d[6]], TIPOS[d[7]]])].filter(Boolean),
       habilidades: [d[24], d[25], d[26]],
       objetos: [u16(d, 12), u16(d, 14), u16(d, 16)],

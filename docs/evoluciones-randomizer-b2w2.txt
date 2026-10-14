@@ -1,0 +1,89 @@
+EVOLUCIONES DEL RANDOMIZER (Pokémon Blanco 2 / Negro 2)
+=======================================================
+
+Esto es lo que cambia en las evoluciones cuando se activan estas dos opciones de la pestaña
+Pokémon > Evoluciones del randomizer de LockeDex. Los Pokémon que no salen aquí no cambian.
+Los niveles salen de la fuerza (total de estadísticas base) del Pokémon al que se evoluciona, tal
+como es en el juego, sin tocar: son siempre los mismos aunque se cambien las estadísticas.
+No valen si además se activan las evoluciones aleatorias (entonces todo es distinto).
+
+
+1) CONVERTIR EVOLUCIONES COMPLEJAS EN EVOLUCIONES POR NIVEL
+-----------------------------------------------------------
+Las evoluciones por intercambio, sabiendo un ataque, con otro Pokémon en el equipo o con mucha
+belleza pasan a ser por nivel. Se pierde la forma original de evolucionar.
+Si el Pokémon ya evolucionaba por nivel a otro, la compleja pasa a ser con una piedra que no use.
+Si hay dos formas de llegar al mismo Pokémon (Feebas), queda solo la de nivel.
+
+  Poliwhirl → Politoed: antes por intercambio llevando Roca del Rey; ahora nivel 34
+  Kadabra → Alakazam: antes por intercambio; ahora nivel 33
+  Machoke → Machamp: antes por intercambio; ahora nivel 34
+  Graveler → Golem: antes por intercambio; ahora nivel 33
+  Slowpoke → Slowking: antes por intercambio llevando Roca del Rey; ahora con la Piedra Solar
+  Haunter → Gengar: antes por intercambio; ahora nivel 34
+  Onix → Steelix: antes por intercambio llevando Rev.metálico; ahora nivel 35
+  Lickitung → Lickilicky: antes sabiendo Desenrollar; ahora nivel 35
+  Rhydon → Rhyperior: antes por intercambio llevando Protector; ahora nivel 50
+  Tangela → Tangrowth: antes sabiendo Poder Pasado; ahora nivel 37
+  Seadra → Kingdra: antes por intercambio llevando Escamadragón; ahora nivel 37
+  Scyther → Scizor: antes por intercambio llevando Rev.metálico; ahora nivel 34
+  Electabuzz → Electivire: antes por intercambio llevando Electrizador; ahora nivel 37
+  Magmar → Magmortar: antes por intercambio llevando Magmatizador; ahora nivel 37
+  Porygon → Porygon2: antes por intercambio llevando Mejora; ahora nivel 35
+  Aipom → Ambipom: antes sabiendo Doble Golpe; ahora nivel 33
+  Yanma → Yanmega: antes sabiendo Poder Pasado; ahora nivel 35
+  Piloswine → Mamoswine: antes sabiendo Poder Pasado; ahora nivel 36
+  Porygon2 → Porygon-Z: antes por intercambio llevando Discoxtraño; ahora nivel 37
+  Feebas → Milotic: antes con mucha belleza; ahora nivel 37
+  Dusclops → Dusknoir: antes por intercambio llevando Telaterrible; ahora nivel 45
+  Clamperl → Huntail: antes por intercambio llevando Diente Mar.; ahora nivel 33
+  Clamperl → Gorebyss: antes por intercambio llevando Escama Mar.; ahora con la Piedra Solar
+  Bonsly → Sudowoodo: antes sabiendo Mimético; ahora nivel 27
+  Mime Jr. → Mr. Mime: antes sabiendo Mimético; ahora nivel 31
+  Mantyke → Mantine: antes con Remoraid en el equipo; ahora nivel 31
+  Boldore → Gigalith: antes por intercambio; ahora nivel 34
+  Gurdurr → Conkeldurr: antes por intercambio; ahora nivel 34
+  Karrablast → Escavalier: antes por intercambio con un Shelmet; ahora nivel 34
+  Shelmet → Accelgor: antes por intercambio con un Karrablast; ahora nivel 34
+
+
+2) CONVERTIR EVOLUCIONES POR PIEDRA EN EVOLUCIONES POR NIVEL
+------------------------------------------------------------
+La piedra SE MANTIENE y se le suma el nivel: pueden evolucionar de las dos formas.
+
+  Pikachu → Raichu: con la Piedratrueno o nivel 32
+  Nidorina → Nidoqueen: con la Piedra Lunar o nivel 34
+  Nidorino → Nidoking: con la Piedra Lunar o nivel 34
+  Clefairy → Clefable: con la Piedra Lunar o nivel 32
+  Vulpix → Ninetales: con la Piedra Fuego o nivel 34
+  Jigglypuff → Wigglytuff: con la Piedra Lunar o nivel 28
+  Gloom → Vileplume: con la Piedra Hoja o nivel 32
+  Growlithe → Arcanine: con la Piedra Fuego o nivel 38
+  Weepinbell → Victreebel: con la Piedra Hoja o nivel 32
+  Shellder → Cloyster: con la Piedra Agua o nivel 36
+  Exeggcute → Exeggutor: con la Piedra Hoja o nivel 36
+  Staryu → Starmie: con la Piedra Agua o nivel 36
+  Togetic → Togekiss: con la Piedra Día o nivel 38
+  Sunkern → Sunflora: con la Piedra Solar o nivel 28
+  Murkrow → Honchkrow: con la Piedra Noche o nivel 34
+  Misdreavus → Mismagius: con la Piedra Noche o nivel 34
+  Lombre → Ludicolo: con la Piedra Agua o nivel 32
+  Nuzleaf → Shiftry: con la Piedra Hoja o nivel 32
+  Skitty → Delcatty: con la Piedra Lunar o nivel 24
+  Roselia → Roserade: con la Piedra Día o nivel 34
+  Pansage → Simisage: con la Piedra Hoja o nivel 34
+  Pansear → Simisear: con la Piedra Fuego o nivel 34
+  Panpour → Simipour: con la Piedra Agua o nivel 34
+  Munna → Musharna: con la Piedra Lunar o nivel 33
+  Cottonee → Whimsicott: con la Piedra Solar o nivel 32
+  Petilil → Lilligant: con la Piedra Solar o nivel 32
+  Minccino → Cinccino: con la Piedra Día o nivel 32
+  Eelektrik → Eelektross: con la Piedratrueno o nivel 47
+  Lampent → Chandelure: con la Piedra Noche o nivel 49
+
+Las que se quedan solo con la piedra, y por qué:
+  Gloom → Bellossom con la Piedra Solar: ya evoluciona por nivel (Vileplume nivel 32)
+  Poliwhirl → Poliwrath con la Piedra Agua: ya evoluciona por nivel (Politoed nivel 34)
+  Eevee → Jolteon con la Piedratrueno, Vaporeon con la Piedra Agua, Flareon con la Piedra Fuego: no le queda sitio en su tabla de evoluciones (tiene 7)
+  Kirlia → Gallade con la Piedra Alba (solo machos): ya evoluciona por nivel (Gardevoir nivel 30)
+  Snorunt → Froslass con la Piedra Alba (solo hembras): ya evoluciona por nivel (Glalie nivel 42)

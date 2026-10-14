@@ -8,7 +8,7 @@
 import { COMBATES } from "./datos.js";
 import { retratoDeLaWeb } from "./retratos.js";
 import { abrirElegirImagen } from "./elegir-imagen.js";
-import { crearSelectorJuego } from "../comun/selector-juego.js";
+import { crearSelectorJuego, CLAVE_MULTIPLICADOR_CAPS } from "../comun/selector-juego.js";
 import { leer, escribir } from "../comun/almacen.js";
 import { imagenConRespaldo } from "../comun/imagenes.js";
 import { escaparHTML } from "../comun/utilidades.js";
@@ -27,7 +27,7 @@ function retrato(c) {
 // NO cambiar estas claves: si se cambian, se pierden los combates marcados como superados
 const CLAVE_SUPERADOS = "poketeams-levelcaps-v2"; // { idJuego: [claveCombate, ...] }
 const CLAVE_JUEGO = "poketeams-levelcaps-juego-v1";
-const CLAVE_MULTIPLICADOR = "poketeams-levelcaps-multiplicador-v1"; // { idJuego: 1.5, ... }
+const CLAVE_MULTIPLICADOR = CLAVE_MULTIPLICADOR_CAPS; // { idJuego: 1.5, ... }
 
 // Multiplicador de nivel (randomizers que suben el nivel de los entrenadores)
 const MULTIPLICADOR_MIN = 0.5;
@@ -77,7 +77,9 @@ function tituloNivel(c) {
 }
 
 function pintarMultiplicador() {
-  valorMultiplicador.textContent = `×${multiplicador.toFixed(1)}`;
+  // Con un decimal, salvo los de un randomizer (×1,05)
+  const decimales = Math.abs(multiplicador * 10 - Math.round(multiplicador * 10)) < 1e-9 ? 1 : 2;
+  valorMultiplicador.textContent = `×${multiplicador.toFixed(decimales)}`;
 }
 
 function cambiarMultiplicador(paso) {
@@ -415,4 +417,13 @@ export function mostrar() {
   // Si se ha llegado desde un locke de «Lockes», el juego viene apuntado en CLAVE_JUEGO.
   // Si es el mismo que ya había, no hace nada.
   selectorJuego.elegirPorId(leer(CLAVE_JUEGO, null));
+  // Un locke con randomizer puede haber cambiado el multiplicador desde fuera
+  for (const clave of Object.keys(multiplicadores)) delete multiplicadores[clave];
+  Object.assign(multiplicadores, leer(CLAVE_MULTIPLICADOR, {}));
+  const impuesto = juego && (multiplicadores[juego.id] || 1);
+  if (juego && impuesto !== multiplicador) {
+    multiplicador = impuesto;
+    pintarMultiplicador();
+    pintarLista();
+  }
 }
