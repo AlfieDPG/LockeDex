@@ -3,12 +3,12 @@
 // El editor (js/versus/editor*.js, partida.js, bolsa.js...) no sabe de qué consola es la
 // partida: pide aquí las piezas con formatoDe(bytes) y usa siempre los mismos nombres.
 //
-//   { id, gen, cajas, leer, sePuedeEditar, leerHueco, huecoVacio, editarHuecos, cuantosEquipo,
-//     entrenadorDe, pokemon: { leerEditable, aplicarEditable, crearPokemon, conLlaveNueva,
+//   { id, gen, cajas, cajasAbiertas, leer, sePuedeEditar, leerHueco, huecoVacio, editarHuecos,
+//     cuantosEquipo, entrenadorDe, pokemon: { leerEditable, aplicarEditable, crearPokemon, conLlaveNueva,
 //     paraEquipo, paraCaja, esHuevo, especieDe, formaDe, lugarIntercambio, maxMote,
 //     maxEntrenador }, mochila: { bolsillosDe, leerMochila, escribirMochila } }
 
-import { JUEGOS, leerPartida3DS, posicionCuantos, entrenadorDe } from "./tresds.js";
+import { JUEGOS, leerPartida3DS, posicionCuantos, entrenadorDe, cajasAbiertas } from "./tresds.js";
 import { JUEGOS_EDITABLES, sePuedeEditar, leerHueco, huecoVacio, editarHuecos } from "./escribir3ds.js";
 import * as pk3ds from "./pokemon3ds.js";
 import { bolsillosDe, leerMochila, escribirMochila } from "./mochila3ds.js";
@@ -40,6 +40,7 @@ export function formatoDe(bytes) {
       id: tres.id,
       gen: tres.gen,
       cajas: tres.cajas,
+      cajasAbiertas,
       leer: leerPartida3DS,
       sePuedeEditar,
       leerHueco,
@@ -58,6 +59,7 @@ export function formatoDe(bytes) {
     id: mapa.id,
     gen: mapa.gen,
     cajas: mapa.numCajas,
+    cajasAbiertas: () => mapa.numCajas,
     leer: leerPartidaDS,
     sePuedeEditar: sePuedeEditarDS,
     leerHueco: leerHuecoDS,

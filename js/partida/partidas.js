@@ -69,10 +69,12 @@ export function alternarCajaMuertos(idLocke, posicion) {
   guardarPartida(idLocke, partida);
 }
 
-// Lee el archivo y lo guarda. Devuelve { partida } o { error } (texto para enseñar).
+// Lee el archivo y lo guarda. Devuelve { partida } o { error } (texto para enseñar; con
+// reintentar o dudoso, puede que a la próxima sí se pueda).
 export async function procesarArchivo(locke, bytes, archivo = "") {
   const deDS = !esPartida3DS(bytes) && esPartidaDS(bytes);
-  if (!deDS && !esPartida3DS(bytes)) return { error: "Ese archivo no es una partida que se sepa leer." };
+  // dudoso: puede ser una partida a medio guardar (el emulador escribiendo justo entonces)
+  if (!deDS && !esPartida3DS(bytes)) return { error: "Ese archivo no es una partida que se sepa leer.", dudoso: true };
 
   let leida;
   try {

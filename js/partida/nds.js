@@ -4,12 +4,13 @@
 // está. Devuelve lo mismo que leerPartida3DS (./tresds.js). Escribir está en ./escribirds.js.
 //
 // Gen 4: la partida está dos veces (en 0x0 y en 0x40000), cada una con un bloque general (el
-// entrenador, el equipo y la bolsa) y otro de cajas. Al final de cada bloque hay un pie de 0x14
-// bytes: un contador (vale el más alto de las dos copias), el tamaño y un CRC16-CCITT.
+// entrenador, el equipo y la bolsa) y otro de cajas. Al final de cada bloque hay un pie con un
+// contador (vale el más alto de las dos copias), el tamaño y un CRC16-CCITT: de 0x14 bytes en
+// Diamante / Perla y Platino, y de 0x10 en HGSS (sin el hueco de delante del tamaño).
 // Gen 5: cada caja va en su bloque de 0x1000, y el equipo y la bolsa en el suyo, cada uno con
 // su CRC detrás. Una tabla repite todos esos CRC (y lleva el suyo), y todo está dos veces: la
 // copia de seguridad empieza en 0x24000 (Negro / Blanco) o 0x26000 (Negro 2 / Blanco 2).
-// Comprobado con partidas reales de Platino, Blanco y Blanco 2.
+// Comprobado con partidas reales de Diamante, Platino, HeartGold, Blanco y Blanco 2.
 
 import { ORDEN } from "./tresds.js";
 import { LETRAS_GEN4 } from "./datos-ds.js";
@@ -26,15 +27,15 @@ export const POR_CAJA = 30;
 const GEN4 = {
   dp: {
     general: [0, 0xc100], cajas: [0xc100, 0x121e0], nombre: 0x64, tid: 0x74, generoEntrenador: 0x7c, idioma: 0x7d,
-    cuantos: 0x94, equipo: 0x98, primeraCaja: 4, paso: 0xff0, nombres: 0x11ee4, bolsa: 0x624, version: 10
+    cuantos: 0x94, equipo: 0x98, primeraCaja: 4, paso: 0xff0, nombres: 0x11ee4, bolsa: 0x624, version: 10, pie: 0x14
   },
   platino: {
     general: [0, 0xcf2c], cajas: [0xcf2c, 0x121e4], nombre: 0x68, tid: 0x78, generoEntrenador: 0x80, idioma: 0x81,
-    cuantos: 0x9c, equipo: 0xa0, primeraCaja: 4, paso: 0xff0, nombres: 0x11ee4, bolsa: 0x630, version: 12
+    cuantos: 0x9c, equipo: 0xa0, primeraCaja: 4, paso: 0xff0, nombres: 0x11ee4, bolsa: 0x630, version: 12, pie: 0x14
   },
   hgss: {
     general: [0, 0xf628], cajas: [0xf700, 0x12310], nombre: 0x64, tid: 0x74, generoEntrenador: 0x7c, idioma: 0x7d,
-    cuantos: 0x94, equipo: 0x98, primeraCaja: 0, paso: 0x1000, nombres: 0x12008, bolsa: 0x644, version: 7
+    cuantos: 0x94, equipo: 0x98, primeraCaja: 0, paso: 0x1000, nombres: 0x12008, bolsa: 0x644, version: 7, pie: 0x10
   }
 };
 const TAM_EQUIPO_GEN4 = 0xec;
@@ -83,18 +84,19 @@ export function sinPie(bytes) {
   return null;
 }
 
-// Un bloque de gen 4 en una de las dos copias: { inicio, datos, crc, contador } o null si no cuadra
-function bloqueGen4(b, copia, [inicio, tam]) {
+// Un bloque de gen 4 en una de las dos copias: { inicio, datos, crc, contador } o null si no cuadra.
+// largoPie: 0x14 (el tamaño va en +8) o 0x10 (en +4).
+function bloqueGen4(b, copia, [inicio, tam], largoPie) {
   const i = copia + inicio;
-  const pie = i + tam - 0x14;
-  if (u32(b, pie + 8) !== tam) return null;
-  if (crc16(b, i, tam - 0x14) !== u16(b, i + tam - 2)) return null;
-  return { inicio: i, datos: tam - 0x14, crc: i + tam - 2, contador: u32(b, pie) };
+  const pie = i + tam - largoPie;
+  if (u32(b, pie + largoPie - 0xc) !== tam) return null;
+  if (crc16(b, i, tam - largoPie) !== u16(b, i + tam - 2)) return null;
+  return { inicio: i, datos: tam - largoPie, crc: i + tam - 2, contador: u32(b, pie) };
 }
 
 // El de las dos copias que vale (el de contador más alto)
-function mejorBloque(b, datos) {
-  const validos = [0, 0x40000].map((copia) => bloqueGen4(b, copia, datos)).filter(Boolean);
+function mejorBloque(b, datos, largoPie) {
+  const validos = [0, 0x40000].map((copia) => bloqueGen4(b, copia, datos, largoPie)).filter(Boolean);
   return validos.sort((x, y) => y.contador - x.contador)[0] || null;
 }
 
@@ -108,8 +110,8 @@ export function mapaDS(bytes) {
   if (!b) return null;
 
   for (const [id, j] of Object.entries(GEN4)) {
-    const general = mejorBloque(b, j.general);
-    const cajas = mejorBloque(b, j.cajas);
+    const general = mejorBloque(b, j.general, j.pie);
+    const cajas = mejorBloque(b, j.cajas, j.pie);
     if (!general || !cajas) continue;
     return {
       id, gen: 4, datos: j, numCajas: 18,
@@ -358,6 +360,7 @@ export function leerPartidaDS(bytes) {
     version: VERSIONES[ent.version] || "",
     gen,
     entrenador: texto(new DataView(ent.nombre.buffer), 0, 8),
+    abiertas: mapa.numCajas,
     equipo,
     cajas
   };

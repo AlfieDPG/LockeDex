@@ -1208,7 +1208,32 @@ button.salon-cara:hover {
   min-width: 0;
 }
 
+.locke-randomizer-editar {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: #363949;
+  color: #f2f2f2;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.locke-randomizer-editar:hover {
+  background: #424559;
+}
+
+.locke-randomizer-resumen {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
 .locke-normas,
+.locke-randomizer,
 .locke-rutas,
 .locke-caps {
   display: flex;
@@ -1860,6 +1885,16 @@ button.salon-cara:hover {
 
 .partida-caja h3 small {
   opacity: 0.5;
+}
+
+/* Bloqueada en el juego (Sol / Luna): se ve, pero apagada */
+.partida-caja.bloqueada .partida-pokemon {
+  opacity: 0.45;
+}
+
+.partida-candado {
+  display: inline-flex;
+  color: #aab0c8;
 }
 
 .partida-pokemon {

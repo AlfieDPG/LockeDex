@@ -32,39 +32,39 @@
 
 /* Las pestañas de arriba del todo (regiones de Rutas y Level caps, Normas, Ruleta) cuelgan
    de la línea de color de la sección: la elegida se pega a ella, con una curva a cada lado */
-:is(.selector-juego, #vista-normas, #vista-ruleta) > .selector-regiones:first-child {
+:is(.selector-juego, #vista-normas, #vista-ruleta, #vista-randomizer) > .selector-regiones:first-child {
   gap: 1.3rem;
   margin: -0.85rem 0 0 1.3rem;
   padding: 0;
   border-bottom: none;
 }
 
-:is(.selector-juego, #vista-normas, #vista-ruleta) > .selector-regiones:first-child button {
+:is(.selector-juego, #vista-normas, #vista-ruleta, #vista-randomizer) > .selector-regiones:first-child button {
   position: relative;
   padding: 1.15rem 1rem 0.55rem;
   border-radius: 0 0 0.65rem 0.65rem;
 }
 
-:is(.selector-juego, #vista-normas, #vista-ruleta) > .selector-regiones:first-child button {
+:is(.selector-juego, #vista-normas, #vista-ruleta, #vista-randomizer) > .selector-regiones:first-child button {
   --fondo: transparent;
 }
 
-:is(.selector-juego, #vista-normas, #vista-ruleta) > .selector-regiones:first-child button:hover {
+:is(.selector-juego, #vista-normas, #vista-ruleta, #vista-randomizer) > .selector-regiones:first-child button:hover {
   --fondo: rgba(255, 255, 255, 0.08);
   background: var(--fondo);
 }
 
-:is(.selector-juego, #vista-normas, #vista-ruleta) > .selector-regiones:first-child button.activa {
+:is(.selector-juego, #vista-normas, #vista-ruleta, #vista-randomizer) > .selector-regiones:first-child button.activa {
   --fondo: rgb(var(--color-vista));
   background: var(--fondo);
   color: #1e1f2b;
 }
 
-:is(.selector-juego, #vista-normas, #vista-ruleta) > .selector-regiones:first-child button:hover::before,
-:is(.selector-juego, #vista-normas, #vista-ruleta) > .selector-regiones:first-child button:hover::after,
-:is(.selector-juego, #vista-normas, #vista-ruleta) > .selector-regiones:first-child button.activa::before,
-:is(.selector-juego, #vista-normas, #vista-ruleta) > .selector-regiones:first-child button:hover::after,
-:is(.selector-juego, #vista-normas, #vista-ruleta) > .selector-regiones:first-child button.activa::after {
+:is(.selector-juego, #vista-normas, #vista-ruleta, #vista-randomizer) > .selector-regiones:first-child button:hover::before,
+:is(.selector-juego, #vista-normas, #vista-ruleta, #vista-randomizer) > .selector-regiones:first-child button:hover::after,
+:is(.selector-juego, #vista-normas, #vista-ruleta, #vista-randomizer) > .selector-regiones:first-child button.activa::before,
+:is(.selector-juego, #vista-normas, #vista-ruleta, #vista-randomizer) > .selector-regiones:first-child button:hover::after,
+:is(.selector-juego, #vista-normas, #vista-ruleta, #vista-randomizer) > .selector-regiones:first-child button.activa::after {
   content: "";
   position: absolute;
   top: 0;
@@ -72,14 +72,14 @@
   height: 1.1rem;
 }
 
-:is(.selector-juego, #vista-normas, #vista-ruleta) > .selector-regiones:first-child button:hover::before,
-:is(.selector-juego, #vista-normas, #vista-ruleta) > .selector-regiones:first-child button.activa::before {
+:is(.selector-juego, #vista-normas, #vista-ruleta, #vista-randomizer) > .selector-regiones:first-child button:hover::before,
+:is(.selector-juego, #vista-normas, #vista-ruleta, #vista-randomizer) > .selector-regiones:first-child button.activa::before {
   right: 100%;
   background: radial-gradient(circle at 0 100%, transparent 1.1rem, var(--fondo) calc(1.1rem + 0.5px));
 }
 
-:is(.selector-juego, #vista-normas, #vista-ruleta) > .selector-regiones:first-child button:hover::after,
-:is(.selector-juego, #vista-normas, #vista-ruleta) > .selector-regiones:first-child button.activa::after {
+:is(.selector-juego, #vista-normas, #vista-ruleta, #vista-randomizer) > .selector-regiones:first-child button:hover::after,
+:is(.selector-juego, #vista-normas, #vista-ruleta, #vista-randomizer) > .selector-regiones:first-child button.activa::after {
   left: 100%;
   background: radial-gradient(circle at 100% 100%, transparent 1.1rem, var(--fondo) calc(1.1rem + 0.5px));
 }

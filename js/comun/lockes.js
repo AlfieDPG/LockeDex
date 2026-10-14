@@ -176,6 +176,38 @@ function quitarNormasQueLlegaronDeOtros(usuario) {
   escribir(CLAVE_NORMAS_LIMPIAS, [...hechas, usuario.uid]);
 }
 
+// Al cerrarse un locke tuyo, «Rutas» de su juego se queda limpio (lo marcado y lo capturado en
+// cada sitio), salvo que tengas otro locke abierto del mismo juego. Cada locke, una sola vez por
+// cuenta en cada navegador; los que ya estaban cerrados la primera vez no se tocan.
+const CLAVE_RUTAS_LIMPIAS = "poketeams-rutas-limpias-v1"; // { uid: [idLocke] }
+const CLAVE_RUTAS = "poketeams-rutas-v2"; // las de js/rutas/index.js
+const CLAVE_CAPTURAS = "poketeams-capturas-v1"; // las de js/rutas/capturas.js
+
+function limpiarRutasDeCerrados(usuario) {
+  if (!delServidor) return;
+  const hechas = leer(CLAVE_RUTAS_LIMPIAS, {}) || {};
+  const mios = misLockes();
+  const cerrados = mios.filter((locke) => locke.estado === "cerrado").map((locke) => locke.id);
+  if (!hechas[usuario.uid]) {
+    escribir(CLAVE_RUTAS_LIMPIAS, { ...hechas, [usuario.uid]: cerrados });
+    return;
+  }
+  const nuevos = mios.filter((locke) => locke.estado === "cerrado" && !hechas[usuario.uid].includes(locke.id));
+  if (!nuevos.length) return;
+
+  const abiertos = new Set(mios.filter((locke) => locke.estado !== "cerrado" && !estaEliminado(locke, usuario.uid)).map((locke) => locke.juego));
+  const marcadas = leer(CLAVE_RUTAS, {}) || {};
+  const capturas = leer(CLAVE_CAPTURAS, {}) || {};
+  for (const locke of nuevos) {
+    if (!locke.juego || abiertos.has(locke.juego)) continue;
+    delete marcadas[locke.juego];
+    delete capturas[locke.juego];
+  }
+  escribir(CLAVE_RUTAS, marcadas);
+  escribir(CLAVE_CAPTURAS, capturas);
+  escribir(CLAVE_RUTAS_LIMPIAS, { ...hechas, [usuario.uid]: [...hechas[usuario.uid], ...nuevos.map((locke) => locke.id)] });
+}
+
 async function recibirNormasDeMisLockes() {
   await cuandoEsteSincronizado();
   const usuario = usuarioActual();
@@ -236,6 +268,10 @@ function escuchar(usuario) {
 
       ponerMiNombre();
       recibirNormasDeMisLockes();
+      // Después de juntar con la nube, para que lo de la nube no lo vuelva a traer
+      cuandoEsteSincronizado()
+        .then(() => usuarioActual() && limpiarRutasDeCerrados(usuarioActual()))
+        .catch((error) => console.error(error));
     },
     (error) => {
       console.error("No se han podido leer los lockes", error);
@@ -271,7 +307,7 @@ function combatesNuevos(nombres, anteriores = []) {
 }
 
 export async function crearLocke({
-  nombre, descripcion, tipo, juego, juegoOtro, vidas, vidasIlimitadas, normas, rutasPropias, capsPropios,
+  nombre, descripcion, tipo, juego, juegoOtro, vidas, vidasIlimitadas, normas, rutasPropias, capsPropios, randomizer,
   combates, invitados, nombres, fotos
 }) {
   const usuario = usuarioActual();
@@ -306,6 +342,7 @@ export async function crearLocke({
     normas: normas || null,
     rutasPropias: rutasPropias || null,
     capsPropios: capsPropios || null,
+    randomizer: randomizer || null,
     combates: combatesNuevos(combates),
     resultados: {},
     rom: {},
@@ -796,6 +833,7 @@ export async function editarLocke(id, datos) {
     normas: datos.normas || null,
     rutasPropias: datos.rutasPropias || null,
     capsPropios: datos.capsPropios || null,
+    randomizer: datos.randomizer || null,
     actualizado: Date.now()
   };
   // Con el locke cerrado los combates ya no se tocan (el resultado ya está)

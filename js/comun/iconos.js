@@ -101,7 +101,18 @@ const DIBUJOS = {
                <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>`
 };
 
+// Los que son una imagen (blanca sobre transparente): se usa de máscara y se pinta con el color
+// del botón, como los demás
+const IMAGENES = {
+  mega: new URL("../../img/iconos/mega.png", import.meta.url).href // el símbolo de la megaevolución
+};
+
 export function icono(nombre) {
+  if (IMAGENES[nombre]) {
+    return `<svg class="icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <mask id="mascara-${nombre}"><image href="${IMAGENES[nombre]}" width="24" height="24"/></mask>
+      <rect width="24" height="24" fill="currentColor" mask="url(#mascara-${nombre})"/></svg>`;
+  }
   return `<svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor"
     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
     aria-hidden="true" focusable="false">${DIBUJOS[nombre] || ""}</svg>`;

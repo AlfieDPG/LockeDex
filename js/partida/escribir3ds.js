@@ -7,8 +7,8 @@
 //   1) El Pokémon: su suma (0x06), el barajado de sus cuatro trozos y el XOR.
 //   2) Los checksums de bloque de la tabla del final (tras «BEEF»). Comprobados contra
 //      partidas reales: en gen 6, CRC16-CCITT; en gen 7, CRC16 reflejado e invertido.
-//   3) Gen 7 lleva además una firma sobre esa tabla: hasta que no se haga, solo se escribe
-//      en X / Y y Rubí Omega / Zafiro Alfa (JUEGOS_EDITABLES).
+//   3) Gen 7 lleva además una firma sobre esa tabla (./firma7.js): el bloque que la lleva calcula
+//      su checksum con la firma a ceros, y la firma se hace después, sobre la tabla ya al día.
 //
 // Nada se da por bueno: antes de devolver la partida cambiada se vuelve a leer y se mira que
 // los checksums cuadran, que cada hueco tiene lo que se ha metido y que fuera de los huecos
@@ -18,8 +18,9 @@ import {
   JUEGOS, TROZO, TAM_POKEMON, TAM_POKEMON_EQUIPO, bloques, ordenDe, xorPokemon, sumaPokemon, descifrar, posicionHueco,
   posicionCuantos, leerPartida3DS
 } from "./tresds.js";
+import { firmar, LARGO_FIRMA } from "./firma7.js";
 
-export const JUEGOS_EDITABLES = ["xy", "oras"];
+export const JUEGOS_EDITABLES = ["xy", "oras", "sm", "usum"];
 
 export function sePuedeEditar(bytes) {
   const juego = JUEGOS[bytes.length];
@@ -59,26 +60,23 @@ function crc7(datos) {
   return ~c & 0xffff;
 }
 
-// El número del bloque de la firma (gen 7), o -1: su checksum no cuadra nunca (lo deshace la firma)
-function bloqueFirma(bytes, lista) {
-  const juego = JUEGOS[bytes.length];
-  if (!juego.firma) return -1;
-  return lista.findIndex((b) => juego.firma >= b.inicio && juego.firma < b.inicio + b.largo);
-}
-
+// El checksum de un bloque. El de la firma (gen 7), con la firma a ceros.
 function checksumDe(bytes, bloque) {
-  const datos = bytes.subarray(bloque.inicio, bloque.inicio + bloque.largo);
-  return JUEGOS[bytes.length].gen === 7 ? crc7(datos) : crc6(datos);
+  const juego = JUEGOS[bytes.length];
+  let datos = bytes.subarray(bloque.inicio, bloque.inicio + bloque.largo);
+  if (juego.firma >= bloque.inicio && juego.firma < bloque.inicio + bloque.largo) {
+    datos = datos.slice();
+    datos.fill(0, juego.firma - bloque.inicio, juego.firma - bloque.inicio + LARGO_FIRMA);
+  }
+  return juego.gen === 7 ? crc7(datos) : crc6(datos);
 }
 
-// Los bloques cuyo checksum no cuadra (sin contar el de la firma)
+// Los bloques cuyo checksum no cuadra
 export function checksumsMalos(bytes) {
   const vista = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const lista = bloques(bytes);
-  const firma = bloqueFirma(bytes, lista);
-  return lista
+  return bloques(bytes)
     .map((bloque, i) => ({ bloque, i }))
-    .filter(({ bloque, i }) => i !== firma && checksumDe(bytes, bloque) !== vista.getUint16(bloque.entrada + 6, true))
+    .filter(({ bloque }) => checksumDe(bytes, bloque) !== vista.getUint16(bloque.entrada + 6, true))
     .map(({ i }) => i);
 }
 
@@ -88,11 +86,17 @@ export function checksumsBien(bytes) {
 
 export function arreglarChecksums(bytes) {
   const vista = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const lista = bloques(bytes);
-  const firma = bloqueFirma(bytes, lista);
-  lista.forEach((bloque, i) => {
-    if (i !== firma) vista.setUint16(bloque.entrada + 6, checksumDe(bytes, bloque), true);
-  });
+  for (const bloque of bloques(bytes)) vista.setUint16(bloque.entrada + 6, checksumDe(bytes, bloque), true);
+  const juego = JUEGOS[bytes.length];
+  if (juego.firma) firmar(bytes, juego.firma, juego.id === "usum");
+}
+
+// Lo que arreglarChecksums puede cambiar: el checksum de cada bloque en la tabla y la firma
+export function zonasDeChecksums(bytes) {
+  const zonas = bloques(bytes).map((b) => ({ inicio: b.entrada + 6, fin: b.entrada + 8 }));
+  const juego = JUEGOS[bytes.length];
+  if (juego.firma) zonas.push({ inicio: juego.firma, fin: juego.firma + LARGO_FIRMA });
+  return zonas;
 }
 
 // ---------- Un Pokémon ----------
@@ -166,8 +170,8 @@ export function editarHuecos(original, cambios, cuantosEquipo) {
     const releido = descifrarHueco(nuevo, sitio);
     if (!releido || !igualesSalvoSuma(releido, crudo)) throw new Error("Un Pokémon no se ha guardado bien.");
   }
-  // Fuera de los huecos tocados, solo puede cambiar el checksum de cada bloque en la tabla
-  for (const b of bloques(nuevo)) tocados.push({ inicio: b.entrada + 6, fin: b.entrada + 8 });
+  // Fuera de los huecos tocados, solo pueden cambiar los checksums de la tabla (y la firma)
+  tocados.push(...zonasDeChecksums(nuevo));
   for (let i = 0; i < nuevo.length; i++) {
     if (nuevo[i] !== original[i] && !tocados.some((r) => i >= r.inicio && i < r.fin)) {
       throw new Error("Ha cambiado algo que no debía.");

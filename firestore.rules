@@ -241,7 +241,7 @@ service cloud.firestore {
           || !despues().diff(antes()).affectedKeys().hasAny([
             'nombre', 'descripcion', 'tipo', 'juego', 'juegoOtro', 'juegoPropio', 'estado', 'ganador',
             'fechaFin', 'creador', 'vidasIniciales', 'vidasIlimitadas', 'creado', 'normas',
-            'rutasPropias', 'capsPropios', 'combates'
+            'rutasPropias', 'capsPropios', 'randomizer', 'combates'
           ]);
       }
 

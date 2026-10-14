@@ -177,11 +177,17 @@ export function posicionCuantos(bytes) {
   return bloques(bytes)[juego.bloques.equipo].inicio + 6 * TAM_POKEMON_EQUIPO;
 }
 
-// El entrenador, para los Pokémon que se crean (de momento, solo en gen 6). nombre: los bytes
-// tal cual (13 letras de 2 bytes con el 0 del final), que van igual en el Pokémon.
+// El entrenador, para los Pokémon que se crean. nombre: los bytes tal cual (13 letras de 2
+// bytes con el 0 del final), que van igual en el Pokémon. Gen 7 lo tiene todo en otro sitio.
+const ENTRENADOR = {
+  6: { region: 0x26, pais: 0x27, consola: 0x2c, idioma: 0x2d, nombre: 0x48 },
+  7: { region: 0x2e, pais: 0x2f, consola: 0x34, idioma: 0x35, nombre: 0x38 }
+};
+
 export function entrenadorDe(bytes) {
   const juego = JUEGOS[bytes.length];
-  if (!juego || juego.gen !== 6) throw new Error("Todavía no se pueden crear Pokémon en este juego.");
+  if (!juego) throw new Error("No parece una partida de 3DS.");
+  const o = ENTRENADOR[juego.gen];
   const b = bloques(bytes)[juego.bloques.entrenador];
   const v = new DataView(bytes.buffer, bytes.byteOffset + b.inicio, b.largo);
   return {
@@ -189,12 +195,20 @@ export function entrenadorDe(bytes) {
     sid: v.getUint16(0x02, true),
     version: v.getUint8(0x04),
     genero: v.getUint8(0x05),
-    region: v.getUint8(0x26),
-    pais: v.getUint8(0x27),
-    consola: v.getUint8(0x2c),
-    idioma: v.getUint8(0x2d),
-    nombre: bytes.slice(b.inicio + 0x48, b.inicio + 0x48 + 0x1a)
+    region: v.getUint8(o.region),
+    pais: v.getUint8(o.pais),
+    consola: v.getUint8(o.consola),
+    idioma: v.getUint8(o.idioma),
+    nombre: bytes.slice(b.inicio + o.nombre, b.inicio + o.nombre + 0x1a)
   };
+}
+
+// Cajas desbloqueadas: en gen 7 se abren según se llenan (byte 0x5E1 del bloque de las cajas)
+export function cajasAbiertas(bytes) {
+  const juego = JUEGOS[bytes.length];
+  if (juego.gen !== 7) return juego.cajas;
+  const n = bytes[bloques(bytes)[juego.bloques.cajasInfo].inicio + 0x5e1];
+  return Math.max(1, Math.min(juego.cajas, n || juego.cajas));
 }
 
 export function leerPartida3DS(bytes) {
@@ -207,7 +221,6 @@ export function leerPartida3DS(bytes) {
   };
 
   const ent = bloque("entrenador");
-  const desplazNombre = juego.gen === 7 ? 0x38 : 0x48;
   const version = VERSIONES[ent.getUint8(0x04)];
 
   const eq = bloque("equipo");
@@ -236,7 +249,8 @@ export function leerPartida3DS(bytes) {
     juego: juego.id,
     version: version || "",
     gen: juego.gen,
-    entrenador: texto(ent, desplazNombre, 12),
+    entrenador: texto(ent, ENTRENADOR[juego.gen].nombre, 12),
+    abiertas: cajasAbiertas(bytes),
     equipo,
     cajas
   };

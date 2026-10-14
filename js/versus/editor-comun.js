@@ -17,18 +17,22 @@ import { abrirHuecos, escribirHuecos, mirar, llaveDe } from "../partida/huecos.j
 import { formatoDeSeguro } from "../partida/formato.js";
 import { marcarMetidos, marcarCreados, esCreado } from "../partida/partidas.js";
 import { FORMAS, convertirPartida } from "../partida/convertir.js";
-import { OBJETOS_EN, LUGARES_GEN6 } from "../partida/datos-3ds.js";
+import { OBJETOS_EN, LUGARES_GEN6, LUGARES_GEN7 } from "../partida/datos-3ds.js";
 import { LUGARES_GEN4, LUGARES_GEN4_OTROS, LUGARES_GEN5, LUGARES_GEN5_OTROS } from "../partida/datos-ds.js";
 import { cargarDatosEditor, GRUPOS } from "../partida/datos-editor.js";
 
 // Cada juego que se edita: su generación y lo último que existe en él (números de especie,
 // objeto, ataque, habilidad y ball). lugares: hasta qué número de lugar es suyo (gen 4 y 5).
 export const LIMITES = {
+  dp: { gen: 4, especies: 493, objetos: 464, ataques: 467, habilidades: 123, balls: 16, lugares: 111 },
   platino: { gen: 4, especies: 493, objetos: 467, ataques: 467, habilidades: 123, balls: 16, lugares: 125 },
+  hgss: { gen: 4, especies: 493, objetos: 536, ataques: 467, habilidades: 123, balls: 24, lugares: Infinity },
   bw: { gen: 5, especies: 649, objetos: 632, ataques: 559, habilidades: 164, balls: 25, lugares: 116 },
   b2w2: { gen: 5, especies: 649, objetos: 638, ataques: 559, habilidades: 164, balls: 25, lugares: Infinity },
   xy: { gen: 6, especies: 721, objetos: 717, ataques: 617, habilidades: 188, balls: 25 },
-  oras: { gen: 6, especies: 721, objetos: 775, ataques: 621, habilidades: 191, balls: 25 }
+  oras: { gen: 6, especies: 721, objetos: 775, ataques: 621, habilidades: 191, balls: 25 },
+  sm: { gen: 7, especies: 802, objetos: 920, ataques: 719, habilidades: 232, balls: 26 },
+  usum: { gen: 7, especies: 807, objetos: 959, ataques: 728, habilidades: 233, balls: 26 }
 };
 
 function genDe(juego) {
@@ -36,9 +40,9 @@ function genDe(juego) {
 }
 
 // Los lugares especiales «intercambio» de cada generación (los creados en la web)
-const INTERCAMBIO = { 4: 2002, 5: 30003, 6: 30001 };
+const INTERCAMBIO = { 4: 2002, 5: 30003, 6: 30001, 7: 30001 };
 
-// Las formas que se pueden elegir en gen 6: las que no son de Alola ni de gen 7
+// Hasta gen 6 no se pueden elegir las formas de Alola ni las de gen 7
 const ULTIMA_FORMA_GEN6 = 10090;
 
 export const ESPAÑOL = 7; // idioma de la partida
@@ -47,11 +51,11 @@ const HUEVO = { 1: "タマゴ", 2: "Egg", 3: "Œuf", 4: "Uovo", 5: "Ei", 7: "Hue
 // Estadísticas base que cambiaron después de gen 7 (la Pokédex trae las de ahora)
 const BASES_ANTIGUAS = { 681: [60, 50, 150, 50, 150, 60] }; // Aegislash
 
-// Las balls, por su número en el juego (del 1 al 25)
+// Las balls, por su número en el juego (del 1 al 26)
 const BALLS = [
   "Master Ball", "Ultra Ball", "Great Ball", "Poke Ball", "Safari Ball", "Net Ball", "Dive Ball", "Nest Ball",
   "Repeat Ball", "Timer Ball", "Luxury Ball", "Premier Ball", "Dusk Ball", "Heal Ball", "Quick Ball", "Cherish Ball",
-  "Fast Ball", "Level Ball", "Lure Ball", "Heavy Ball", "Love Ball", "Friend Ball", "Moon Ball", "Sport Ball", "Dream Ball"
+  "Fast Ball", "Level Ball", "Lure Ball", "Heavy Ball", "Love Ball", "Friend Ball", "Moon Ball", "Sport Ball", "Dream Ball", "Beast Ball"
 ];
 
 // ---------- Datos ----------
@@ -124,6 +128,10 @@ export function ataque(id) {
 // Los juegos de origen que puede llevar un Pokémon (número en el juego), con la generación
 // en que salieron
 export const VERSIONES = [
+  [30, "Sol", 7], [31, "Luna", 7], [32, "Ultrasol", 7], [33, "Ultraluna", 7],
+  [35, "Rojo (Consola Virtual)", 7], [36, "Verde (Consola Virtual)", 7], [37, "Azul (Consola Virtual)", 7],
+  [38, "Amarillo (Consola Virtual)", 7], [39, "Oro (Consola Virtual)", 7], [40, "Plata (Consola Virtual)", 7],
+  [41, "Cristal (Consola Virtual)", 7],
   [24, "X", 6], [25, "Y", 6], [27, "Rubí Omega", 6], [26, "Zafiro Alfa", 6],
   [21, "Negro", 5], [20, "Blanco", 5], [23, "Negro 2", 5], [22, "Blanco 2", 5],
   [10, "Diamante", 4], [11, "Perla", 4], [12, "Platino", 4], [7, "Oro HeartGold", 4], [8, "Plata SoulSilver", 4],
@@ -139,20 +147,20 @@ export function lugarIntercambio(juego) {
   return INTERCAMBIO[genDe(juego)];
 }
 
-// Los lugares del juego, sin repetir nombre. En gen 6, el N está en la posición N / 2; en gen 4
+// Los lugares del juego, sin repetir nombre. En 3DS, el N está en la posición N / 2; en gen 4
 // y 5, en la N (y los especiales, aparte).
 export function lugaresDe(juego) {
   const clave = `lugares-${juego}`;
   if (!listas.has(clave)) {
     const gen = genDe(juego);
-    const tabla = gen === 4 ? LUGARES_GEN4 : gen === 5 ? LUGARES_GEN5 : LUGARES_GEN6;
+    const tabla = { 4: LUGARES_GEN4, 5: LUGARES_GEN5, 6: LUGARES_GEN6, 7: LUGARES_GEN7 }[gen];
     const hasta = (LIMITES[juego] || {}).lugares ?? Infinity;
     const vistos = new Set();
     const lista = [];
     tabla.forEach((es, i) => {
       if (!es || vistos.has(es) || !i || i > hasta) return;
       vistos.add(es);
-      lista.push({ id: gen === 6 ? i * 2 : i, es, en: "", buscar: quitarAcentos(es) });
+      lista.push({ id: gen >= 6 ? i * 2 : i, es, en: "", buscar: quitarAcentos(es) });
     });
     lista.push({ id: INTERCAMBIO[gen], es: "Intercambio", en: "", buscar: "intercambio" });
     listas.set(clave, lista);
@@ -166,7 +174,8 @@ export function nombreLugar(numero, creado = false, juego = "xy") {
   if (gen === 4) return LUGARES_GEN4[numero] || LUGARES_GEN4_OTROS[numero] || (numero ? `Lugar ${numero}` : "");
   if (gen === 5) return LUGARES_GEN5[numero] || LUGARES_GEN5_OTROS[numero] || (numero ? `Lugar ${numero}` : "");
   if (numero === INTERCAMBIO[6] || numero === 30002) return "Intercambio";
-  return (numero % 2 === 0 && LUGARES_GEN6[numero / 2]) || (numero ? `Lugar ${numero}` : "");
+  const tabla = gen === 7 ? LUGARES_GEN7 : LUGARES_GEN6;
+  return (numero % 2 === 0 && tabla[numero / 2]) || (numero ? `Lugar ${numero}` : "");
 }
 
 // ¿Creado de cero en la web? (también los de los cambios sin guardar)
@@ -179,7 +188,8 @@ export function creadoEnWeb(idLocke, llave) {
 // ---------- Bolsa ----------
 
 // Bolsillo de PokeAPI -> el de la bolsa (js/partida/mochila3ds.js y mochilads.js). Gen 4 tiene
-// además bolsillos para las balls, las cartas y los objetos de combate.
+// además bolsillos para las balls, las cartas y los objetos de combate; gen 7, para los cristales
+// Z y los Rotoprodigios (que PokeAPI no separa: van por el nombre).
 const BOLSILLO_POKEAPI = { 1: "objetos", 2: "medicinas", 3: "objetos", 4: "mt", 5: "bayas", 6: "objetos", 7: "objetos", 8: "clave" };
 const BOLSILLO_GEN4 = { 3: "balls", 6: "cartas", 7: "combate" };
 // Los que en gen 6 van en otro: Repartir Experiencia (clave) y Caramelo Furia (medicinas)
@@ -188,7 +198,9 @@ const BOLSILLO_EN_GEN6 = { 216: "clave", 504: "medicinas" };
 export function bolsilloDe(objetoId, juego = "xy") {
   const gen = genDe(juego);
   const dePokeAPI = ((delEditor && delEditor.bolsillos) || {})[objetoId];
-  if (gen === 6 && BOLSILLO_EN_GEN6[objetoId]) return BOLSILLO_EN_GEN6[objetoId];
+  if (gen === 7 && /ium Z$/.test(OBJETOS_EN[objetoId] || "")) return "cristales";
+  if (gen === 7 && /^Roto /.test(OBJETOS_EN[objetoId] || "")) return "roto";
+  if (gen >= 6 && BOLSILLO_EN_GEN6[objetoId]) return BOLSILLO_EN_GEN6[objetoId];
   return (gen === 4 && BOLSILLO_GEN4[dePokeAPI]) || BOLSILLO_POKEAPI[dePokeAPI] || "objetos";
 }
 
@@ -265,7 +277,8 @@ function nombreDeForma(fila) {
 }
 
 // [{ forma (número en el juego), texto, idForma?, formaPMD?, imagenForma? }]
-export function formasDe(especie) {
+// juego: el de la partida (sin él, todas: para las estadísticas de lo que ya está en ella)
+export function formasDe(especie, juego) {
   const lista = [{ forma: 0, texto: "Normal" }];
   if (especie === 493) {
     lista[0].texto = "Tipo Normal";
@@ -274,7 +287,7 @@ export function formasDe(especie) {
     );
   }
   for (const [numero, [idForma, showdown]] of Object.entries(FORMAS[especie] || {})) {
-    if (idForma > ULTIMA_FORMA_GEN6) continue;
+    if (juego && genDe(juego) < 7 && idForma > ULTIMA_FORMA_GEN6) continue;
     const fila = filasPokedex.get(idForma);
     lista.push({ forma: Number(numero), texto: fila ? nombreDeForma(fila) : showdown, idForma, formaPMD: fila ? fila.forma : 0 });
   }
@@ -371,7 +384,7 @@ export async function editableDeEquipo(p, juego) {
   const quien = p.mote || p.es;
   if (p.id > limites.especies) throw new Error(`${p.es} no está en este juego.`);
 
-  const formas = formasDe(p.id);
+  const formas = formasDe(p.id, juego);
   const suya = formas.find((f) => (p.imagenForma ? f.imagenForma === p.imagenForma : f.idForma && f.idForma === p.idForma));
   if (!suya && p.idForma && p.idForma !== p.id && !/mega|primal/.test(p.formaSlug || "")) problemas.push(`${quien}: va con la forma normal`);
   const forma = suya ? suya.forma : 0;

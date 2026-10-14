@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="css/logros.css">
   <link rel="stylesheet" href="css/ruleta.css">
   <link rel="stylesheet" href="css/calculadora.css">
+  <link rel="stylesheet" href="css/randomizer.css">
   <script type="module" src="js/main.js"></script>
 </head>
 <body>
@@ -49,6 +50,7 @@
         <button data-vista="pokedex" data-icono="pokedex" class="boton-seccion">Pokédex</button>
         <button data-vista="calculadora" data-icono="calculadora" class="boton-seccion">Calculadora</button>
         <button data-vista="normas" data-icono="libro" class="boton-seccion">Normas</button>
+        <button data-vista="randomizer" data-icono="mezclar" class="boton-seccion">Randomizer</button>
         <button data-vista="ruleta" data-icono="ruleta" class="boton-seccion">Ruleta</button>
         <button data-vista="amigos" data-icono="amigos" class="boton-seccion">Amigos</button>
         <button data-vista="logros" data-icono="trofeo" class="boton-seccion">Logros</button>
@@ -171,6 +173,8 @@
           <div class="selector-regiones normas-pestanas"></div>
           <div class="normas"></div>
         </section>
+
+        <section id="vista-randomizer" hidden></section>
 
         <section id="vista-lockes" hidden>
           <div class="barra-versus">
@@ -486,6 +490,10 @@
         <span class="etiqueta-campo">Level caps</span>
         <div class="locke-caps"></div>
       </div>
+      <div class="locke-eleccion">
+        <span class="etiqueta-campo">Randomizer</span>
+        <div class="locke-randomizer"></div>
+      </div>
     </div>
 
     <label class="campo-ancho campo-descripcion">
@@ -678,7 +686,7 @@
       <p>Pulsa tu equipo en tu bloque para ver el equipo y las cajas. Las capturas se marcan solas en «Rutas».</p>
       <h3>Cajas de muertos</h3>
       <p>Pulsa «Muertos» en las cajas donde guardas a los que mueren. Los que entren nuevos en ellas te los propone para el cementerio (y quitar la vida, si quieres).</p>
-      <h3>Editar (X / Y, Rubí Omega / Zafiro Alfa, Platino, Negro / Blanco y Negro 2 / Blanco 2)</h3>
+      <h3>Editar</h3>
       <p>Pulsa un Pokémon para cambiarle lo que quieras, borrarlo o clonarlo; arrástralo encima de otro para cambiarlos de sitio, o a un hueco «+» para moverlo. En un hueco «+» creas uno nuevo y con «Meter equipo» metes uno de «Mis equipos» o de Showdown.</p>
       <h3>Bolsa</h3>
       <p>En la pestaña «Bolsa», cada bolsillo (objetos, medicinas, MT, bayas y objetos clave): cambia cuántos tienes, quítalos o mete otros.</p>

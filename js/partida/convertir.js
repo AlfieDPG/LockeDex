@@ -99,6 +99,7 @@ export async function prepararConversion() {
 function nombreLugar(gen, numero) {
   if (gen === 4) return LUGARES_GEN4[numero] || LUGARES_GEN4_OTROS[numero] || "";
   if (gen === 5) return LUGARES_GEN5[numero] || LUGARES_GEN5_OTROS[numero] || "";
+  if (numero === 30001 || numero === 30002) return "Intercambio";
   return (gen === 7 ? LUGARES_GEN7 : LUGARES_GEN6)[numero / 2] || "";
 }
 
@@ -154,6 +155,7 @@ export async function convertirPartida(leida) {
     juego: leida.juego,
     version: leida.version,
     entrenador: leida.entrenador,
+    abiertas: leida.abiertas,
     equipo: leida.equipo.map((p) => convertir(p, leida.gen, true)),
     cajas: leida.cajas.map((caja) => ({
       nombre: caja.nombre,

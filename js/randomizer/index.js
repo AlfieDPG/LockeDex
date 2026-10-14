@@ -1,0 +1,597 @@
+// ---------- Sección «Randomizer» ----------
+//
+// Arriba, las pestañas (Pokémon, iniciales, entrenadores...); debajo, la ROM y el botón de
+// randomizar y las normas de la pestaña. Todo empieza «sin cambios». Desde un locke
+// («Randomizar mi ROM») las normas son las del locke y no se tocan: elegir la ROM y randomizar.
+//
+// La ROM no sale nunca del navegador: se lee, se randomiza aquí y se descarga.
+//
+//   localStorage «poketeams-randomizer-v1»: { reglas } (las tuyas)
+//   localStorage «poketeams-randomizer-semillas-v1»: { idLocke: semilla } (la tuya de cada
+//     locke: volver a randomizar da la misma ROM)
+
+import { escaparHTML } from "../comun/utilidades.js";
+import { icono } from "../comun/iconos.js";
+import { leer, escribir } from "../comun/almacen.js";
+import { lockePorId, misLockes } from "../comun/lockes.js";
+import { JUEGOS } from "../comun/juegos.js";
+import { datos, cargarDatos } from "../comun/datos.js";
+import { preguntar, confirmar } from "../comun/ventanas.js";
+import {
+  completarReglas, hayAlgo, misReglas, REGLAS_VACIAS, CLAVE_MIAS as CLAVE, normasGuardadas, guardarNormas, borrarNormas
+} from "./reglas.js";
+
+const ULTIMA_ESPECIE = 649; // de momento, juegos hasta gen 5
+
+const CLAVE_SEMILLAS = "poketeams-randomizer-semillas-v1";
+
+// Juego de js/comun/juegos.js por las tres primeras letras del código de la ROM
+const JUEGO_DE_CODIGO = { IRE: "b2w2", IRD: "b2w2" };
+
+const PARECIDA_ALEATORIO = [["no", "Sin cambios"], ["parecida", "Fuerza parecida"], ["cualquiera", "Aleatorio"]];
+const QUIEN = [["no", "Nadie"], ["lideres", "Líderes"], ["normales", "Normales"], ["todos", "Todos"]];
+const COMPAT = [["no", "Sin cambios"], ["aleatoria", "Aleatorio"], ["total", "Todos"]];
+const ALEATORIO = [["no", "Sin cambios"], ["azar", "Aleatorio"]];
+const SI_NO = [[false, "Sin cambios"], [true, "Aleatorio"]];
+// Las generaciones a las que se puede actualizar (las de después del juego)
+const GENERACIONES = [[0, "Sin cambios"], [6, "6.ª generación"], [7, "7.ª generación"], [8, "8.ª generación"], [9, "9.ª generación"]];
+// Multiplicador de niveles: se guarda lo que suben, en %
+const MULTIPLICADOR = { tipo: "barra", min: 0, max: 100, paso: 5, formato: (v) => (v ? `×${(1 + v / 100).toLocaleString("es-ES", { minimumFractionDigits: 2 })}` : "Sin cambios") };
+
+// Las pestañas, y en cada una sus apartados. Cada apartado, sus campos, siempre a la vista: el
+// primer valor de cada uno es «sin cambios». tipo: «opciones» (botones), «casilla» (sí o no),
+// «lista» (desplegable), «barra» (deslizable) o «iniciales» (las tres, a mano). «hijos»: los que
+// dependen de este, colgando debajo; se ven cuando «abre» lo dice. «si»: solo se muestra con
+// eso. «ayuda»: al pasar el ratón.
+const PESTANAS = [
+  {
+    id: "pokemon", titulo: "Pokémon",
+    apartados: [
+      {
+        id: "stats", titulo: "Estadísticas", icono: "actividad",
+        campos: [
+          { k: "modo", tipo: "opciones", opciones: ALEATORIO, ayuda: "Aleatorio: cada uno reparte su total de otra forma" },
+          { k: "generacion", tipo: "lista", texto: "Actualizar a la generación", opciones: GENERACIONES, ayuda: "Las estadísticas base que tenían en esa generación (algunos las cambiaron en juegos posteriores)" }
+        ]
+      },
+      {
+        id: "tipos", titulo: "Tipos", icono: "etiqueta",
+        campos: [
+          {
+            k: "modo", tipo: "opciones", opciones: ALEATORIO, abre: (r) => r.tipos.modo !== "no",
+            hijos: [{ k: "familia", tipo: "casilla", texto: "Se mantienen al evolucionar" }]
+          }
+        ]
+      },
+      {
+        id: "habilidades", titulo: "Habilidades", icono: "estrella",
+        campos: [
+          {
+            k: "modo", tipo: "opciones", opciones: ALEATORIO, abre: (r) => r.habilidades.modo !== "no",
+            hijos: [
+              { k: "familia", tipo: "casilla", texto: "Se mantienen al evolucionar" },
+              { k: "dos", tipo: "casilla", texto: "Todos los Pokémon tienen dos habilidades" },
+              { k: "sinMalas", tipo: "casilla", texto: "Banear habilidades inútiles", ayuda: "Nada de Ausente, Inicio Lento, Flaqueza, Fuga..." }
+            ]
+          }
+        ]
+      },
+      {
+        id: "evoluciones", titulo: "Evoluciones", icono: "mega",
+        campos: [
+          { k: "modo", tipo: "opciones", opciones: ALEATORIO, ayuda: "Aleatorio: cada uno evoluciona en otro de fuerza parecida, con tres fases como mucho" },
+          { k: "dificiles", tipo: "casilla", texto: "Convertir evoluciones complejas en evoluciones por nivel", ayuda: "Las de intercambio, saber un ataque, llevar a otro en el equipo..." },
+          { k: "piedras", tipo: "casilla", texto: "Convertir evoluciones por piedra en evoluciones por nivel", ayuda: "El nivel sale de su fuerza" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "ataques", titulo: "Ataques",
+    apartados: [
+      {
+        id: "movimientos", titulo: "Datos de los ataques", icono: "rayo",
+        campos: [{ k: "generacion", tipo: "lista", texto: "Actualizar a la generación", opciones: GENERACIONES, ayuda: "Potencia, precisión, PP y tipo que tenían en esa generación" }]
+      },
+      {
+        id: "ataques", titulo: "Ataques que aprenden", icono: "libro",
+        campos: [
+          {
+            k: "modo", tipo: "opciones", opciones: [...ALEATORIO, ["tipo", "Aleatorio, preferiblemente de su tipo"]], abre: (r) => r.ataques.modo !== "no",
+            hijos: [
+              { k: "tipo", tipo: "barra", texto: "Ataques de su tipo", min: 0, max: 100, paso: 5, formato: (v) => `${v} %`, si: (r) => r.ataques.modo === "tipo", ayuda: "Probabilidad de que cada ataque sea de uno de sus tipos" },
+              { k: "inicio", tipo: "lista", texto: "Número de ataques asegurados", opciones: [[0, "Sin cambios"], [1, "1"], [2, "2"], [3, "3"], [4, "4"]], ayuda: "Los que sabe como mínimo desde el nivel 1" },
+              { k: "orden", tipo: "casilla", texto: "Ataques más fuertes en niveles más altos" }
+            ]
+          }
+        ]
+      },
+      {
+        id: "mt", titulo: "MT", icono: "disco",
+        campos: [
+          { k: "ataques", tipo: "opciones", opciones: SI_NO, ayuda: "Qué ataque enseña cada MT (las MO no se tocan)" },
+          {
+            k: "compat", tipo: "opciones", texto: "Quién las aprende", opciones: COMPAT, abre: (r) => r.mt.compat === "aleatoria",
+            hijos: [{ k: "tipo", tipo: "barra", texto: "Más fácil si son de su tipo", min: 0, max: 100, paso: 5, formato: (v) => `${v} %` }]
+          },
+          { k: "mo", tipo: "casilla", texto: "Todos aprenden las MO", si: (r) => r.mt.compat !== "total" }
+        ]
+      },
+      {
+        id: "tutores", titulo: "Tutores de ataques", icono: "persona",
+        campos: [
+          { k: "ataques", tipo: "opciones", opciones: SI_NO, ayuda: "Qué ataque enseña cada tutor" },
+          {
+            k: "compat", tipo: "opciones", texto: "Quién los aprende", opciones: COMPAT, abre: (r) => r.tutores.compat === "aleatoria",
+            hijos: [{ k: "tipo", tipo: "barra", texto: "Más fácil si son de su tipo", min: 0, max: 100, paso: 5, formato: (v) => `${v} %` }]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: "especiales", titulo: "Iniciales y especiales",
+    apartados: [
+      {
+        id: "iniciales", titulo: "Iniciales", icono: "pokeball",
+        campos: [
+          {
+            k: "modo", tipo: "opciones", opciones: [["no", "Sin cambios"], ["cualquiera", "Aleatorio"], ["dos-evoluciones", "Con dos evoluciones"], ["elegidas", "Elegir"]],
+            abre: (r) => r.iniciales.modo !== "no",
+            hijos: [
+              { k: "elegidas", tipo: "iniciales", texto: "Iniciales", si: (r) => r.iniciales.modo === "elegidas" },
+              { k: "rivalInicial", tipo: "casilla", texto: "El rival lleva su inicial", ayuda: "Lleva la inicial nueva que tiene ventaja sobre la tuya, y la evoluciona como en el juego" }
+            ]
+          }
+        ]
+      },
+      {
+        id: "estaticos", titulo: "Estáticos", icono: "corona", ayuda: "Legendarios y demás Pokémon que se encuentran sueltos",
+        campos: [{ k: "modo", tipo: "opciones", opciones: PARECIDA_ALEATORIO }]
+      },
+      {
+        id: "intercambios", titulo: "Intercambios", icono: "intercambiar", ayuda: "Los Pokémon que te piden y te dan los NPC",
+        campos: [
+          { k: "modo", tipo: "opciones", opciones: PARECIDA_ALEATORIO },
+          { k: "objetos", tipo: "casilla", texto: "Objetos de los intercambios aleatorios" },
+          { k: "ivs", tipo: "casilla", texto: "IVs de los intercambios aleatorios" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "entrenadores", titulo: "Entrenadores",
+    apartados: [
+      {
+        id: "entrenadores", titulo: "Pokémon de entrenadores", icono: "espadas",
+        campos: [
+          {
+            k: "modo", tipo: "opciones", opciones: PARECIDA_ALEATORIO, abre: (r) => r.entrenadores.modo !== "no",
+            hijos: [
+              { k: "sinLegendarios", tipo: "casilla", texto: "Sin legendarios" },
+              { k: "lideresTipo", tipo: "casilla", texto: "Líderes y Alto Mando de un tipo", ayuda: "Cada gimnasio (líder y entrenadores de dentro), cada miembro del Alto Mando y el campeón, con Pokémon de un tipo aleatorio" }
+            ]
+          },
+          { k: "nivel", texto: "Multiplicador de niveles", ...MULTIPLICADOR }
+        ]
+      },
+      {
+        id: "entrenadores", titulo: "Más Pokémon y objetos", icono: "mas",
+        campos: [
+          {
+            k: "extras", tipo: "opciones", texto: "Pokémon extra para", opciones: QUIEN, abre: (r) => r.entrenadores.extras !== "no",
+            hijos: [{ k: "cuantos", tipo: "opciones", texto: "Cuántos se añaden", opciones: [[1, "1"], [2, "2"], [3, "3"], [4, "4"], [5, "5"]], ayuda: "Hasta seis en total" }]
+          },
+          { k: "objetos", tipo: "opciones", texto: "Añadir objetos a", opciones: QUIEN },
+          {
+            k: "evolucionados", tipo: "casilla", texto: "Evolucionados del todo", ayuda: "A partir de cierto nivel, solo llevan Pokémon en su última evolución",
+            abre: (r) => r.entrenadores.evolucionados,
+            hijos: [{ k: "nivelEvolucionados", tipo: "barra", texto: "Desde el nivel", min: 10, max: 70, paso: 1, formato: (v) => `Nivel ${v}` }]
+          }
+        ]
+      },
+      {
+        id: "entrenadores", titulo: "Combates", icono: "amigos",
+        campos: [
+          { k: "dobles", tipo: "casilla", texto: "Todos los combates dobles", ayuda: "Los de un solo Pokémon llevan uno más" },
+          { k: "nombres", tipo: "casilla", texto: "Nombres de los entrenadores aleatorios", ayuda: "Los de los entrenadores normales y sus clases, barajados" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "salvajes", titulo: "Salvajes",
+    apartados: [
+      {
+        id: "salvajes", titulo: "Pokémon salvajes", icono: "mapa", ayuda: "Todos: hierba (también la oscura y la que se mueve), agua, pesca, cuevas y claros ocultos",
+        campos: [
+          {
+            k: "modo", tipo: "opciones", opciones: PARECIDA_ALEATORIO, abre: (r) => r.salvajes.modo !== "no",
+            hijos: [{ k: "sinLegendarios", tipo: "casilla", texto: "Sin legendarios" }]
+          },
+          { k: "nivel", texto: "Multiplicador de niveles", ...MULTIPLICADOR },
+          { k: "objetos", tipo: "casilla", texto: "Objetos de los Pokémon salvajes aleatorios" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "objetos", titulo: "Objetos",
+    apartados: [
+      {
+        id: "objetos", titulo: "Objetos del suelo", icono: "objeto", ayuda: "Los que recoges por el camino y los escondidos. Las MT y los objetos de la historia no se tocan",
+        campos: [
+          { k: "suelo", tipo: "opciones", opciones: SI_NO },
+          { k: "sinMalos", tipo: "casilla", texto: "Banear objetos inútiles", ayuda: "Ni en el suelo, ni en las tiendas, ni equipados: nada de cartas, pañuelos ni cosas que no sirvan en la aventura" }
+        ]
+      },
+      {
+        id: "objetos", titulo: "Tiendas", icono: "caja",
+        campos: [
+          {
+            k: "tiendas", tipo: "casilla", texto: "Tiendas especiales aleatorias", ayuda: "Lo que venden las tiendas que no son las normales",
+            abre: (r) => r.objetos.tiendas,
+            hijos: [{ k: "sinNormales", tipo: "casilla", texto: "Sin lo de las tiendas normales", ayuda: "Las especiales no venden nada de lo que ya hay en las normales (Pociones, Poké Balls...)" }]
+          },
+          { k: "piedras", tipo: "casilla", texto: "Siempre hay piedras evolutivas", ayuda: "Todas se venden en alguna tienda de las de la historia" },
+          { k: "caramelos", tipo: "casilla", texto: "Caramelos Raros baratos", ayuda: "A 100 en la tienda del primer pueblo" },
+          { k: "precios", tipo: "casilla", texto: "Precios equilibrados" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "varios", titulo: "Varios",
+    apartados: [
+      {
+        id: "varios", titulo: "Varios", icono: "pokedex",
+        campos: [
+          { k: "pokedex", tipo: "casilla", texto: "Pokédex Nacional desde el principio", ayuda: "Al darte la Pokédex, también la nacional" },
+          { k: "texto", tipo: "casilla", texto: "Texto instantáneo" }
+        ]
+      }
+    ]
+  }
+];
+let vista = null;
+let mias = null; // reglas que se están editando (tuyas)
+let guardada = null; // id de las normas guardadas que se están editando (null: las sueltas)
+let idLocke = null; // con normas de un locke
+let rom = null; // { archivo (File), juego, nombre }
+let trabajando = false;
+let pestana = PESTANAS[0].id;
+
+// ---------- Normas ----------
+
+function reglasActuales() {
+  if (idLocke) {
+    const locke = lockePorId(idLocke);
+    if (locke && locke.randomizer) return completarReglas(locke.randomizer.reglas);
+  }
+  return mias;
+}
+
+// Lo que se cambia se guarda solo: en las normas guardadas que estén elegidas o, si no, en las sueltas
+function guardarMias() {
+  if (guardada) guardarNormas(null, mias, guardada);
+  else escribir(CLAVE, { reglas: mias });
+}
+
+// La barra de normas: de dónde vienen las que se ven (las sueltas, unas guardadas o las de un
+// locke) y qué se puede hacer con ellas
+function plantillaNormas() {
+  const guardadas = normasGuardadas();
+  const lockes = misLockes().filter((l) => l.randomizer);
+  const elegida = idLocke ? `l:${idLocke}` : guardada ? `g:${guardada}` : "";
+  const opcion = (valor, texto) => `<option value="${escaparHTML(valor)}" ${valor === elegida ? "selected" : ""}>${escaparHTML(texto)}</option>`;
+  return `
+    <div class="random-normas">
+      <span>Normas</span>
+      <select class="random-normas-elegir">
+        ${opcion("", "Sin guardar")}
+        ${guardadas.length ? `<optgroup label="Guardadas">${guardadas.map((n) => opcion(`g:${n.id}`, n.nombre)).join("")}</optgroup>` : ""}
+        ${lockes.length ? `<optgroup label="De un locke">${lockes.map((l) => opcion(`l:${l.id}`, l.nombre)).join("")}</optgroup>` : ""}
+      </select>
+      ${idLocke
+        ? `<button class="random-boton-normas" data-normas="copiar">Copiar a las mías</button>`
+        : `<button class="random-boton-normas" data-normas="guardar">${guardada ? "Guardar copia" : "Guardar"}</button>
+           ${guardada ? `<button class="random-boton-normas" data-normas="borrar">Borrar</button>` : ""}`}
+    </div>`;
+}
+
+// Elegir de dónde vienen las normas
+function elegirNormas(valor) {
+  idLocke = null;
+  guardada = null;
+  if (valor.startsWith("l:")) idLocke = valor.slice(2);
+  else if (valor.startsWith("g:")) {
+    const n = normasGuardadas().find((x) => x.id === valor.slice(2));
+    if (n) {
+      guardada = n.id;
+      mias = completarReglas(n.reglas);
+    }
+  } else mias = misReglas() || completarReglas();
+  if (rom) elegirRom(rom.archivo);
+  else pintar();
+}
+
+async function accionNormas(que) {
+  if (que === "guardar") {
+    const nombre = await preguntar("Nombre para estas normas:", "");
+    if (!nombre || !nombre.trim()) return;
+    guardada = guardarNormas(nombre.trim().slice(0, 40), mias);
+    pintar();
+  } else if (que === "borrar") {
+    const n = normasGuardadas().find((x) => x.id === guardada);
+    if (!n || !(await confirmar(`¿Borrar las normas «${n.nombre}»?`))) return;
+    borrarNormas(guardada);
+    guardada = null;
+    mias = misReglas() || completarReglas();
+    pintar();
+  } else if (que === "copiar") {
+    const locke = lockePorId(idLocke);
+    if (!locke || !locke.randomizer) return;
+    mias = completarReglas(locke.randomizer.reglas);
+    idLocke = null;
+    guardada = null;
+    escribir(CLAVE, { reglas: mias });
+    if (rom) elegirRom(rom.archivo);
+    else pintar();
+  }
+}
+
+// ---------- Pintar ----------
+
+// Las tres iniciales a mano: un desplegable por cada una, con todas las especies
+function plantillaIniciales(a, c, valor, dis) {
+  const lista = (datos && datos.pokemon) || [];
+  const especies = lista.filter((p) => p.id <= ULTIMA_ESPECIE).sort((x, y) => x.id - y.id);
+  return `<div class="random-iniciales">${[0, 1, 2]
+    .map((i) => `
+      <select data-apartado="${a.id}" data-campo="${c.k}" data-indice="${i}" ${dis}>
+        <option value="0">Aleatoria</option>
+        ${especies.map((p) => `<option value="${p.id}" ${Number(valor[i]) === p.id ? "selected" : ""}>${escaparHTML(p.es)}</option>`).join("")}
+      </select>`)
+    .join("")}</div>`;
+}
+
+// Los que cuelgan de un campo (si los tiene y están abiertos), sangrados y con su línea
+function plantillaHijos(a, c, reglas, bloqueado) {
+  if (!c.hijos || !c.abre(reglas)) return "";
+  const filas = c.hijos.map((h) => plantillaFila(a, h, reglas, bloqueado)).join("");
+  return filas ? `<div class="random-hijos">${filas}</div>` : "";
+}
+
+// Una fila: el nombre a la izquierda y el control a la derecha; debajo, lo que cuelga de ella
+function plantillaFila(a, c, reglas, bloqueado) {
+  if (c.si && !c.si(reglas)) return "";
+  return `
+    <div class="random-fila">
+      <span class="random-nombre" title="${escaparHTML(c.ayuda || "")}">${escaparHTML(c.texto || "")}</span>
+      ${plantillaControl(a, c, reglas, bloqueado)}
+    </div>
+    ${plantillaHijos(a, c, reglas, bloqueado)}`;
+}
+
+function plantillaControl(a, c, reglas, bloqueado) {
+  const valor = reglas[a.id][c.k];
+  const dis = bloqueado ? "disabled" : "";
+  const dato = `data-apartado="${a.id}" data-campo="${c.k}"`;
+  if (c.tipo === "iniciales") return plantillaIniciales(a, c, valor, dis);
+  // Un número: barra deslizable, con lo que vale al lado
+  if (c.tipo === "barra") {
+    return `
+      <label class="random-barra-valor">
+        <output>${escaparHTML(c.formato(valor))}</output>
+        <input type="range" min="${c.min}" max="${c.max}" step="${c.paso}" value="${valor}" ${dato} ${dis}>
+      </label>`;
+  }
+  // Sí o no: un interruptor
+  if (c.tipo === "casilla") {
+    return `<button class="random-interruptor ${valor ? "activa" : ""}" role="switch" aria-checked="${Boolean(valor)}" aria-label="${escaparHTML(c.texto)}" ${dato} data-valor="${!valor}" ${dis}><i></i></button>`;
+  }
+  // Varias opciones: botones pegados, siempre en una fila (en pantallas estrechas, en columna)
+  if (c.tipo === "opciones") {
+    return `<div class="random-segmentado" title="${escaparHTML(c.ayuda || "")}">${c.opciones
+      .map(([v, t]) => `<button class="${v === valor ? "activa" : ""}" ${dato} data-valor="${escaparHTML(JSON.stringify(v))}" ${dis}>${escaparHTML(t)}</button>`)
+      .join("")}</div>`;
+  }
+  return `<select class="random-desplegable" ${dato} ${dis}>${c.opciones.map(([v, t]) => `<option value="${escaparHTML(JSON.stringify(v))}" ${v === valor ? "selected" : ""}>${escaparHTML(t)}</option>`).join("")}</select>`;
+}
+
+// ¿Algo de esta tarjeta (o de lo que cuelga) no está sin cambios?
+function tarjetaCambiada(a, reglas) {
+  const claves = [];
+  const juntar = (campos) => campos.forEach((c) => (claves.push(c.k), c.hijos && juntar(c.hijos)));
+  juntar(a.campos);
+  return claves.some((k) => JSON.stringify(reglas[a.id][k]) !== JSON.stringify(REGLAS_VACIAS[a.id][k]));
+}
+
+// Una tarjeta por apartado. Si el primer campo son opciones sin nombre, es la principal: va en la
+// cabecera, al lado del título, y lo que cuelga de ella, justo debajo. Los demás, una fila cada uno.
+function plantillaApartado(a, reglas, bloqueado) {
+  const [primero, ...resto] = a.campos;
+  const principal = primero.tipo === "opciones" && !primero.texto ? primero : null;
+  const filas = (principal ? resto : a.campos).map((c) => plantillaFila(a, c, reglas, bloqueado)).join("");
+  return `
+    <section class="random-tarjeta ${tarjetaCambiada(a, reglas) ? "encendida" : ""}">
+      <header>
+        <h3 title="${escaparHTML(a.ayuda || "")}">${icono(a.icono)} ${escaparHTML(a.titulo)}</h3>
+        ${principal ? plantillaControl(a, principal, reglas, bloqueado) : ""}
+      </header>
+      ${principal ? plantillaHijos(a, principal, reglas, bloqueado) : ""}
+      ${filas}
+    </section>`;
+}
+
+function pintar() {
+  const locke = idLocke ? lockePorId(idLocke) : null;
+  if (idLocke && !(locke && locke.randomizer)) idLocke = null;
+  const reglas = reglasActuales();
+  const bloqueado = Boolean(idLocke);
+  const actual = PESTANAS.find((p) => p.id === pestana) || PESTANAS[0];
+
+  // Una pestaña con algo cambiado lleva un punto
+  const cambiada = (p) => p.apartados.some((a) => tarjetaCambiada(a, reglas));
+  vista.innerHTML = `
+    <div class="selector-regiones random-pestanas">
+      ${PESTANAS.map((p) => `<button data-pestana="${p.id}" class="${p.id === actual.id ? "activa" : ""}">${escaparHTML(p.titulo)}${cambiada(p) ? `<i class="random-punto"></i>` : ""}</button>`).join("")}
+    </div>
+    ${plantillaNormas()}
+    <div class="random-barra">
+      <button class="random-elegir">${icono("subir")} ${rom ? "Otra ROM" : "Elegir ROM"}</button>
+      <span class="random-rom ${rom && rom.error ? "con-error" : ""}">${rom ? escaparHTML(rom.error || `${rom.nombre} · ${rom.archivo.name}`) : ""}</span>
+      <button class="random-ir" ${rom && !rom.error && !trabajando && hayAlgo(reglas) ? "" : "disabled"} title="${hayAlgo(reglas) ? "" : "Cambia algo primero"}">${icono("mezclar")} ${trabajando ? "Randomizando..." : "Randomizar"}</button>
+    </div>
+    <span class="random-estado"></span>
+    <div class="random-tarjetas">${actual.apartados.map((a) => plantillaApartado(a, reglas, bloqueado)).join("")}</div>
+    <input class="random-archivo" type="file" accept=".nds" hidden>`;
+}
+// ---------- ROM ----------
+
+async function elegirRom(archivo) {
+  rom = { archivo, nombre: "", juego: "", error: "" };
+  try {
+    // La cabecera basta para saber qué juego es
+    const cabecera = new Uint8Array(await archivo.slice(0, 0x200).arrayBuffer());
+    const codigo = new TextDecoder("latin1").decode(cabecera.subarray(0x0c, 0x10));
+    const juego = JUEGO_DE_CODIGO[codigo.slice(0, 3)];
+    if (!juego) {
+      rom.error = "Este juego todavía no se puede randomizar (de momento, Negro 2 y Blanco 2).";
+    } else {
+      rom.juego = juego;
+      rom.nombre = (JUEGOS.find((j) => j.id === juego) || {}).nombre || juego;
+      const locke = idLocke ? lockePorId(idLocke) : null;
+      if (locke && locke.juego && locke.juego !== juego) {
+        const delLocke = (JUEGOS.find((j) => j.id === locke.juego) || {}).nombre || locke.juego;
+        rom.error = `Esa ROM es de ${rom.nombre} y el locke, de ${delLocke}.`;
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    rom.error = "No se ha podido leer el archivo.";
+  }
+  pintar();
+}
+
+const modulos = {};
+
+function semillaPara() {
+  const { nuevaSemilla } = modulos.azar;
+  if (!idLocke) return nuevaSemilla();
+  const semillas = leer(CLAVE_SEMILLAS, {}) || {};
+  if (!semillas[idLocke]) {
+    semillas[idLocke] = nuevaSemilla();
+    escribir(CLAVE_SEMILLAS, semillas);
+  }
+  return semillas[idLocke];
+}
+
+async function randomizar() {
+  if (!rom || rom.error || trabajando) return;
+  trabajando = true;
+  pintar();
+  const estado = () => vista.querySelector(".random-estado");
+  try {
+    if (!modulos.azar) {
+      [modulos.azar, modulos.randomizar] = await Promise.all([import("./azar.js"), import("./randomizar.js")]);
+    }
+    const bytes = new Uint8Array(await rom.archivo.arrayBuffer());
+    // Que se vea «Randomizando...» antes de que el navegador se ponga a trabajar
+    await new Promise((resolver) => setTimeout(resolver, 30));
+    await modulos.randomizar.randomizarROM(bytes, reglasActuales(), semillaPara());
+    const nombre = rom.archivo.name.replace(/(\.nds)?$/i, " (random).nds");
+    const enlace = document.createElement("a");
+    enlace.href = URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" }));
+    enlace.download = nombre;
+    enlace.click();
+    setTimeout(() => URL.revokeObjectURL(enlace.href), 60000);
+    trabajando = false;
+    pintar();
+    estado().textContent = `Lista: ${nombre}`;
+  } catch (error) {
+    console.error(error);
+    trabajando = false;
+    pintar();
+    estado().textContent = error.message || "No se ha podido randomizar.";
+    estado().classList.add("con-error");
+  }
+}
+
+// ---------- Arranque ----------
+
+// El campo de la pestaña que se ve, por su apartado y su clave (también los que cuelgan)
+function buscarCampo(apartado, clave) {
+  const actual = PESTANAS.find((p) => p.id === pestana) || PESTANAS[0];
+  const buscar = (campos) => {
+    for (const c of campos) {
+      if (c.k === clave) return c;
+      const hijo = c.hijos && buscar(c.hijos);
+      if (hijo) return hijo;
+    }
+    return null;
+  };
+  for (const a of actual.apartados) {
+    const c = a.id === apartado && buscar(a.campos);
+    if (c) return c;
+  }
+  return null;
+}
+
+function cambiar(apartado, campo, valor) {
+  mias[apartado][campo] = valor;
+  guardarMias();
+  pintar();
+}
+
+export function iniciar() {
+  vista = document.querySelector("#vista-randomizer");
+  mias = misReglas() || completarReglas();
+
+  vista.addEventListener("click", (e) => {
+    const boton = e.target.closest("button");
+    if (!boton || boton.disabled) return;
+    if (boton.dataset.pestana) {
+      pestana = boton.dataset.pestana;
+      pintar();
+    } else if (boton.dataset.campo) cambiar(boton.dataset.apartado, boton.dataset.campo, JSON.parse(boton.dataset.valor));
+    else if (boton.classList.contains("random-elegir")) vista.querySelector(".random-archivo").click();
+    else if (boton.classList.contains("random-ir")) randomizar();
+    else if (boton.dataset.normas) accionNormas(boton.dataset.normas);
+  });
+
+  vista.addEventListener("change", (e) => {
+    if (e.target.matches(".random-archivo") && e.target.files[0]) elegirRom(e.target.files[0]);
+    else if (e.target.matches(".random-normas-elegir")) elegirNormas(e.target.value);
+    else if (e.target.matches("select[data-indice]")) {
+      const { apartado, campo, indice } = e.target.dataset;
+      const lista = mias[apartado][campo].slice();
+      lista[Number(indice)] = Number(e.target.value);
+      cambiar(apartado, campo, lista);
+    } else if (e.target.matches("select[data-campo], input[type=range][data-campo]")) {
+      cambiar(e.target.dataset.apartado, e.target.dataset.campo, JSON.parse(e.target.value));
+    }
+  });
+
+  // Mientras se arrastra una barra, su valor al lado (se guarda al soltar)
+  vista.addEventListener("input", (e) => {
+    if (!e.target.matches("input[type=range][data-campo]")) return;
+    const campo = buscarCampo(e.target.dataset.apartado, e.target.dataset.campo);
+    const salida = e.target.parentElement.querySelector("output");
+    if (campo && salida) salida.textContent = campo.formato(Number(e.target.value));
+  });
+
+  // Los nombres de los Pokémon, para elegir las iniciales a mano
+  cargarDatos().then(() => vista.isConnected && pintar()).catch(() => {});
+}
+
+export function mostrar() {
+  pintar();
+}
+
+// Desde el botón «Randomizar mi ROM» de un locke: sus normas
+export function usarLocke(id) {
+  idLocke = id;
+  guardada = null;
+  if (rom) elegirRom(rom.archivo);
+}

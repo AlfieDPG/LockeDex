@@ -12,12 +12,16 @@ import { formatoDeSeguro, CARAMELO_RARO } from "../partida/formato.js";
 import {
   prepararDatos, partidaDeTrabajo, cambiarPartida, objetosDe, nombreObjeto, bolsilloDe, urlsIconoDe, iconoDe, LIMITES
 } from "./editor-comun.js";
-import { avisar, preguntar } from "../comun/ventanas.js";
+import { avisar } from "../comun/ventanas.js";
 
 const NOMBRES = {
-  objetos: "Objetos", medicinas: "Medicinas", balls: "Balls", mt: "MT y MO", bayas: "Bayas", cartas: "Cartas", combate: "Combate", clave: "Objetos clave"
+  objetos: "Objetos", medicinas: "Medicinas", balls: "Balls", mt: "MT y MO", bayas: "Bayas", cartas: "Cartas", combate: "Combate",
+  cristales: "Cristales Z", roto: "Rotoprodigios", clave: "Objetos clave"
 };
-const ICONOS = { objetos: "objeto", medicinas: "pocion", balls: "pokeball", mt: "disco", bayas: "baya", cartas: "etiqueta", combate: "espadas", clave: "llave" };
+const ICONOS = {
+  objetos: "objeto", medicinas: "pocion", balls: "pokeball", mt: "disco", bayas: "baya", cartas: "etiqueta", combate: "espadas",
+  cristales: "rayo", roto: "estrella", clave: "llave"
+};
 
 let elegido = "objetos"; // el bolsillo que se ve
 
@@ -51,7 +55,7 @@ export async function pintarBolsa(contenedor, idLocke) {
         ${bolsillos
           .map((b) => `<button class="bolsa-bolsillo ${b.id === elegido ? "activo" : ""}" data-bolsillo="${b.id}">${icono(ICONOS[b.id])} ${NOMBRES[b.id]} <small>${mochila[b.id].length}</small></button>`)
           .join("")}
-        <button class="bolsa-caramelos" title="Cuántos Caramelos Raros llevas">${icono("caramelo")} Caramelos raros</button>
+        <button class="bolsa-caramelos" title="Llevar 999 Caramelos Raros">${icono("caramelo")} Caramelos raros</button>
       </div>
       ${lleno
         ? `<p class="bolsa-lleno">Este bolsillo está lleno.</p>`
@@ -94,16 +98,15 @@ function cambiar(idLocke, hacer, contenedor) {
   });
 }
 
-// Atajo: cuántos Caramelos Raros llevas (van en las medicinas)
-async function caramelos(contenedor, idLocke) {
-  const texto = await preguntar("¿Cuántos Caramelos Raros quieres llevar? (hasta 999)", "999");
-  if (texto === null || texto.trim() === "") return;
-  const cantidad = Math.max(0, Math.min(999, Math.floor(Number(texto)) || 0));
+// Atajo: 999 Caramelos Raros, sin preguntar (van en las medicinas, que pasan a verse)
+const CARAMELOS = 999;
+
+function caramelos(contenedor, idLocke) {
+  elegido = "medicinas";
   cambiar(idLocke, (m) => {
     const suyo = m.medicinas.find((e) => e.objeto === CARAMELO_RARO);
-    if (suyo) suyo.cantidad = cantidad;
-    else if (cantidad) m.medicinas.push({ objeto: CARAMELO_RARO, cantidad });
-    if (!cantidad) m.medicinas = m.medicinas.filter((e) => e.objeto !== CARAMELO_RARO);
+    if (suyo) suyo.cantidad = CARAMELOS;
+    else m.medicinas.push({ objeto: CARAMELO_RARO, cantidad: CARAMELOS });
   }, contenedor);
 }
 
@@ -118,7 +121,7 @@ export function activarBolsa(contenedor, idDe) {
       return;
     }
     if (e.target.closest(".bolsa-caramelos")) {
-      caramelos(contenedor, idDe()).catch((error) => console.error(error));
+      caramelos(contenedor, idDe());
       return;
     }
     const quitar = e.target.closest(".bolsa-quitar");

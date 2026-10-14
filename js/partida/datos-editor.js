@@ -19,7 +19,8 @@ import { TIPOS_POR_ID } from "../calculadora/ataques.js";
 const ULTIMA_ESPECIE = 807;
 // Los juegos que se editan y su grupo de versiones en PokeAPI
 export const GRUPOS = {
-  platino: "platinum", bw: "black-white", b2w2: "black-2-white-2", xy: "x-y", oras: "omega-ruby-alpha-sapphire"
+  dp: "diamond-pearl", platino: "platinum", hgss: "heartgold-soulsilver", bw: "black-white", b2w2: "black-2-white-2",
+  xy: "x-y", oras: "omega-ruby-alpha-sapphire", sm: "sun-moon", usum: "ultra-sun-ultra-moon"
 };
 const SUBIENDO_DE_NIVEL = 1; // pokemon_move_methods.csv
 

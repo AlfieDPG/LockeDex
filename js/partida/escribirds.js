@@ -14,8 +14,7 @@
 
 import { mapaDS, posicionHuecoDS, leerPartidaDS, descifrarDS, xorDS, sumaDS, ordenDS, crc16, TROZO, TAM_POKEMON } from "./nds.js";
 
-// Los que se han probado escribiendo en el juego. DP y HGSS: sin partidas para probar.
-export const JUEGOS_EDITABLES_DS = ["platino", "bw", "b2w2"];
+export const JUEGOS_EDITABLES_DS = ["dp", "platino", "hgss", "bw", "b2w2"];
 
 const u16 = (b, i) => b[i] | (b[i + 1] << 8);
 function poner16(b, i, valor) {

@@ -54,9 +54,10 @@ export function poner(h, sitio, crudo) {
   else h.equipo[i] = pk.paraEquipo(crudo, h.basesDe(pk.especieDe(crudo), pk.formaDe(crudo)), h.equipo[0] || h.equipoAntes[0]);
 }
 
-// El primer hueco libre de las cajas (desde la caja «desde»), o null si están llenas
+// El primer hueco libre de las cajas desbloqueadas (desde la caja «desde»), o null si están llenas
 export function huecoLibre(h, desde = 0) {
-  for (let caja = desde; caja < h.formato.cajas; caja++) {
+  const abiertas = h.formato.cajasAbiertas(h.bytes);
+  for (let caja = desde; caja < abiertas; caja++) {
     for (let hueco = 0; hueco < POR_CAJA; hueco++) {
       if (!mirar(h, { caja, hueco })) return { caja, hueco };
     }

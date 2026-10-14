@@ -1,0 +1,111 @@
+// ---------- Normas del randomizer ----------
+//
+// Lo que se comparte en un locke: las normas, nunca la semilla ni la ROM. Cada jugador las
+// aplica con su propia semilla y le sale una ROM distinta que sigue las mismas normas.
+//
+// Todo empieza «como en el juego»: lo que no se toca se queda como está. Modos de elegir
+// Pokémon: «cualquiera» (sin límite) o «parecida» (de fuerza parecida: estadísticas base
+// totales cerca de las del original).
+//
+//   localStorage «poketeams-randomizer-v1»: { reglas } (las tuyas, las de la sección)
+
+import { leer, escribir } from "../comun/almacen.js";
+
+export const CLAVE_MIAS = "poketeams-randomizer-v1";
+const VERSION = 3;
+
+export const REGLAS_VACIAS = {
+  version: VERSION,
+  stats: { modo: "no", generacion: 0 },
+  tipos: { modo: "no", familia: false },
+  habilidades: { modo: "no", dos: false, familia: false, sinMalas: false },
+  evoluciones: { modo: "no", dificiles: false, piedras: false },
+  iniciales: { modo: "no", rivalInicial: true, elegidas: [0, 0, 0] },
+  estaticos: { modo: "no" },
+  intercambios: { modo: "no", objetos: false, ivs: false },
+  movimientos: { generacion: 0 },
+  ataques: { modo: "no", tipo: 50, inicio: 0, orden: false },
+  entrenadores: {
+    modo: "no", sinLegendarios: true, lideresTipo: false, extras: "no", cuantos: 1, objetos: "no", evolucionados: false,
+    nivelEvolucionados: 40, nivel: 0, dobles: false, nombres: false
+  },
+  salvajes: { modo: "no", sinLegendarios: true, nivel: 0, objetos: false },
+  mt: { ataques: false, compat: "no", tipo: 50, mo: false },
+  tutores: { ataques: false, compat: "no", tipo: 50 },
+  objetos: { suelo: false, sinMalos: false, tiendas: false, sinNormales: false, piedras: false, caramelos: false, precios: false },
+  varios: { pokedex: false, texto: false }
+};
+
+// Unas normas que vienen de fuera (un locke, un código): lo que falte, como en las vacías; lo
+// que se guardó con otra forma, pasado a la de ahora
+export function completarReglas(reglas = {}) {
+  const salida = { version: VERSION };
+  for (const [apartado, valores] of Object.entries(REGLAS_VACIAS)) {
+    if (apartado === "version") continue;
+    const suyas = { ...((reglas && reglas[apartado]) || {}) };
+    salida[apartado] = Object.fromEntries(Object.entries(valores).map(([k, v]) => [k, k in suyas ? suyas[k] : v]));
+    // Antes: «las de los juegos de hoy» (sí o no) en vez de la generación
+    if (suyas.moderna && !suyas.generacion) salida[apartado].generacion = 9;
+  }
+  // Antes, tipos «familia» o «cualquiera»: ahora aleatorio, y lo de la familia aparte
+  if (salida.tipos.modo === "familia") Object.assign(salida.tipos, { modo: "azar", familia: true });
+  if (salida.tipos.modo === "cualquiera") salida.tipos.modo = "azar";
+  return salida;
+}
+
+// ¿Hay algo distinto de «como en el juego»?
+export function hayAlgo(reglas) {
+  return JSON.stringify(completarReglas(reglas)) !== JSON.stringify(REGLAS_VACIAS);
+}
+
+// Qué apartados cambian, en palabras: «estadísticas, tipos, entrenadores»
+const NOMBRES_APARTADOS = {
+  stats: "estadísticas", tipos: "tipos", habilidades: "habilidades", evoluciones: "evoluciones", iniciales: "iniciales",
+  estaticos: "estáticos", intercambios: "intercambios", movimientos: "datos de los ataques", ataques: "ataques que aprenden",
+  entrenadores: "entrenadores", salvajes: "salvajes", mt: "MT", tutores: "tutores", objetos: "objetos", varios: "varios"
+};
+
+export function resumenNormas(reglas) {
+  const r = completarReglas(reglas);
+  return Object.entries(NOMBRES_APARTADOS)
+    .filter(([apartado]) => JSON.stringify(r[apartado]) !== JSON.stringify(REGLAS_VACIAS[apartado]))
+    .map(([, nombre]) => nombre)
+    .join(", ");
+}
+
+// ---------- Normas guardadas con nombre ----------
+//
+//   localStorage «poketeams-randomizer-guardadas-v1»: [{ id, nombre, reglas }]
+// Se eligen en la sección «Randomizer» (y lo que se cambia se guarda en ellas) y al crear un locke.
+
+export const CLAVE_GUARDADAS = "poketeams-randomizer-guardadas-v1";
+
+export function normasGuardadas() {
+  const lista = leer(CLAVE_GUARDADAS, []);
+  return Array.isArray(lista) ? lista.filter((n) => n && n.id && n.nombre) : [];
+}
+
+export function guardarNormas(nombre, reglas, id = null) {
+  const lista = normasGuardadas();
+  const actual = id && lista.find((n) => n.id === id);
+  const copia = JSON.parse(JSON.stringify(completarReglas(reglas)));
+  if (actual) {
+    actual.reglas = copia;
+    if (nombre) actual.nombre = nombre;
+  } else {
+    id = `n${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
+    lista.push({ id, nombre, reglas: copia });
+  }
+  escribir(CLAVE_GUARDADAS, lista);
+  return id;
+}
+
+export function borrarNormas(id) {
+  escribir(CLAVE_GUARDADAS, normasGuardadas().filter((n) => n.id !== id));
+}
+
+// Las tuyas (las de la sección «Randomizer»), o null si nunca las has tocado
+export function misReglas() {
+  const guardadas = leer(CLAVE_MIAS, null);
+  return guardadas && guardadas.reglas && guardadas.reglas.version === VERSION ? completarReglas(guardadas.reglas) : null;
+}

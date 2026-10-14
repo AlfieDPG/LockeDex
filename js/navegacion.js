@@ -22,7 +22,8 @@ const SECCIONES = {
   pokedex: () => import("./pokedex/index.js"),
   calculadora: () => import("./calculadora/index.js"),
   ruleta: () => import("./ruleta/index.js"),
-  logros: () => import("./logros/index.js")
+  logros: () => import("./logros/index.js"),
+  randomizer: () => import("./randomizer/index.js")
 };
 
 // Vista -> sección que la gestiona
@@ -37,7 +38,8 @@ const VISTAS = {
   pokedex: "pokedex",
   calculadora: "calculadora",
   ruleta: "ruleta",
-  logros: "logros"
+  logros: "logros",
+  randomizer: "randomizer"
 };
 
 const iniciadas = new Map(); // sección -> promesa con su módulo ya iniciado

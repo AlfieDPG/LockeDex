@@ -42,6 +42,7 @@ import {
   alternarRom
 } from "./combates.js";
 import { iniciarPartida, plantillaPartida, accionPartida } from "./partida.js";
+import { hayAlgo, misReglas, normasGuardadas, resumenNormas } from "../randomizer/reglas.js";
 import { confirmar } from "../comun/ventanas.js";
 
 let seccion = null;
@@ -163,6 +164,7 @@ function plantillaJuego(locke) {
       ${nombre ? `<span class="locke-juego-nombre">${icono("mando")} ${escaparHTML(nombre)}</span>` : ""}
       ${atajos}
       ${normas ? `<button class="locke-ir" data-ir="normas">${icono("libro")} Normas (${normas})</button>` : ""}
+      ${locke.randomizer && locke.estado !== "cerrado" ? `<button class="locke-ir" data-ir="randomizer">${icono("mezclar")} Randomizar mi ROM</button>` : ""}
       <button class="locke-ir" data-ir="cementerio">${icono("calavera")} Cementerio (${totalMuertos(locke)})</button>
       <button class="locke-ir" data-ir="actividad">${icono("actividad")} Actividad</button>
     </div>`;
@@ -433,6 +435,63 @@ function personalizadoElegido(tipo, locke) {
   return copia(valor);
 }
 
+// ---------- Randomizer ----------
+//
+// Sin randomizer, unas normas guardadas con nombre, las sueltas de la sección «Randomizer» (y, al
+// editar, las que ya lleve el locke). El locke se lleva una copia: { nombre, reglas }. Solo quien
+// lo creó lo cambia; los demás las usan en «Randomizar mi ROM» (cada uno con su propio azar).
+
+const SIN_RANDOMIZER = "";
+const LAS_MIAS = "mias";
+const GUARDADA = "guardada:";
+
+function pintarRandomizer(locke, creador) {
+  const delLocke = locke && locke.randomizer;
+  const mias = misReglas();
+  const elegido = delLocke ? LAS_DEL_LOCKE : SIN_RANDOMIZER;
+  const opcion = (valor, texto) =>
+    `<option value="${escaparHTML(valor)}" ${valor === elegido ? "selected" : ""}>${escaparHTML(texto)}</option>`;
+  const guardadas = normasGuardadas();
+  campo(".locke-randomizer").innerHTML = `
+    <select class="locke-normas-elegir locke-randomizer-elegir" ${creador ? "" : "disabled"}>
+      ${opcion(SIN_RANDOMIZER, "Sin randomizer")}
+      ${delLocke ? opcion(LAS_DEL_LOCKE, `Las del locke${delLocke.nombre ? ` (${delLocke.nombre})` : ""}`) : ""}
+      ${guardadas.map((n) => opcion(`${GUARDADA}${n.id}`, n.nombre)).join("")}
+      ${mias && hayAlgo(mias) ? opcion(LAS_MIAS, "Las sueltas de mi sección Randomizer") : ""}
+    </select>
+    ${creador ? `<button type="button" class="locke-randomizer-editar">${icono("lapiz")} Preparar normas</button>` : ""}
+    <p class="locke-randomizer-resumen"></p>`;
+  resumenRandomizer(locke);
+}
+
+// Lo que cambian las normas elegidas, en pocas palabras (para que quien crea el locke sepa qué
+// está eligiendo)
+function resumenRandomizer(locke) {
+  const elegidas = randomizerElegido(locke);
+  const texto = campo(".locke-randomizer-resumen");
+  if (!texto) return;
+  texto.textContent = elegidas ? `Cambian: ${resumenNormas(elegidas.reglas) || "nada"}.` : "";
+  texto.hidden = !elegidas;
+}
+
+function randomizerElegido(locke) {
+  const valor = campo(".locke-randomizer-elegir").value;
+  if (valor === SIN_RANDOMIZER) return null;
+  if (valor === LAS_DEL_LOCKE) return (locke && locke.randomizer) || null;
+  if (valor === LAS_MIAS) return { nombre: "Personalizadas", reglas: misReglas() };
+  if (valor.startsWith(GUARDADA)) {
+    const n = normasGuardadas().find((x) => x.id === valor.slice(GUARDADA.length));
+    return n ? { nombre: n.nombre, reglas: n.reglas } : null;
+  }
+  return null;
+}
+// «Randomizar mi ROM»: la sección con las normas del locke
+async function irARandomizer(id) {
+  const modulo = await import("../randomizer/index.js");
+  modulo.usarLocke(id);
+  irA("randomizer");
+}
+
 // Lo que abren los botones «Rutas» y «Level caps» de un locke: sus personalizados o, si no
 // tiene, los de su juego (si es uno de la web). "" si nada.
 function destinoDe(locke, tipo) {
@@ -564,6 +623,7 @@ async function abrirDialogo(locke = null) {
   pintarNormas(locke, creador);
   pintarPersonalizado("rutas", locke, creador);
   pintarPersonalizado("caps", locke, creador);
+  pintarRandomizer(locke, creador);
   if (!locke) campo("#locke-nombre").focus();
   if (!cerrado) await cargarInvitables(locke);
 }
@@ -596,6 +656,7 @@ async function guardar() {
   const normas = normasElegidas(locke);
   const rutasPropias = personalizadoElegido("rutas", locke);
   const capsPropios = personalizadoElegido("caps", locke);
+  const randomizer = randomizerElegido(locke);
   const combates = nombresCombatesDelDialogo();
 
   // Lo único imprescindible es el nombre: un locke para ti solo también vale
@@ -616,7 +677,7 @@ async function guardar() {
     }
 
     await crearLocke({
-      nombre, descripcion, tipo, juego, juegoOtro, vidas, vidasIlimitadas, normas, rutasPropias, capsPropios,
+      nombre, descripcion, tipo, juego, juegoOtro, vidas, vidasIlimitadas, normas, rutasPropias, capsPropios, randomizer,
       combates, invitados: nuevos.map((perfil) => perfil.uid), nombres, fotos
     });
   } else {
@@ -625,7 +686,8 @@ async function guardar() {
 
     if (soyCreador(locke)) {
       await editarLocke(locke.id, {
-        nombre, descripcion, tipo, juego, juegoOtro, vidas, vidasIlimitadas, normas, rutasPropias, capsPropios, combates
+        nombre, descripcion, tipo, juego, juegoOtro, vidas, vidasIlimitadas, normas, rutasPropias, capsPropios, randomizer,
+        combates
       });
     }
     // Invitar va aparte: lo puede hacer cualquiera de dentro, no solo el creador
@@ -695,6 +757,19 @@ export function iniciar() {
 
   dialogo.querySelector("#locke-cancelar").addEventListener("click", () => dialogo.close());
   activarCamposJuego(dialogo);
+
+  // Randomizer: el resumen sigue a lo elegido; «Preparar normas» lleva a la sección para
+  // montarlas y guardarlas con nombre (luego salen aquí)
+  dialogo.querySelector(".locke-randomizer").addEventListener("change", (e) => {
+    if (e.target.matches(".locke-randomizer-elegir")) resumenRandomizer(editando ? lockePorId(editando) : null);
+  });
+  dialogo.querySelector(".locke-randomizer").addEventListener("click", async (e) => {
+    if (!e.target.closest(".locke-randomizer-editar")) return;
+    dialogo.close();
+    const modulo = await import("../randomizer/index.js");
+    modulo.usarLocke(null);
+    irA("randomizer");
+  });
 
   // Con vidas ilimitadas el número no pinta nada
   dialogo.querySelector("#locke-infinitas").addEventListener("change", (e) => {
@@ -787,6 +862,8 @@ export function iniciar() {
       tarea = irANormas(id);
     } else if (boton.classList.contains("locke-ir") && boton.dataset.ir === "cementerio") {
       abrirCementerio(id);
+    } else if (boton.classList.contains("locke-ir") && boton.dataset.ir === "randomizer") {
+      tarea = irARandomizer(id);
     } else if (boton.classList.contains("locke-ir") && boton.dataset.ir === "actividad") {
       abrirActividad(id);
     } else if (boton.classList.contains("locke-ir")) {

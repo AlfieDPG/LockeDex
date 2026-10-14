@@ -28,6 +28,7 @@ import { EDITABLES } from "../partida/formato.js";
 import { POR_CAJA } from "../partida/tresds.js";
 import { pintarBolsa, activarBolsa } from "./bolsa.js";
 import { mover } from "../partida/huecos.js";
+import { prepararConversion } from "../partida/convertir.js";
 import { iniciarEditor, abrirEditor, cerrarEditor, editorEnLado, sitioEditando } from "./editor.js";
 import { iniciarMeter, abrirMeter } from "./meter-equipo.js";
 import {
@@ -65,7 +66,9 @@ export function plantillaPartida(locke) {
   const pendientes = partida ? muertosSinApuntar(locke.id, misMuertos(locke)).length : 0;
 
   let accion = "";
-  if (estado === "pausado") {
+  if (estado === "leyendo") {
+    accion = `<button class="locke-partida-vincular" disabled>${icono("enlace")} Leyendo...</button>`;
+  } else if (estado === "pausado") {
     accion = `<button class="locke-partida-reanudar" title="Volver a leer la partida">${icono("reanudar")} Reanudar</button>`;
   } else if (!partida) {
     // Con la partida ya leída, volver a vincular está en la ventana, junto a «Desvincular»
@@ -91,6 +94,8 @@ export function accionPartida(boton, id) {
     avisar("No se ha podido abrir la partida.");
   };
   if (boton.classList.contains("locke-partida-vincular")) {
+    // Lo que hace falta para leerla, ya mientras se elige el archivo
+    prepararConversion().catch((error) => console.error(error));
     if (sePuedeVigilar) vincular(id).catch(fallo);
     else leerUnaVez(id);
   } else if (boton.classList.contains("locke-partida-reanudar")) {
@@ -109,20 +114,32 @@ export function accionPartida(boton, id) {
 
 // ---------- Al leer el archivo ----------
 
+const intentos = new Map(); // idLocke -> lecturas dudosas seguidas
+const MAX_DUDOSAS = 3;
+
 // true si ya está (bien o con un error que no se arregla reintentando)
 async function alLeer(id, bytes, archivo) {
   const locke = lockePorId(id);
   if (!locke) return false; // los lockes todavía no han llegado: en el siguiente vistazo
+  if (locke.estado === "cerrado") return true; // ya no se lee: no vuelve a marcar «Rutas»
 
   const resultado = await procesarArchivo(locke, bytes, archivo);
   if (resultado.error) {
     if (resultado.reintentar) return false;
+    // Puede que el emulador estuviera guardando: se mira otra vez antes de darlo por malo
+    const dudosas = (intentos.get(id) || 0) + 1;
+    if (resultado.dudoso && dudosas < MAX_DUDOSAS) {
+      intentos.set(id, dudosas);
+      return false;
+    }
+    intentos.delete(id);
     avisar(resultado.error);
     // Recién vinculado con el archivo equivocado: fuera, para poder elegir otro
     if (!partidaDe(id)) await desvincular(id);
     return true;
   }
 
+  intentos.delete(id);
   repintar();
   if (dialogo.open && idAbierto === id) pintarPartida();
   // La ventana de los muertos sale sola si estás mirando «Lockes»; si no, queda el aviso
@@ -221,18 +238,22 @@ function pintarPartida() {
   }
 
   // Cada caja con su interruptor de «Muertos» (puede haber varias). Editando, también la
-  // primera vacía (para meter ahí) y en cada una un hueco libre.
+  // primera vacía (para meter ahí) y en cada una un hueco libre. Las bloqueadas (Sol / Luna:
+  // se abren según se llenan) no se ven en el juego: marcadas y sin hueco para meter.
   const deMuertos = cajasMuertosDe(partida);
+  const abiertas = partida.abiertas || partida.cajas.length;
   let vaciaPuesta = false;
   const cajas = partida.cajas
     .map((caja, i) => {
-      if (!caja.pokemon.length && (!conSitio || vaciaPuesta)) return "";
+      const bloqueada = i >= abiertas;
+      if (!caja.pokemon.length && (!conSitio || vaciaPuesta || bloqueada)) return "";
       if (!caja.pokemon.length) vaciaPuesta = true;
       const muertos = deMuertos.includes(i);
-      const libre = conSitio ? primerHueco(caja) : -1;
+      const libre = conSitio && !bloqueada ? primerHueco(caja) : -1;
       return `
-        <section class="partida-caja ${muertos ? "de-muertos" : ""}">
+        <section class="partida-caja ${muertos ? "de-muertos" : ""} ${bloqueada ? "bloqueada" : ""}">
           <h3>
+            ${bloqueada ? `<span class="partida-candado" title="Bloqueada en el juego">${icono("candado")}</span>` : ""}
             ${escaparHTML(caja.nombre)} <small>${caja.pokemon.length}</small>
             <button class="partida-marcar-muertos ${muertos ? "activa" : ""}" data-caja="${i}" aria-pressed="${muertos}"
                     title="${muertos ? "Ya no es caja de muertos" : "Marcar como caja de muertos"}">${icono("calavera")} Muertos</button>

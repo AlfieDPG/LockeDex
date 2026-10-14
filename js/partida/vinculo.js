@@ -45,7 +45,7 @@ async function operar(modo, hacer, almacen = ALMACEN) {
 
 // ---------- Vínculos ----------
 
-const vinculos = new Map(); // idLocke -> { archivo, permiso: "granted" | "prompt" | ..., ultimo }
+const vinculos = new Map(); // idLocke -> { archivo, permiso: "granted" | "prompt" | ..., ultimo, leyendo }
 let alLeer = () => {};
 let alCambiarEstado = () => {};
 let temporizador = null;
@@ -53,6 +53,7 @@ let temporizador = null;
 export function estadoVinculo(idLocke) {
   const vinculo = vinculos.get(idLocke);
   if (!vinculo) return "";
+  if (vinculo.leyendo) return "leyendo"; // recién elegido, la primera lectura aún no ha acabado
   return vinculo.permiso === "granted" ? "vigilando" : "pausado";
 }
 
@@ -83,7 +84,7 @@ export async function cargarVinculos(leer, cambiarEstado) {
 // Elegir el archivo (tiene que ser con un clic: el navegador no deja abrirlo solo)
 export async function vincular(idLocke) {
   const [archivo] = await window.showOpenFilePicker({ id: "partida", multiple: false });
-  vinculos.set(idLocke, { archivo, permiso: "granted", ultimo: "" });
+  vinculos.set(idLocke, { archivo, permiso: "granted", ultimo: "", leyendo: true });
   await operar("readwrite", (almacen) => almacen.put(archivo, idLocke)).catch((error) => console.error(error));
   alCambiarEstado();
   await mirar(idLocke);
@@ -210,6 +211,7 @@ async function mirar(idLocke) {
   } catch (error) {
     // Borrado, movido o sin permiso: se deja en pausa
     vinculo.permiso = "prompt";
+    vinculo.leyendo = false;
     alCambiarEstado();
     return;
   }
@@ -218,7 +220,12 @@ async function mirar(idLocke) {
   const bytes = new Uint8Array(await archivo.arrayBuffer());
   // Si el emulador está a mitad de escribir, la lectura falla: se reintenta en el siguiente
   // vistazo (por eso la firma solo se apunta si se ha podido leer)
-  if (await alLeer(idLocke, bytes, archivo.name)) vinculo.ultimo = firma;
+  if (!(await alLeer(idLocke, bytes, archivo.name))) return;
+  vinculo.ultimo = firma;
+  if (vinculo.leyendo) {
+    vinculo.leyendo = false;
+    alCambiarEstado();
+  }
 }
 
 let mirando = false;

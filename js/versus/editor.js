@@ -200,7 +200,7 @@ function pintar() {
     return;
   }
 
-  const formas = formasDe(poke.especie);
+  const formas = formasDe(poke.especie, abierto.juego);
   if (!formas.some((f) => f.forma === poke.forma)) formas.push({ forma: poke.forma, texto: `Forma ${poke.forma}` });
 
   cuerpo.innerHTML = `
