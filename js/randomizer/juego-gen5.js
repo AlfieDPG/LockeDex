@@ -28,6 +28,7 @@ import { leerTextos, escribirTextos } from "./textos-bw.js";
 import { descomprimirLZ } from "./lz.js";
 import { perfilDe, JUEGOS_GEN5 } from "./perfiles-gen5.js";
 import { IPS, aplicarIPS } from "./parches-gen5.js";
+import { ponerHierbaEnPueblos as hierbaEnPueblos } from "./hierba-gen5.js";
 
 export const ULTIMA_ESPECIE = 649;
 export const ULTIMO_ATAQUE = 559;
@@ -671,6 +672,12 @@ export function ponerPokedexNacional(datos) {
   ampliado.set(original);
   datos.narcs.scripts.archivos[perfil.scriptPokedex] = aplicarIPS(ampliado, IPS[perfil.parcheNacional]);
 }
+// Hierba en los pueblos que no tienen (ver ./hierba-gen5.js). Antes de leerBW2: así los Pokémon
+// nuevos se randomizan con los demás salvajes. Devuelve las zonas que la llevan.
+export function ponerHierbaEnPueblos(rom) {
+  return hierbaEnPueblos(rom, perfilDe(rom), { leerNarc, crearNarc });
+}
+
 // Texto instantáneo (lo mismo que UPR-ZX, buscado por su forma): en la rutina que escribe los
 // textos, fuera la espera entre letra y letra («beq; b» → nada) y, al acabar una letra, a por la
 // siguiente sin esperar al próximo fotograma (el «bne» de 0xB8 bytes más allá salta atrás).

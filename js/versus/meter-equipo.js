@@ -68,7 +68,8 @@ async function meter() {
   if (problemas.length && !(await confirmar(`Algunas cosas no van en este juego:\n\n• ${problemas.join("\n• ")}\n\n¿Meterlo igual?`, { aceptar: "Meterlo igual" }))) return;
 
   const alEquipo = dialogo.querySelector('input[name="meter-destino"]:checked').value === "equipo";
-  const nombres = listos.map(({ editable }) => editable.mote || nombreEspecie(editable.especie)).join(", ");
+  // En la actividad, sin especies ni motes (los demás no tienen por qué saber cuáles)
+  const nombres = `${listos.length} Pokémon`;
   const cual = equipo.nombre ? ` (equipo «${equipo.nombre}»)` : "";
   await cambiarHuecos(idLocke, (h) => {
     const entrenador = h.formato.entrenadorDe(h.bytes);

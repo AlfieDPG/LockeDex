@@ -6,8 +6,8 @@
 // la X y se añaden escribiéndolos (con los de la web como sugerencia) o copiando de golpe
 // los de un juego de la web.
 
-import { LUGARES } from "./datos.js";
-import { crearSelectorJuego } from "../comun/selector-juego.js";
+import { LUGARES, lugaresDelJuego } from "./datos.js";
+import { crearSelectorJuego, CLAVE_HIERBA_RUTAS } from "../comun/selector-juego.js";
 import { leer, escribir } from "../comun/almacen.js";
 import { quitarAcentos, escaparHTML } from "../comun/utilidades.js";
 import { icono } from "../comun/iconos.js";
@@ -46,6 +46,8 @@ let usadas = new Set();
 // Se vuelve a leer al abrir la sección: la partida vinculada a un locke también marca
 // (js/partida/rutas.js)
 let marcadas = leer(CLAVE_MARCADAS, {});
+// Juegos con los pueblos con hierba del randomizer (los apunta un locke al abrir sus Rutas)
+let hierba = leer(CLAVE_HIERBA_RUTAS, {}) || {};
 
 let editando = false;       // la lista propia abierta, con casillas para cambiarla
 let abrirEditando = false;  // la próxima lista que se abra, ya en modo editar (al crearla)
@@ -422,7 +424,8 @@ function elegirJuego(nuevo, seguir = false) {
     return;
   }
 
-  lugares = juego.propio ? lugaresDe(juego) : LUGARES[juego.id];
+  // (Con la hierba en los pueblos del randomizer, si un locke de este juego la lleva)
+  lugares = juego.propio ? lugaresDe(juego) : lugaresDelJuego(juego.id, Boolean(hierba[juego.id]));
 
   // Solo cuentan las marcas de lugares que siguen existiendo. Si un lugar ha cambiado de
   // apartado (p. ej. de «rutas» a «postgame»), su marca se conserva.
@@ -443,10 +446,11 @@ function elegirJuego(nuevo, seguir = false) {
 export function mostrar() {
   // Si se ha llegado desde un locke de «Lockes», el juego viene apuntado en CLAVE_JUEGO.
   // Si es el mismo que ya había, no hace nada.
-  const antes = JSON.stringify(marcadas);
+  const antes = JSON.stringify([marcadas, hierba]);
   marcadas = leer(CLAVE_MARCADAS, {}) || {};
+  hierba = leer(CLAVE_HIERBA_RUTAS, {}) || {};
   const id = leer(CLAVE_JUEGO, null);
   selectorJuego.elegirPorId(id);
-  // Mismo juego, pero con marcas nuevas desde fuera: se vuelve a pintar
-  if (juego && !editando && JSON.stringify(marcadas) !== antes) elegirJuego(juego, true);
+  // Mismo juego, pero con marcas nuevas (o los pueblos con hierba) desde fuera: se vuelve a pintar
+  if (juego && !editando && JSON.stringify([marcadas, hierba]) !== antes) elegirJuego(juego, true);
 }

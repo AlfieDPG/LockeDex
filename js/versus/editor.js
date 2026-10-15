@@ -470,20 +470,25 @@ function opcionesDe(poke, idioma) {
   return { base: poke.stats, nombreEspecie: nombreEspecie(poke.especie, idioma), nombreHuevo: nombreHuevo(idioma), generoRatio: poke.generoRatio };
 }
 
-// Cómo se llama en la actividad: «Misty» o «Charizard»
+// Cómo se llama al preguntar: «Misty» o «Charizard»
 function nombreDe(e) {
   return e.huevo ? `huevo de ${nombreEspecie(e.especie)}` : e.mote || nombreEspecie(e.especie);
 }
 
-// Lo que ha cambiado, para la actividad del locke: «Charizard: nivel 36 → 50 · objeto Restos»
+// En la actividad, sin especie ni mote: los demás no tienen por qué saber qué Pokémon tiene
+function nombreOculto(e) {
+  return e.huevo ? "un huevo" : "un Pokémon";
+}
+
+// Lo que ha cambiado, para la actividad del locke: «un Pokémon (nivel 36 → 50 · objeto Restos)»
 function resumenCambios(antes, despues) {
-  if (!antes) return `nuevo ${nombreDe(despues)}${despues.huevo ? "" : ` (Nv. ${despues.nivel})`}`;
+  if (!antes) return despues.huevo ? "nuevo huevo" : `nuevo Pokémon (Nv. ${despues.nivel})`;
   const partes = [];
   const igual = (uno, otro) => JSON.stringify(uno) === JSON.stringify(otro);
-  if (despues.especie !== antes.especie) partes.push(`${nombreEspecie(antes.especie)} → ${nombreEspecie(despues.especie)}`);
+  if (despues.especie !== antes.especie) partes.push("otra especie");
   else if (despues.forma !== antes.forma) partes.push("forma");
   if (despues.huevo !== antes.huevo) partes.push(despues.huevo ? "ahora es un huevo" : "ya no es un huevo");
-  if (despues.mote !== antes.mote && !despues.huevo) partes.push(despues.mote ? `mote «${despues.mote}»` : "sin mote");
+  if (despues.mote !== antes.mote && !despues.huevo) partes.push(despues.mote ? "mote" : "sin mote");
   if (despues.nivel !== antes.nivel && despues.huevo === antes.huevo) partes.push(`nivel ${antes.nivel} → ${despues.nivel}`);
   if (despues.naturaleza !== antes.naturaleza) partes.push(`naturaleza ${NATURALEZAS[despues.naturaleza].es}`);
   if (despues.objeto !== antes.objeto) partes.push(despues.objeto ? `objeto ${objeto(despues.objeto, abierto.juego).es}` : "sin objeto");
@@ -503,7 +508,7 @@ function resumenCambios(antes, despues) {
   if (!igual(despues.ivs, antes.ivs)) partes.push("IVs");
   if (!igual(despues.evs, antes.evs)) partes.push("EVs");
   if (!partes.length) return "";
-  return despues.especie !== antes.especie ? partes.join(" · ") : `${nombreDe(antes)}: ${partes.join(" · ")}`;
+  return `${nombreOculto(antes)} (${partes.join(" · ")})`;
 }
 
 async function guardar() {
@@ -548,7 +553,7 @@ async function borrar() {
   await cambiarHuecos(idLocke, (h) => {
     comprobarSitio(h, sitio, llave);
     poner(h, sitio, null);
-  }, `borrado ${nombreDe(antes)}`);
+  }, `borrado ${nombreOculto(antes)}`);
   cerrarEditor();
 }
 
@@ -566,7 +571,7 @@ async function clonar() {
     const copia = pk.conLlaveNueva(cambiado ? pk.aplicarEditable(crudo, despues, opcionesDe(poke, antes.idioma)) : crudo);
     poner(h, destino, copia);
     return [llaveDe(copia)];
-  }, `clon de ${nombreDe(despues)}`);
+  }, `clon de ${nombreOculto(despues)}`);
   despuesDeAceptar(sitio);
 }
 

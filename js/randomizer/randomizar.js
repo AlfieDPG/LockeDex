@@ -819,6 +819,9 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
   // Una ROM de DS (los bytes) o un juego de 3DS ya preparado (ver ./rom-3ds.js)
   const rom = bytes.es3DS ? bytes : new RomNDS(bytes);
   const M = await cargarMotor(rom);
+  // La hierba de los pueblos, antes de leer nada (sus Pokémon son salvajes como los demás)
+  // (en 3DS carga antes lo que le falta: puede tardar)
+  const conHierba = reglas.salvajes.pueblos && M.ponerHierbaEnPueblos ? (await M.ponerHierbaEnPueblos(rom)).length > 0 : false;
   const datos = M.leerBW2(rom);
   for (const id of datos.perfil.legendarios || []) LEGENDARIOS.add(id);
   let datosObjetos = await cargarDatosRandomizer();
@@ -848,6 +851,7 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
   };
 
   const r = reglas;
+  hacer("hierba en los pueblos", conHierba, () => {});
   // Primero lo que cambia a los Pokémon (las evoluciones, antes que los tipos y las habilidades,
   // que siguen a las familias)
   hacer("datos de los ataques", r.movimientos.generacion, () => ataquesDeGeneracion(datos, deGeneracion(datosObjetos, r.movimientos.generacion).ataques));

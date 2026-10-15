@@ -14,6 +14,8 @@ import { leerPartida3DS, esPartida3DS } from "./tresds.js";
 import { leerPartidaDS, esPartidaDS } from "./nds.js";
 import { convertirPartida } from "./convertir.js";
 import { marcarCapturas } from "./rutas.js";
+import { hierbaEnPueblos } from "../randomizer/reglas.js";
+import { CLAVE_HIERBA_RUTAS } from "../comun/selector-juego.js";
 
 // NO cambiar esta clave: si se cambia, se pierden las partidas vinculadas
 const CLAVE = "poketeams-partidas-v1";
@@ -94,7 +96,14 @@ export async function procesarArchivo(locke, bytes, archivo = "") {
     : nueva.cajas.flatMap((caja, i) => (NOMBRE_CEMENTERIO.test(caja.nombre) ? [i] : []));
 
   const mirados = new Set(anterior.mirados || []);
-  const marcadas = marcarCapturas(nueva, leida.juego, mirados);
+  // Con la hierba en los pueblos del randomizer, esos pueblos también son lugares de captura (y
+  // Rutas los enseña, como al llegar desde el locke)
+  const conHierba = hierbaEnPueblos(locke);
+  if (conHierba) {
+    const juegos = leer(CLAVE_HIERBA_RUTAS, {}) || {};
+    if (!juegos[leida.juego]) escribir(CLAVE_HIERBA_RUTAS, { ...juegos, [leida.juego]: true });
+  }
+  const marcadas = marcarCapturas(nueva, leida.juego, mirados, conHierba);
 
   const partida = {
     ...nueva,

@@ -128,3 +128,7 @@ export const CLAVES_JUEGO = {
 // Multiplicador de nivel de cada juego en Level caps: { idJuego: 1.5, ... }. Un locke con
 // randomizer lo deja puesto al abrir sus Level caps (el de sus normas: todos los mismos).
 export const CLAVE_MULTIPLICADOR_CAPS = "poketeams-levelcaps-multiplicador-v1";
+
+// Juegos que en Rutas llevan los pueblos con hierba del randomizer: { idJuego: true }. Un locke
+// lo deja puesto (o lo quita) al abrir sus Rutas, según sus normas.
+export const CLAVE_HIERBA_RUTAS = "poketeams-rutas-hierba-v1";

@@ -15,6 +15,7 @@
 import { leerGarc, crearGarc, leerMini, crearMini, descomprimirLZ11, comprimirLZ11 } from "./rom-3ds.js";
 import { leerTextos6, escribirTextos6, aTexto } from "./textos-3ds.js";
 import { leerAmx, escribirAmx, leer16, poner16 as poner16Amx } from "./amx.js";
+import { ponerHierbaEnPueblos as hierbaEnPueblos } from "./hierba-3ds.js";
 
 export const ULTIMA_ESPECIE = 802;
 export const ULTIMO_ATAQUE = 719;
@@ -1491,6 +1492,12 @@ export function actualizarTextos(sesion, { iniciales, mt, entrenadores }) {
 }
 export function ponerAspectoIniciales() {}
 export function ponerCombatesDobles() {}
+
+// Hierba en los pueblos que no tienen (ver ./hierba-3ds.js). Antes de leerBW2 (carga lo que le hace falta).
+// Devuelve las zonas que la llevan.
+export function ponerHierbaEnPueblos(sesion) {
+  return hierbaEnPueblos(sesion, perfilDe(sesion), { leerGarc, crearGarc, descomprimirLZ11, comprimirLZ11 });
+}
 
 // Texto instantáneo: dos instrucciones del programa que cargan la velocidad del texto, detrás de unas marcas
 const MARCAS_TEXTO = {

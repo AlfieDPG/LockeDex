@@ -15,7 +15,7 @@ import { icono } from "../comun/iconos.js";
 import { escaparHTML, fechaLarga } from "../comun/utilidades.js";
 import { hayNube, usuarioActual } from "../comun/nube.js";
 import { leer, escribir } from "../comun/almacen.js";
-import { CLAVES_JUEGO, CLAVE_MULTIPLICADOR_CAPS } from "../comun/selector-juego.js";
+import { CLAVES_JUEGO, CLAVE_MULTIPLICADOR_CAPS, CLAVE_HIERBA_RUTAS } from "../comun/selector-juego.js";
 import {
   plantillaCampoJuego, activarCamposJuego, leerCampoJuego, nombreJuego, juegoConDatos
 } from "../comun/campo-juego.js";
@@ -42,7 +42,7 @@ import {
   alternarRom
 } from "./combates.js";
 import { iniciarPartida, plantillaPartida, accionPartida } from "./partida.js";
-import { completarReglas, hayAlgo, misReglas, normasGuardadas, resumenNormas } from "../randomizer/reglas.js";
+import { completarReglas, hayAlgo, misReglas, normasGuardadas, resumenNormas, hierbaEnPueblos } from "../randomizer/reglas.js";
 import { confirmar } from "../comun/ventanas.js";
 
 let seccion = null;
@@ -720,6 +720,14 @@ function irAlJuego(seccionDestino, idJuego, locke) {
     if (subida) multiplicadores[idJuego] = 1 + subida / 100;
     else delete multiplicadores[idJuego];
     escribir(CLAVE_MULTIPLICADOR_CAPS, multiplicadores);
+  }
+  // Rutas de un locke: con «Hierba en los pueblos» en sus normas, esos pueblos salen también
+  if (seccionDestino === "rutas" && locke) {
+    const conHierba = hierbaEnPueblos(locke);
+    const juegos = leer(CLAVE_HIERBA_RUTAS, {}) || {};
+    if (conHierba) juegos[idJuego] = true;
+    else delete juegos[idJuego];
+    escribir(CLAVE_HIERBA_RUTAS, juegos);
   }
   irA(seccionDestino);
 }

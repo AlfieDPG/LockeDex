@@ -24,6 +24,7 @@ import { leerNarc, crearNarc } from "./rom-nds.js";
 import { IPS, aplicarIPS, largoConIPS } from "./parches-gen5.js";
 import { ENTRADAS_GEN4 } from "./datos-gen4.js";
 import { leerTextos4, escribirTextos4, aCodigos, deCodigos } from "./textos-gen4.js";
+import { ponerHierbaEnPueblos as hierbaEnPueblos } from "./hierba-gen4.js";
 
 export const ULTIMA_ESPECIE = 493;
 export const ULTIMO_ATAQUE = 467;
@@ -1024,5 +1025,10 @@ export function ponerPokedexNacional(datos) {
 }
 
 // Sin hacer en 4.ª generación
+// Hierba en los pueblos que no tienen (ver ./hierba-gen4.js). Antes de leerBW2. Devuelve las zonas
+export function ponerHierbaEnPueblos(rom) {
+  return hierbaEnPueblos(rom, perfilDe(rom), { leerNarc, crearNarc });
+}
+
 export function ponerTextoRapido() {}
 export function ponerCombatesDobles() {}

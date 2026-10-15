@@ -388,3 +388,73 @@ export const LUGARES = {
     ]
   }
 };
+
+// ---------- Pueblos con hierba (randomizer) ----------
+// Con «Hierba en los pueblos» (js/randomizer/hierba-gen4.js, hierba-gen5.js y hierba-3ds.js) estos pueblos,
+// donde no se podía capturar nada, tienen Pokémon de hierba. Un locke con esa norma los ve en
+// «Ciudades y pueblos», junto a los demás y en el orden de la historia.
+
+const PUEBLOS_HIERBA_SINNOH = [
+  "Pueblo Arena", "Ciudad Jubileo", "Ciudad Pirita", "Pueblo Aromaflor", "Ciudad Corazón", "Pueblo Sosiego",
+  "Ciudad Rocavelo", "Ciudad Puntaneva", "Zona de Combate", "Zona Sobrevivir"
+];
+const ORDEN_SINNOH = [
+  "Pueblo Hojaverde", "Pueblo Arena", "Ciudad Jubileo", "Ciudad Pirita", "Pueblo Aromaflor", "Ciudad Vetusta",
+  "Ciudad Corazón", "Pueblo Sosiego", "Pueblo Caelestis", "Ciudad Rocavelo", "Ciudad Pradera", "Ciudad Canal",
+  "Ciudad Puntaneva", "Ciudad Marina", "Zona de Combate", "Zona Sobrevivir", "Zona Descanso"
+];
+
+const PUEBLOS_HIERBA = {
+  xy: {
+    nuevos: ["Pueblo Vánitas", "Ciudad Novarte", "Pueblo Crómlech", "Ciudad Témpera", "Pueblo Fresco", "Ciudad Fluxus", "Ciudad Batik", "Ciudad Fractal"],
+    orden: [
+      "Pueblo Vánitas", "Ciudad Novarte", "Pueblo Petroglifo", "Ciudad Relieve", "Pueblo Crómlech", "Ciudad Yantra", "Ciudad Romantis",
+      "Ciudad Témpera", "Pueblo Fresco", "Ciudad Fluxus", "Ciudad Batik", "Ciudad Fractal", "Pueblo Mosaico"
+    ]
+  },
+  oras: {
+    nuevos: ["Pueblo Escaso", "Ciudad Férrica", "Ciudad Malvalona", "Pueblo Verdegal", "Pueblo Pardal", "Pueblo Lavacalda", "Ciudad Arborada"],
+    orden: [
+      "Pueblo Escaso", "Ciudad Petalia", "Ciudad Férrica", "Pueblo Azuliza", "Ciudad Portual", "Ciudad Malvalona", "Pueblo Verdegal",
+      "Pueblo Pardal", "Pueblo Lavacalda", "Ciudad Arborada", "Ciudad Calagua", "Ciudad Algaria", "Arrecípolis", "Pueblo Oromar",
+      "Ciudad Colosalia"
+    ]
+  },
+  dp: { nuevos: PUEBLOS_HIERBA_SINNOH, orden: ORDEN_SINNOH },
+  platino: { nuevos: PUEBLOS_HIERBA_SINNOH, orden: ORDEN_SINNOH },
+  hgss: {
+    nuevos: ["Ciudad Trigal", "Pueblo Caoba", "Pueblo Lavanda", "Ciudad Azafrán"],
+    orden: [
+      "Pueblo Primavera", "Ciudad Cerezo", "Ciudad Malva", "Pueblo Azalea", "Ciudad Trigal", "Ciudad Iris",
+      "Ciudad Olivo", "Ciudad Orquídea", "Pueblo Caoba", "Ciudad Endrino", "Pueblo Lavanda", "Ciudad Azafrán"
+    ]
+  },
+  bw: {
+    nuevos: ["Pueblo Arcilla", "Pueblo Terracota", "Ciudad Esmalte", "Ciudad Mayólica", "Ciudad Loza", "Ciudad Caolín", "Pueblo Ladrillo"],
+    orden: [
+      "Pueblo Arcilla", "Ciudad Gres", "Pueblo Terracota", "Ciudad Esmalte", "Ciudad Mayólica", "Ciudad Fayenza",
+      "Ciudad Loza", "Ciudad Teja", "Ciudad Caolín", "Pueblo Ladrillo", "Pueblo Arenisca"
+    ]
+  },
+  b2w2: {
+    nuevos: [
+      "Pueblo Ocre", "Ciudad Mayólica", "Ciudad Fayenza", "Ciudad Loza", "Pueblo Chamota", "Pueblo Ladrillo",
+      "Ciudad Caolín", "Pueblo Terracota", "Ciudad Esmalte", "Pueblo Arcilla"
+    ],
+    orden: [
+      "Ciudad Engobe", "Pueblo Ocre", "Ciudad Hormigón", "Ciudad Porcelana", "Ciudad Mayólica", "Ciudad Fayenza",
+      "Ciudad Loza", "Pueblo Chamota", "Pueblo Arenisca", "Pueblo Ladrillo", "Ciudad Caolín", "Ciudad Marga",
+      "Ciudad Teja", "Ciudad Gres", "Pueblo Terracota", "Ciudad Esmalte", "Pueblo Arcilla"
+    ]
+  }
+};
+
+// Los lugares de un juego de la web; con hierba, sus ciudades llevan además las de la hierba
+export function lugaresDelJuego(idJuego, conHierba = false) {
+  const lugares = LUGARES[idJuego];
+  const extra = PUEBLOS_HIERBA[idJuego];
+  if (!lugares || !conHierba || !extra) return lugares;
+  const todas = new Set([...(lugares.ciudades || []), ...extra.nuevos]);
+  const enOrden = extra.orden.filter((pueblo) => todas.has(pueblo));
+  return { ...lugares, ciudades: [...enOrden, ...[...todas].filter((pueblo) => !extra.orden.includes(pueblo))] };
+}

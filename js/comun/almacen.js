@@ -18,6 +18,7 @@ export const CLAVES_SINCRONIZADAS = [
   "poketeams-rutas-v2",                   // rutas marcadas
   "poketeams-capturas-v1",                // qué se capturó en cada lugar (rutas/capturas.js)
   "poketeams-rutas-juego-v1",             // juego elegido en «Rutas»
+  "poketeams-rutas-hierba-v1",            // juegos con los pueblos con hierba del randomizer
   "poketeams-levelcaps-v2",               // combates superados
   "poketeams-levelcaps-juego-v1",         // juego elegido en «Level caps»
   "poketeams-levelcaps-multiplicador-v1", // multiplicador de nivel

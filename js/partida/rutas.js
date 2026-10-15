@@ -4,7 +4,7 @@
 // apunta qué salió ahí, igual que si se hiciera a mano. Nunca se desmarca nada, y cada Pokémon
 // se mira una sola vez: si desmarcas un lugar, no vuelve a marcarse solo.
 
-import { LUGARES } from "../rutas/datos.js";
+import { lugaresDelJuego } from "../rutas/datos.js";
 import { leer, escribir } from "../comun/almacen.js";
 import { apuntarEnLockesDelJuego } from "../comun/lockes.js";
 
@@ -67,9 +67,10 @@ function captura(p) {
 }
 
 // partida: la convertida (js/partida/convertir.js). mirados: llaves de los Pokémon ya
-// mirados otras veces (se añaden los de ahora). Devuelve cuántos lugares se han marcado.
-export function marcarCapturas(partida, idJuego, mirados) {
-  const lugares = LUGARES[idJuego];
+// mirados otras veces (se añaden los de ahora). conHierba: el locke tiene la hierba en los
+// pueblos del randomizer (esos pueblos también cuentan). Devuelve cuántos lugares se han marcado.
+export function marcarCapturas(partida, idJuego, mirados, conHierba = false) {
+  const lugares = lugaresDelJuego(idJuego, conHierba);
   if (!lugares) return 0;
 
   const apartados = (lugares.apartados || APARTADOS.map((clave) => ({ clave }))).map((a) => a.clave);

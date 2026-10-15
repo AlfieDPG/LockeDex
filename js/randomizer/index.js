@@ -244,7 +244,11 @@ const PESTANAS = [
             hijos: [{ k: "sinLegendarios", tipo: "casilla", texto: "Sin legendarios" }]
           },
           { k: "nivel", texto: "Multiplicador de niveles", ...MULTIPLICADOR },
-          { k: "objetos", tipo: "casilla", texto: "Objetos de los Pokémon salvajes aleatorios" }
+          { k: "objetos", tipo: "casilla", texto: "Objetos de los Pokémon salvajes aleatorios" },
+          {
+            k: "pueblos", tipo: "casilla", texto: "Hierba en los pueblos", no: ["sm", "usum"],
+            ayuda: "Un trozo de hierba alta en cada pueblo y ciudad que no tiene, con los Pokémon de la ruta por la que se llega. No se ve: solo al pisarla"
+          }
         ]
       }
     ]
