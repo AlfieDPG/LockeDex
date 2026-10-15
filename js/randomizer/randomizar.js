@@ -10,12 +10,14 @@ import { crearAzar } from "./azar.js";
 import { completarReglas } from "./reglas.js";
 import { cargarDatosRandomizer, montarDatosRandomizer, clasificarObjetos, deGeneracion } from "./datos.js";
 import { tiposEs } from "../comun/tipos.js";
-import {
-  leerBW2, escribirBW2, leerMovimientos, escribirMovimientos, actualizarTextos, nombresPokemon, ponerAspectoIniciales,
-  leerNombresEntrenadores, ponerPokedexNacional, ponerTextoRapido, ponerCombatesDobles,
-  ULTIMA_ESPECIE, ULTIMO_ATAQUE, ULTIMO_OBJETO, ULTIMA_HABILIDAD, EVO, TIPOS, TIENDAS_MT, TIENDAS_NORMALES, TIENDAS_HISTORIA,
-  GRUPOS_JEFES, SIN_DOBLES, TIENDA_PRIMERA
-} from "./juego-bw2.js";
+import { ULTIMA_ESPECIE, ULTIMO_ATAQUE, ULTIMA_HABILIDAD, EVO, TIPOS } from "./juego-gen5.js";
+import { esGen4 } from "./juego-gen4-ident.js";
+
+// El módulo de cada generación (los dos exportan lo mismo): se carga el que toca
+async function cargarMotor(rom) {
+  if (rom.es3DS) return import("./juego-3ds.js");
+  return esGen4(rom) ? import("./juego-gen4.js") : import("./juego-gen5.js");
+}
 
 // Legendarios y singulares hasta gen 5
 const LEGENDARIOS = new Set([
@@ -43,7 +45,9 @@ const DE_TESELIA_EN_CLAROS = new Set([
   559, 561, 564, 569, 572, 575, 578, 580, 583, 587, 588, 594, 596, 601, 605, 607, 610, 613, 616, 618, 619, 621, 622, 624,
   626, 628, 630, 631, 632
 ]);
-const BLOQUES_MT = 13; // bytes de compatibilidad con las MT (95 MT y 6 MO)
+const BLOQUES_MT_DS = 13; // bytes de compatibilidad con las MT y MO (en Negro 2 y Blanco 2, 95 MT y 6 MO; en la 4.ª generación, 92 y 8)
+// Cuántas MT, cuántas MO y cuántas MT más van detrás de las MO (solo Negro y Blanco y su segunda parte)
+const bitsMT = (datos) => datos.perfil.bitsMT || { tm: 92, hm: 6, extra: 3 };
 const GRUPOS_TUTOR = [15, 17, 13, 15]; // cuántos ataques de cada grupo de tutores (4 bytes cada uno)
 // Dónde empieza cada grupo en la lista de ataques de los tutores (que va en otro orden: 13, 15, 15, 17)
 const ORDEN_TUTOR = [13, 43, 0, 28];
@@ -147,9 +151,10 @@ function randomizarStats(datos, azar) {
 // «familia»: la base saca tipos nuevos y sus evoluciones los heredan (si la evolución ganaba un
 // segundo tipo, gana otro al azar). «cualquiera»: cada uno los suyos. Quien tenía dos, sigue con dos.
 function randomizarTipos(datos, reglas, azar) {
-  const otro = (menos) => azar.elegir(TIPOS.filter((t) => t !== menos));
+  const tipos = datos.perfil.tipos || TIPOS;
+  const otro = (menos) => azar.elegir(tipos.filter((t) => t !== menos && t));
   const nuevos = (cuantos) => {
-    const uno = azar.elegir(TIPOS);
+    const uno = azar.elegir(tipos.filter(Boolean));
     return cuantos === 2 ? [uno, otro(uno)] : [uno];
   };
   const antes = new Map(todas(datos).map((e) => [e.id, e.tipos.length]));
@@ -165,8 +170,8 @@ function randomizarTipos(datos, reglas, azar) {
 
 function randomizarHabilidades(datos, reglas, azar) {
   const buenas = [];
-  for (let id = 1; id <= ULTIMA_HABILIDAD; id++) {
-    if (!HABILIDADES_NUNCA.has(id) && !(reglas.habilidades.sinMalas && HABILIDADES_MALAS.has(id))) buenas.push(id);
+  for (let id = 1; id <= (datos.perfil.ultimaHabilidad || ULTIMA_HABILIDAD); id++) {
+    if (!HABILIDADES_NUNCA.has(id) && !(datos.perfil.habilidadesNunca || []).includes(id) && !(reglas.habilidades.sinMalas && HABILIDADES_MALAS.has(id))) buenas.push(id);
   }
   for (const e of todas(datos)) {
     const [uno, dos, oculta] = e.habilidades;
@@ -414,6 +419,11 @@ function randomizarAtaques(datos, reglas, azar) {
       const ordenados = sitios.map((i) => nuevos[i]).sort((a, b) => a.potencia - b.potencia);
       sitios.forEach((i, k) => (nuevos[i] = { ...ordenados[k], nivel: niveles[k] }));
     }
+    // Y, ya ordenados, que entre los primeros (los que sabe de salida) haya alguno que haga daño
+    if (nuevos.length && !nuevos.slice(0, 4).some((a) => a.potencia > 1)) {
+      const danino = azar.elegir(pos.sueltos.filter((a) => a.potencia > 1 && (!tipo || e.tipos.includes(a.tipo))));
+      if (danino) nuevos[0] = { id: danino.id, nivel: nuevos[0].nivel, potencia: danino.potencia };
+    }
     datos.aprende[e.id] = nuevos.map((a) => [a.id, a.nivel]);
   }
 }
@@ -512,12 +522,12 @@ function randomizarEntrenadores(datos, reglas, azar, lineas, objetos, azarJefes)
   // Líderes y Alto Mando de un tipo: un tipo al azar para cada gimnasio y cada uno del Alto Mando
   const tipoDe = new Map();
   if (r.modo !== "no" && r.lideresTipo) {
-    for (const grupo of GRUPOS_JEFES) {
-      const tipo = azarJefes.elegir(TIPOS);
+    for (const grupo of datos.perfil.grupos) {
+      const tipo = azarJefes.elegir(datos.perfil.tipos || TIPOS);
       for (const i of grupo) tipoDe.set(i, tipo);
     }
   }
-  const delTipo = new Map(TIPOS.map((tipo) => [tipo, lista.filter((e) => e.tipos.includes(tipo))]));
+  const delTipo = new Map((datos.perfil.tipos || TIPOS).filter(Boolean).map((tipo) => [tipo, lista.filter((e) => e.tipos.includes(tipo))]));
 
   for (const t of datos.entrenadores) {
     const suyos = tipoDe.has(t.indice) ? delTipo.get(tipoDe.get(t.indice)) : lista;
@@ -547,7 +557,7 @@ function randomizarEntrenadores(datos, reglas, azar, lineas, objetos, azarJefes)
     }
 
     // Todos los combates dobles: los de un solo Pokémon, uno más
-    if (r.dobles && t.combate === 0 && !SIN_DOBLES.has(t.indice) && t.pokemon.length) {
+    if (r.dobles && t.combate === 0 && !datos.perfil.sinDobles.includes(t.indice) && t.pokemon.length) {
       t.combate = 1;
       if (t.pokemon.length === 1) anadir();
     }
@@ -563,6 +573,9 @@ function randomizarEntrenadores(datos, reglas, azar, lineas, objetos, azarJefes)
       }
     }
 
+    // El que cambia de especie, con su habilidad al azar (la de la ranura de antes podría no existir)
+    for (const poke of t.pokemon) if (poke.cambiado) poke.habilidad = 0;
+
     // Objetos
     if (r.objetos !== "no" && delGrupo(r.objetos, t)) {
       t.conObjetos = true;
@@ -571,7 +584,16 @@ function randomizarEntrenadores(datos, reglas, azar, lineas, objetos, azarJefes)
 
     // Ataques propios: los que tendría cada uno a su nivel
     if (t.conAtaques) {
-      for (const poke of t.pokemon) if (poke.cambiado || r.nivel || reglas.ataques.modo !== "no") poke.ataques = ataquesANivel(datos.aprende[poke.especie], poke.nivel);
+      for (const poke of t.pokemon) {
+        if (!(poke.cambiado || r.nivel || reglas.ataques.modo !== "no")) continue;
+        poke.ataques = ataquesANivel(datos.aprende[poke.especie], poke.nivel);
+        // Con al menos uno que haga daño (si no, el último sale por otro que sí, de los que aprende)
+        const daña = (id) => datos.ataques[id] && datos.ataques[id].potencia > 1;
+        if (reglas.ataques.modo !== "no" && poke.ataques.some(Boolean) && !poke.ataques.some(daña)) {
+          const otro = (datos.aprende[poke.especie] || []).find(([id]) => daña(id));
+          if (otro) poke.ataques[Math.max(0, poke.ataques.filter(Boolean).length - 1)] = otro[0];
+        }
+      }
     }
   }
 }
@@ -598,15 +620,30 @@ function ponerBits(datos, cuantos, valor) {
 function compatibilidad(datos, parte, reglas, azar, ataqueDe) {
   for (const e of todas(datos)) {
     if (parte === "mt") {
-      const bits = ponerBits(datos, BLOQUES_MT * 8, (i) => {
+      const bloques = datos.perfil.bloquesMT || BLOQUES_MT_DS;
+      const bits = ponerBits(datos, bloques * 8, (i) => {
         if (reglas.mt.compat === "total") return true; // todas, las MO también
         const ataque = ataqueDe(i);
         const deSuTipo = ataque && e.tipos.includes(ataque.tipo);
         return azar.numero() * 100 < (deSuTipo ? Math.max(reglas.mt.tipo, 15) : 25);
       });
-      // Las MO (las seis siguientes a las 92 primeras) no se tocan salvo en «total»
-      if (reglas.mt.compat !== "total") for (let i = 92; i < 98; i++) bits[i >> 3] = (bits[i >> 3] & ~(1 << (i & 7))) | (e.mt[i >> 3] & (1 << (i & 7)));
-      e.mt = bits.slice(0, BLOQUES_MT);
+      // Las MO (las que van detrás de las MT) no se tocan salvo en «total»
+      const { tm, hm } = bitsMT(datos);
+      if (reglas.mt.compat !== "total") for (let i = tm; i < tm + hm; i++) bits[i >> 3] = (bits[i >> 3] & ~(1 << (i & 7))) | (e.mt[i >> 3] & (1 << (i & 7)));
+      e.mt = bits.slice(0, bloques);
+    } else if (datos.perfil.tutorInfo) {
+      // 4.ª generación: un solo bloque de bits, uno por tutor; los fijos (Golpe Cabeza) se quedan como están
+      const { cuantos, bytes: largo, fijos } = datos.perfil.tutorInfo;
+      const bits = ponerBits(datos, cuantos, (k) => {
+        if (fijos.includes(k)) return e.tutor[k >> 3] & (1 << (k & 7));
+        if (reglas.tutores.compat === "total") return true;
+        const ataque = ataqueDe(k);
+        const deSuTipo = ataque && e.tipos.includes(ataque.tipo);
+        return azar.numero() * 100 < (deSuTipo ? Math.max(reglas.tutores.tipo, 15) : 25);
+      });
+      const bytes = new Uint8Array(largo);
+      bytes.set(bits.slice(0, largo));
+      e.tutor = bytes;
     } else {
       const bytes = new Uint8Array(16);
       GRUPOS_TUTOR.forEach((cuantos, g) => {
@@ -637,10 +674,10 @@ function randomizarObjetosSuelo(datos, reglas, azar, objetos) {
 
 function randomizarTiendas(datos, reglas, azar, objetos) {
   // Sin lo que ya venden las tiendas normales, si se pide
-  const normales = new Set(reglas.objetos.sinNormales ? datos.tiendas.filter((t) => TIENDAS_NORMALES.includes(t.indice)).flatMap((t) => t.objetos) : []);
+  const normales = new Set(reglas.objetos.sinNormales ? datos.tiendas.filter((t) => datos.perfil.tiendas.normales.includes(t.indice)).flatMap((t) => t.objetos) : []);
   const lista = objetos.usables.filter((id) => !(reglas.objetos.sinMalos && objetos.malos.has(id)) && !normales.has(id));
   for (const t of datos.tiendas) {
-    if (TIENDAS_MT.includes(t.indice) || TIENDAS_NORMALES.includes(t.indice)) continue;
+    if (datos.perfil.tiendas.mt.includes(t.indice) || datos.perfil.tiendas.normales.includes(t.indice)) continue;
     t.objetos = t.objetos.map(() => azar.elegir(lista));
   }
 }
@@ -648,7 +685,7 @@ function randomizarTiendas(datos, reglas, azar, objetos) {
 // Que estos objetos se vendan en alguna tienda especial de las de la historia (si no está ya, en
 // el sitio de otro objeto). primera: una tienda concreta, si se quiere.
 function venderSiempre(datos, azar, ids, primera) {
-  const tiendas = datos.tiendas.filter((t) => TIENDAS_HISTORIA.includes(t.indice) && t.objetos.length);
+  const tiendas = datos.tiendas.filter((t) => datos.perfil.tiendas.historia.includes(t.indice) && t.objetos.length);
   const fijos = new Set(); // «tienda:hueco» ya ocupados por uno de estos
   const concreta = primera !== undefined && tiendas.find((t) => t.indice === primera);
   for (const id of ids) {
@@ -662,16 +699,18 @@ function venderSiempre(datos, azar, ids, primera) {
   }
 }
 
-// Todas las MO, para todos (son las seis que van detrás de las 92 primeras MT)
+// Todas las MO, para todos (las que van detrás de las 92 primeras MT)
 function moParaTodos(datos) {
-  for (const e of todas(datos)) for (let i = 92; i < 98; i++) e.mt[i >> 3] |= 1 << (i & 7);
+  const { tm, hm } = bitsMT(datos);
+  for (const e of todas(datos)) for (let i = tm; i < tm + hm; i++) e.mt[i >> 3] |= 1 << (i & 7);
 }
 
 function equilibrarPrecios(datos, objetos) {
   datos.precios = datos.precios.map((precio, id) => {
     const nuevo = objetos.precio(id);
-    // El juego los guarda en decenas (la Poción, 30 = 300)
-    return nuevo ? Math.min(0xffff, Math.max(1, Math.round(nuevo / 10))) : precio;
+    // Negro, Blanco y los segundos los guardan en decenas (la Poción, 30 = 300); los de la 4.ª, tal cual
+    const unidad = datos.perfil.preciosEnDecenas === false ? 1 : 10;
+    return nuevo ? Math.min(0xffff, Math.max(1, Math.round(nuevo / unidad))) : precio;
   });
 }
 
@@ -679,17 +718,27 @@ function equilibrarPrecios(datos, objetos) {
 
 export async function randomizarROM(bytes, reglasEntrada, semilla) {
   const reglas = completarReglas(reglasEntrada);
-  const rom = new RomNDS(bytes);
-  const datos = leerBW2(rom);
+  // Una ROM de DS (los bytes) o un juego de 3DS ya preparado (ver ./rom-3ds.js)
+  const rom = bytes.es3DS ? bytes : new RomNDS(bytes);
+  const M = await cargarMotor(rom);
+  const datos = M.leerBW2(rom);
+  for (const id of datos.perfil.legendarios || []) LEGENDARIOS.add(id);
   let datosObjetos = await cargarDatosRandomizer();
   // Un datos/randomizer.json viejo (de la caché) no trae estadísticas ni ataques: a PokeAPI
   if (!datosObjetos.statsAntes || !datosObjetos.ataquesAntes) datosObjetos = await montarDatosRandomizer();
-  const objetos = clasificarObjetos(datosObjetos, ULTIMO_OBJETO);
+  const objetos = clasificarObjetos(datosObjetos, datos.perfil.ultimoObjeto);
+  // Los que no existen en este juego (en Diamante y Perla, los números 112 a 134)
+  if (datos.perfil.objetosInexistentes) {
+    const existe = (id) => !datos.perfil.objetosInexistentes(id);
+    objetos.usables = objetos.usables.filter(existe);
+    objetos.equipables = objetos.equipables.filter(existe);
+  }
   // Si piden quitar los malos, los equipables tampoco los llevan
   if (reglas.objetos.sinMalos) objetos.equipables = objetos.equipables.filter((id) => !objetos.malos.has(id));
 
   const azar = (parte) => crearAzar(`${semilla}|${parte}`);
   // Las líneas de las iniciales de antes de tocar nada (para darle al rival las nuevas)
+  const inicialesAntes = datos.iniciales.slice();
   const lineas = lineasIniciales(datos, datos.iniciales);
   const originalesIntercambios = datos.intercambios.map((x) => ({ da: x.da, pide: x.pide }));
   const yaDobles = new Set(datos.entrenadores.filter((t) => t.combate === 1).map((t) => t.indice));
@@ -716,7 +765,7 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
   hacer("intercambios", r.intercambios.modo !== "no" || r.intercambios.objetos || r.intercambios.ivs, () =>
     randomizarIntercambios(datos, reglas, azar("intercambios"), objetos));
   hacer("salvajes", r.salvajes.modo !== "no" || r.salvajes.nivel, () => randomizarSalvajes(datos, reglas, azar("salvajes")));
-  hacer("claros ocultos", r.salvajes.modo !== "no", () => randomizarClaros(datos, reglas, azar("claros")));
+  hacer("claros ocultos", r.salvajes.modo !== "no" && datos.perfil.claros, () => randomizarClaros(datos, reglas, azar("claros")));
   hacer("objetos de los salvajes", r.salvajes.objetos, () => randomizarObjetosSalvajes(datos, azar("objetos-salvajes"), objetos));
   const rival = r.iniciales.modo !== "no" && r.iniciales.rivalInicial;
   const entrenadores = r.entrenadores.modo !== "no" || r.entrenadores.extras !== "no" || r.entrenadores.objetos !== "no" ||
@@ -725,7 +774,7 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
     randomizarEntrenadores(datos, reglas, azar("entrenadores"), rival ? lineas : new Map(), objetos, azar("jefes")));
 
   // Los ataques de las MT y de los tutores (el programa principal y el overlay 36)
-  const movimientos = r.mt.ataques || r.tutores.ataques || r.mt.compat !== "no" || r.tutores.compat !== "no" ? leerMovimientos(rom) : null;
+  const movimientos = !datos.perfil.sinMT && (r.mt.ataques || r.tutores.ataques || r.mt.compat !== "no" || r.tutores.compat !== "no") ? M.leerMovimientos(rom) : null;
   if (movimientos) {
     const pos = ataquesPosibles(datos);
     const elegir = (nombre, lista) => {
@@ -740,57 +789,65 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
       });
     };
     if (r.mt.ataques) movimientos.mt = elegir("mt-ataques", movimientos.mt);
-    if (r.tutores.ataques) movimientos.tutor = elegir("tutores-ataques", movimientos.tutor);
+    if (r.tutores.ataques && datos.perfil.tutores) {
+      const fijos = datos.perfil.tutorInfo?.fijos || [];
+      const nuevos = elegir("tutores-ataques", movimientos.tutor);
+      movimientos.tutor = movimientos.tutor.map((v, k) => (fijos.includes(k) ? v : nuevos[k]));
+    }
     hacer("ataques de las MT", r.mt.ataques, () => {});
-    hacer("ataques de los tutores", r.tutores.ataques, () => {});
+    hacer("ataques de los tutores", r.tutores.ataques && datos.perfil.tutores, () => {});
     // Qué ataque es cada MT y cada tutor (ya con los nuevos) para dar más compatibilidad a los de su tipo
     const mtDe = (i) => {
-      const k = i < 92 ? i : i >= 98 ? 92 + (i - 98) : -1;
+      const { tm, hm } = bitsMT(datos);
+      const k = i < tm ? i : i >= tm + hm ? tm + (i - tm - hm) : -1;
       return k >= 0 ? datos.ataques[movimientos.mt[k]] : null;
     };
     hacer("MT", r.mt.compat !== "no", () => compatibilidad(datos, "mt", reglas, azar("mt"), mtDe));
-    hacer("tutores", r.tutores.compat !== "no", () => compatibilidad(datos, "tutor", reglas, azar("tutores"), (k) => datos.ataques[movimientos.tutor[k]]));
-    if (r.mt.ataques || r.tutores.ataques) escribirMovimientos(rom, movimientos, datos.ataques);
+    hacer("tutores", r.tutores.compat !== "no" && datos.perfil.tutores, () => compatibilidad(datos, "tutor", reglas, azar("tutores"), (k) => datos.ataques[movimientos.tutor[k]]));
+    if (r.mt.ataques || (r.tutores.ataques && datos.perfil.tutores)) M.escribirMovimientos(rom, movimientos, datos.ataques);
   }
-  hacer("MO para todos", r.mt.mo, () => moParaTodos(datos));
-  hacer("objetos del suelo", r.objetos.suelo, () => randomizarObjetosSuelo(datos, reglas, azar("suelo"), objetos));
-  hacer("tiendas", r.objetos.tiendas, () => randomizarTiendas(datos, reglas, azar("tiendas"), objetos));
-  hacer("piedras en las tiendas", r.objetos.piedras, () => venderSiempre(datos, azar("piedras"), PIEDRAS_EVOLUTIVAS));
-  hacer("precios", r.objetos.precios, () => equilibrarPrecios(datos, objetos));
-  hacer("Caramelos Raros baratos", r.objetos.caramelos, () => {
-    venderSiempre(datos, azar("caramelos"), [CARAMELO_RARO], TIENDA_PRIMERA);
-    datos.precios[CARAMELO_RARO] = PRECIO_CARAMELO;
+  hacer("MO para todos", r.mt.mo && !datos.perfil.sinMT, () => moParaTodos(datos));
+  hacer("objetos del suelo", r.objetos.suelo && !datos.perfil.sinObjetos, () => randomizarObjetosSuelo(datos, reglas, azar("suelo"), objetos));
+  hacer("tiendas", r.objetos.tiendas && !datos.perfil.sinObjetos, () => randomizarTiendas(datos, reglas, azar("tiendas"), objetos));
+  hacer("piedras en las tiendas", r.objetos.piedras && !datos.perfil.sinObjetos, () => venderSiempre(datos, azar("piedras"), PIEDRAS_EVOLUTIVAS));
+  hacer("precios", r.objetos.precios && !datos.perfil.sinObjetos, () => equilibrarPrecios(datos, objetos));
+  hacer("Caramelos Raros baratos", r.objetos.caramelos && !datos.perfil.sinObjetos, () => {
+    venderSiempre(datos, azar("caramelos"), [CARAMELO_RARO], datos.perfil.tiendas.primera);
+    datos.precios[CARAMELO_RARO] = datos.perfil.preciosEnDecenas === false ? PRECIO_CARAMELO * 10 : PRECIO_CARAMELO;
   });
-  escribirBW2(rom, datos);
+  // (antes de escribir los scripts)
+  hacer("Pokédex Nacional", r.varios.pokedex, () => M.ponerPokedexNacional(datos));
+  M.escribirBW2(rom, datos);
 
   // Los nombres de los entrenadores (se escriben con los demás textos, al final)
   let nombresEntrenadores = null;
   hacer("nombres de entrenadores", r.entrenadores.nombres, () => {
-    nombresEntrenadores = leerNombresEntrenadores(rom);
+    nombresEntrenadores = M.leerNombresEntrenadores(rom);
     barajarNombres(datos, nombresEntrenadores, azar("nombres"));
   });
   // Retoques del programa
-  hacer("combates dobles", r.entrenadores.dobles, () => ponerCombatesDobles(rom, yaDobles));
-  hacer("Pokédex Nacional", r.varios.pokedex, () => ponerPokedexNacional(rom));
-  hacer("texto rápido", r.varios.texto, () => ponerTextoRapido(rom));
+  hacer("combates dobles", r.entrenadores.dobles, () => M.ponerCombatesDobles(rom, yaDobles));
+  hacer("texto rápido", r.varios.texto, () => M.ponerTextoRapido(rom));
 
   // Que lo que se lee cuadre: descripciones de las MT, tipo de las iniciales y diálogos de los
   // intercambios
   const viejos = originalesIntercambios;
-  const nombres = nombresPokemon(rom);
+  const nombres = M.nombresPokemon(rom);
   const cambiosIntercambio = new Map();
-  datos.intercambios.forEach((t, i) => {
-    const o = viejos[i];
-    if (o.da !== t.da) cambiosIntercambio.set(nombres[o.da], nombres[t.da]);
-    if (o.pide !== t.pide) cambiosIntercambio.set(nombres[o.pide], nombres[t.pide]);
-  });
+  if (nombres.length) {
+    datos.intercambios.forEach((t, i) => {
+      const o = viejos[i];
+      if (o.da !== t.da) cambiosIntercambio.set(nombres[o.da], nombres[t.da]);
+      if (o.pide !== t.pide) cambiosIntercambio.set(nombres[o.pide], nombres[t.pide]);
+    });
+  }
   // En la pantalla de elegir, el dibujo y el grito de las nuevas
-  if (r.iniciales.modo !== "no") ponerAspectoIniciales(rom, datos.iniciales);
+  if (r.iniciales.modo !== "no") M.ponerAspectoIniciales(rom, datos.iniciales);
   // El tipo de las iniciales, si cambian ellas o los tipos
   const textoIniciales = r.iniciales.modo !== "no" || r.tipos.modo !== "no";
-  actualizarTextos(rom, {
+  M.actualizarTextos(rom, {
     mt: movimientos && r.mt.ataques ? movimientos.mt : null,
-    iniciales: textoIniciales ? datos.iniciales.map((id) => ({ tipo: tiposEs[datos.especies[id].tipos[0]] })) : null,
+    iniciales: textoIniciales ? Object.assign(datos.iniciales.map((id) => ({ tipo: tiposEs[datos.especies[id].tipos[0]] })), { antes: inicialesAntes, ahora: datos.iniciales }) : null,
     intercambios: cambiosIntercambio,
     entrenadores: nombresEntrenadores
   });
@@ -798,3 +855,4 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
 }
 
 export { ULTIMA_ESPECIE, ULTIMO_ATAQUE };
+

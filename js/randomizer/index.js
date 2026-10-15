@@ -26,7 +26,21 @@ const ULTIMA_ESPECIE = 649; // de momento, juegos hasta gen 5
 const CLAVE_SEMILLAS = "poketeams-randomizer-semillas-v1";
 
 // Juego de js/comun/juegos.js por las tres primeras letras del código de la ROM
-const JUEGO_DE_CODIGO = { IRE: "b2w2", IRD: "b2w2" };
+const JUEGO_DE_CODIGO = {
+  IRE: "b2w2", IRD: "b2w2", IRB: "bw", IRA: "bw", ADA: "dp", APA: "dp", CPU: "platino", IPK: "hgss", IPG: "hgss"
+};
+const GEN4 = ["dp", "platino", "hgss"];
+// Los de 3DS (se leen del .3ds y salen como archivos sueltos para el emulador o la consola)
+const TRES_DS = ["xy", "oras", "sm", "usum"];
+// Juego de js/comun/juegos.js por el código de producto de un .3ds («CTR-P-EK2A»)
+const JUEGO_DE_CODIGO_3DS = { EK: "xy", EC: "oras", BN: "sm" };
+// La generación de cada juego (las actualizaciones de datos son a las siguientes)
+const GENERACION_DE = { dp: 4, platino: 4, hgss: 4, bw: 5, b2w2: 5, xy: 6, oras: 6, sm: 7, usum: 7 };
+// Lo que no tiene cada juego (no sale en su pestaña): Negro y Blanco no tienen tutores de ataques;
+// en los de 4.ª generación, todavía no se hace lo de los tutores ni las iniciales
+// (HeartGold y SoulSilver: sin salvajes todavía)
+const SIN_PESTANAS = { xy: ["varios"], oras: ["varios"], sm: ["objetos", "varios"] };
+const SIN_APARTADOS = { bw: ["tutores"], dp: ["tutores"], xy: ["tutores", "estaticos", "intercambios"], oras: ["tutores", "estaticos", "intercambios"], sm: ["tutores", "estaticos", "intercambios"] };
 
 const PARECIDA_ALEATORIO = [["no", "Sin cambios"], ["parecida", "Fuerza parecida"], ["cualquiera", "Aleatorio"]];
 const QUIEN = [["no", "Nadie"], ["lideres", "Líderes"], ["normales", "Normales"], ["todos", "Todos"]];
@@ -34,7 +48,9 @@ const COMPAT = [["no", "Sin cambios"], ["aleatoria", "Aleatorio"], ["total", "To
 const ALEATORIO = [["no", "Sin cambios"], ["azar", "Aleatorio"]];
 const SI_NO = [[false, "Sin cambios"], [true, "Aleatorio"]];
 // Las generaciones a las que se puede actualizar (las de después del juego)
-const GENERACIONES = [[0, "Sin cambios"], [6, "6.ª generación"], [7, "7.ª generación"], [8, "8.ª generación"], [9, "9.ª generación"]];
+const GENERACIONES = (juego) => [
+  [0, "Sin cambios"], ...[5, 6, 7, 8, 9].filter((g) => g > (GENERACION_DE[juego] || 5)).map((g) => [g, `${g}.ª generación`])
+];
 // Multiplicador de niveles: se guarda lo que suben, en %
 const MULTIPLICADOR = { tipo: "barra", min: 0, max: 100, paso: 5, formato: (v) => (v ? `×${(1 + v / 100).toLocaleString("es-ES", { minimumFractionDigits: 2 })}` : "Sin cambios") };
 
@@ -193,7 +209,7 @@ const PESTANAS = [
       {
         id: "entrenadores", titulo: "Combates", icono: "amigos",
         campos: [
-          { k: "dobles", tipo: "casilla", texto: "Todos los combates dobles", ayuda: "Los de un solo Pokémon llevan uno más" },
+          { k: "dobles", tipo: "casilla", texto: "Todos los combates dobles", ayuda: "Los de un solo Pokémon llevan uno más", no: GEN4 },
           { k: "nombres", tipo: "casilla", texto: "Nombres de los entrenadores aleatorios", ayuda: "Los de los entrenadores normales y sus clases, barajados" }
         ]
       }
@@ -246,8 +262,8 @@ const PESTANAS = [
       {
         id: "varios", titulo: "Varios", icono: "pokedex",
         campos: [
-          { k: "pokedex", tipo: "casilla", texto: "Pokédex Nacional desde el principio", ayuda: "Al darte la Pokédex, también la nacional" },
-          { k: "texto", tipo: "casilla", texto: "Texto instantáneo" }
+          { k: "pokedex", tipo: "casilla", texto: "Pokédex Nacional desde el principio", ayuda: "Al darte la Pokédex, también la nacional", no: [...GEN4, ...TRES_DS] },
+          { k: "texto", tipo: "casilla", texto: "Texto instantáneo", no: ["bw", ...GEN4, ...TRES_DS] }
         ]
       }
     ]
@@ -373,6 +389,8 @@ function plantillaHijos(a, c, reglas, bloqueado) {
 // Una fila: el nombre a la izquierda y el control a la derecha; debajo, lo que cuelga de ella
 function plantillaFila(a, c, reglas, bloqueado) {
   if (c.si && !c.si(reglas)) return "";
+  // «no»: los juegos que no lo tienen
+  if (c.no && rom && c.no.includes(rom.juego)) return "";
   return `
     <div class="random-fila">
       <span class="random-nombre" title="${escaparHTML(c.ayuda || "")}">${escaparHTML(c.texto || "")}</span>
@@ -404,7 +422,8 @@ function plantillaControl(a, c, reglas, bloqueado) {
       .map(([v, t]) => `<button class="${v === valor ? "activa" : ""}" ${dato} data-valor="${escaparHTML(JSON.stringify(v))}" ${dis}>${escaparHTML(t)}</button>`)
       .join("")}</div>`;
   }
-  return `<select class="random-desplegable" ${dato} ${dis}>${c.opciones.map(([v, t]) => `<option value="${escaparHTML(JSON.stringify(v))}" ${v === valor ? "selected" : ""}>${escaparHTML(t)}</option>`).join("")}</select>`;
+  const opciones = typeof c.opciones === "function" ? c.opciones(rom && rom.juego) : c.opciones;
+  return `<select class="random-desplegable" ${dato} ${dis}>${opciones.map(([v, t]) => `<option value="${escaparHTML(JSON.stringify(v))}" ${v === valor ? "selected" : ""}>${escaparHTML(t)}</option>`).join("")}</select>`;
 }
 
 // ¿Algo de esta tarjeta (o de lo que cuelga) no está sin cambios?
@@ -443,7 +462,7 @@ function pintar() {
   const cambiada = (p) => p.apartados.some((a) => tarjetaCambiada(a, reglas));
   vista.innerHTML = `
     <div class="selector-regiones random-pestanas">
-      ${PESTANAS.map((p) => `<button data-pestana="${p.id}" class="${p.id === actual.id ? "activa" : ""}">${escaparHTML(p.titulo)}${cambiada(p) ? `<i class="random-punto"></i>` : ""}</button>`).join("")}
+      ${PESTANAS.filter((p) => !((rom && SIN_PESTANAS[rom.juego]) || []).includes(p.id)).map((p) => `<button data-pestana="${p.id}" class="${p.id === actual.id ? "activa" : ""}">${escaparHTML(p.titulo)}${cambiada(p) ? `<i class="random-punto"></i>` : ""}</button>`).join("")}
     </div>
     ${plantillaNormas()}
     <div class="random-barra">
@@ -453,8 +472,8 @@ function pintar() {
       <button class="random-ir" ${rom && !rom.error && !trabajando && hayAlgo(reglas) ? "" : "disabled"} title="${hayAlgo(reglas) ? "" : "Cambia algo primero"}">${icono("mezclar")} ${trabajando ? "Randomizando..." : "Randomizar"}</button>
     </div>
     <span class="random-estado"></span>
-    <div class="random-tarjetas">${actual.apartados.map((a) => plantillaApartado(a, reglas, bloqueado)).join("")}</div>
-    <input class="random-archivo" type="file" accept=".nds" hidden>`;
+    <div class="random-tarjetas">${actual.apartados.filter((a) => !((rom && SIN_APARTADOS[rom.juego]) || []).includes(a.id)).map((a) => plantillaApartado(a, reglas, bloqueado)).join("")}</div>
+    <input class="random-archivo" type="file" accept=".nds,.3ds" hidden>`;
 }
 // ---------- ROM ----------
 
@@ -463,10 +482,23 @@ async function elegirRom(archivo) {
   try {
     // La cabecera basta para saber qué juego es
     const cabecera = new Uint8Array(await archivo.slice(0, 0x200).arrayBuffer());
-    const codigo = new TextDecoder("latin1").decode(cabecera.subarray(0x0c, 0x10));
-    const juego = JUEGO_DE_CODIGO[codigo.slice(0, 3)];
+    let juego;
+    if (new TextDecoder("latin1").decode(cabecera.subarray(0x100, 0x104)) === "NCSD") {
+      // Un .3ds: el código del juego está en la cabecera de su primera partición
+      const inicio = new DataView(cabecera.buffer).getUint32(0x120, true) * 0x200;
+      const particion = new Uint8Array(await archivo.slice(inicio, inicio + 0x200).arrayBuffer());
+      const producto = new TextDecoder("latin1").decode(particion.subarray(0x150, 0x160));
+      juego = JUEGO_DE_CODIGO_3DS[producto.slice(6, 8)];
+      rom.es3DS = true;
+      if (juego && !(particion[0x188 + 7] & 4)) {
+        rom.error = "Ese .3ds está cifrado: hace falta uno descifrado.";
+      }
+    } else {
+      const codigo = new TextDecoder("latin1").decode(cabecera.subarray(0x0c, 0x10));
+      juego = JUEGO_DE_CODIGO[codigo.slice(0, 3)];
+    }
     if (!juego) {
-      rom.error = "Este juego todavía no se puede randomizar (de momento, Negro 2 y Blanco 2).";
+      rom.error = "Este juego todavía no se puede randomizar (de momento, de DS y X, Y, Rubí Omega y Zafiro Alfa).";
     } else {
       rom.juego = juego;
       rom.nombre = (JUEGOS.find((j) => j.id === juego) || {}).nombre || juego;
@@ -505,11 +537,26 @@ async function randomizar() {
     if (!modulos.azar) {
       [modulos.azar, modulos.randomizar] = await Promise.all([import("./azar.js"), import("./randomizar.js")]);
     }
-    const bytes = new Uint8Array(await rom.archivo.arrayBuffer());
+    let bytes;
+    let nombre;
     // Que se vea «Randomizando...» antes de que el navegador se ponga a trabajar
     await new Promise((resolver) => setTimeout(resolver, 30));
-    await modulos.randomizar.randomizarROM(bytes, reglasActuales(), semillaPara());
-    const nombre = rom.archivo.name.replace(/(\.nds)?$/i, " (random).nds");
+    if (rom.es3DS) {
+      // Un .3ds no se carga entero: se leen los archivos que hacen falta y el .3ds nuevo se monta con trozos del original
+      const { Rom3DS, lectorDeArchivo, Sesion3DS } = await import("./rom-3ds.js");
+      const juego3DS = await import("./juego-3ds.js");
+      const sesion = new Sesion3DS(await new Rom3DS(lectorDeArchivo(rom.archivo)).abrir());
+      await juego3DS.prepararRom(sesion);
+      await modulos.randomizar.randomizarROM(sesion, reglasActuales(), semillaPara());
+      const nuevo = await sesion.construirRom();
+      nombre = rom.archivo.name.replace(/(\.3ds)?$/i, " (random).3ds");
+      const piezas = nuevo.partes.map((x) => (x.rango ? rom.archivo.slice(x.rango.desde, x.rango.desde + x.rango.tam) : x));
+      bytes = new Blob(piezas, { type: "application/octet-stream" });
+    } else {
+      bytes = new Uint8Array(await rom.archivo.arrayBuffer());
+      await modulos.randomizar.randomizarROM(bytes, reglasActuales(), semillaPara());
+      nombre = rom.archivo.name.replace(/(\.nds)?$/i, " (random).nds");
+    }
     const enlace = document.createElement("a");
     enlace.href = URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" }));
     enlace.download = nombre;
@@ -605,3 +652,4 @@ export function usarLocke(id) {
   guardada = null;
   if (rom) elegirRom(rom.archivo);
 }
+
