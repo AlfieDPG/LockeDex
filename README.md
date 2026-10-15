@@ -2,7 +2,7 @@
 
 Web de fans para jugar Nuzlockes con amigos: equipos, rutas, level caps, Pokédex y marcador de lockes.
 
-Enlace: https://alfiedpg.github.io/Pokelocke/
+Enlace: https://alfiedpg.github.io/LockeDex/
 
 Créditos, aviso legal y privacidad: [legal.html](legal.html). Web sin ánimo de lucro, no afiliada
 a Nintendo, Creatures Inc., GAME FREAK inc. ni The Pokémon Company.
