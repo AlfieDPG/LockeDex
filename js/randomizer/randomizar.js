@@ -507,7 +507,17 @@ function randomizarObjetosSalvajes(datos, azar, objetos) {
 
 // ---------- Entrenadores ----------
 
-const delGrupo = (quien, t) => quien === "todos" || (quien === "lideres" ? t.importante : quien === "normales" && !t.importante);
+// De qué grupo es cada entrenador: «lideres» (gimnasios, Alto Mando, campeón...), «rivales» (los
+// demás importantes) o «normales»
+function grupoDe(datos, t) {
+  if (!t.importante) return "normales";
+  return (datos.perfil.lideres || []).includes(t.indice) ? "lideres" : "rivales";
+}
+
+const delGrupo = (quienes, datos, t) => (quienes || []).includes(grupoDe(datos, t));
+
+// El primer combate contra el rival (solo tienes la inicial): a nivel 5 como mucho
+const NIVEL_PRIMER_COMBATE = 5;
 
 // Las tres líneas de iniciales: especie -> { cual (0, 1 o 2), fase (0, 1 o 2) }
 function lineasIniciales(datos, iniciales) {
@@ -546,6 +556,8 @@ function randomizarEntrenadores(datos, reglas, azar, lineas, objetos, azarJefes)
 
   for (const t of datos.entrenadores) {
     const suyos = tipoDe.has(t.indice) ? delTipo.get(tipoDe.get(t.indice)) : lista;
+    const primerCombate = grupoDe(datos, t) === "rivales" && t.pokemon.length &&
+      t.pokemon.every((poke) => poke.nivel <= NIVEL_PRIMER_COMBATE);
     for (const poke of t.pokemon) {
       const linea = lineas.get(poke.especie);
       if (linea) {
@@ -566,8 +578,9 @@ function randomizarEntrenadores(datos, reglas, azar, lineas, objetos, azarJefes)
       t.pokemon.push({ ...ultimo, especie: nuevo.id, forma: 0, habilidad: 0, objeto: 0, ataques: [0, 0, 0, 0], cambiado: true });
     };
 
-    // Pokémon extra (hasta seis en total), con el nivel del último
-    if (delGrupo(r.extras, t)) {
+    // Pokémon extra (hasta seis en total), con el nivel del último. El primer combate contra el
+    // rival, no: tú solo tienes un Pokémon
+    if (delGrupo(r.extras, datos, t) && !primerCombate) {
       for (let k = 0; k < r.cuantos && t.pokemon.length && t.pokemon.length < MAX_EQUIPO; k++) anadir();
     }
 
@@ -592,7 +605,7 @@ function randomizarEntrenadores(datos, reglas, azar, lineas, objetos, azarJefes)
     for (const poke of t.pokemon) if (poke.cambiado) poke.habilidad = 0;
 
     // Objetos
-    if (r.objetos !== "no" && delGrupo(r.objetos, t)) {
+    if (delGrupo(r.objetos, datos, t)) {
       t.conObjetos = true;
       for (const poke of t.pokemon) if (!poke.objeto) poke.objeto = azar.elegir(objetos.equipables);
     }
@@ -800,7 +813,7 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
   hacer("claros ocultos", r.salvajes.modo !== "no" && datos.perfil.claros, () => randomizarClaros(datos, reglas, azar("claros")));
   hacer("objetos de los salvajes", r.salvajes.objetos, () => randomizarObjetosSalvajes(datos, azar("objetos-salvajes"), objetos));
   const rival = r.iniciales.modo !== "no" && r.iniciales.rivalInicial;
-  const entrenadores = r.entrenadores.modo !== "no" || r.entrenadores.extras !== "no" || r.entrenadores.objetos !== "no" ||
+  const entrenadores = r.entrenadores.modo !== "no" || r.entrenadores.extras.length || r.entrenadores.objetos.length ||
     r.entrenadores.evolucionados || r.entrenadores.nivel || r.entrenadores.dobles || rival || r.ataques.modo !== "no";
   hacer("entrenadores", entrenadores, () =>
     randomizarEntrenadores(datos, reglas, azar("entrenadores"), rival ? lineas : new Map(), objetos, azar("jefes")));

@@ -42,7 +42,8 @@ const SIN_PESTANAS = {};
 const SIN_APARTADOS = { bw: ["tutores"], dp: ["tutores"], xy: ["tutores"], oras: [], sm: ["tutores"], usum: [] };
 
 const PARECIDA_ALEATORIO = [["no", "Sin cambios"], ["parecida", "Fuerza parecida"], ["cualquiera", "Aleatorio"]];
-const QUIEN = [["no", "Nadie"], ["lideres", "Líderes"], ["normales", "Normales"], ["todos", "Todos"]];
+// A quién: se marcan sueltos, ninguno es nadie
+const QUIEN = [["lideres", "Líderes"], ["rivales", "Rivales"], ["normales", "Entrenadores"]];
 const COMPAT = [["no", "Sin cambios"], ["aleatoria", "Aleatorio"], ["total", "Todos"]];
 const ALEATORIO = [["no", "Sin cambios"], ["azar", "Aleatorio"]];
 const SI_NO = [[false, "Sin cambios"], [true, "Aleatorio"]];
@@ -201,10 +202,11 @@ const PESTANAS = [
         id: "entrenadores", titulo: "Más Pokémon y objetos", icono: "mas",
         campos: [
           {
-            k: "extras", tipo: "opciones", texto: "Pokémon extra para", opciones: QUIEN, abre: (r) => r.entrenadores.extras !== "no",
+            k: "extras", tipo: "opciones", varias: true, texto: "Pokémon extra para", opciones: QUIEN, abre: (r) => r.entrenadores.extras.length > 0,
+            ayuda: "El primer combate contra el rival se queda como está",
             hijos: [{ k: "cuantos", tipo: "opciones", texto: "Cuántos se añaden", opciones: [[1, "1"], [2, "2"], [3, "3"], [4, "4"], [5, "5"]], ayuda: "Hasta seis en total" }]
           },
-          { k: "objetos", tipo: "opciones", texto: "Añadir objetos a", opciones: QUIEN },
+          { k: "objetos", tipo: "opciones", varias: true, texto: "Añadir objetos a", opciones: QUIEN },
           {
             k: "evolucionados", tipo: "casilla", texto: "Evolucionados del todo", ayuda: "A partir de cierto nivel, solo llevan Pokémon en su última evolución",
             abre: (r) => r.entrenadores.evolucionados,
@@ -421,6 +423,15 @@ function plantillaControl(a, c, reglas, bloqueado) {
   // Sí o no: un interruptor
   if (c.tipo === "casilla") {
     return `<button class="random-interruptor ${valor ? "activa" : ""}" role="switch" aria-checked="${Boolean(valor)}" aria-label="${escaparHTML(c.texto)}" ${dato} data-valor="${!valor}" ${dis}><i></i></button>`;
+  }
+  // Varias opciones que se marcan sueltas (varias: el valor es la lista de las marcadas): cada
+  // botón lleva la lista que queda al pulsarlo
+  if (c.tipo === "opciones" && c.varias) {
+    const marcadas = valor || [];
+    const alPulsar = (v) => c.opciones.map(([x]) => x).filter((x) => (x === v) !== marcadas.includes(x));
+    return `<div class="random-segmentado" title="${escaparHTML(c.ayuda || "")}">${c.opciones
+      .map(([v, t]) => `<button class="${marcadas.includes(v) ? "activa" : ""}" aria-pressed="${marcadas.includes(v)}" ${dato} data-valor="${escaparHTML(JSON.stringify(alPulsar(v)))}" ${dis}>${escaparHTML(t)}</button>`)
+      .join("")}</div>`;
   }
   // Varias opciones: botones pegados, siempre en una fila (en pantallas estrechas, en columna)
   if (c.tipo === "opciones") {

@@ -26,7 +26,8 @@ export const REGLAS_VACIAS = {
   movimientos: { generacion: 0 },
   ataques: { modo: "no", tipo: 50, inicio: 0, orden: false },
   entrenadores: {
-    modo: "no", sinLegendarios: true, lideresTipo: false, extras: "no", cuantos: 1, objetos: "no", evolucionados: false,
+    // extras y objetos: a quién, cualquiera de «lideres», «rivales» y «normales» (vacío: a nadie)
+    modo: "no", sinLegendarios: true, lideresTipo: false, extras: [], cuantos: 1, objetos: [], evolucionados: false,
     nivelEvolucionados: 40, nivel: 0, dobles: false, nombres: false
   },
   salvajes: { modo: "no", sinLegendarios: true, nivel: 0, objetos: false },
@@ -35,6 +36,8 @@ export const REGLAS_VACIAS = {
   objetos: { suelo: false, sinMalos: false, tiendas: false, sinNormales: false, piedras: false, caramelos: false, precios: false },
   varios: { pokedex: false, texto: false }
 };
+
+const QUIENES_ANTES = { lideres: ["lideres", "rivales"], normales: ["normales"], todos: ["lideres", "rivales", "normales"] };
 
 // Unas normas que vienen de fuera (un locke, un código): lo que falte, como en las vacías; lo
 // que se guardó con otra forma, pasado a la de ahora
@@ -50,6 +53,11 @@ export function completarReglas(reglas = {}) {
   // Antes, tipos «familia» o «cualquiera»: ahora aleatorio, y lo de la familia aparte
   if (salida.tipos.modo === "familia") Object.assign(salida.tipos, { modo: "azar", familia: true });
   if (salida.tipos.modo === "cualquiera") salida.tipos.modo = "azar";
+  // Antes, extras y objetos eran una sola opción, y «líderes» llevaba también a los rivales
+  for (const k of ["extras", "objetos"]) {
+    const valor = salida.entrenadores[k];
+    if (!Array.isArray(valor)) salida.entrenadores[k] = QUIENES_ANTES[valor] || [];
+  }
   return salida;
 }
 
