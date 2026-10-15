@@ -49,8 +49,9 @@ export const TIPOS = [
 
 // Métodos de evolución (gen 5)
 export const EVO = {
-  nivel: 4, intercambio: 5, intercambioObjeto: 6, intercambioEspecial: 7, piedra: 8, belleza: 16,
-  piedraMacho: 17, piedraHembra: 18, objetoDia: 19, objetoNoche: 20, ataque: 21, otroEnEquipo: 22
+  amistad: 1, amistadDia: 2, amistadNoche: 3, nivel: 4, intercambio: 5, intercambioObjeto: 6, intercambioEspecial: 7,
+  piedra: 8, belleza: 16, piedraMacho: 17, piedraHembra: 18, objetoDia: 19, objetoNoche: 20, ataque: 21,
+  otroEnEquipo: 22, nivelMacho: 23, nivelHembra: 24
 };
 
 // Zonas de los salvajes: hierba, hierba alta (dobles), hierba que se mueve, surf, surf con
@@ -96,6 +97,7 @@ function leerEspecies(narcs) {
       tipos: [...new Set([TIPOS[d[6]], TIPOS[d[7]]])].filter(Boolean),
       habilidades: [d[24], d[25], d[26]],
       objetos: [u16(d, 12), u16(d, 14), u16(d, 16)],
+      genero: d[18],
       mt: d.slice(40, 53),
       tutor: d.length >= 76 ? d.slice(60, 76) : new Uint8Array(0),
       evoluciones,

@@ -98,8 +98,9 @@ const PESTANAS = [
         id: "evoluciones", titulo: "Evoluciones", icono: "mega",
         campos: [
           { k: "modo", tipo: "opciones", opciones: ALEATORIO, ayuda: "Aleatorio: cada uno evoluciona en otro de fuerza parecida, con tres fases como mucho" },
-          { k: "dificiles", tipo: "casilla", texto: "Convertir evoluciones complejas en evoluciones por nivel", ayuda: "Las de intercambio, saber un ataque, llevar a otro en el equipo..." },
-          { k: "piedras", tipo: "casilla", texto: "Convertir evoluciones por piedra en evoluciones por nivel", ayuda: "La piedra se mantiene y se le suma el nivel: puede evolucionar de las dos formas. Lista de cambios en docs/evoluciones-randomizer-b2w2.txt" }
+          { k: "dificiles", tipo: "casilla", texto: "Facilitar evoluciones complejas", ayuda: "Intercambio, amistad, saber un ataque, un lugar...: además por nivel. Intercambio con objeto: además subiendo de nivel con él. Lista de cambios en el README de GitHub" },
+          { k: "objetos", tipo: "casilla", texto: "Facilitar evoluciones por objeto", ayuda: "Piedras y objetos: además por nivel, sin el objeto" },
+          { k: "niveles", tipo: "casilla", texto: "Bajar niveles de evolución", ayuda: "Como mucho 24 la primera de tres fases, 30 las de dos (36 si es fuerte) y 36 la segunda de tres (45 las pseudolegendarias)" }
         ]
       }
     ]

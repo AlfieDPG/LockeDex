@@ -27,8 +27,9 @@ export const TIPOS = [
 
 // Los métodos de evolución de 6.ª y 7.ª generación son los de la 5.ª (con alguno más al final)
 export const EVO = {
-  nivel: 4, intercambio: 5, intercambioObjeto: 6, intercambioEspecial: 7, piedra: 8, belleza: 16,
-  piedraMacho: 17, piedraHembra: 18, objetoDia: 19, objetoNoche: 20, ataque: 21, otroEnEquipo: 22
+  amistad: 1, amistadDia: 2, amistadNoche: 3, nivel: 4, intercambio: 5, intercambioObjeto: 6, intercambioEspecial: 7,
+  piedra: 8, belleza: 16, piedraMacho: 17, piedraHembra: 18, objetoDia: 19, objetoNoche: 20, ataque: 21,
+  otroEnEquipo: 22, nivelMacho: 23, nivelHembra: 24
 };
 // Los métodos de 7.ª generación en los que el dato es un nivel (va en un byte aparte)
 const EVO_CON_NIVEL = new Set([4, 9, 10, 11, 12, 13, 14, 15, 23, 24, 28, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 41]);
@@ -344,6 +345,7 @@ function leerEspecies(garcDatos, garcEvo, perfil) {
       tipos: [...new Set([TIPOS[d[6]], TIPOS[d[7]]])].filter(Boolean),
       habilidades: [d[24], d[25] === d[24] ? 0 : d[25], d[26]],
       objetos: [u16(d, 12), u16(d, 14), 0],
+      genero: d[18],
       mt: d.slice(40, 54),
       tutor: leerCompatTutor(d, perfil),
       evoluciones,

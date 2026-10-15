@@ -241,56 +241,97 @@ function esAntepasada(id, de, madre) {
   return false;
 }
 
-// En gen 5 no hay concursos: la belleza (Feebas) tampoco se puede
-const METODOS_DIFICILES = new Set([EVO.intercambio, EVO.intercambioObjeto, EVO.intercambioEspecial, EVO.ataque, EVO.otroEnEquipo, EVO.belleza]);
-const METODOS_PIEDRA = new Set([EVO.piedra, EVO.piedraMacho, EVO.piedraHembra]);
+// Métodos de evolución (los números de gen 5; del 28 en adelante, los de 6.ª y 7.ª)
+const METODOS_AMISTAD = new Set([EVO.amistad, EVO.amistadDia, EVO.amistadNoche]);
+// Los que en un locke no se pueden (o casi): intercambio, belleza (en gen 5 no hay concursos),
+// saber un ataque, otro en el equipo, un lugar (25-27), juego al revés (Inkay), afecto (Sylveon),
+// un tipo en el equipo (Pancham), lluvia (Sliggo), solo de día o de noche (Tyrunt, Amaura,
+// Fomantis) y una cumbre (Crabrawler)
+const METODOS_COMPLEJOS = new Set([
+  EVO.intercambio, EVO.intercambioEspecial, EVO.belleza, EVO.ataque, EVO.otroEnEquipo, 25, 26, 27, 28, 29, 30, 31, 32, 33, 39
+]);
+// Con un objeto: piedras (también las de solo machos o solo hembras), llevarlo de día o de noche
+// e intercambio llevándolo
+const METODOS_OBJETO = new Set([EVO.piedra, EVO.piedraMacho, EVO.piedraHembra, EVO.objetoDia, EVO.objetoNoche, EVO.intercambioObjeto]);
+// Los que llevan un nivel en el dato
+const METODOS_NIVEL = new Set([4, 9, 10, 11, 12, 13, 14, 15, 23, 24, 28, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 41]);
+const conGeneros = (e) => e.genero > 0 && e.genero < 254;
 
-// · Complejas → nivel: la evolución pasa a ser por nivel (al que tiene sentido por la fuerza del
-//   destino). Si la especie ya evolucionaba por nivel a otra (Poliwhirl, Slowpoke...), la que era
-//   compleja pasa a ser con una piedra que no use ya.
-// · Piedra → nivel: la piedra SE QUEDA y se le suma el nivel (puede evolucionar de las dos
-//   formas). Solo si la especie no evolucionaba ya por nivel, si le queda sitio en su tabla (7
-//   evoluciones, Eevee las llena) y, si tiene varias por piedra, la primera.
+// Facilitar evoluciones: la forma de siempre no se quita nunca, se le suma otra.
+// · Con objeto: además por nivel, sin el objeto. Las de piedra de solo machos o solo hembras, por
+//   nivel con ese género. Con dos destinos (Gloom, Poliwhirl, Clamperl), los machos van al primero
+//   y las hembras al segundo.
+// · Complejas (y amistad): además por nivel. Las de intercambio llevando un objeto, además
+//   subiendo de nivel con él puesto (de día y de noche).
+// · Si la especie ya evoluciona por nivel a otra (Slowpoke → Slowking), por amistad; si es cosa de
+//   un género (Kirlia → Gallade, Snorunt → Froslass), no se puede. Tampoco si no queda sitio en la
+//   tabla (7 evoluciones, 8 en 3DS: Eevee las llena).
+// · Bajar niveles, como mucho: 24 la primera de tres fases, 30 las de dos (36 si el destino suma
+//   500 o más) y 36 la segunda de tres (45 si suma 600 o más).
 function randomizarEvoluciones(datos, reglas) {
-  const { dificiles, piedras } = reglas.evoluciones;
+  const { dificiles, objetos, niveles } = reglas.evoluciones;
+  const cabe = datos.perfil.gen >= 6 ? 8 : 7;
+  const destino = (evo) => `${evo.especie}/${evo.forma || 0}`;
+  // El suyo si ya lo llevaba (Pancham, Sliggo...); si no, el que tiene sentido por la fuerza del destino
+  const nivelDe = (evo) => (METODOS_NIVEL.has(evo.metodo) && evo.dato > 0 && evo.dato <= 100 ? evo.dato : nivelParaEvolucion(datos.especies[evo.especie]));
   for (const e of todas(datos)) {
-    if (dificiles) {
-      let hayNivel = e.evoluciones.some((evo) => evo.metodo === EVO.nivel);
-      const piedrasUsadas = new Set(e.evoluciones.filter((evo) => evo.metodo === EVO.piedra).map((evo) => evo.dato));
-      for (const evo of e.evoluciones) {
-        const destino = datos.especies[evo.especie];
-        if (!destino || !METODOS_DIFICILES.has(evo.metodo)) continue;
-        // Otra forma de llegar al mismo (Feebas: belleza y Escama Bella): sobra
-        if (e.evoluciones.some((otra) => otra !== evo && otra.especie === evo.especie && otra.metodo === EVO.nivel)) {
-          evo.quitar = true;
-          continue;
-        }
-        if (!hayNivel) {
-          evo.metodo = EVO.nivel;
-          evo.dato = nivelParaEvolucion(destino);
-          hayNivel = true;
-        } else {
-          const piedraLibre = PIEDRAS.find((p) => !piedrasUsadas.has(p));
-          evo.metodo = EVO.piedra;
-          evo.dato = piedraLibre;
-          piedrasUsadas.add(piedraLibre);
-        }
-      }
-      e.evoluciones = e.evoluciones.filter((evo) => !evo.quitar);
+    const originales = e.evoluciones.filter((evo) => datos.especies[evo.especie]);
+    const yaLlega = (evo, metodo) => e.evoluciones.some((x) => destino(x) === destino(evo) && (x.metodo === EVO.nivel || x.metodo === metodo));
+    const anadir = (evo, metodo, dato) => e.evoluciones.length < cabe && e.evoluciones.push({ ...evo, metodo, dato, nueva: true });
+    // ¿Ya evoluciona por nivel a otro? (por nivel de machos no choca con uno de hembras, ni al revés)
+    const ocupado = (evo, genero) =>
+      e.evoluciones.some((x) => METODOS_NIVEL.has(x.metodo) && destino(x) !== destino(evo) &&
+        !(x.metodo === EVO.nivelMacho && genero === "hembra") && !(x.metodo === EVO.nivelHembra && genero === "macho"));
+    const porNivel = (evo, genero) => {
+      const metodo = genero === "macho" ? EVO.nivelMacho : genero === "hembra" ? EVO.nivelHembra : EVO.nivel;
+      if (yaLlega(evo, metodo)) return;
+      if (!ocupado(evo, genero)) anadir(evo, metodo, nivelDe(evo));
+      else if (!genero && !METODOS_AMISTAD.has(evo.metodo) && !METODOS_NIVEL.has(evo.metodo) && !yaLlega(evo, EVO.amistad)) anadir(evo, EVO.amistad, 0);
+    };
+    if (objetos) {
+      const conObjeto = [];
+      for (const evo of originales) if (METODOS_OBJETO.has(evo.metodo) && !conObjeto.some((x) => destino(x) === destino(evo))) conObjeto.push(evo);
+      const reparte = conObjeto.length === 2 && conGeneros(e);
+      conObjeto.forEach((evo, i) => {
+        const genero = evo.metodo === EVO.piedraMacho ? "macho" : evo.metodo === EVO.piedraHembra ? "hembra" : reparte ? ["macho", "hembra"][i] : null;
+        porNivel(evo, genero);
+      });
     }
-    if (piedras && e.evoluciones.length < 7 && !e.evoluciones.some((evo) => evo.metodo === EVO.nivel)) {
-      const conPiedra = e.evoluciones.find((evo) => METODOS_PIEDRA.has(evo.metodo) && datos.especies[evo.especie]);
-      if (conPiedra) {
-        e.evoluciones.push({ metodo: EVO.nivel, dato: nivelParaEvolucion(datos.especies[conPiedra.especie]), especie: conPiedra.especie });
+    if (dificiles) {
+      for (const evo of originales) {
+        if (evo.metodo === EVO.intercambioObjeto) {
+          if (e.evoluciones.length + 2 > cabe) continue;
+          anadir(evo, EVO.objetoDia, evo.dato);
+          anadir(evo, EVO.objetoNoche, evo.dato);
+        } else if (METODOS_COMPLEJOS.has(evo.metodo) || METODOS_AMISTAD.has(evo.metodo)) porNivel(evo, null);
       }
     }
   }
-  // Una segunda evolución nunca antes (ni al mismo nivel) que la primera
+  if (niveles) {
+    for (const e of todas(datos)) {
+      if (LEGENDARIOS.has(e.id)) continue;
+      for (const evo of e.evoluciones) {
+        const a = datos.especies[evo.especie];
+        if (!a || !METODOS_NIVEL.has(evo.metodo) || !evo.dato) continue;
+        const fuerza = a.totalOriginal || a.total;
+        const tope = e.previa ? (fuerza >= 600 ? 45 : 36) : a.evoluciones.length ? 24 : fuerza >= 500 ? 36 : 30;
+        evo.dato = Math.min(evo.dato, tope);
+      }
+    }
+  }
+  // Una segunda evolución nunca antes (ni al mismo nivel) que la primera: se mueve la añadida (si
+  // es la segunda, más tarde; si es la primera, antes), nunca la del juego
   for (const e of todas(datos)) {
-    const evo = e.evoluciones.find((x) => x.metodo === EVO.nivel);
     const previa = e.previa && datos.especies[e.previa];
-    const previaNivel = previa && previa.evoluciones.find((x) => x.especie === e.id && x.metodo === EVO.nivel);
-    if (evo && previaNivel && evo.dato <= previaNivel.dato) evo.dato = Math.min(60, previaNivel.dato + 8);
+    if (!previa) continue;
+    for (const antes of previa.evoluciones) {
+      if (antes.especie !== e.id || !METODOS_NIVEL.has(antes.metodo) || !antes.dato) continue;
+      for (const evo of e.evoluciones) {
+        if (!METODOS_NIVEL.has(evo.metodo) || !evo.dato || evo.dato > antes.dato) continue;
+        if (evo.nueva) evo.dato = Math.min(60, antes.dato + 8);
+        else if (antes.nueva) antes.dato = Math.max(1, evo.dato - 8);
+      }
+    }
   }
 }
 // ---------- Iniciales ----------
@@ -813,7 +854,7 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
   hacer("estadísticas de otra generación", r.stats.generacion, () => statsDeGeneracion(datos, deGeneracion(datosObjetos, r.stats.generacion).stats));
   hacer("estadísticas", r.stats.modo !== "no", () => randomizarStats(datos, azar("stats")));
   hacer("evoluciones al azar", r.evoluciones.modo !== "no", () => randomizarEvolucionesAlAzar(datos, azar("evoluciones")));
-  hacer("evoluciones", r.evoluciones.dificiles || r.evoluciones.piedras, () => randomizarEvoluciones(datos, reglas));
+  hacer("evoluciones", r.evoluciones.dificiles || r.evoluciones.objetos || r.evoluciones.niveles, () => randomizarEvoluciones(datos, reglas));
   hacer("tipos", r.tipos.modo !== "no", () => randomizarTipos(datos, reglas, azar("tipos")));
   hacer("habilidades", r.habilidades.modo !== "no", () => randomizarHabilidades(datos, reglas, azar("habilidades")));
   hacer("ataques", r.ataques.modo !== "no", () => randomizarAtaques(datos, reglas, azar("ataques")));

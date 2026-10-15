@@ -39,8 +39,9 @@ const numeroDeTipo = (tipo) => (tipo ? TIPOS.indexOf(tipo) : 9);
 // Métodos de evolución: del juego a los de 5.ª generación (los que usa randomizar.js) y vuelta.
 // Del 7 en adelante, los de 4.ª generación van uno por debajo (la piedra es el 7, no el 8).
 export const EVO = {
-  nivel: 4, intercambio: 5, intercambioObjeto: 6, intercambioEspecial: 7, piedra: 8, belleza: 16,
-  piedraMacho: 17, piedraHembra: 18, objetoDia: 19, objetoNoche: 20, ataque: 21, otroEnEquipo: 22
+  amistad: 1, amistadDia: 2, amistadNoche: 3, nivel: 4, intercambio: 5, intercambioObjeto: 6, intercambioEspecial: 7,
+  piedra: 8, belleza: 16, piedraMacho: 17, piedraHembra: 18, objetoDia: 19, objetoNoche: 20, ataque: 21,
+  otroEnEquipo: 22, nivelMacho: 23, nivelHembra: 24
 };
 const metodoAbstracto = (m) => (m >= 7 ? m + 1 : m);
 const metodoDelJuego = (m) => (m >= 8 ? m - 1 : m);
@@ -209,6 +210,7 @@ function leerEspecies(narcs) {
       tipos: [...new Set([TIPOS[d[6]], TIPOS[d[7]]])].filter(Boolean),
       habilidades: [d[22], d[23], 0],
       objetos: [u16(d, 12), u16(d, 14), 0],
+      genero: d[16],
       mt: d.slice(28, 41),
       tutor: new Uint8Array(0),
       evoluciones,

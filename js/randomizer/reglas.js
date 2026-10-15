@@ -19,7 +19,7 @@ export const REGLAS_VACIAS = {
   stats: { modo: "no", generacion: 0 },
   tipos: { modo: "no", familia: false },
   habilidades: { modo: "no", dos: false, familia: false, sinMalas: false },
-  evoluciones: { modo: "no", dificiles: false, piedras: false },
+  evoluciones: { modo: "no", dificiles: false, objetos: false, niveles: false },
   iniciales: { modo: "no", rivalInicial: true, elegidas: [0, 0, 0] },
   estaticos: { modo: "no", totems: "no", aliados: "no", aura: "no" },
   intercambios: { modo: "no", objetos: false, ivs: false },
@@ -57,6 +57,8 @@ export function completarReglas(reglas = {}) {
   if (salida.tipos.modo === "cualquiera") salida.tipos.modo = "azar";
   // Antes, «preferiblemente de su tipo» era otro modo de los ataques
   if (salida.ataques.modo === "tipo") Object.assign(salida.ataques, { modo: "azar", deSuTipo: true });
+  // Antes, «piedras» en vez de «objetos» en las evoluciones
+  if (reglas && reglas.evoluciones && reglas.evoluciones.piedras && !("objetos" in reglas.evoluciones)) salida.evoluciones.objetos = true;
   // Antes, extras y objetos eran una sola opción, y «líderes» llevaba también a los rivales
   for (const k of ["extras", "objetos"]) {
     const valor = salida.entrenadores[k];
