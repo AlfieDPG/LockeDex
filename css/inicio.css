@@ -1,0 +1,382 @@
+/* ---------- Inicio (js/inicio/index.js) ---------- */
+
+#vista-inicio {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+#vista-inicio[hidden] {
+  display: none;
+}
+
+#vista-inicio button {
+  font-family: inherit;
+  color: #f2f2f2;
+  cursor: pointer;
+}
+
+#vista-inicio .icono {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+}
+
+/* ---------- Saludo ---------- */
+
+.inicio-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 0.2rem 0;
+}
+
+.inicio-logo {
+  flex: none;
+  width: 3.4rem;
+  height: 3.4rem;
+}
+
+.inicio-saludo {
+  flex: 1;
+  min-width: 0;
+}
+
+.inicio-saludo h1 {
+  margin: 0;
+  overflow: hidden;
+  font-size: 2rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.inicio-avisos,
+.inicio-entrar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: none;
+  padding: 0.55rem 0.9rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.inicio-avisos {
+  background: rgba(241, 196, 15, 0.15);
+  box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.5);
+}
+
+.inicio-avisos .icono {
+  color: #f1c40f;
+}
+
+.inicio-avisos:hover {
+  background: rgba(241, 196, 15, 0.25);
+}
+
+.inicio-entrar {
+  background: rgb(var(--color-vista));
+}
+
+.inicio-entrar:hover {
+  filter: brightness(1.12);
+}
+
+/* ---------- Lockes en marcha y conectados ---------- */
+
+.inicio-columnas {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 1.2rem;
+  align-items: start;
+}
+
+.inicio-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.9rem;
+  border-radius: 0.8rem;
+  background: #252735;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.inicio-bloque h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.2rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+
+.inicio-lockes h2 .icono { color: rgb(214, 88, 76); }
+.inicio-amigos h2 .icono { color: rgb(80, 190, 215); }
+
+.inicio-vacio {
+  margin: 0.2rem 0;
+  font-size: 0.9rem;
+  opacity: 0.6;
+}
+
+/* Cada locke: su color a la izquierda, nombre y juego, las caras y tus cifras */
+.inicio-locke {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: none;
+  border-radius: 0.55rem;
+  background: #2c2e3e;
+  box-shadow: inset 4px 0 0 var(--color-locke, #3498db);
+  text-align: left;
+}
+
+.inicio-locke:hover {
+  background: #32354a;
+}
+
+.inicio-locke-datos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+  min-width: 0;
+  padding-left: 0.2rem;
+}
+
+.inicio-locke-tipo {
+  font-size: 0.7rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-locke, #3498db);
+}
+
+.inicio-locke-nombre,
+.inicio-locke-juego {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.inicio-locke-nombre {
+  font-size: 1.05rem;
+}
+
+.inicio-locke-juego {
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+/* Las caras, montadas un poco unas encima de otras */
+.inicio-locke-caras {
+  display: flex;
+  flex: none;
+}
+
+.inicio-locke-caras .inicio-cara + .inicio-cara {
+  margin-left: -0.45rem;
+}
+
+.inicio-cara {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.9rem;
+  height: 1.9rem;
+  overflow: hidden;
+  border: 2px solid #2c2e3e;
+  border-radius: 50%;
+  background: #3a3d52;
+  box-sizing: border-box;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.inicio-cara img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.inicio-cara img[src^="data:"] {
+  image-rendering: auto;
+}
+
+.inicio-locke-cifras {
+  display: flex;
+  gap: 0.7rem;
+  flex: none;
+  min-width: 6.5rem;
+  justify-content: flex-end;
+}
+
+.inicio-cifra {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 1.05rem;
+  font-weight: bold;
+}
+
+.inicio-cifra.victorias .icono { color: #f1c40f; }
+.inicio-cifra.vidas .icono { color: #e74c3c; }
+.inicio-cifra.vidas.fuera { opacity: 0.6; }
+.inicio-cifra.vidas.fuera .icono { color: #f2f2f2; }
+
+.inicio-pie {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+
+.inicio-pie button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.8rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: #3a3d52;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.inicio-pie button:hover {
+  background: #4a4e68;
+}
+
+/* El botón de crear, en el color de su sección */
+.inicio-lockes { --color-bloque: 214, 88, 76; }
+.inicio-equipos { --color-bloque: 91, 141, 239; }
+
+.inicio-pie .inicio-principal {
+  background: rgb(var(--color-bloque));
+}
+
+.inicio-pie .inicio-principal:hover {
+  background: rgb(var(--color-bloque));
+  filter: brightness(1.12);
+}
+
+/* Al lado de los lockes: conectados y, debajo, los equipos */
+.inicio-lado {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  min-width: 0;
+}
+
+/* Sin sesión, los equipos solos */
+.inicio-solo {
+  max-width: 36rem;
+}
+
+.inicio-equipos h2 .icono { color: rgb(91, 141, 239); }
+
+.inicio-equipo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: none;
+  border-radius: 0.55rem;
+  background: #2c2e3e;
+  text-align: left;
+}
+
+.inicio-equipo:hover {
+  background: #32354a;
+}
+
+.inicio-equipo strong {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Amigos conectados: foto con el aro verde y el nombre debajo */
+.inicio-amigos-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.6rem, 1fr));
+  gap: 0.3rem;
+}
+
+.inicio-amigo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  padding: 0.45rem 0.2rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.inicio-amigo:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.inicio-amigo > span:last-child {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.inicio-cara.grande {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-color: #2ecc71;
+  font-size: 1.1rem;
+}
+
+/* ---------- Al llegar a un locke desde Inicio: se ilumina un momento ---------- */
+
+.locke.resaltado {
+  animation: locke-resaltado 1.6s ease-out;
+}
+
+@keyframes locke-resaltado {
+  0%, 30% { outline: 3px solid var(--color-locke, #3498db); outline-offset: 3px; }
+  100% { outline: 3px solid transparent; outline-offset: 3px; }
+}
+
+/* ---------- Móvil ---------- */
+
+@media (max-width: 760px) {
+  .inicio-columnas {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .inicio-cabecera {
+    flex-wrap: wrap;
+  }
+
+  .inicio-saludo h1 {
+    font-size: 1.5rem;
+  }
+
+  .inicio-locke-caras {
+    display: none;
+  }
+}

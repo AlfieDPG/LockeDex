@@ -13,6 +13,7 @@
 import { icono } from "./comun/iconos.js";
 
 const SECCIONES = {
+  inicio: () => import("./inicio/index.js"),
   equipos: () => import("./equipos/index.js"),
   rutas: () => import("./rutas/index.js"),
   levelcaps: () => import("./levelcaps/index.js"),
@@ -28,6 +29,7 @@ const SECCIONES = {
 
 // Vista -> sección que la gestiona
 const VISTAS = {
+  inicio: "inicio",
   crear: "equipos",
   equipos: "equipos",
   rutas: "rutas",
@@ -62,8 +64,8 @@ export function prepararSeccion(nombre) {
 }
 
 // La vista abierta va en la dirección (#rutas, #pokedex...): al recargar se vuelve a ella.
-// Sin nada (entrar de nuevas) se empieza en Lockes.
-const VISTA_DE_ENTRADA = "lockes";
+// Sin nada (entrar de nuevas) se empieza en Inicio.
+const VISTA_DE_ENTRADA = "inicio";
 
 // Nombres de antes, para que sigan valiendo los enlaces guardados («Lockes» se llamaba «Versus»)
 const ANTIGUAS = { versus: "lockes" };
@@ -109,5 +111,11 @@ export function iniciarNavegacion() {
   document.querySelector(".menu-lateral").addEventListener("click", (e) => {
     const boton = e.target.closest("[data-vista]");
     if (boton) irA(boton.dataset.vista);
+  });
+
+  // El logo lleva a Inicio
+  document.querySelector(".logo a").addEventListener("click", (e) => {
+    e.preventDefault();
+    irA("inicio");
   });
 }

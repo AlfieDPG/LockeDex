@@ -8,7 +8,7 @@ import "./comun/numero.js"; // las flechas de las casillas de número (en toda l
 
 activarRespaldoImagenes();
 iniciarNavegacion();
-irA(vistaInicial()); // la que hubiera al recargar, o Versus si se entra de nuevas
+irA(vistaInicial()); // la que hubiera al recargar, o Inicio si se entra de nuevas
 
 // Preguntas frecuentes: el «?» al lado de «Créditos y privacidad»
 const dialogoAyuda = document.querySelector("#dialogo-ayuda");

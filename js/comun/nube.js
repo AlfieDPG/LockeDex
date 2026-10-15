@@ -406,6 +406,14 @@ export function usuarioActual() {
   return usuario;
 }
 
+// Firebase ya ha dicho si hay sesión o no (al cargar la página tarda un momento): hasta
+// entonces, no tener usuario no quiere decir que no se haya entrado
+let sesionSabida = false;
+
+export function seSabeLaSesion() {
+  return sesionSabida;
+}
+
 export function baseDeDatos() {
   return bd ? { bd, fn: funcionesBD } : null;
 }
@@ -422,6 +430,8 @@ export async function iniciarNube() {
     await cargarFirebase();
   } catch (error) {
     console.error("No se ha podido cargar Firebase", error);
+    sesionSabida = true;
+    avisarDeLaSesion();
     marcarSincronizado();
     return;
   }
@@ -444,6 +454,7 @@ export async function iniciarNube() {
 
   funcionesAuth.onAuthStateChanged(auth, async (nuevo) => {
     usuario = nuevo;
+    sesionSabida = true;
     if (nuevo) {
       apuntarCuenta({
         app: appActiva,

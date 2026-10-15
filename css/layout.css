@@ -38,8 +38,29 @@ main {
   font-size: 1.45rem;
 }
 
+/* Todo el logo es el enlace a Inicio */
+.logo a {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.logo a:hover {
+  color: #fff;
+}
+
 .logo img {
   flex: none;
+  transition: transform 0.3s;
+}
+
+.logo a:hover img {
+  transform: rotate(-20deg);
+}
+
+.logo img {
   width: 1.6rem;
   height: 1.6rem;
 }
@@ -1502,6 +1523,7 @@ button.perfil-fondo:hover:not(:disabled) {
   box-shadow: inset 0 3px 0 rgb(var(--color-vista));
 }
 
+:root:has(#vista-inicio:not([hidden])) { --color-vista: 231, 76, 60; }
 :root:has(#vista-lockes:not([hidden])) { --color-vista: 214, 88, 76; }
 :root:has(#vista-crear:not([hidden])),
 :root:has(#vista-equipos:not([hidden])) { --color-vista: 91, 141, 239; }

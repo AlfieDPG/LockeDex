@@ -28,12 +28,13 @@
   <link rel="stylesheet" href="css/ruleta.css">
   <link rel="stylesheet" href="css/calculadora.css">
   <link rel="stylesheet" href="css/randomizer.css">
+  <link rel="stylesheet" href="css/inicio.css">
   <script type="module" src="js/main.js"></script>
 </head>
 <body>
   <div class="app">
     <aside class="barra-lateral">
-      <h1 class="logo"><img src="img/pokeball-180.png" alt="">LockeDex</h1>
+      <h1 class="logo"><a href="#inicio" title="Inicio"><img src="img/pokeball-180.png" alt="">LockeDex</a></h1>
       <nav class="menu-lateral">
         <!-- data-icono: el icono que se le pone delante (js/navegacion.js) -->
         <button data-vista="lockes" data-icono="espadas" class="boton-destacado">Lockes</button>
@@ -83,6 +84,9 @@
     <div class="contenido">
       <main>
         <!-- Cada vista es un <section id="vista-XXX"> y se abre con un botón data-vista="XXX" -->
+        <!-- Inicio: se abre con el logo (js/inicio/index.js lo pinta entero) -->
+        <section id="vista-inicio" hidden></section>
+
         <section id="vista-crear" hidden>
           <div class="barra-superior">
             <div class="lado-izq">
