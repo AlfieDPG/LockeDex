@@ -26,8 +26,8 @@ const LEGENDARIOS = new Set([
   644, 645, 646, 647, 648, 649
 ]);
 // Habilidades que nunca salen: Superguarda y las que solo funcionan en un Pokémon (Predicción,
-// Multitipo, Don Floral, Modo Daruma)
-const HABILIDADES_NUNCA = new Set([25, 59, 121, 122, 161]);
+// Multitipo, Modo Daruma). Don Floral sí: sin cambiar de forma, sube igual Ataque y Def. Esp. con sol
+const HABILIDADES_NUNCA = new Set([25, 59, 121, 161]);
 // Las inútiles: Ausente, Inicio Lento, Flaqueza, Zoquete, Rezagado, Recogemiel, Fuga, Iluminación,
 // Más, Menos, Compiescolta, Telepatía
 const HABILIDADES_MALAS = new Set([54, 112, 129, 103, 100, 118, 50, 35, 57, 58, 132, 140]);
@@ -391,11 +391,13 @@ function ataqueAlAzar(azar, especie, pos, tipo, usados) {
   return azar.elegir(pos.sueltos);
 }
 
+const MAX_APRENDE = 20;
+
 function randomizarAtaques(datos, reglas, azar) {
   const pos = ataquesPosibles(datos);
-  // «tipo»: de su tipo con esa probabilidad; «azar»: cualquiera
+  // Cualquiera, todos igual de probables; con «deSuTipo», de sus tipos con esa probabilidad
   const { inicio } = reglas.ataques;
-  const tipo = reglas.ataques.modo === "tipo" ? reglas.ataques.tipo : 0;
+  const tipo = reglas.ataques.deSuTipo ? reglas.ataques.tipo : 0;
   for (const e of todas(datos)) {
     const viejos = datos.aprende[e.id] || [];
     const usados = new Set();
@@ -409,22 +411,17 @@ function randomizarAtaques(datos, reglas, azar) {
       const danino = azar.elegir(pos.sueltos.filter((a) => a.potencia > 1 && (!tipo || e.tipos.includes(a.tipo))));
       if (danino) nuevos[0] = { id: danino.id, nivel: nuevos[0].nivel, potencia: danino.potencia };
     }
-    // Que empiecen con al menos «inicio» ataques
+    // Que empiecen con al menos «inicio» ataques: los que falten, nuevos a nivel 1. Los niveles de
+    // la lista no se tocan: sigue aprendiendo en los mismos niveles que en el juego. Sin pasar de
+    // MAX_APRENDE en total (o de los que ya tenía, si eran más), por si el juego tiene tope
     if (inicio) {
       let enNivelUno = nuevos.filter((a) => a.nivel <= 1).length;
-      for (let i = 0; i < nuevos.length && enNivelUno < inicio; i++) {
-        if (nuevos[i].nivel > 1) {
-          nuevos[i].nivel = 1;
-          enNivelUno++;
-        }
-      }
-      while (enNivelUno < inicio) {
+      const tope = Math.max(MAX_APRENDE, viejos.length);
+      while (enNivelUno < inicio && nuevos.length < tope) {
         const a = ataqueAlAzar(azar, e, pos, tipo, new Set(nuevos.map((x) => x.id)));
         nuevos.push({ id: a.id, nivel: 1, potencia: a.potencia });
         enNivelUno++;
       }
-      // Como mucho 4 ataques a la vez: los de nivel 1 que sobren pasan a nivel 2
-      nuevos.filter((a) => a.nivel <= 1).slice(Math.max(4, inicio)).forEach((a) => (a.nivel = 2));
     }
     nuevos.sort((a, b) => a.nivel - b.nivel);
     // Los que hacen daño, de más flojo a más fuerte (en los mismos niveles)
@@ -645,15 +642,19 @@ function ponerBits(datos, cuantos, valor) {
   return bytes;
 }
 
+// Cara o cruz (50 %); con «deSuTipo», los ataques de sus tipos con «tipo» % (nunca menos de 50)
+function aprendeAlAzar(azar, e, ataque, { deSuTipo, tipo }) {
+  const suyo = deSuTipo && ataque && e.tipos.includes(ataque.tipo);
+  return azar.numero() * 100 < (suyo ? Math.max(tipo, 50) : 50);
+}
+
 function compatibilidad(datos, parte, reglas, azar, ataqueDe) {
   for (const e of todas(datos)) {
     if (parte === "mt") {
       const bloques = datos.perfil.bloquesMT || BLOQUES_MT_DS;
       const bits = ponerBits(datos, bloques * 8, (i) => {
         if (reglas.mt.compat === "total") return true; // todas, las MO también
-        const ataque = ataqueDe(i);
-        const deSuTipo = ataque && e.tipos.includes(ataque.tipo);
-        return azar.numero() * 100 < (deSuTipo ? Math.max(reglas.mt.tipo, 15) : 25);
+        return aprendeAlAzar(azar, e, ataqueDe(i), reglas.mt);
       });
       // Las MO (las que van detrás de las MT) no se tocan salvo en «total»
       const { tm, hm } = bitsMT(datos);
@@ -665,9 +666,7 @@ function compatibilidad(datos, parte, reglas, azar, ataqueDe) {
       const bits = ponerBits(datos, cuantos, (k) => {
         if (fijos.includes(k)) return e.tutor[k >> 3] & (1 << (k & 7));
         if (reglas.tutores.compat === "total") return true;
-        const ataque = ataqueDe(k);
-        const deSuTipo = ataque && e.tipos.includes(ataque.tipo);
-        return azar.numero() * 100 < (deSuTipo ? Math.max(reglas.tutores.tipo, 15) : 25);
+        return aprendeAlAzar(azar, e, ataqueDe(k), reglas.tutores);
       });
       const bytes = new Uint8Array(largo);
       bytes.set(bits.slice(0, largo));
@@ -677,9 +676,7 @@ function compatibilidad(datos, parte, reglas, azar, ataqueDe) {
       GRUPOS_TUTOR.forEach((cuantos, g) => {
         const fila = ponerBits(datos, cuantos, (b) => {
           if (reglas.tutores.compat === "total") return true;
-          const ataque = ataqueDe(ORDEN_TUTOR[g] + b);
-          const deSuTipo = ataque && e.tipos.includes(ataque.tipo);
-          return azar.numero() * 100 < (deSuTipo ? Math.max(reglas.tutores.tipo, 15) : 25);
+          return aprendeAlAzar(azar, e, ataqueDe(ORDEN_TUTOR[g] + b), reglas.tutores);
         });
         bytes.set(fila, g * 4);
       });
@@ -698,31 +695,47 @@ function objetosMT(datos) {
   return [...rango(328, Math.min(tm, 92)), ...rango(618, extra || 0)];
 }
 
-// Lo que hay por el camino: donde había una MT, otra MT; en cualquier otro sitio, cualquier objeto (también MT), menos
-// los clave (los de la historia, que ni salen ni se mueven) y, si se pide, los inútiles
+// MT al azar sin repetir hasta que salgan todas (luego vuelve a empezar)
+function sacoDeMT(azar, mts) {
+  let quedan = [];
+  return () => {
+    if (!quedan.length) quedan = azar.barajar(mts);
+    return quedan.pop();
+  };
+}
+
+// Lo que hay por el camino (como el UPR): donde había una MT, otra MT, sin repetir mientras se pueda; en
+// cualquier otro sitio, cualquier objeto que no sea MT (así hay las mismas MT que en el juego), menos los
+// clave (los de la historia, que ni salen ni se mueven) y, si se pide, los inútiles
 function randomizarObjetosSuelo(datos, reglas, azar, objetos) {
   const mts = objetosMT(datos);
   const esMT = new Set(mts);
-  const lista = [...objetos.usables.filter((id) => !(reglas.objetos.sinMalos && objetos.malos.has(id))), ...mts];
+  const otraMT = sacoDeMT(azar, mts);
+  const lista = objetos.usables.filter((id) => !(reglas.objetos.sinMalos && objetos.malos.has(id)));
   for (const o of datos.objetosSuelo) {
     const actual = objetos.categoria(o.objeto);
     if (!actual || objetos.clave(o.objeto) || actual === "plot-advancement" || actual === "event-items" || actual === "gameplay") continue;
     if (actual === "all-machines") {
       // Las MO no se mueven
-      if (esMT.has(o.objeto)) o.objeto = azar.elegir(mts);
+      if (esMT.has(o.objeto)) o.objeto = otraMT();
       continue;
     }
     o.objeto = azar.elegir(lista);
   }
 }
 
+// Las tiendas especiales de la historia y las de MT (las normales no se tocan). Donde se vendía una
+// MT, otra MT (sin repetir en la misma tienda); lo demás, cualquier objeto que no sea MT
 function randomizarTiendas(datos, reglas, azar, objetos) {
+  const mts = objetosMT(datos);
+  const esMT = new Set(mts);
   // Sin lo que ya venden las tiendas normales, si se pide
   const normales = new Set(reglas.objetos.sinNormales ? datos.tiendas.filter((t) => datos.perfil.tiendas.normales.includes(t.indice)).flatMap((t) => t.objetos) : []);
   const lista = objetos.usables.filter((id) => !(reglas.objetos.sinMalos && objetos.malos.has(id)) && !normales.has(id));
   for (const t of datos.tiendas) {
-    if (datos.perfil.tiendas.mt.includes(t.indice) || datos.perfil.tiendas.normales.includes(t.indice)) continue;
-    t.objetos = t.objetos.map(() => azar.elegir(lista));
+    if (datos.perfil.tiendas.normales.includes(t.indice)) continue;
+    const otraMT = sacoDeMT(azar, mts);
+    t.objetos = t.objetos.map((id) => (esMT.has(id) ? otraMT() : azar.elegir(lista)));
   }
 }
 

@@ -24,15 +24,17 @@ export const REGLAS_VACIAS = {
   estaticos: { modo: "no", totems: "no", aliados: "no", aura: "no" },
   intercambios: { modo: "no", objetos: false, ivs: false },
   movimientos: { generacion: 0 },
-  ataques: { modo: "no", tipo: 50, inicio: 0, orden: false },
+  // deSuTipo: más fácil que sean de sus tipos («tipo» %); si no, todos igual de probables
+  ataques: { modo: "no", deSuTipo: false, tipo: 50, inicio: 0, orden: false },
   entrenadores: {
     // extras y objetos: a quién, cualquiera de «lideres», «rivales» y «normales» (vacío: a nadie)
     modo: "no", sinLegendarios: true, lideresTipo: false, extras: [], cuantos: 1, objetos: [], evolucionados: false,
     nivelEvolucionados: 40, nivel: 0, dobles: false, nombres: false
   },
   salvajes: { modo: "no", sinLegendarios: true, nivel: 0, objetos: false },
-  mt: { ataques: false, compat: "no", tipo: 50, mo: false },
-  tutores: { ataques: false, compat: "no", tipo: 50 },
+  // compat «aleatoria»: cada uno, cara o cruz (50 %); con deSuTipo, los de su tipo con «tipo» %
+  mt: { ataques: false, compat: "no", deSuTipo: false, tipo: 90, mo: false },
+  tutores: { ataques: false, compat: "no", deSuTipo: false, tipo: 90 },
   objetos: { suelo: false, sinMalos: false, tiendas: false, sinNormales: false, piedras: false, caramelos: false, precios: false },
   varios: { pokedex: false, texto: false }
 };
@@ -53,6 +55,8 @@ export function completarReglas(reglas = {}) {
   // Antes, tipos «familia» o «cualquiera»: ahora aleatorio, y lo de la familia aparte
   if (salida.tipos.modo === "familia") Object.assign(salida.tipos, { modo: "azar", familia: true });
   if (salida.tipos.modo === "cualquiera") salida.tipos.modo = "azar";
+  // Antes, «preferiblemente de su tipo» era otro modo de los ataques
+  if (salida.ataques.modo === "tipo") Object.assign(salida.ataques, { modo: "azar", deSuTipo: true });
   // Antes, extras y objetos eran una sola opción, y «líderes» llevaba también a los rivales
   for (const k of ["extras", "objetos"]) {
     const valor = salida.entrenadores[k];

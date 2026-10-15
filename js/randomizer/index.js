@@ -115,10 +115,11 @@ const PESTANAS = [
         id: "ataques", titulo: "Ataques que aprenden", icono: "libro",
         campos: [
           {
-            k: "modo", tipo: "opciones", opciones: [...ALEATORIO, ["tipo", "Aleatorio, preferiblemente de su tipo"]], abre: (r) => r.ataques.modo !== "no",
+            k: "modo", tipo: "opciones", opciones: ALEATORIO, abre: (r) => r.ataques.modo !== "no",
             hijos: [
-              { k: "tipo", tipo: "barra", texto: "Ataques de su tipo", min: 0, max: 100, paso: 5, formato: (v) => `${v} %`, si: (r) => r.ataques.modo === "tipo", ayuda: "Probabilidad de que cada ataque sea de uno de sus tipos" },
-              { k: "inicio", tipo: "lista", texto: "Número de ataques asegurados", opciones: [[0, "Sin cambios"], [1, "1"], [2, "2"], [3, "3"], [4, "4"]], ayuda: "Los que sabe como mínimo desde el nivel 1" },
+              { k: "deSuTipo", tipo: "casilla", texto: "Preferiblemente de su tipo" },
+              { k: "tipo", tipo: "barra", texto: "Ataques de su tipo", min: 0, max: 100, paso: 5, formato: (v) => `${v} %`, si: (r) => r.ataques.deSuTipo, ayuda: "Probabilidad de que cada ataque sea de uno de sus tipos" },
+              { k: "inicio", tipo: "lista", texto: "Número de ataques asegurados", opciones: [[0, "Sin cambios"], [1, "1"], [2, "2"], [3, "3"], [4, "4"]], ayuda: "Los que sabe como mínimo desde el nivel 1 (los que falten se añaden; los demás siguen en su nivel)" },
               { k: "orden", tipo: "casilla", texto: "Ataques más fuertes en niveles más altos" }
             ]
           }
@@ -130,7 +131,11 @@ const PESTANAS = [
           { k: "ataques", tipo: "opciones", opciones: SI_NO, ayuda: "Qué ataque enseña cada MT (las MO no se tocan)" },
           {
             k: "compat", tipo: "opciones", texto: "Quién las aprende", opciones: COMPAT, abre: (r) => r.mt.compat === "aleatoria",
-            hijos: [{ k: "tipo", tipo: "barra", texto: "Más fácil si son de su tipo", min: 0, max: 100, paso: 5, formato: (v) => `${v} %` }]
+            ayuda: "Aleatorio: cada Pokémon, cada MT, cara o cruz",
+            hijos: [
+              { k: "deSuTipo", tipo: "casilla", texto: "Más fácil si son de su tipo" },
+              { k: "tipo", tipo: "barra", texto: "Las de su tipo", min: 50, max: 100, paso: 5, formato: (v) => `${v} %`, si: (r) => r.mt.deSuTipo, ayuda: "Probabilidad de aprender las de sus tipos (las demás, 50 %)" }
+            ]
           },
           { k: "mo", tipo: "casilla", texto: "Todos aprenden las MO", si: (r) => r.mt.compat !== "total" }
         ]
@@ -141,7 +146,11 @@ const PESTANAS = [
           { k: "ataques", tipo: "opciones", opciones: SI_NO, ayuda: "Qué ataque enseña cada tutor" },
           {
             k: "compat", tipo: "opciones", texto: "Quién los aprende", opciones: COMPAT, abre: (r) => r.tutores.compat === "aleatoria",
-            hijos: [{ k: "tipo", tipo: "barra", texto: "Más fácil si son de su tipo", min: 0, max: 100, paso: 5, formato: (v) => `${v} %` }]
+            ayuda: "Aleatorio: cada Pokémon, cada tutor, cara o cruz",
+            hijos: [
+              { k: "deSuTipo", tipo: "casilla", texto: "Más fácil si son de su tipo" },
+              { k: "tipo", tipo: "barra", texto: "Los de su tipo", min: 50, max: 100, paso: 5, formato: (v) => `${v} %`, si: (r) => r.tutores.deSuTipo, ayuda: "Probabilidad de aprender los de sus tipos (los demás, 50 %)" }
+            ]
           }
         ]
       }
@@ -253,7 +262,7 @@ const PESTANAS = [
         id: "objetos", titulo: "Tiendas", icono: "caja",
         campos: [
           {
-            k: "tiendas", tipo: "casilla", texto: "Tiendas especiales aleatorias", ayuda: "Lo que venden las tiendas que no son las normales",
+            k: "tiendas", tipo: "casilla", texto: "Tiendas especiales aleatorias", ayuda: "Lo que venden las tiendas que no son las normales. En las de MT, otras MT",
             abre: (r) => r.objetos.tiendas,
             hijos: [{ k: "sinNormales", tipo: "casilla", texto: "Sin lo de las tiendas normales", ayuda: "Las especiales no venden nada de lo que ya hay en las normales (Pociones, Poké Balls...)" }]
           },
