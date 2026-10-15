@@ -314,13 +314,28 @@ function randomizarIniciales(datos, reglas, azar) {
 
 // ---------- Estáticos e intercambios ----------
 
+// Los tótems de 7.ª generación: otra especie (y otras para sus aliados) y otra aura de entre las que usan los del juego
+function randomizarTotems(datos, reglas, azar) {
+  const lista = todas(datos);
+  const { totems: modo, aliados, aura } = reglas.estaticos;
+  const auras = [...new Set(datos.totems.map((t) => t.auraOriginal).filter(Boolean))];
+  for (const t of datos.totems) {
+    if (t.sinUso) continue;
+    if (modo !== "no") t.nueva = sustituta(azar, datos.especies[t.actual], lista, modo).id;
+    if (aliados !== "no") for (const a of t.aliados) if (datos.especies[a.actual]) a.nueva = sustituta(azar, datos.especies[a.actual], lista, aliados).id;
+    if (aura === "azar" && t.auraOriginal) t.aura = azar.elegir(auras);
+  }
+}
+
 function randomizarEstaticos(datos, reglas, azar) {
   const lista = todas(datos);
   for (const e of datos.estaticos) {
-    if (e.huevo) continue; // el huevo que se da en el juego se queda como está
+    if (e.huevo || e.ignorar || e.copiaDe !== undefined) continue; // el huevo que se da en el juego se queda como está
     const original = datos.especies[e.actual];
     e.nueva = sustituta(azar, original, lista, reglas.estaticos.modo).id;
   }
+  // Los que son el mismo Pokémon que otro, igual que él
+  for (const e of datos.estaticos) if (e.copiaDe !== undefined) e.nueva = datos.estaticos[e.copiaDe].nueva;
 }
 
 function randomizarIntercambios(datos, reglas, azar, objetos) {
@@ -329,7 +344,7 @@ function randomizarIntercambios(datos, reglas, azar, objetos) {
     if (reglas.intercambios.modo !== "no") {
       t.da = sustituta(azar, datos.especies[t.da], lista, reglas.intercambios.modo).id;
       // Lo que piden, nunca un legendario (sería casi imposible de conseguir)
-      t.pide = sustituta(azar, datos.especies[t.pide], lista.filter((e) => !LEGENDARIOS.has(e.id)), reglas.intercambios.modo).id;
+      if (datos.especies[t.pide]) t.pide = sustituta(azar, datos.especies[t.pide], lista.filter((e) => !LEGENDARIOS.has(e.id)), reglas.intercambios.modo).id;
     }
     if (reglas.intercambios.objetos) t.objeto = azar.elegir(objetos.equipables);
     if (reglas.intercambios.ivs) t.ivs = t.ivs.map(() => azar.entero(32));
@@ -662,12 +677,28 @@ function compatibilidad(datos, parte, reglas, azar, ataqueDe) {
 
 // ---------- Objetos ----------
 
+// Los números de objeto de las MT (sin las MO): 92 seguidas desde el 328 y, si las hay, las que van aparte
+function objetosMT(datos) {
+  if (datos.perfil.mtItems) return datos.perfil.mtItems;
+  const { tm, extra } = bitsMT(datos);
+  const rango = (desde, cuantos) => Array.from({ length: cuantos }, (_, k) => desde + k);
+  return [...rango(328, Math.min(tm, 92)), ...rango(618, extra || 0)];
+}
+
+// Lo que hay por el camino: donde había una MT, otra MT; en cualquier otro sitio, cualquier objeto (también MT), menos
+// los clave (los de la historia, que ni salen ni se mueven) y, si se pide, los inútiles
 function randomizarObjetosSuelo(datos, reglas, azar, objetos) {
-  const lista = objetos.usables.filter((id) => !(reglas.objetos.sinMalos && objetos.malos.has(id)));
+  const mts = objetosMT(datos);
+  const esMT = new Set(mts);
+  const lista = [...objetos.usables.filter((id) => !(reglas.objetos.sinMalos && objetos.malos.has(id))), ...mts];
   for (const o of datos.objetosSuelo) {
     const actual = objetos.categoria(o.objeto);
-    // Las MT y los objetos clave (los que hacen falta para avanzar) no se mueven
-    if (!actual || actual === "all-machines" || actual === "plot-advancement" || actual === "event-items" || actual === "gameplay") continue;
+    if (!actual || objetos.clave(o.objeto) || actual === "plot-advancement" || actual === "event-items" || actual === "gameplay") continue;
+    if (actual === "all-machines") {
+      // Las MO no se mueven
+      if (esMT.has(o.objeto)) o.objeto = azar.elegir(mts);
+      continue;
+    }
     o.objeto = azar.elegir(lista);
   }
 }
@@ -725,8 +756,8 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
   for (const id of datos.perfil.legendarios || []) LEGENDARIOS.add(id);
   let datosObjetos = await cargarDatosRandomizer();
   // Un datos/randomizer.json viejo (de la caché) no trae estadísticas ni ataques: a PokeAPI
-  if (!datosObjetos.statsAntes || !datosObjetos.ataquesAntes) datosObjetos = await montarDatosRandomizer();
-  const objetos = clasificarObjetos(datosObjetos, datos.perfil.ultimoObjeto);
+  if (!datosObjetos.statsAntes || !datosObjetos.ataquesAntes || !datosObjetos.objetosGen) datosObjetos = await montarDatosRandomizer();
+  const objetos = clasificarObjetos(datosObjetos, datos.perfil.ultimoObjeto, datos.perfil.gen);
   // Los que no existen en este juego (en Diamante y Perla, los números 112 a 134)
   if (datos.perfil.objetosInexistentes) {
     const existe = (id) => !datos.perfil.objetosInexistentes(id);
@@ -762,6 +793,7 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
   hacer("ataques", r.ataques.modo !== "no", () => randomizarAtaques(datos, reglas, azar("ataques")));
   hacer("iniciales", r.iniciales.modo !== "no", () => randomizarIniciales(datos, reglas, azar("iniciales")));
   hacer("estáticos", r.estaticos.modo !== "no", () => randomizarEstaticos(datos, reglas, azar("estaticos")));
+  hacer("tótems", datos.totems && datos.totems.length && (r.estaticos.totems !== "no" || r.estaticos.aliados !== "no" || r.estaticos.aura === "azar"), () => randomizarTotems(datos, reglas, azar("totems")));
   hacer("intercambios", r.intercambios.modo !== "no" || r.intercambios.objetos || r.intercambios.ivs, () =>
     randomizarIntercambios(datos, reglas, azar("intercambios"), objetos));
   hacer("salvajes", r.salvajes.modo !== "no" || r.salvajes.nivel, () => randomizarSalvajes(datos, reglas, azar("salvajes")));

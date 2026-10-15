@@ -33,20 +33,21 @@ const GEN4 = ["dp", "platino", "hgss"];
 // Los de 3DS (se leen del .3ds y salen como archivos sueltos para el emulador o la consola)
 const TRES_DS = ["xy", "oras", "sm", "usum"];
 // Juego de js/comun/juegos.js por el código de producto de un .3ds («CTR-P-EK2A»)
-const JUEGO_DE_CODIGO_3DS = { EK: "xy", EC: "oras", BN: "sm" };
+const JUEGO_DE_CODIGO_3DS = { EK: "xy", EC: "oras", BN: "sm", A2: "usum" };
 // La generación de cada juego (las actualizaciones de datos son a las siguientes)
 const GENERACION_DE = { dp: 4, platino: 4, hgss: 4, bw: 5, b2w2: 5, xy: 6, oras: 6, sm: 7, usum: 7 };
-// Lo que no tiene cada juego (no sale en su pestaña): Negro y Blanco no tienen tutores de ataques;
-// en los de 4.ª generación, todavía no se hace lo de los tutores ni las iniciales
-// (HeartGold y SoulSilver: sin salvajes todavía)
-const SIN_PESTANAS = { xy: ["varios"], oras: ["varios"], sm: ["objetos", "varios"] };
-const SIN_APARTADOS = { bw: ["tutores"], dp: ["tutores"], xy: ["tutores", "estaticos", "intercambios"], oras: ["tutores", "estaticos", "intercambios"], sm: ["tutores", "estaticos", "intercambios"] };
+// Lo que no tiene cada juego (no sale en su pestaña): no tienen tutores de ataques Negro y Blanco, Diamante y Perla,
+// X e Y, y Sol y Luna
+const SIN_PESTANAS = {};
+const SIN_APARTADOS = { bw: ["tutores"], dp: ["tutores"], xy: ["tutores"], oras: [], sm: ["tutores"], usum: [] };
 
 const PARECIDA_ALEATORIO = [["no", "Sin cambios"], ["parecida", "Fuerza parecida"], ["cualquiera", "Aleatorio"]];
 const QUIEN = [["no", "Nadie"], ["lideres", "Líderes"], ["normales", "Normales"], ["todos", "Todos"]];
 const COMPAT = [["no", "Sin cambios"], ["aleatoria", "Aleatorio"], ["total", "Todos"]];
 const ALEATORIO = [["no", "Sin cambios"], ["azar", "Aleatorio"]];
 const SI_NO = [[false, "Sin cambios"], [true, "Aleatorio"]];
+// Solo Sol, Luna, Ultrasol y Ultraluna tienen tótems
+const SIN_TOTEMS = ["dp", "platino", "hgss", "bw", "b2w2", "xy", "oras"];
 // Las generaciones a las que se puede actualizar (las de después del juego)
 const GENERACIONES = (juego) => [
   [0, "Sin cambios"], ...[5, 6, 7, 8, 9].filter((g) => g > (GENERACION_DE[juego] || 5)).map((g) => [g, `${g}.ª generación`])
@@ -163,7 +164,12 @@ const PESTANAS = [
       },
       {
         id: "estaticos", titulo: "Estáticos", icono: "corona", ayuda: "Legendarios y demás Pokémon que se encuentran sueltos",
-        campos: [{ k: "modo", tipo: "opciones", opciones: PARECIDA_ALEATORIO }]
+        campos: [
+          { k: "modo", tipo: "opciones", opciones: PARECIDA_ALEATORIO },
+          { k: "totems", tipo: "opciones", texto: "Tótems", opciones: PARECIDA_ALEATORIO, no: SIN_TOTEMS },
+          { k: "aliados", tipo: "opciones", texto: "Aliados de los tótems", opciones: PARECIDA_ALEATORIO, no: SIN_TOTEMS },
+          { k: "aura", tipo: "opciones", texto: "Aura de los tótems", opciones: ALEATORIO, no: SIN_TOTEMS }
+        ]
       },
       {
         id: "intercambios", titulo: "Intercambios", icono: "intercambiar", ayuda: "Los Pokémon que te piden y te dan los NPC",
@@ -209,7 +215,7 @@ const PESTANAS = [
       {
         id: "entrenadores", titulo: "Combates", icono: "amigos",
         campos: [
-          { k: "dobles", tipo: "casilla", texto: "Todos los combates dobles", ayuda: "Los de un solo Pokémon llevan uno más", no: GEN4 },
+          { k: "dobles", tipo: "casilla", texto: "Todos los combates dobles", ayuda: "Los de un solo Pokémon llevan uno más" },
           { k: "nombres", tipo: "casilla", texto: "Nombres de los entrenadores aleatorios", ayuda: "Los de los entrenadores normales y sus clases, barajados" }
         ]
       }
@@ -235,7 +241,7 @@ const PESTANAS = [
     id: "objetos", titulo: "Objetos",
     apartados: [
       {
-        id: "objetos", titulo: "Objetos del suelo", icono: "objeto", ayuda: "Los que recoges por el camino y los escondidos. Las MT y los objetos de la historia no se tocan",
+        id: "objetos", titulo: "Objetos del suelo", icono: "objeto", ayuda: "Los que recoges por el camino y los escondidos. Donde había una MT sale otra MT; los objetos de la historia no se tocan",
         campos: [
           { k: "suelo", tipo: "opciones", opciones: SI_NO },
           { k: "sinMalos", tipo: "casilla", texto: "Banear objetos inútiles", ayuda: "Ni en el suelo, ni en las tiendas, ni equipados: nada de cartas, pañuelos ni cosas que no sirvan en la aventura" }
@@ -262,8 +268,8 @@ const PESTANAS = [
       {
         id: "varios", titulo: "Varios", icono: "pokedex",
         campos: [
-          { k: "pokedex", tipo: "casilla", texto: "Pokédex Nacional desde el principio", ayuda: "Al darte la Pokédex, también la nacional", no: [...GEN4, ...TRES_DS] },
-          { k: "texto", tipo: "casilla", texto: "Texto instantáneo", no: ["bw", ...GEN4, ...TRES_DS] }
+          { k: "pokedex", tipo: "casilla", texto: "Pokédex Nacional desde el principio", ayuda: "Al darte la Pokédex, también la nacional", no: [...GEN4, "sm", "usum"] },
+          { k: "texto", tipo: "casilla", texto: "Texto instantáneo", no: ["bw", ...GEN4] }
         ]
       }
     ]

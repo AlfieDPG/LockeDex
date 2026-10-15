@@ -103,7 +103,11 @@ export const esHGSS = (entrada) => entrada.tipo === "HGSS";
 const tres = (x) => [x - 1, x, x + 1]; // tagRivalConsecutive
 const tresDesde = (x) => [x, x + 1, x + 2]; // tagFriendConsecutive
 
+// Los entrenadores que combaten a tu lado en las dobles (tagFriendConsecutive)
+const AMIGOS_DPPT = [...[0x265, 0x268, 0x26d, 0x270].flatMap((x) => [x, x + 1, x + 2])];
+
 const DP = {
+  amigos: AMIGOS_DPPT,
   lideres: [0xf6, 0x13b, 0x13d, 0x13c, 0x13e, 0xfa, 0x13f, 0x140, 0x105, 0x106, 0x107, 0x108, 0x10b, 0x193, 0x194],
   rivales: [...tres(0xf8), ...tres(0x1d7), ...tres(0x1da), ...tres(0x1dd), 0x26b, 0x26c, 0x25f, ...tres(0x1e0), ...tres(0x346), ...tres(0x349), ...tresDesde(0x265), ...tresDesde(0x268), ...tresDesde(0x26d), ...tresDesde(0x270)],
   grupos: [
@@ -120,6 +124,7 @@ const DP = {
 };
 
 const PT = {
+  amigos: AMIGOS_DPPT,
   lideres: [0xf6, 0x13b, 0x13e, 0x13d, 0x13c, 0xfa, 0x13f, 0x140, 0x105, 0x106, 0x107, 0x108, 0x10b, 0x362, 0x363, 0x364, 0x365, 0x366, 0x391, 0x193, 0x194],
   rivales: [...tres(0x353), ...tres(0xf8), ...tres(0x1d7), ...tres(0x1da), ...tres(0x1dd), 0x26b, 0x26c, 0x25f, ...tres(0x1e0), ...tres(0x346), ...tres(0x349), ...tres(0x368), ...tresDesde(0x265), ...tresDesde(0x268), ...tresDesde(0x26d), ...tresDesde(0x270)],
   grupos: [
@@ -166,6 +171,7 @@ export function perfilDe(rom) {
     objetosInexistentes: tipo === "dp" ? (id) => id >= 112 && id <= 134 : () => false,
     lideres: fijos.lideres, rivales: fijos.rivales, grupos: fijos.grupos,
     sinDobles: [],
+    amigos: fijos.amigos || [],
     // MT y MO: 92 MT y 8 MO, en el mismo sitio
     bitsMT: { tm: 92, hm: 8, extra: 0 },
     // Los tutores de ataques (Platino y HeartGold/SoulSilver): cuántos, y cuántos bytes de compatibilidad
@@ -257,7 +263,7 @@ function leerEntrenadores(narcs, importantes, relleno) {
       }
       pokemon.push(poke);
     }
-    entrenadores.push({ indice: i, clase: t[1], combate: t[16], conAtaques, conObjetos, importante: importantes.has(i), pokemon });
+    entrenadores.push({ indice: i, clase: t[1], combate: t[16] ? 1 : 0, conAtaques, conObjetos, importante: importantes.has(i), pokemon });
   }
   return entrenadores;
 }
@@ -509,6 +515,11 @@ export function leerBW2(rom) {
   }
   const relleno = !esDP(perfil.entrada);
   const importantes = new Set([...perfil.lideres, ...perfil.rivales]);
+  const entrenadores = leerEntrenadores(narcs, importantes, relleno);
+  // Los que no pasan a combate doble: los amigos que combaten a tu lado y los rivales con uno o dos Pokémon (los de
+  // los primeros combates, cuando solo llevas uno o dos)
+  const rivales = new Set(perfil.rivales);
+  perfil.sinDobles = entrenadores.filter((t) => perfil.amigos.includes(t.indice) || (rivales.has(t.indice) && t.pokemon.length <= 2)).map((t) => t.indice);
   return {
     perfil,
     narcs,
@@ -516,7 +527,7 @@ export function leerBW2(rom) {
     aprende: leerAprende(narcs),
     ataques,
     salvajes: esHGSS(perfil.entrada) ? leerSalvajesHGSS(narcs) : leerSalvajesDPPt(narcs),
-    entrenadores: leerEntrenadores(narcs, importantes, relleno),
+    entrenadores,
     iniciales,
     inicialesOriginales: iniciales.slice(),
     estaticos,
@@ -573,6 +584,8 @@ function escribirEntrenadores(narcs, entrenadores, relleno) {
     const cabecera = narcs.entrenadores.archivos[t.indice];
     cabecera[0] = (cabecera[0] & ~3) | (t.conAtaques ? 1 : 0) | (t.conObjetos ? 2 : 0);
     cabecera[3] = t.pokemon.length;
+    // Combate doble (el byte 16 vale 2 y es igual para uno solo que para una pareja de entrenadores)
+    if ((cabecera[16] ? 1 : 0) !== t.combate) cabecera[16] = t.combate ? 2 : 0;
     const tam = 6 + (t.conObjetos ? 2 : 0) + (t.conAtaques ? 8 : 0) + (relleno ? 2 : 0);
     const p = new Uint8Array(tam * t.pokemon.length);
     let pos = 0;

@@ -28,13 +28,17 @@ export async function montarDatosRandomizer() {
   );
   const categoria = new Map(filas(categorias).map(([id, bolsillo, nombre]) => [id, [nombre, Number(bolsillo)]]));
   const objeto = new Map(filas(items).map(([id, , cat, coste]) => [id, [cat, Number(coste) || 0]]));
-  const objetos = {};
+  // Los objetos según el número que tienen en cada generación (la 5.ª, la de siempre; la 6.ª, en X, Y, Rubí Omega y
+  // Zafiro Alfa; la 7.ª, en Sol, Luna, Ultrasol y Ultraluna)
+  const porGeneracion = { 5: {}, 6: {}, 7: {} };
   for (const [item, generacion, indice] of filas(indices)) {
-    if (Number(generacion) !== 5) continue;
+    const destino = porGeneracion[Number(generacion)];
+    if (!destino) continue;
     const [cat, coste] = objeto.get(item) || [];
     const [nombre, bolsillo] = categoria.get(cat) || [];
-    if (nombre) objetos[indice] = [nombre, coste, bolsillo];
+    if (nombre) destino[indice] = [nombre, coste, bolsillo];
   }
+  const objetos = porGeneracion[5];
 
   // Estadísticas base de hoy (PS, Ataque, Defensa, At. Esp., Def. Esp., Velocidad)
   const stats = {};
@@ -64,7 +68,7 @@ export async function montarDatosRandomizer() {
   const ataquesAntes = filas(cambiosAtaques)
     .filter(([id]) => Number(id) <= ULTIMO_ATAQUE)
     .map(([id, grupo, tipo, potencia, pp, precision]) => [Number(id), generacionDe.get(grupo), tipo ? Number(tipo) - 1 : null, numero(potencia), numero(pp), numero(precision)]);
-  return { objetos, stats, ataques, statsAntes, ataquesAntes };
+  return { objetos, objetosGen: { 6: porGeneracion[6], 7: porGeneracion[7] }, stats, ataques, statsAntes, ataquesAntes };
 }
 
 // Las estadísticas y los ataques como eran en la generación «gen»: { stats, ataques } con la
@@ -134,12 +138,14 @@ const EQUIPABLES = new Set([
 ]);
 const BOLSILLO_CLAVE = 8;
 
-export function clasificarObjetos(datos, ultimo) {
+export function clasificarObjetos(datos, ultimo, generacion) {
+  // Los de 6.ª y 7.ª generación tienen su propia numeración
+  const tabla = (generacion >= 6 && datos.objetosGen && datos.objetosGen[generacion]) || datos.objetos;
   const usables = [];
   const equipables = [];
   const malos = new Set();
   for (let id = 1; id <= ultimo; id++) {
-    const d = datos.objetos[id];
+    const d = tabla[id];
     if (!d) continue;
     const [cat, , bolsillo] = d;
     if (NUNCA.has(cat) || bolsillo === BOLSILLO_CLAVE) continue;
@@ -147,5 +153,9 @@ export function clasificarObjetos(datos, ultimo) {
     if (MALOS.has(cat)) malos.add(id);
     if (EQUIPABLES.has(cat)) equipables.push(id);
   }
-  return { usables, equipables, malos, precio: (id) => (datos.objetos[id] || [])[1] || 0, categoria: (id) => (datos.objetos[id] || [])[0] || "" };
+  return {
+    usables, equipables, malos, precio: (id) => (tabla[id] || [])[1] || 0, categoria: (id) => (tabla[id] || [])[0] || "",
+    // Los objetos clave (los de la aventura) ni salen ni se mueven
+    clave: (id) => (tabla[id] || [])[2] === BOLSILLO_CLAVE
+  };
 }

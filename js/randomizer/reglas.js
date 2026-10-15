@@ -21,7 +21,7 @@ export const REGLAS_VACIAS = {
   habilidades: { modo: "no", dos: false, familia: false, sinMalas: false },
   evoluciones: { modo: "no", dificiles: false, piedras: false },
   iniciales: { modo: "no", rivalInicial: true, elegidas: [0, 0, 0] },
-  estaticos: { modo: "no" },
+  estaticos: { modo: "no", totems: "no", aliados: "no", aura: "no" },
   intercambios: { modo: "no", objetos: false, ivs: false },
   movimientos: { generacion: 0 },
   ataques: { modo: "no", tipo: 50, inicio: 0, orden: false },
