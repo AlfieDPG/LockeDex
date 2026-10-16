@@ -42,6 +42,7 @@ Quiero avisaros de que esta web está en desarrollo y puede tener errores. Si en
 ⚠️AVISOS⚠️
 - El Randomizer solo funciona con ROMS de NDS y 3DS. Estoy en proceso de incluir los juegos de Switch y GBA.
 - La web se vincula con todos los juegos menos Diamante Brillante y Perla Reluciente (work in progress).
+- Si teneis cualquier duda podeis consultar el boton de "?" de abajo a la izquierda y alomejor encontrais ahi la respuesta, si no, enviad un correo y se añadirá la duda a "preguntas frecuentes".
 - Para el Randomizer es necesario que vosotros tengais las ROMS ya que yo no puedo darlos porque eso seria pirateria y no me apetece ir a la carcel :)
 `;
 
