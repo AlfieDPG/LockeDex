@@ -9,16 +9,30 @@ import { cargarDatos, datos } from "../comun/datos.js";
 import { formasDeTipoDe } from "../comun/formas.js";
 import { LUGARES_GEN6, LUGARES_GEN7, OBJETOS_EN, CRECIMIENTO } from "./datos-3ds.js";
 import { LUGARES_GEN4, LUGARES_GEN4_OTROS, LUGARES_GEN5, LUGARES_GEN5_OTROS } from "./datos-ds.js";
+import { LUGARES_GEN8 } from "./datos-switch.js";
 
 // Formas que importan (las que cambian el aspecto o los tipos), por el número que les da el
 // juego: [id de PokeAPI, nombre en Showdown]. Las que no están (Vivillon, Pikachu con gorra,
 // los dominantes...) salen como la normal.
 const ALOLA = (id, ...otras) => Object.fromEntries([1, ...otras].map((n) => [n, [id, "Alola"]]));
+const GALAR = (id) => ({ 1: [id, "Galar"] });
 export const FORMAS = {
   19: ALOLA(10091), 20: ALOLA(10092, 2), 26: ALOLA(10100), 27: ALOLA(10101), 28: ALOLA(10102),
-  37: ALOLA(10103), 38: ALOLA(10104), 50: ALOLA(10105), 51: ALOLA(10106), 52: ALOLA(10107),
+  37: ALOLA(10103), 38: ALOLA(10104), 50: ALOLA(10105), 51: ALOLA(10106), 52: { ...ALOLA(10107), 2: [10161, "Galar"] },
   53: ALOLA(10108), 74: ALOLA(10109), 75: ALOLA(10110), 76: ALOLA(10111), 88: ALOLA(10112),
   89: ALOLA(10113), 103: ALOLA(10114), 105: ALOLA(10115, 2),
+  // Galar (Espada / Escudo)
+  77: GALAR(10162), 78: GALAR(10163), 79: GALAR(10164), 80: { 2: [10165, "Galar"] }, 83: GALAR(10166),
+  110: GALAR(10167), 122: GALAR(10168), 144: GALAR(10169), 145: GALAR(10170), 146: GALAR(10171),
+  199: GALAR(10172), 222: GALAR(10173), 263: GALAR(10174), 264: GALAR(10175), 554: GALAR(10176),
+  555: { 2: [10177, "Galar"], 3: [10178, "Galar-Zen"] }, 562: GALAR(10179), 618: GALAR(10180),
+  849: { 1: [10184, "Low-Key"] },
+  875: { 1: [10185, "Noice"] },
+  876: { 1: [10186, "F"] },
+  888: { 1: [10188, "Crowned"] },
+  889: { 1: [10189, "Crowned"] },
+  892: { 1: [10191, "Rapid-Strike"] },
+  898: { 1: [10193, "Ice"], 2: [10194, "Shadow"] },
   386: { 1: [10001, "Attack"], 2: [10002, "Defense"], 3: [10003, "Speed"] },
   413: { 1: [10004, "Sandy"], 2: [10005, "Trash"] },
   479: { 1: [10008, "Heat"], 2: [10009, "Wash"], 3: [10010, "Frost"], 4: [10011, "Fan"], 5: [10012, "Mow"] },
@@ -100,6 +114,7 @@ function nombreLugar(gen, numero) {
   if (gen === 4) return LUGARES_GEN4[numero] || LUGARES_GEN4_OTROS[numero] || "";
   if (gen === 5) return LUGARES_GEN5[numero] || LUGARES_GEN5_OTROS[numero] || "";
   if (numero === 30001 || numero === 30002) return "Intercambio";
+  if (gen === 8) return LUGARES_GEN8[numero] || "";
   return (gen === 7 ? LUGARES_GEN7 : LUGARES_GEN6)[numero / 2] || "";
 }
 

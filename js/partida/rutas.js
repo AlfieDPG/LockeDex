@@ -17,7 +17,8 @@ const APARTADOS = ["rutas", "ciudades", "postgame", "eventos"];
 // Ediciones de cada juego: los Pokémon que vienen de otro juego no cuentan
 const EDICIONES = {
   dp: ["Diamante", "Perla"], platino: ["Platino"], hgss: ["HeartGold", "SoulSilver"], bw: ["Negro", "Blanco"],
-  b2w2: ["Negro 2", "Blanco 2"], xy: ["X", "Y"], oras: ["Rubí Omega", "Zafiro Alfa"], sm: ["Sol", "Luna"], usum: ["Ultrasol", "Ultraluna"]
+  b2w2: ["Negro 2", "Blanco 2"], xy: ["X", "Y"], oras: ["Rubí Omega", "Zafiro Alfa"], sm: ["Sol", "Luna"], usum: ["Ultrasol", "Ultraluna"],
+  swsh: ["Espada", "Escudo"]
 };
 
 // Lugares que en «Rutas» van partidos en zonas o se llaman distinto. Por el número del lugar

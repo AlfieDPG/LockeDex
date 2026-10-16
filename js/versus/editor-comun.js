@@ -44,6 +44,8 @@ const INTERCAMBIO = { 4: 2002, 5: 30003, 6: 30001, 7: 30001 };
 
 // Hasta gen 6 no se pueden elegir las formas de Alola ni las de gen 7
 const ULTIMA_FORMA_GEN6 = 10090;
+// Las de Espada / Escudo (la 10181, Zygarde 10 %, es de antes)
+const esFormaGen8 = (idForma) => idForma >= 10161 && idForma <= 10194 && idForma !== 10181;
 
 export const ESPAÑOL = 7; // idioma de la partida
 const HUEVO = { 1: "タマゴ", 2: "Egg", 3: "Œuf", 4: "Uovo", 5: "Ei", 7: "Huevo", 8: "알" };
@@ -288,6 +290,7 @@ export function formasDe(especie, juego) {
   }
   for (const [numero, [idForma, showdown]] of Object.entries(FORMAS[especie] || {})) {
     if (juego && genDe(juego) < 7 && idForma > ULTIMA_FORMA_GEN6) continue;
+    if (juego && genDe(juego) < 8 && esFormaGen8(idForma)) continue;
     const fila = filasPokedex.get(idForma);
     lista.push({ forma: Number(numero), texto: fila ? nombreDeForma(fila) : showdown, idForma, formaPMD: fila ? fila.forma : 0 });
   }
