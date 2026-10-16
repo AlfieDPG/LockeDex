@@ -350,6 +350,126 @@
   font-size: 1.1rem;
 }
 
+/* Tarjeta de notas personales en la vista de inicio */
+.inicio-notas {
+  margin-top: 1rem;
+}
+
+.inicio-notas-texto {
+  width: 100%;
+  min-height: 120px;
+  margin-top: 0.8rem;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.2);
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.inicio-notas-texto:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.25);
+}
+
+/* Tarjeta de notas y avisos de la web */
+.inicio-avisos-web {
+  margin-top: 1rem;
+}
+
+.inicio-avisos-contenido {
+  margin-top: 0.8rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  word-break: break-word;
+}
+
+/* Bloque de sugerencias */
+.inicio-sugerencias {
+  margin-top: 1rem;
+}
+
+.sugerencias-subtexto {
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 0.4rem;
+  margin-bottom: 0.8rem;
+}
+
+.sugerencias-texto {
+  width: 100%;
+  min-height: 90px;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.2);
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.sugerencias-texto:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.25);
+}
+
+.sugerencias-pie {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.8rem;
+  flex-wrap: wrap;
+}
+
+/* Botón estilizado y centrado */
+.boton-sugerencias {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1;
+  text-align: center;
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.boton-sugerencias .icono {
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
+}
+
+.boton-sugerencias:active {
+  transform: scale(0.98);
+}
+
+.boton-sugerencias:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.sugerencias-aviso {
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
 /* ---------- Al llegar a un locke desde Inicio: se ilumina un momento ---------- */
 
 .locke.resaltado {

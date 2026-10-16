@@ -4,9 +4,10 @@
 //   · Tus lockes en marcha, con tus vidas y victorias: pulsando uno se va a él en «Lockes».
 //   · Los amigos conectados ahora mismo.
 //   · Tus últimos equipos guardados.
+//   · Notas / Avisos del desarrollador para todos los usuarios.
 //
 // Las secciones no se repiten aquí: ya están en el menú de la izquierda.
-// Sin sesión, solo el saludo con «Iniciar sesión» y los equipos.
+// Sin sesión, solo el saludo con «Iniciar sesión», los equipos y el cuadro de avisos.
 
 import { icono } from "../comun/iconos.js";
 import { escaparHTML } from "../comun/utilidades.js";
@@ -28,6 +29,33 @@ let seccion = null;
 
 const MAX_LOCKES = 4;
 const MAX_EQUIPOS = 3;
+
+// =========================================================================
+// 📝 TEXTO DE AVISO / NOTAS DE LA WEB
+// Escribe aquí lo que quieras anunciar a los usuarios.
+// Puedes usar saltos de línea normales o etiquetas HTML como <b>texto en negrita</b> o <ul><li>puntos</li></ul>
+// =========================================================================
+const AVISO_INICIO = `
+¡Bienvenidos a LockeDex!
+Quiero avisaros de que esta web está en desarrollo y puede tener errores. Si encuentras alguno, por favor, házmelo saber mediante el recuadro de sugerencias de abajo o si se te ocurre alguna idea que consideras que le vendria bien a la pagina tambien, todo feedback respetuoso es bienvenido :)
+
+⚠️AVISOS⚠️
+- El Randomizer solo funciona con ROMS de NDS y 3DS. Estoy en proceso de incluir los juegos de Switch y GBA.
+- La web se vincula con todos los juegos menos Diamante Brillante y Perla Reluciente (work in progress).
+- Para el Randomizer es necesario que vosotros tengais las ROMS ya que yo no puedo darlos porque eso seria pirateria y no me apetece ir a la carcel :)
+`;
+
+function plantillaAvisos() {
+  if (!AVISO_INICIO.trim()) return ""; // Si la dejas vacía, la tarjeta no se muestra
+
+  return `
+    <section class="inicio-bloque inicio-avisos-web">
+      <h2>${icono("libro")} Notas y avisos</h2>
+      <div class="inicio-avisos-contenido">
+        ${AVISO_INICIO.trim().replace(/\n/g, "<br>")}
+      </div>
+    </section>`;
+}
 
 // ---------- Pintar ----------
 
@@ -169,6 +197,7 @@ function plantillaEquipos() {
 
 function pintar() {
   if (seccion.hidden) return;
+
   seccion.innerHTML = `
     ${plantillaCabecera()}
     ${conSesion()
@@ -176,7 +205,32 @@ function pintar() {
            ${plantillaLockes()}
            <div class="inicio-lado">${plantillaAmigos()}${plantillaEquipos()}</div>
          </div>`
-      : `<div class="inicio-solo">${plantillaEquipos()}</div>`}`;
+      : `<div class="inicio-solo">${plantillaEquipos()}</div>`}
+    ${plantillaAvisos()}
+    ${plantillaSugerencias()}`;
+}
+
+// Añade esta plantilla para el bloque de sugerencias
+function plantillaSugerencias() {
+  // SVGs directos con la clase "icono" para garantizar que se vean igual que los demás de la web
+  const iconoSobre = `<svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`;
+  const iconoEnviar = `<svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
+
+  return `
+    <section class="inicio-bloque inicio-sugerencias">
+      <h2>${iconoSobre} Enviar sugerencia</h2>
+      <p class="sugerencias-subtexto">¿Tienes alguna idea, fallo que reportar o comentario sobre la web? ¡Escríbeme!</p>
+      <form class="sugerencias-form">
+        <textarea class="sugerencias-texto" placeholder="Escribe aquí tu comentario o sugerencia..." required></textarea>
+        <div class="sugerencias-pie">
+          <button type="submit" class="inicio-principal boton-sugerencias">
+            ${iconoEnviar}
+            <span>Enviar comentario</span>
+          </button>
+          <span class="sugerencias-aviso"></span>
+        </div>
+      </form>
+    </section>`;
 }
 
 // ---------- Ir a un sitio ----------
@@ -212,6 +266,48 @@ export function iniciar() {
     if (e.target.closest(".inicio-avisos")) return document.querySelector(".avisos-boton").click();
     if (e.target.closest(".inicio-entrar")) return document.querySelector(".sesion-boton").click();
   });
+
+  // Dentro de la función iniciar() en js/inicio/index.js
+seccion.addEventListener("submit", async (e) => {
+  if (e.target.matches(".sugerencias-form")) {
+    e.preventDefault();
+    const form = e.target;
+    const texto = form.querySelector(".sugerencias-texto").value;
+    const aviso = form.querySelector(".sugerencias-aviso");
+    const boton = form.querySelector("button");
+
+    boton.disabled = true;
+    aviso.textContent = "Enviando...";
+
+    try {
+      // Reemplaza TU_CORREO@GMAIL.COM por tu correo real
+      const respuesta = await fetch("https://formsubmit.co/ajax/alfdelgar@gmail.com", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          message: texto,
+          usuario: conSesion() ? miPerfil()?.nombre || "Usuario registrado" : "Anónimo"
+        })
+      });
+
+      if (respuesta.ok) {
+        aviso.style.color = "#2ecc71";
+        aviso.textContent = "¡Gracias! Tu mensaje ha sido enviado.";
+        form.reset();
+      } else {
+        throw new Error();
+      }
+    } catch (err) {
+      aviso.style.color = "#e74c3c";
+      aviso.textContent = "Error al enviar. Inténtalo de nuevo más tarde.";
+    } finally {
+      boton.disabled = false;
+    }
+  }
+});
 
   // Todo en vivo: se repinta solo mientras se ve
   alCambiarSesion(pintar);
