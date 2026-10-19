@@ -5,5 +5,5 @@
   "liveServer.settings.port": 5500,
   "liveServer.settings.root": "/",
   // Que no recargue por cambios en los datos grandes ni en git
-  "liveServer.settings.ignoreFiles": [".vscode/**", ".git/**", "datos/**", "img/**", "docs/**"]
+  "liveServer.settings.ignoreFiles": [".vscode/**", ".git/**", "datos/**", "img/**"]
 }

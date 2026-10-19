@@ -1,8 +1,0 @@
-Fotos de los jugadores de la sección «Jugadores».
-
-Nombre del archivo = campo "foto" del jugador en js/jugadores/index.js:
-  alfie.png   (o .jpg, .jpeg, .webp)
-  pedro.png
-
-La foto se recorta en círculo, así que lo ideal es una imagen cuadrada
-(por ejemplo 400x400). Si falta el archivo, la ficha muestra la inicial del nombre.
