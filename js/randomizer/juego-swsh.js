@@ -18,7 +18,7 @@
 //   appli/shop/bin/shop_data.bin      las tiendas (FlatBuffers)
 //   pml/item/item.dat                 los objetos (el precio, u32 al principio de cada uno)
 
-import { leerFB, escribirFB, raizFB, campoFB, tablasFB } from "./flatbuffers.js";
+import { leerFB, escribirFB, raizFB, campoFB, refFB, tablasFB } from "./flatbuffers.js";
 import { leerGfpak, escribirGfpak } from "./gfpak.js";
 import { SALVAJES, ESTATICOS, REGALOS, INTERCAMBIOS, TIENDAS, ATAQUE } from "./esquemas-swsh.js";
 import { leerTextos6, escribirTextos6, aTexto } from "./textos-3ds.js";
@@ -43,6 +43,7 @@ const RUTAS = {
   personal: "bin/pml/personal/personal_total.bin",
   aprende: "bin/pml/waza_oboe/wazaoboe_total.bin",
   objetos: "bin/pml/item/item.dat",
+  hashObjetos: "bin/pml/item/item_hash_to_index.dat",
   salvajes: "bin/archive/field/resident/data_table.gfpak",
   colocacion: "bin/archive/field/resident/placement.gfpak",
   estaticos: "bin/script_event_data/event_encount_data.bin",
@@ -154,8 +155,7 @@ export function perfilDe(sesion) {
     claros: false, iniciales: true,
     lideres: LIDERES, rivales: RIVALES, grupos: GRUPOS, importantes: new Set([...LIDERES, ...RIVALES]),
     sinDobles: [],
-    preciosEnDecenas: false,
-    sinObjetosSuelo: true
+    preciosEnDecenas: false
   };
 }
 
@@ -165,7 +165,7 @@ export async function prepararRom(sesion) {
   for (let i = 0; i <= ULTIMO_ATAQUE; i++) rutas.push(rutaAtaque(i));
   for (const r of sesion.listar("bin/trainer/trainer_data/")) rutas.push(r, r.replace("trainer_data/trainer_data_", "trainer_poke/trainer_poke_"));
   for (const idioma of IDIOMAS) {
-    rutas.push(rutaTexto(idioma, "monsname"), rutaTexto(idioma, "trname"), rutaTexto(idioma, "trtype"), rutaHistoria(idioma, "field_trade"));
+    rutas.push(rutaTexto(idioma, "monsname"), rutaTexto(idioma, "trname"), rutaTexto(idioma, "trtype"), rutaHistoria(idioma, "field_trade"), ...Object.keys(TEXTOS_INICIALES).map((a) => rutaHistoria(idioma, a)));
   }
   await sesion.cargar(rutas.filter((r) => sesion.tiene(r)));
   return perfilDe(sesion);
@@ -299,7 +299,8 @@ function leerSalvajes(sesion) {
         zona: `clima${k}`, sub,
         huecos: sub.Slots.map((s) => ({ especie: s.Species, forma: s.Form, min: sub.LevelMin, max: sub.LevelMax, vacio: !s.Species, slot: s }))
       })).filter((zona) => zona.huecos.some((h) => h.especie));
-      if (zonas.length) salvajes.push({ archivo: `${nombre}:${z}`, estaciones: [zonas] });
+      // (los que se ven por el campo van aparte: con «un solo Pokémon por zona», todos iguales)
+      if (zonas.length) salvajes.push({ archivo: `${nombre}:${z}`, estaciones: [zonas], campo: nombre.includes("symbol") });
     });
   }
   return { pack, archivos, salvajes };
@@ -352,6 +353,76 @@ function leerPrecios(sesion) {
   return { precios, sitioPrecio: sitio };
 }
 
+// Los objetos van por un hash (FNV de su nombre interno): item_hash_to_index.dat los traduce. u32 cuántos y, de 16 en 16
+// bytes, [u64 hash, u32 número, u32]
+function leerHashes(sesion) {
+  const b = sesion.archivo(RUTAS.hashObjetos);
+  const v = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  const aObjeto = new Map();
+  const aHash = new Map();
+  for (let k = 0, n = v.getUint32(0, true); k < n && 4 + k * 16 + 12 <= b.length; k++) {
+    const hash = v.getBigUint64(4 + k * 16, true);
+    const id = v.getUint32(4 + k * 16 + 8, true);
+    aObjeto.set(hash, id);
+    if (!aHash.has(id)) aHash.set(id, hash);
+  }
+  return { aObjeto, aHash };
+}
+
+// Los objetos del suelo y los escondidos (los brillos): en cada zona de placement.gfpak. Los del suelo llevan hasta 8
+// objetos (campo 6 de cada uno, sus hashes) con su cantidad (campo 7); los escondidos, una lista de posibles [hash,
+// probabilidad, cantidad]. Cada objeto, con su archivo y dónde está su hash, para cambiarlo ahí mismo
+function leerObjetosSuelo(sesion) {
+  const { aObjeto } = leerHashes(sesion);
+  const pack = leerGfpak(sesion.archivo(RUTAS.colocacion));
+  const lista = [];
+  for (let i = 0; i < pack.entradas.length; i++) {
+    const b = pack.archivo(i);
+    const v = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    let zonas;
+    try {
+      zonas = tablasFB(b, raizFB(b), 0);
+    } catch (e) {
+      continue; // no es un archivo de zona
+    }
+    const anadir = (pos) => {
+      const id = aObjeto.get(v.getBigUint64(pos, true));
+      if (id) lista.push({ objeto: id, archivo: i, pos });
+    };
+    for (const z of zonas) {
+      for (const h of tablasFB(b, z, 6)) {
+        const objeto = refFB(b, h, 0);
+        const hashes = objeto && refFB(b, objeto, 6);
+        if (hashes) for (let k = 0; k < v.getUint32(hashes, true); k++) anadir(hashes + 4 + k * 8);
+      }
+      for (const h of tablasFB(b, z, 19)) {
+        const escondido = refFB(b, h, 0);
+        for (const posible of escondido ? tablasFB(b, escondido, 2) : []) {
+          const pos = campoFB(b, posible, 0);
+          if (pos) anadir(pos);
+        }
+      }
+    }
+  }
+  return lista;
+}
+
+function escribirObjetosSuelo(sesion, datos) {
+  if (!datos.objetosSuelo.length) return;
+  const { aHash, aObjeto } = leerHashes(sesion);
+  const pack = leerGfpak(sesion.archivo(RUTAS.colocacion));
+  const nuevos = {};
+  for (const o of datos.objetosSuelo) {
+    const hash = aHash.get(o.objeto);
+    const b = nuevos[o.archivo] || pack.archivo(o.archivo);
+    const v = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    if (hash === undefined || aObjeto.get(v.getBigUint64(o.pos, true)) === o.objeto) continue;
+    v.setBigUint64(o.pos, hash, true);
+    nuevos[o.archivo] = b;
+  }
+  if (Object.keys(nuevos).length) sesion.cambiar(RUTAS.colocacion, escribirGfpak(pack, nuevos));
+}
+
 // Las tiendas: una por lista; la de los Centros Pokémon (una lista por medallas), como una sola con todo lo que
 // llega a vender. Las especiales, con huecos libres al final (0) para lo que se añada
 function leerTiendas(sesion) {
@@ -397,7 +468,7 @@ export function leerBW2(sesion) {
     salvajes: salvajes.salvajes, entrenadores: leerEntrenadores(sesion, perfil),
     iniciales: est.iniciales.slice(), inicialesOriginales: est.iniciales.slice(),
     estaticos: est.estaticos, intercambios: est.intercambios, totems: [],
-    precios, tiendas: tiendas.tiendas, objetosSuelo: [], claros: null,
+    precios, tiendas: tiendas.tiendas, objetosSuelo: leerObjetosSuelo(sesion), claros: null,
     sw: { personal, ataquesFB, est, salvajes, tiendas, sitioPrecio }
   };
 }
@@ -412,6 +483,7 @@ export function escribirBW2(sesion, datos) {
   escribirSalvajes(sesion, datos);
   escribirEstaticos(sesion, datos);
   escribirTiendas(sesion, datos);
+  escribirObjetosSuelo(sesion, datos);
   // Precios
   const objetos = sesion.archivo(RUTAS.objetos);
   const antes = objetos.slice();
@@ -675,7 +747,45 @@ export function leerNombresEntrenadores(sesion) {
   };
 }
 
-export function actualizarTextos(sesion, { entrenadores }) {
+// Lo que dicen de las iniciales: Lionel al presentarlas (main_event_0070) y al elegir (main_event_0080). En cada línea,
+// de qué inicial habla (0 Grookey, 1 Scorbunny, 2 Sobble) y, en español, el tipo que dice (para cambiarlo)
+const TEXTOS_INICIALES = {
+  main_event_0070: { 4: 0, 5: 1, 6: 2, 14: 1, 15: 2, 16: 0 },
+  main_event_0080: { 3: 1, 4: 2, 5: 0, 12: 1, 13: 2, 14: 0 }
+};
+// Las de cómo es cada una (su carácter), que con otra especie no valen: se cambian por una frase con su tipo
+const DESCRIPCIONES = { 3: 1, 4: 2, 5: 0 };
+const TIPOS_ANTES = ["Planta", "Fuego", "Agua"];
+
+function textosIniciales(sesion, iniciales) {
+  for (const idioma of IDIOMAS) {
+    const especies = leerTextos6(sesion.archivo(rutaTexto(idioma, "monsname"))).lineas;
+    for (const [archivo, lineasDe] of Object.entries(TEXTOS_INICIALES)) {
+      const ruta = rutaHistoria(idioma, archivo);
+      if (!sesion.tiene(ruta)) continue;
+      const original = sesion.archivo(ruta);
+      const lineas = leerTextos6(original).lineas;
+      for (const [i, cual] of Object.entries(lineasDe)) {
+        const antes = iniciales.antes[cual];
+        const ahora = iniciales.ahora[cual];
+        // (con la misma especie, puede haber cambiado su tipo)
+        if (lineas[i] === undefined || (antes === ahora && iniciales[cual].tipo === TIPOS_ANTES[cual])) continue;
+        if (idioma === "Spanish" && archivo === "main_event_0080" && DESCRIPCIONES[i] !== undefined) {
+          lineas[i] = `¡${especies[ahora]} es de tipo ${iniciales[cual].tipo}!`;
+          continue;
+        }
+        let texto = lineas[i].split(especies[antes]).join(especies[ahora]);
+        if (idioma === "Spanish") texto = texto.replace(`tipo ${TIPOS_ANTES[cual]}`, `tipo ${iniciales[cual].tipo}`).replace(`tipo\n${TIPOS_ANTES[cual]}`, `tipo\n${iniciales[cual].tipo}`);
+        lineas[i] = texto;
+      }
+      const nuevo = escribirTextos6(original, lineas);
+      if (!igual(nuevo, original)) sesion.cambiar(ruta, nuevo);
+    }
+  }
+}
+
+export function actualizarTextos(sesion, { entrenadores, iniciales }) {
+  if (iniciales && iniciales.antes && iniciales.ahora) textosIniciales(sesion, iniciales);
   if (!entrenadores) return;
   for (const idioma of IDIOMAS) {
     for (const [archivo, orden] of [["trname", entrenadores.nombres], ["trtype", entrenadores.clases]]) {

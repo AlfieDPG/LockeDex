@@ -32,7 +32,9 @@ const HABILIDADES_NUNCA = new Set([25, 59, 121, 161]);
 // Las inútiles: Ausente, Inicio Lento, Flaqueza, Zoquete, Rezagado, Recogemiel, Fuga, Iluminación,
 // Más, Menos, Compiescolta, Telepatía
 const HABILIDADES_MALAS = new Set([54, 112, 129, 103, 100, 118, 50, 35, 57, 58, 132, 140]);
-const ATAQUES_MALOS = new Set([165]); // Forcejeo
+const rango = (desde, hasta) => Array.from({ length: hasta - desde + 1 }, (_, k) => desde + k);
+// Forcejeo y los que solo existen en combate: los movimientos Z (7.ª) y los Maxiataques (8.ª, al dinamaxizarse)
+const ATAQUES_MALOS = new Set([165, ...rango(622, 658), ...rango(695, 703), 719, ...rango(723, 728), 743, ...rango(757, 774)]);
 const PIEDRAS = [80, 81, 82, 83, 84, 85]; // Solar, Lunar, Fuego, Trueno, Agua, Hoja
 const PIEDRAS_EVOLUTIVAS = [...PIEDRAS, 107, 108, 109]; // y Piedra Brillante, Noche y Alba
 const CARAMELO_RARO = 50;
@@ -527,6 +529,21 @@ function randomizarSalvajes(datos, reglas, azar) {
   }
 }
 
+// Los que se ven por el campo (Espada y Escudo): en cada zona, todos la misma especie (una de las que había), con todos
+// los climas igual. Así no se puede elegir cuál capturar
+function unSoloPorZona(datos, azar) {
+  for (const area of datos.salvajes) {
+    if (!area.campo) continue;
+    const huecos = area.estaciones.flat().flatMap((z) => z.huecos).filter((h) => !h.vacio && h.especie);
+    if (!huecos.length) continue;
+    const elegida = azar.elegir(huecos);
+    for (const h of huecos) {
+      h.especie = elegida.especie;
+      h.forma = elegida.forma;
+    }
+  }
+}
+
 // Los claros ocultos: cada hueco, otro de los que caben ahí
 function randomizarClaros(datos, reglas, azar) {
   const lista = candidatas(datos, reglas.salvajes).filter((e) => e.id <= 493 || DE_TESELIA_EN_CLAROS.has(e.id));
@@ -873,6 +890,7 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
   hacer("intercambios", r.intercambios.modo !== "no" || r.intercambios.objetos || r.intercambios.ivs, () =>
     randomizarIntercambios(datos, reglas, azar("intercambios"), objetos));
   hacer("salvajes", r.salvajes.modo !== "no" || r.salvajes.nivel, () => randomizarSalvajes(datos, reglas, azar("salvajes")));
+  hacer("un solo Pokémon por zona", r.salvajes.unico && datos.salvajes.some((a) => a.campo), () => unSoloPorZona(datos, azar("unico")));
   hacer("claros ocultos", r.salvajes.modo !== "no" && datos.perfil.claros, () => randomizarClaros(datos, reglas, azar("claros")));
   hacer("objetos de los salvajes", r.salvajes.objetos, () => randomizarObjetosSalvajes(datos, azar("objetos-salvajes"), objetos));
   const rival = r.iniciales.modo !== "no" && r.iniciales.rivalInicial;

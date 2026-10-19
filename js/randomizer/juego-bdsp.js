@@ -8,7 +8,8 @@
 //   Dpr/masterdatas            TrainerTable (TrainerData y TrainerPoke, uno por entrenador) y ShopTable
 //   Dpr/scriptableobjects/gamesettings   FieldEncountTable_d y _p: los salvajes de cada zona y los legendarios
 //   Dpr/ev_script              fld_item: los objetos del suelo (el objeto va como un float en el script)
-// Las iniciales van en el programa (no se pueden cambiar) y los intercambios, en los scripts.
+//   Message/                   los textos (el diálogo de elegir inicial)
+// Las iniciales van en el programa: se cambian con un parche IPS (exefs) por versión. Los intercambios, en los scripts.
 
 import { abrirBundle, leerPorNombre, leerOriginal, cambiarPorNombre, guardarBundle } from "./unity.js";
 
@@ -20,6 +21,21 @@ export const TIPOS = [
   "normal", "fighting", "flying", "poison", "ground", "rock", "bug", "ghost", "steel",
   "fire", "water", "grass", "electric", "psychic", "ice", "dragon", "dark", "fairy"
 ];
+// Las iniciales van en el programa: en cada versión (Diamante y Perla, 1.0.0 a 1.3.0), su build ID y dónde están las
+// funciones que dan la inicial y la del rival (get_DefaultPokeNo y get_RivalPokeNo). En cada una, tres «mov wN, #especie»:
+// en +0xC8 (Planta), +0x154 (Fuego) y +0x158 (Agua). Referencia: Ai0796/BDSP-Randomizers
+const VERSIONES = [
+  ["F87FC6075104EC4D9642A4AA6BB22216", 0x1bbbbb0, 0x1bbbf30], ["EA058A067CBD6943A6CF65B4588B6098", 0x238c6b0, 0x238ca30],
+  ["D9E96FB92878E3458AAE7E8D31AB32A9", 0x1fea960, 0x1feace0], ["1B5215DF918BA04BB3894852387F82FF", 0x238e470, 0x238e7f0],
+  ["BC259F7EE8E79A4995CDC79E69CAC6CD", 0x237ccf0, 0x237d070], ["35B9D8779B1951418FB609945CCC8C7E", 0x2334e30, 0x23351b0],
+  ["94CEAE325C205C4B9D6F7235552F28FD", 0x2cf13d0, 0x2cf1750], ["1284AB14C1477243AE2A3550EF828709", 0x1bbbbe0, 0x1bbbf60],
+  ["609FAC97880FA04CA6A8626D54A2BAB2", 0x238c6d0, 0x238ca50], ["3C70CAE153DF0B4F8A7B24C60FD8D0E7", 0x238dd00, 0x238e080],
+  ["5D3A3B56321FFD4CB5B5AEDC62550AFB", 0x238e490, 0x238e810], ["046D130F0873314A81D795C157E44A2F", 0x237cd10, 0x237d090],
+  ["D75246EC33C2F64BB1D8C893D4823FFC", 0x2334e50, 0x23351d0], ["38F59CBDA2EB9C44B72F94C4D25935A2", 0x238c8e0, 0x238cc60]
+];
+const INICIALES = [387, 390, 393];
+const IDIOMAS = ["jpn", "jpn_kanji", "english", "french", "italian", "german", "spanish", "korean", "simp_chinese", "trad_chinese"];
+
 // Los métodos de evolución en los que el dato es un nivel (va en el quinto número)
 const EVO_CON_NIVEL = new Set([4, 9, 10, 11, 12, 13, 14, 15, 23, 24, 28, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 41, 46, 47]);
 
@@ -30,6 +46,8 @@ const RUTAS = {
   ajustes: BASE + "Dpr/scriptableobjects/gamesettings",
   scripts: BASE + "Dpr/ev_script"
 };
+// Los textos: los nombres y las categorías de cada idioma, en common_msbt; los diálogos, en el bundle de cada idioma
+const MENSAJES = BASE + "Message/";
 
 // Los entrenadores (por su número): Benito (los tres de cada combate, uno por inicial), líderes (los de la historia
 // y las revanchas), Alto Mando, Campeona y comandantes del Equipo Galaxia
@@ -81,7 +99,7 @@ export function perfilDe(sesion) {
     legendarios: [],
     maxEvoluciones: 8,
     sinMT: false, bitsMT: { tm: 100, hm: 0, extra: 0 }, bloquesMT: 13,
-    tutores: false, tutorInfo: null, claros: false, iniciales: false,
+    tutores: false, tutorInfo: null, claros: false, iniciales: true,
     lideres: LIDERES, rivales: RIVALES, grupos: GRUPOS, importantes: new Set([...LIDERES, ...RIVALES]),
     sinDobles: [],
     preciosEnDecenas: false
@@ -90,6 +108,9 @@ export function perfilDe(sesion) {
 
 export async function prepararRom(sesion) {
   await sesion.cargar(Object.values(RUTAS));
+  // Los textos (para el diálogo de elegir inicial), si están en la carpeta
+  const textos = [MENSAJES + "common_msbt", ...IDIOMAS.map((i) => MENSAJES + i)].filter((r) => sesion.tiene(r));
+  await sesion.cargar(textos);
   return perfilDe(sesion);
 }
 
@@ -248,7 +269,7 @@ export function leerBW2(sesion) {
   const s = leerSalvajes(tablas);
   return {
     perfil, especies, aprende, ataques, salvajes: s.salvajes, entrenadores: leerEntrenadores(entrenadores, perfil),
-    iniciales: [], inicialesOriginales: [], estaticos: s.estaticos, intercambios: [], totems: [],
+    iniciales: INICIALES.slice(), inicialesOriginales: INICIALES.slice(), estaticos: s.estaticos, intercambios: [], totems: [],
     precios, tiendas: t.tiendas, objetosSuelo: fld ? leerObjetosSuelo(fld) : [], claros: null,
     bd: { personal, evolucion, oboe, waza, items, entrenadores, shop, tablas, fld, maquinas }
   };
@@ -337,6 +358,111 @@ export function escribirBW2(sesion, datos) {
   }
 
   for (const clave of Object.keys(RUTAS)) guardar(sesion, clave);
+  if (datos.iniciales.some((id, k) => id !== INICIALES[k])) escribirIniciales(sesion, datos.iniciales, datos.especies);
+}
+
+// ---------- Iniciales ----------
+
+// «mov wN, #imm» de ARM64 (movz de 32 bits), en little endian
+const mov = (registro, valor) => {
+  const x = (0x52800000 | ((valor & 0xffff) << 5) | registro) >>> 0;
+  return [x & 0xff, (x >> 8) & 0xff, (x >> 16) & 0xff, x >>> 24];
+};
+
+// Un parche IPS32 por versión (el emulador aplica el de la suya: van por su build ID). El rival se lleva la que tiene
+// ventaja sobre la tuya, como en el juego: con Planta, la de Fuego; con Fuego, la de Agua; con Agua, la de Planta
+function parcheIniciales([planta, fuego, agua], inicial, rival) {
+  const cambios = [
+    [inicial + 0xc8, mov(0, planta)], [inicial + 0xc8 + 0x8c, mov(8, fuego)], [inicial + 0xc8 + 0x90, mov(9, agua)],
+    [rival + 0xc8, mov(0, fuego)], [rival + 0xc8 + 0x8c, mov(8, agua)], [rival + 0xc8 + 0x90, mov(8, planta)]
+  ];
+  const salida = [..."IPS32"].map((c) => c.charCodeAt(0));
+  for (const [sitio, bytes] of cambios) {
+    const p = sitio + 0x100; // las direcciones del NSO van detrás de su cabecera
+    salida.push((p >>> 24) & 0xff, (p >> 16) & 0xff, (p >> 8) & 0xff, p & 0xff, 0, bytes.length, ...bytes);
+  }
+  salida.push(..."EEOF".split("").map((c) => c.charCodeAt(0)));
+  return Uint8Array.from(salida);
+}
+
+// La inicial que escoges queda en la variable 246, y muchos scripts la comparan con Turtwig, Chimchar y Piplup (qué
+// equipo lleva Benito, qué te dicen...): en esas comparaciones (los números van como float), las nuevas
+const VARIABLE_INICIAL = 246;
+function scriptsIniciales(sesion, iniciales, especies) {
+  const ab = bundles(sesion).scripts;
+  // Cada fase de la línea de antes (Turtwig, Grotle, Torterra...), por la misma fase de la nueva (o la última que tenga)
+  const linea = (id) => {
+    const l = [id];
+    for (let e = especies[id]; e && e.evoluciones.length && l.length < 3; e = especies[e.evoluciones[0].especie]) l.push(e.evoluciones[0].especie);
+    return l;
+  };
+  const nuevo = new Map();
+  INICIALES.forEach((antes, k) => {
+    const ahora = linea(iniciales[k]);
+    [antes, antes + 1, antes + 2].forEach((fase, i) => nuevo.set(aBits(fase), aBits(ahora[Math.min(i, ahora.length - 1)])));
+  });
+  for (const nombre of ab.porNombre.keys()) {
+    let objeto;
+    try {
+      objeto = leerPorNombre(ab, nombre);
+    } catch (e) {
+      continue;
+    }
+    if (!Array.isArray(objeto.Scripts)) continue;
+    let cambio = false;
+    for (const s of objeto.Scripts) {
+      for (const c of s.Commands || []) {
+        const args = c.Arg || [];
+        if (!args.some((a) => a.argType === 2 && a.data === VARIABLE_INICIAL)) continue;
+        for (const a of args) {
+          if (a.argType === 1 && nuevo.has(a.data) && nuevo.get(a.data) !== a.data) {
+            a.data = nuevo.get(a.data);
+            cambio = true;
+          }
+        }
+      }
+    }
+    if (cambio) cambiarPorNombre(ab, nombre, objeto);
+  }
+  guardar(sesion, "scripts");
+}
+
+function escribirIniciales(sesion, iniciales, especies) {
+  for (const [id, inicial, rival] of VERSIONES) sesion.cambiar(`@exefs/${id}.ips`, parcheIniciales(iniciales, inicial, rival));
+  scriptsIniciales(sesion, iniciales, especies);
+  // El diálogo de elegir: «¿Quieres a Turtwig, el Pokémon Hojita?», en cada idioma (el nombre y la categoría)
+  if (!sesion.tiene(MENSAJES + "common_msbt")) return;
+  const comun = abrirBundle(sesion.archivo(MENSAJES + "common_msbt"));
+  const lineas = (nombre) => {
+    try {
+      return leerPorNombre(comun, nombre).labelDataArray.map((l) => l.wordDataArray.map((w) => w.str).join(""));
+    } catch (e) {
+      return null;
+    }
+  };
+  for (const idioma of IDIOMAS) {
+    const ruta = MENSAJES + idioma;
+    const nombres = lineas(`${idioma}_ss_monsname`);
+    const categorias = lineas(`${idioma}_ss_zkn_type`);
+    if (!sesion.tiene(ruta) || !nombres || !categorias) continue;
+    const ab = abrirBundle(sesion.archivo(ruta));
+    const objeto = `${idioma}_dp_scenario1`;
+    if (!ab.porNombre.has(objeto)) continue;
+    const msg = leerPorNombre(ab, objeto);
+    INICIALES.forEach((antes, k) => {
+      const ahora = iniciales[k];
+      if (ahora === antes) return;
+      const label = msg.labelDataArray.find((l) => l.labelName === `8-EV_POKESELECT_0${k + 2}`);
+      if (!label) return;
+      for (const w of label.wordDataArray) {
+        if (w.str === nombres[antes]) w.str = nombres[ahora];
+        else if (w.str === categorias[antes]) w.str = categorias[ahora];
+      }
+    });
+    cambiarPorNombre(ab, objeto, msg);
+    const bytes = guardarBundle(ab);
+    if (bytes) sesion.cambiar(ruta, bytes);
+  }
 }
 
 function escribirEntrenadores(datos, b, copia, poner) {

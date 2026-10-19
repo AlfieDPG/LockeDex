@@ -44,8 +44,8 @@ const SWITCH = ["swsh", "bdsp"];
 // Lo que no tiene cada juego (no sale en su pestaña): no tienen tutores de ataques Negro y Blanco, Diamante y Perla,
 // X e Y, y Sol y Luna
 const SIN_PESTANAS = {};
-// En Diamante Brillante y Perla Reluciente, las iniciales van en el programa y los intercambios en los scripts
-const SIN_APARTADOS = { bw: ["tutores"], dp: ["tutores"], xy: ["tutores"], oras: [], sm: ["tutores"], usum: [], bdsp: ["tutores", "iniciales", "intercambios"] };
+// En Diamante Brillante y Perla Reluciente, los intercambios van en los scripts
+const SIN_APARTADOS = { bw: ["tutores"], dp: ["tutores"], xy: ["tutores"], oras: [], sm: ["tutores"], usum: [], bdsp: ["tutores", "intercambios"] };
 
 const PARECIDA_ALEATORIO = [["no", "Sin cambios"], ["parecida", "Fuerza parecida"], ["cualquiera", "Aleatorio"]];
 // A quién: se marcan sueltos, ninguno es nadie
@@ -251,6 +251,10 @@ const PESTANAS = [
             hijos: [{ k: "sinLegendarios", tipo: "casilla", texto: "Sin legendarios" }]
           },
           { k: "nivel", texto: "Multiplicador de niveles", ...MULTIPLICADOR },
+          {
+            k: "unico", tipo: "casilla", texto: "Un solo Pokémon por zona en el campo", no: ["dp", "platino", "hgss", "bw", "b2w2", "xy", "oras", "sm", "usum", "bdsp"],
+            ayuda: "Espada y Escudo: todos los Pokémon que se ven por el campo en cada zona son la misma especie, al azar. Así no se puede elegir cuál capturar (los de la hierba con «!» siguen saliendo al azar)"
+          },
           { k: "objetos", tipo: "casilla", texto: "Objetos de los Pokémon salvajes aleatorios" },
           {
             k: "pueblos", tipo: "casilla", texto: "Hierba en los pueblos", no: ["sm", "usum", ...SWITCH],
@@ -266,8 +270,7 @@ const PESTANAS = [
       {
         id: "objetos", titulo: "Objetos del suelo", icono: "objeto", ayuda: "Los que recoges por el camino y los escondidos. Donde había una MT sale otra MT; los objetos de la historia no se tocan",
         campos: [
-          // En Espada y Escudo van por otra tabla que todavía no se sabe leer
-          { k: "suelo", tipo: "opciones", opciones: SI_NO, no: ["swsh"] },
+          { k: "suelo", tipo: "opciones", opciones: SI_NO },
           { k: "sinMalos", tipo: "casilla", texto: "Banear objetos inútiles", ayuda: "Ni en el suelo, ni en las tiendas, ni equipados: nada de cartas, pañuelos ni cosas que no sirvan en la aventura" }
         ]
       },

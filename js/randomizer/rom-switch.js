@@ -51,9 +51,11 @@ export class SesionSwitch {
     return new Set(this.cambios.keys());
   }
 
-  // El .zip con lo cambiado (sin comprimir: casi todo va ya comprimido o es pequeño)
+  // El .zip con lo cambiado (sin comprimir: casi todo va ya comprimido o es pequeño). Lo que empieza por «@exefs/»
+  // (parches del programa) va a la carpeta «exefs» del mod
   zip(carpeta = "LockeDex") {
-    return crearZip([...this.cambios].sort(([a], [b]) => (a < b ? -1 : 1)).map(([ruta, bytes]) => [`${carpeta}/romfs/${ruta}`, bytes]));
+    const destino = (ruta) => (ruta.startsWith("@exefs/") ? `${carpeta}/exefs/${ruta.slice(7)}` : `${carpeta}/romfs/${ruta}`);
+    return crearZip([...this.cambios].sort(([a], [b]) => (a < b ? -1 : 1)).map(([ruta, bytes]) => [destino(ruta), bytes]));
   }
 }
 
