@@ -21,7 +21,10 @@ import {
   completarReglas, hayAlgo, misReglas, REGLAS_VACIAS, CLAVE_MIAS as CLAVE, normasGuardadas, guardarNormas, borrarNormas
 } from "./reglas.js";
 
-const ULTIMA_ESPECIE = 649; // de momento, juegos hasta gen 5
+// La última especie de cada juego (para elegir las iniciales a mano). Sin ROM ni locke, la del
+// más nuevo: al randomizar, la que no exista en el juego sale al azar (randomizar.js)
+const ULTIMA_ESPECIE = { dp: 493, platino: 493, hgss: 493, bw: 649, b2w2: 649, xy: 721, oras: 721, sm: 802, usum: 807 };
+const ULTIMA_DE_TODAS = Math.max(...Object.values(ULTIMA_ESPECIE));
 
 const CLAVE_SEMILLAS = "poketeams-randomizer-semillas-v1";
 
@@ -285,7 +288,7 @@ const PESTANAS = [
         id: "varios", titulo: "Varios", icono: "pokedex",
         campos: [
           { k: "pokedex", tipo: "casilla", texto: "Pokédex Nacional desde el principio", ayuda: "Al darte la Pokédex, también la nacional", no: [...GEN4, "sm", "usum"] },
-          { k: "texto", tipo: "casilla", texto: "Texto instantáneo", no: ["bw", ...GEN4] }
+          { k: "texto", tipo: "casilla", texto: "Texto instantáneo", no: GEN4 }
         ]
       }
     ]
@@ -391,7 +394,10 @@ async function accionNormas(que) {
 // Las tres iniciales a mano: un desplegable por cada una, con todas las especies
 function plantillaIniciales(a, c, valor, dis) {
   const lista = (datos && datos.pokemon) || [];
-  const especies = lista.filter((p) => p.id <= ULTIMA_ESPECIE).sort((x, y) => x.id - y.id);
+  const locke = idLocke ? lockePorId(idLocke) : null;
+  const juego = (rom && !rom.error && rom.juego) || (locke && locke.juego);
+  const ultima = ULTIMA_ESPECIE[juego] || ULTIMA_DE_TODAS;
+  const especies = lista.filter((p) => p.id <= ultima).sort((x, y) => x.id - y.id);
   return `<div class="random-iniciales">${[0, 1, 2]
     .map((i) => `
       <select data-apartado="${a.id}" data-campo="${c.k}" data-indice="${i}" ${dis}>
@@ -529,7 +535,7 @@ async function elegirRom(archivo) {
       juego = JUEGO_DE_CODIGO[codigo.slice(0, 3)];
     }
     if (!juego) {
-      rom.error = "Este juego todavía no se puede randomizar (de momento, de DS y X, Y, Rubí Omega y Zafiro Alfa).";
+      rom.error = "Este juego todavía no se puede randomizar (de momento, los de DS y los de 3DS).";
     } else {
       rom.juego = juego;
       rom.nombre = (JUEGOS.find((j) => j.id === juego) || {}).nombre || juego;

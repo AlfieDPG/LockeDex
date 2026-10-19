@@ -1,7 +1,7 @@
 // ---------- Parches de UPR-ZX (formato IPS) ----------
 //
 // Los que hacen lo de «Pokédex Nacional desde el principio» (cambian y alargan 4 bytes el script
-// donde te dan la Pokédex) y «texto instantáneo» de Blanco / Negro (cambian el programa principal).
+// donde te dan la Pokédex). El texto instantáneo no va por parche: ver ponerTextoRapido (juego-gen5.js).
 // Son los de UPR-ZX (src/com/dabomstew/pkrandom/patches), los mismos para todos los idiomas.
 
 const base64 = (texto) => Uint8Array.from(atob(texto), (c) => c.charCodeAt(0));
@@ -125,14 +125,6 @@ export const IPS = {
   "AP4AAAAMAAEA/gAAAA8AAQD+AAAADgABAP4AAAAAAAEA/gAAAAEAAQD+AAAAAgABAP4AAAADAAEA/gAAACAAAQD+AAAAIQABAP4A" +
   "AAAiAAEA/gAAACMAAQD+AAAAHAABAP4AAAAdAAEA/gAAAB4AAQD+AAAAHwABAP4AAABLAAEA/gAAAJ8AAQD+AAAAoQABAP4AAACg" +
   "AAEA/gAAAGQAAQD+RU9G"
-  ),
-  textoNegro1: base64(
-  "UEFUQ0gBj8AABMBGwEYBkHQACABIAEchBQoCCcUgAEQJSIFCDdACtAhICUkIYAlIAHgBKALRCEgCvABHB0gCvABHAiAGShBH//8A" +
-  "APv7+/uw3wkCyGMfAoHQAQIH0AECfdABAkVPRg=="
-  ),
-  textoBlanco1: base64(
-  "UEFUQ0gBj9wABMBGwEYBkJAACABIAEc5BQoCCcU4AEQJSIFCDdACtAhICUkIYAlIAHgBKALRCEgCvABHB0gCvABHAiAGShBH//8A" +
-  "APv7+/vI3wkC6GMfAp3QAQIj0AECmdABAkVPRg=="
   )
 };
 

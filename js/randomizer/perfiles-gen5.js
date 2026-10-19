@@ -210,10 +210,10 @@ const BW1 = {
     cajas: "a/0/9/0", overlay: 21,
     caja: "0004000c03d10320", limite: "321c26e0012e17d1", puntero: "0a9906980904090c", beq: 0xd0d1, textoCaja: "6088b0420ad1a088"
   },
-  // Sin texto instantáneo: el parche de UPR-ZX mete código que llama a funciones del programa por su
-  // dirección, y en la ROM española esas direcciones no son las mismas (la pantalla se llenaba de
-  // basura). Hace falta uno hecho para cada idioma.
-  textoRapido: null,
+  // El texto instantáneo, como en Negro 2 / Blanco 2: la rutina del texto es la misma byte a byte
+  // (comprobado con las ROM españolas de los cuatro). El parche de UPR-ZX no valía: mete código que
+  // llama a funciones del programa por su dirección, y en la ROM española no son las mismas.
+  textoRapido: { tipo: "patron" },
   aspectoIniciales: { dibujos: "a/2/0/5", overlay: 223, prefijo: [0x08, 0x0a, 0x07, 0x00, 0x08, 0x00, 0x00] }
 };
 

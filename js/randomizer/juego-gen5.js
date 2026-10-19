@@ -686,7 +686,7 @@ const DE_ESPERA_A_SIGUIENTE = 0xb8;
 
 export function ponerTextoRapido(rom) {
   const arm9 = rom.leerArm9();
-  if (!perfilDe(rom).textoRapido) return; // Negro y Blanco no lo tienen (ver perfiles-gen5.js)
+  if (!perfilDe(rom).textoRapido) return;
   const sitio = buscar(arm9, ESPERA_TEXTO) + 4;
   const salto = sitio + DE_ESPERA_A_SIGUIENTE;
   if (sitio < 4 || arm9[salto] !== 0x02 || arm9[salto + 1] !== 0xd1) throw new Error("No se ha encontrado la rutina del texto.");
