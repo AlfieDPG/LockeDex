@@ -146,12 +146,6 @@ export function mapaDS(bytes) {
   return null;
 }
 
-// { id, gen } o null
-export function juegoDS(bytes) {
-  const mapa = mapaDS(bytes);
-  return mapa && { id: mapa.id, gen: mapa.gen };
-}
-
 export function esPartidaDS(bytes) {
   return Boolean(mapaDS(bytes));
 }

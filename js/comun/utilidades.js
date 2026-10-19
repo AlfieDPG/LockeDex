@@ -1,3 +1,5 @@
+import { LOCALE } from "./idioma.js";
+
 export function quitarAcentos(texto) {
   return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
@@ -28,7 +30,7 @@ export function fechaLarga(texto) {
   const partes = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(texto || ""));
   if (!partes) return "";
   const fecha = new Date(Number(partes[1]), Number(partes[2]) - 1, Number(partes[3]));
-  return fecha.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+  return fecha.toLocaleDateString(LOCALE, { day: "numeric", month: "long", year: "numeric" });
 }
 
 // Para meter texto escrito por una persona dentro de una plantilla HTML sin que

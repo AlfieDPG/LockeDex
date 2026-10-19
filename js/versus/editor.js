@@ -27,6 +27,7 @@ import {
   VERSIONES, versionesDe, lugaresDe, lugarIntercambio, nombreLugar, creadoEnWeb
 } from "./editor-comun.js";
 import { confirmar } from "../comun/ventanas.js";
+import { t, nombre as nombreDe } from "../comun/idioma.js";
 
 let dialogo = null;
 let panel = null; // lo de dentro: va en su ventana o en el lado de la ventana «Partida»
@@ -47,7 +48,7 @@ let editando = null; // el sitio que se abre (ya mientras carga)
 async function ponerEspecie(poke, especie, forma, cambiando) {
   const d = await datosEspecie(especie, forma, abierto.juego);
   Object.assign(poke, {
-    especie, id: especie, es: nombreEspecie(especie), forma,
+    especie, id: especie, es: nombreEspecie(especie), en: nombreEspecie(especie, 2), forma,
     idForma: d.opcion.idForma, formaPMD: d.opcion.formaPMD || 0, imagenForma: d.opcion.imagenForma,
     stats: d.bases, habilidades: d.habilidades, generoRatio: d.generoRatio, difGenero: d.difGenero,
     felicidad: d.felicidad, ciclos: d.ciclos, aprende: d.aprende
@@ -92,7 +93,7 @@ function plantillaGenero(poke) {
   if (!posibles.length) return "";
   const genero = poke.genero;
   return `<button class="editor-genero ${genero ? `genero-${genero}` : ""}" ${posibles.length < 2 ? "disabled" : ""}
-            title="${genero ? NOMBRE_GENERO[genero] : "Sin género"}">${genero ? icono(ICONO_GENERO[genero]) : "⚥︎"}</button>`;
+            title="${genero ? NOMBRE_GENERO[genero] : t("Sin género")}">${genero ? icono(ICONO_GENERO[genero]) : "⚥︎"}</button>`;
 }
 
 // Objeto y habilidad: desplegables en los que también se escribe (lo que tiene, escrito; al
@@ -102,7 +103,7 @@ function plantillaObjeto(poke) {
   return `
     <span class="editor-combo">
       ${o ? imagenConRespaldo(urlsIconoDe(o.id, abierto.juego), `class="editor-icono-objeto" alt="" data-quitar-si-falla`) : ""}
-      <span class="editor-buscar"><input class="editor-objeto-campo" type="text" placeholder="Sin objeto" autocomplete="off" aria-label="Objeto" value="${escaparHTML(o ? o.es : "")}"></span>
+      <span class="editor-buscar"><input class="editor-objeto-campo" type="text" placeholder="${t("Sin objeto")}" autocomplete="off" aria-label="${t("Objeto")}" value="${escaparHTML(o ? nombreDe(o) : "")}"></span>
     </span>`;
 }
 
@@ -114,7 +115,7 @@ function plantillaBall(poke) {
       ${suya ? imagenConRespaldo(urlsIconoObjeto(suya.en), `class="editor-icono-objeto" alt="" data-quitar-si-falla`) : ""}
       <select class="editor-ball-campo" aria-label="Ball">
         ${suya ? "" : `<option value="${poke.ball}" selected>Ball ${poke.ball}</option>`}
-        ${lista.map((b) => `<option value="${b.id}" ${b.id === poke.ball ? "selected" : ""}>${escaparHTML(b.es)}</option>`).join("")}
+        ${lista.map((b) => `<option value="${b.id}" ${b.id === poke.ball ? "selected" : ""}>${escaparHTML(nombreDe(b))}</option>`).join("")}
       </select>
     </span>`;
 }
@@ -123,8 +124,8 @@ function plantillaHabilidad(poke) {
   const propia = (poke.habilidades || []).find((h) => h.id === poke.habilidad);
   return `
     <span class="editor-combo">
-      <span class="editor-buscar"><input class="editor-habilidad-campo" type="text" placeholder="Habilidad" autocomplete="off" aria-label="Habilidad" value="${escaparHTML(poke.habilidad ? habilidad(poke.habilidad).es : "")}"></span>
-      ${propia && propia.num === 4 ? `<span class="editor-oculta">oculta</span>` : ""}
+      <span class="editor-buscar"><input class="editor-habilidad-campo" type="text" placeholder="${t("Habilidad")}" autocomplete="off" aria-label="${t("Habilidad")}" value="${escaparHTML(poke.habilidad ? nombreDe(habilidad(poke.habilidad)) : "")}"></span>
+      ${propia && propia.num === 4 ? `<span class="editor-oculta">${t("oculta")}</span>` : ""}
     </span>`;
 }
 
@@ -137,16 +138,16 @@ function comoDesplegable(campo) {
 
 function plantillaAtaque(a, i) {
   if (!a) {
-    return `<div class="editor-ataque vacio"><span class="editor-buscar"><input class="editor-ataque-campo" data-hueco="${i}" type="search" placeholder="Ataque ${i + 1}" autocomplete="off"></span></div>`;
+    return `<div class="editor-ataque vacio"><span class="editor-buscar"><input class="editor-ataque-campo" data-hueco="${i}" type="search" placeholder="${t("Ataque {n}", { n: i + 1 })}" autocomplete="off"></span></div>`;
   }
   const info = infoAtaques.get(a.id) || {};
   const maximos = info.pp ? ppMaximos(info.pp, a.masPP) : "";
   return `
-    <div class="editor-ataque" style="--color:${coloresTipo[info.tipo] || "#3a3d52"}">
+    <div class="editor-ataque" style="--color:${coloresTipo[info.tipo] || "var(--t-control)"}">
       ${info.tipo ? iconoTipo(info.tipo) : ""}
-      <span class="editor-ataque-nombre">${escaparHTML(ataque(a.id).es)}</span>
+      <span class="editor-ataque-nombre">${escaparHTML(nombreDe(ataque(a.id)))}</span>
       <span class="editor-ataque-pp">${a.pp}/${maximos}</span>
-      <button class="editor-ataque-quitar" data-hueco="${i}" title="Cambiar">${icono("aspa")}</button>
+      <button class="editor-ataque-quitar" data-hueco="${i}" title="${t("Cambiar")}">${icono("aspa")}</button>
     </div>`;
 }
 
@@ -155,36 +156,36 @@ function plantillaAtaque(a, i) {
 function plantillaOrigen(poke) {
   const creado = poke.creado && poke.version === "lockedex";
   const versiones = [
-    ...(poke.creado ? [{ id: "lockedex", es: "LockeDex" }] : []),
-    ...(versionesDe(abierto.juego).some((v) => v.id === poke.version) || poke.version === "lockedex" ? [] : [{ id: poke.version, es: (VERSIONES.find((v) => v.id === poke.version) || { es: `Juego ${poke.version}` }).es }]),
+    ...(poke.creado ? [{ id: "lockedex", nombre: "LockeDex" }] : []),
+    ...(versionesDe(abierto.juego).some((v) => v.id === poke.version) || poke.version === "lockedex" ? [] : [{ id: poke.version, nombre: (VERSIONES.find((v) => v.id === poke.version) || { nombre: t("Juego {n}", { n: poke.version }) }).nombre }]),
     ...versionesDe(abierto.juego)
   ];
   return `
     <div class="editor-origen">
-      <label class="editor-dato" title="${poke.huevo ? "Ciclos que le faltan para eclosionar" : "Amistad"}">
+      <label class="editor-dato" title="${poke.huevo ? t("Ciclos que le faltan para eclosionar") : t("Amistad")}">
         ${icono(poke.huevo ? "huevo" : "corazon")}
-        ${campoNumero(`<input class="editor-amistad-campo" type="number" min="0" max="255" value="${poke.amistad}" aria-label="${poke.huevo ? "Ciclos" : "Amistad"}">`)}
+        ${campoNumero(`<input class="editor-amistad-campo" type="number" min="0" max="255" value="${poke.amistad}" aria-label="${poke.huevo ? t("Ciclos") : t("Amistad")}">`)}
       </label>
-      <label class="editor-dato" title="Entrenador original">
+      <label class="editor-dato" title="${t("Entrenador original")}">
         ${icono("persona")}
-        <input class="editor-entrenador-campo" type="text" maxlength="${abierto.maxEntrenador}" autocomplete="off" placeholder="Entrenador" aria-label="Entrenador original" value="${escaparHTML(poke.entrenador || "")}">
+        <input class="editor-entrenador-campo" type="text" maxlength="${abierto.maxEntrenador}" autocomplete="off" placeholder="${t("Entrenador")}" aria-label="${t("Entrenador original")}" value="${escaparHTML(poke.entrenador || "")}">
       </label>
-      <span class="editor-dato" title="${poke.huevo ? "Los huevos aún no tienen dónde se conocieron" : "Dónde se conoció"}">
+      <span class="editor-dato" title="${poke.huevo ? t("Los huevos aún no tienen dónde se conocieron") : t("Dónde se conoció")}">
         ${icono("mapa")}
-        <span class="editor-buscar"><input class="editor-lugar-campo" type="text" autocomplete="off" placeholder="Lugar" aria-label="Dónde se conoció"
+        <span class="editor-buscar"><input class="editor-lugar-campo" type="text" autocomplete="off" placeholder="${t("Lugar")}" aria-label="${t("Dónde se conoció")}"
           value="${escaparHTML(poke.huevo ? "" : nombreLugar(poke.lugar, creado, abierto.juego))}" ${poke.huevo ? "disabled" : ""}></span>
       </span>
-      <label class="editor-dato" title="Juego de origen">
+      <label class="editor-dato" title="${t("Juego de origen")}">
         ${icono("mando")}
-        <select class="editor-version-campo" aria-label="Juego de origen">
-          ${versiones.map((v) => `<option value="${v.id}" ${v.id === poke.version ? "selected" : ""}>${escaparHTML(v.es)}</option>`).join("")}
+        <select class="editor-version-campo" aria-label="${t("Juego de origen")}">
+          ${versiones.map((v) => `<option value="${v.id}" ${v.id === poke.version ? "selected" : ""}>${escaparHTML(v.nombre)}</option>`).join("")}
         </select>
       </label>
     </div>`;
 }
 
 function campoEspecie(poke) {
-  return `<span class="editor-buscar"><input class="editor-especie" type="search" autocomplete="off" placeholder="Especie" aria-label="Especie" title="Especie" value="${escaparHTML(poke.es || "")}"></span>`;
+  return `<span class="editor-buscar"><input class="editor-especie" type="search" autocomplete="off" placeholder="${t("Especie")}" aria-label="${t("Especie")}" title="${t("Especie")}" value="${escaparHTML(poke.especie ? nombreDe(poke) : "")}"></span>`;
 }
 
 function pintar() {
@@ -201,7 +202,7 @@ function pintar() {
   }
 
   const formas = formasDe(poke.especie, abierto.juego);
-  if (!formas.some((f) => f.forma === poke.forma)) formas.push({ forma: poke.forma, texto: `Forma ${poke.forma}` });
+  if (!formas.some((f) => f.forma === poke.forma)) formas.push({ forma: poke.forma, texto: t("Forma {forma}", { forma: poke.forma }) });
 
   cuerpo.innerHTML = `
     <div class="editor-cabecera">
@@ -214,36 +215,36 @@ function pintar() {
         <div class="editor-linea">
           ${campoEspecie(poke)}
           ${formas.length > 1
-            ? `<select class="editor-forma" aria-label="Forma" title="Forma">${formas
+            ? `<select class="editor-forma" aria-label="${t("Forma")}" title="${t("Forma")}">${formas
                 .map((f) => `<option value="${f.forma}" ${f.forma === poke.forma ? "selected" : ""}>${escaparHTML(f.texto)}</option>`)
                 .join("")}</select>`
             : ""}
           ${poke.huevo
             ? ""
-            : `<input class="editor-mote" type="text" maxlength="${abierto.maxMote}" autocomplete="off" placeholder="Mote" aria-label="Mote" title="Mote" value="${escaparHTML(poke.mote)}">`}
+            : `<input class="editor-mote" type="text" maxlength="${abierto.maxMote}" autocomplete="off" placeholder="${t("Mote")}" aria-label="${t("Mote")}" title="${t("Mote")}" value="${escaparHTML(poke.mote)}">`}
         </div>
         <div class="editor-linea">
-          <label class="editor-nivel" title="Nivel">
-            <span>Nv.</span>
-            ${campoNumero(`<input class="editor-nivel-campo" type="number" min="1" max="100" value="${poke.entreno.nivel}" aria-label="Nivel">`)}
+          <label class="editor-nivel" title="${t("Nivel")}">
+            <span>${t("Nv.")}</span>
+            ${campoNumero(`<input class="editor-nivel-campo" type="number" min="1" max="100" value="${poke.entreno.nivel}" aria-label="${t("Nivel")}">`)}
           </label>
-          <select class="editor-naturaleza" aria-label="Naturaleza" title="Naturaleza">${opcionesNaturaleza(poke.entreno.naturaleza, true)}</select>
+          <select class="editor-naturaleza" aria-label="${t("Naturaleza")}" title="${t("Naturaleza")}">${opcionesNaturaleza(poke.entreno.naturaleza, true)}</select>
           ${plantillaBall(poke)}
-          <button class="editor-huevo ${poke.huevo ? "activo" : ""}" title="${poke.huevo ? "Es un huevo (pulsa para que no lo sea)" : "Convertir en huevo"}" aria-pressed="${poke.huevo}">${icono("huevo")}</button>
+          <button class="editor-huevo ${poke.huevo ? "activo" : ""}" title="${poke.huevo ? t("Es un huevo (pulsa para que no lo sea)") : t("Convertir en huevo")}" aria-pressed="${poke.huevo}">${icono("huevo")}</button>
         </div>
       </div>
     </div>
 
     <div class="editor-par">
-      <div class="editor-apartado"><span class="editor-titulo">Objeto</span>${plantillaObjeto(poke)}</div>
-      <div class="editor-apartado"><span class="editor-titulo">Habilidad</span>${plantillaHabilidad(poke)}</div>
+      <div class="editor-apartado"><span class="editor-titulo">${t("Objeto")}</span>${plantillaObjeto(poke)}</div>
+      <div class="editor-apartado"><span class="editor-titulo">${t("Habilidad")}</span>${plantillaHabilidad(poke)}</div>
     </div>
     <div class="editor-apartado">
-      <span class="editor-titulo">Ataques</span>
+      <span class="editor-titulo">${t("Ataques")}</span>
       <div class="editor-ataques">${poke.ataques.map(plantillaAtaque).join("")}</div>
     </div>
     <div class="editor-apartado">
-      <span class="editor-titulo">Estadísticas</span>
+      <span class="editor-titulo">${t("Estadísticas")}</span>
       <div class="editor-estadisticas"></div>
     </div>
     ${plantillaOrigen(poke)}`;
@@ -271,7 +272,7 @@ function activarCampos() {
 
   // Objeto: al entrar, «Sin objeto» (para quitarlo); escribiendo, todos los del juego
   const campoObjeto = cuerpo.querySelector(".editor-objeto-campo");
-  const sinObjeto = { id: 0, es: "Sin objeto", en: "", buscar: "" };
+  const sinObjeto = { id: 0, es: t("Sin objeto"), en: "", buscar: "" };
   comoDesplegable(campoObjeto);
   activarAutocompletado(campoObjeto, objetosDe(juego), (entrada) => {
     poke.objeto = entrada.id;
@@ -295,7 +296,7 @@ function activarCampos() {
     pintar();
   }, {
     actual: campoHabilidad.value,
-    sinTexto: () => propias.map((h) => ({ ...h, es: h.num === 4 ? `${h.es} (oculta)` : h.es, buscar: "" }))
+    sinTexto: () => propias.map((h) => ({ ...h, es: h.num === 4 ? `${nombreDe(h)} (${t("oculta")})` : nombreDe(h), en: "", buscar: "" }))
   });
 
   // Dónde se conoció: los lugares del juego
@@ -326,7 +327,7 @@ function trabajar(tarea) {
   error.textContent = "";
   tarea().catch((fallo) => {
     console.error(fallo);
-    error.textContent = "No se ha podido cargar. Revisa tu conexión.";
+    error.textContent = t("No se ha podido cargar. Revisa tu conexión.");
   });
 }
 
@@ -387,11 +388,11 @@ function nivelInicial(idLocke) {
 // sitio: { equipo } o { caja, hueco }. Si está vacío, es para crear uno. recargar: el mismo
 // que ya estaba abierto, tras aceptar (sin el «Cargando...» de en medio).
 export async function abrirEditor(idLocke, sitio, recargar = false) {
-  if (!recargar && editorEnLado() && sinAceptar() && !(await confirmar("Lo que has cambiado sin pulsar «Aceptar» se pierde. ¿Seguir?", { aceptar: "Seguir", peligro: true }))) return;
+  if (!recargar && editorEnLado() && sinAceptar() && !(await confirmar(t("Lo que has cambiado sin pulsar «Aceptar» se pierde. ¿Seguir?"), { aceptar: t("Seguir"), peligro: true }))) return;
   abierto = null;
   editando = sitio;
   error.textContent = "";
-  if (!recargar) cuerpo.innerHTML = `<p class="editor-cargando">Cargando...</p>`;
+  if (!recargar) cuerpo.innerHTML = `<p class="editor-cargando">${t("Cargando...")}</p>`;
   panel.querySelector(".editor-guardar").disabled = true;
   if (!recargar) panel.classList.remove("nuevo");
   mostrarPanel();
@@ -400,7 +401,7 @@ export async function abrirEditor(idLocke, sitio, recargar = false) {
   try {
     const [bytes] = await Promise.all([partidaDeTrabajo(idLocke), prepararDatos()]);
     const formato = formatoDeSeguro(bytes);
-    if (!LIMITES[formato.id]) throw new Error("Todavía no se puede editar la partida de este juego.");
+    if (!LIMITES[formato.id]) throw new Error(t("Todavía no se puede editar la partida de este juego."));
     const crudo = formato.leerHueco(bytes, sitio);
     const pk = formato.pokemon;
     const base = {
@@ -434,7 +435,7 @@ export async function abrirEditor(idLocke, sitio, recargar = false) {
   } catch (fallo) {
     console.error(fallo);
     cuerpo.innerHTML = "";
-    error.textContent = fallo.message || "No se ha podido abrir.";
+    error.textContent = t(fallo.message || "No se ha podido abrir.");
   }
 }
 
@@ -470,41 +471,46 @@ function opcionesDe(poke, idioma) {
   return { base: poke.stats, nombreEspecie: nombreEspecie(poke.especie, idioma), nombreHuevo: nombreHuevo(idioma), generoRatio: poke.generoRatio };
 }
 
+// La especie ({ es, en }) por su número
+function especieDatos(id) {
+  return { es: nombreEspecie(id), en: nombreEspecie(id, 2) };
+}
+
 // Cómo se llama al preguntar: «Misty» o «Charizard»
-function nombreDe(e) {
-  return e.huevo ? `huevo de ${nombreEspecie(e.especie)}` : e.mote || nombreEspecie(e.especie);
+function nombreDePokemon(e) {
+  return e.huevo ? t("huevo de {pokemon}", { pokemon: nombreDe(especieDatos(e.especie)) }) : e.mote || nombreDe(especieDatos(e.especie));
 }
 
 // En la actividad, sin especie ni mote: los demás no tienen por qué saber qué Pokémon tiene
 function nombreOculto(e) {
-  return e.huevo ? "un huevo" : "un Pokémon";
+  return e.huevo ? t("un huevo") : t("un Pokémon");
 }
 
 // Lo que ha cambiado, para la actividad del locke: «un Pokémon (nivel 36 → 50 · objeto Restos)»
 function resumenCambios(antes, despues) {
-  if (!antes) return despues.huevo ? "nuevo huevo" : `nuevo Pokémon (Nv. ${despues.nivel})`;
+  if (!antes) return despues.huevo ? t("nuevo huevo") : t("nuevo Pokémon (Nv. {nivel})", { nivel: despues.nivel });
   const partes = [];
   const igual = (uno, otro) => JSON.stringify(uno) === JSON.stringify(otro);
-  if (despues.especie !== antes.especie) partes.push("otra especie");
-  else if (despues.forma !== antes.forma) partes.push("forma");
-  if (despues.huevo !== antes.huevo) partes.push(despues.huevo ? "ahora es un huevo" : "ya no es un huevo");
-  if (despues.mote !== antes.mote && !despues.huevo) partes.push(despues.mote ? "mote" : "sin mote");
-  if (despues.nivel !== antes.nivel && despues.huevo === antes.huevo) partes.push(`nivel ${antes.nivel} → ${despues.nivel}`);
-  if (despues.naturaleza !== antes.naturaleza) partes.push(`naturaleza ${NATURALEZAS[despues.naturaleza].es}`);
-  if (despues.objeto !== antes.objeto) partes.push(despues.objeto ? `objeto ${objeto(despues.objeto, abierto.juego).es}` : "sin objeto");
-  if (despues.habilidad !== antes.habilidad || despues.numHabilidad !== antes.numHabilidad) partes.push(`habilidad ${habilidad(despues.habilidad).es}`);
-  if (despues.shiny !== antes.shiny) partes.push(despues.shiny ? "shiny" : "ya no es shiny");
+  if (despues.especie !== antes.especie) partes.push(t("otra especie"));
+  else if (despues.forma !== antes.forma) partes.push(t("forma"));
+  if (despues.huevo !== antes.huevo) partes.push(despues.huevo ? t("ahora es un huevo") : t("ya no es un huevo"));
+  if (despues.mote !== antes.mote && !despues.huevo) partes.push(despues.mote ? t("mote") : t("sin mote"));
+  if (despues.nivel !== antes.nivel && despues.huevo === antes.huevo) partes.push(t("nivel {antes} → {despues}", { antes: antes.nivel, despues: despues.nivel }));
+  if (despues.naturaleza !== antes.naturaleza) partes.push(t("naturaleza {nombre}", { nombre: nombreDe(NATURALEZAS[despues.naturaleza]) }));
+  if (despues.objeto !== antes.objeto) partes.push(despues.objeto ? t("objeto {nombre}", { nombre: nombreDe(objeto(despues.objeto, abierto.juego)) }) : t("sin objeto"));
+  if (despues.habilidad !== antes.habilidad || despues.numHabilidad !== antes.numHabilidad) partes.push(t("habilidad {nombre}", { nombre: nombreDe(habilidad(despues.habilidad)) }));
+  if (despues.shiny !== antes.shiny) partes.push(despues.shiny ? "shiny" : t("ya no es shiny"));
   if (despues.genero !== antes.genero && despues.genero) partes.push(NOMBRE_GENERO[despues.genero].toLowerCase());
   if (despues.amistad !== antes.amistad && despues.huevo === antes.huevo) {
-    partes.push(`${despues.huevo ? "ciclos" : "amistad"} ${antes.amistad} → ${despues.amistad}`);
+    partes.push(`${despues.huevo ? t("ciclos") : t("amistad")} ${antes.amistad} → ${despues.amistad}`);
   }
-  if (despues.ball !== antes.ball) partes.push((balls(abierto.juego).find((b) => b.id === despues.ball) || { es: "ball" }).es);
-  if (despues.lugar !== undefined && despues.lugar !== antes.lugar) partes.push(`conocido en ${nombreLugar(despues.lugar, false, abierto.juego)}`);
-  if (despues.version !== antes.version) partes.push(`origen ${(VERSIONES.find((v) => v.id === despues.version) || { es: "otro juego" }).es}`);
-  if (despues.entrenador && despues.entrenador !== antes.entrenador) partes.push(`entrenador «${despues.entrenador}»`);
+  if (despues.ball !== antes.ball) partes.push(nombreDe(balls(abierto.juego).find((b) => b.id === despues.ball) || { es: "ball" }));
+  if (despues.lugar !== undefined && despues.lugar !== antes.lugar) partes.push(t("conocido en {lugar}", { lugar: nombreLugar(despues.lugar, false, abierto.juego) }));
+  if (despues.version !== antes.version) partes.push(t("origen {juego}", { juego: (VERSIONES.find((v) => v.id === despues.version) || { nombre: t("otro juego") }).nombre }));
+  if (despues.entrenador && despues.entrenador !== antes.entrenador) partes.push(t("entrenador «{nombre}»", { nombre: despues.entrenador }));
   const nuevos = despues.ataques.filter((a) => a.id && !antes.ataques.some((b) => b.id === a.id));
-  if (nuevos.length) partes.push(`ataques ${nuevos.map((a) => ataque(a.id).es).join(", ")}`);
-  else if (!igual(despues.ataques.map((a) => a.id), antes.ataques.map((a) => a.id))) partes.push("ataques");
+  if (nuevos.length) partes.push(t("ataques {nombres}", { nombres: nuevos.map((a) => nombreDe(ataque(a.id))).join(", ") }));
+  else if (!igual(despues.ataques.map((a) => a.id), antes.ataques.map((a) => a.id))) partes.push(t("ataques"));
   if (!igual(despues.ivs, antes.ivs)) partes.push("IVs");
   if (!igual(despues.evs, antes.evs)) partes.push("EVs");
   if (!partes.length) return "";
@@ -549,11 +555,11 @@ async function guardar() {
 
 async function borrar() {
   const { idLocke, sitio, llave, antes } = abierto;
-  if (!(await confirmar(`¿Borrar a ${nombreDe(antes)} de la partida?`))) return;
+  if (!(await confirmar(t("¿Borrar a {nombre} de la partida?", { nombre: nombreDePokemon(antes) })))) return;
   await cambiarHuecos(idLocke, (h) => {
     comprobarSitio(h, sitio, llave);
     poner(h, sitio, null);
-  }, `borrado ${nombreOculto(antes)}`);
+  }, t("borrado {quien}", { quien: nombreOculto(antes) }));
   cerrarEditor();
 }
 
@@ -565,13 +571,13 @@ async function clonar() {
   await cambiarHuecos(idLocke, (h) => {
     comprobarSitio(h, sitio, llave);
     const destino = huecoLibre(h, sitio.caja || 0);
-    if (!destino) throw new Error("Las cajas están llenas.");
+    if (!destino) throw new Error(t("Las cajas están llenas."));
     const pk = h.formato.pokemon;
     const crudo = mirar(h, sitio);
     const copia = pk.conLlaveNueva(cambiado ? pk.aplicarEditable(crudo, despues, opcionesDe(poke, antes.idioma)) : crudo);
     poner(h, destino, copia);
     return [llaveDe(copia)];
-  }, `clon de ${nombreOculto(despues)}`);
+  }, t("clon de {quien}", { quien: nombreOculto(despues) }));
   despuesDeAceptar(sitio);
 }
 
@@ -583,7 +589,7 @@ function accion(boton, tarea) {
     .then(tarea)
     .catch((fallo) => {
       console.error(fallo);
-      error.textContent = fallo && fallo.name === "AbortError" ? "" : fallo.message || "No se ha podido guardar.";
+      error.textContent = fallo && fallo.name === "AbortError" ? "" : t(fallo.message || "No se ha podido guardar.");
     })
     .finally(() => (boton.disabled = false));
 }
@@ -598,7 +604,7 @@ export function iniciarEditor(alCambiarEditandoPokemon = () => {}) {
   cuerpo = panel.querySelector(".editor-cuerpo");
   error = panel.querySelector(".editor-error");
   alCambiarEditando = alCambiarEditandoPokemon;
-  const botones = { borrar: ["papelera", "Borrar"], clonar: ["copiar", "Clonar"] };
+  const botones = { borrar: ["papelera", t("Borrar")], clonar: ["copiar", t("Clonar")] };
   for (const [nombre, [dibujo, texto]] of Object.entries(botones)) {
     panel.querySelector(`.editor-${nombre}`).innerHTML = `${icono(dibujo)} <span>${texto}</span>`;
   }

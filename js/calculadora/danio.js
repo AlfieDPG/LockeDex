@@ -14,6 +14,7 @@
 
 import { multiplicador } from "../comun/efectividad.js";
 import { tiposEs } from "../comun/tipos.js";
+import { t, nombre } from "../comun/idioma.js";
 
 const TIPOS = Object.keys(tiposEs);
 
@@ -80,6 +81,10 @@ const OTROS = {
   focussash: { banda: true, texto: "Aguanta con 1 PS" }
 };
 
+// Los textos, en el idioma de la web
+for (const efecto of Object.values(OTROS)) efecto.texto = t(efecto.texto);
+for (const [, efecto] of Object.values(DE_POKEMON)) efecto.texto = t(efecto.texto);
+
 // Lo que hace un objeto en un Pokémon (null si no cambia nada que se calcule aquí):
 //   { texto, stats?: { índice: ×}, potencia?: ×, tipos?: [], clase?, final?: ×, superEficaz?,
 //     baya?: tipo, banda? }
@@ -87,10 +92,10 @@ export function efectoObjeto(objeto, especie) {
   if (!objeto) return null;
   const k = clave(objeto.en);
   if (OTROS[k]) return OTROS[k];
-  if (DE_TIPO[k]) return { potencia: 4915 / 4096, tipos: [DE_TIPO[k]], texto: `${tiposEs[DE_TIPO[k]]} ×1,2` };
-  if (BAYAS[k]) return { baya: BAYAS[k], texto: `${tiposEs[BAYAS[k]]} ×½` };
+  if (DE_TIPO[k]) return { potencia: 4915 / 4096, tipos: [DE_TIPO[k]], texto: t("{tipo} ×1,2", { tipo: tiposEs[DE_TIPO[k]] }) };
+  if (BAYAS[k]) return { baya: BAYAS[k], texto: t("{tipo} ×½", { tipo: tiposEs[BAYAS[k]] }) };
   const gema = k.match(/^(\w+)gem$/);
-  if (gema && TIPOS.includes(gema[1])) return { potencia: 5325 / 4096, tipos: [gema[1]], texto: `${tiposEs[gema[1]]} ×1,3` };
+  if (gema && TIPOS.includes(gema[1])) return { potencia: 5325 / 4096, tipos: [gema[1]], texto: t("{tipo} ×1,3", { tipo: tiposEs[gema[1]] }) };
   if (DE_POKEMON[k]) {
     const [especies, efecto] = DE_POKEMON[k];
     return especies.includes(especie) ? efecto : null;
@@ -128,6 +133,7 @@ const HABILIDADES = {
   fluffy: "Recibe contacto ×½ y Fuego ×2", marvelscale: "Con estado: Defensa ×1,5",
   rivalry: "Mismo género ×1,25; contrario ×0,75"
 };
+for (const habilidad of Object.keys(HABILIDADES)) HABILIDADES[habilidad] = t(HABILIDADES[habilidad]);
 
 // Lo que hace una habilidad, si cuenta para el cálculo ("" si no)
 export function textoHabilidad(habilidad) {
@@ -170,7 +176,7 @@ export function statEnCombate(c, i, campo = {}, { etapa = (c.etapas || [])[i] ||
   const objeto = efectoObjeto(c.objeto, c.especie);
   if (objeto && objeto.stats && objeto.stats[i]) {
     valor = redondear(valor * objeto.stats[i]);
-    cambios.push(`${c.objeto.es} (${objeto.texto})`);
+    cambios.push(`${nombre(c.objeto)} (${objeto.texto})`);
   }
 
   const habilidad = sinHabilidad ? "" : clave(c.habilidad && c.habilidad.en);
@@ -179,7 +185,7 @@ export function statEnCombate(c, i, campo = {}, { etapa = (c.etapas || [])[i] ||
   const cuenta = (cumple, factor) => {
     if (!cumple) return;
     porHabilidad *= factor;
-    cambios.push(`${c.habilidad.es} (${HABILIDADES[habilidad]})`);
+    cambios.push(`${nombre(c.habilidad)} (${HABILIDADES[habilidad]})`);
   };
   cuenta(i === 1 && (habilidad === "hugepower" || habilidad === "purepower"), 2);
   cuenta(i === 1 && (habilidad === "hustle" || habilidad === "gorillatactics"), 1.5);
@@ -194,16 +200,16 @@ export function statEnCombate(c, i, campo = {}, { etapa = (c.etapas || [])[i] ||
   const tipos = c.tipos || [];
   if (i === 4 && campo.clima === "arena" && tipos.includes("rock")) {
     valor = Math.floor(valor * 1.5);
-    cambios.push("Arena: Def. Esp. ×1,5");
+    cambios.push(t("Arena: Def. Esp. ×1,5"));
   }
   if (i === 2 && campo.clima === "nieve" && tipos.includes("ice")) {
     valor = Math.floor(valor * 1.5);
-    cambios.push("Nieve: Defensa ×1,5");
+    cambios.push(t("Nieve: Defensa ×1,5"));
   }
   // Con Pies Rápidos, la parálisis no le frena
   if (i === 5 && c.paralizado && habilidad !== "quickfeet") {
     valor = Math.floor(valor / 2);
-    cambios.push("Paralizado: Velocidad ×½");
+    cambios.push(t("Paralizado: Velocidad ×½"));
   }
   return { valor: Math.max(1, valor), cambios };
 }
@@ -231,10 +237,10 @@ export function calcularDanio(atacante, defensor, ataqueElegido, campo = {}) {
   // Habilidades (la del defensor no cuenta si el atacante tiene Rompemoldes)
   const habA = clave(atacante.habilidad && atacante.habilidad.en);
   let habD = clave(defensor.habilidad && defensor.habilidad.en);
-  const usaA = () => apuntar(`${atacante.habilidad.es} (${HABILIDADES[habA]})`);
-  const usaD = () => apuntar(`${defensor.habilidad.es} (${HABILIDADES[habD]})`);
+  const usaA = () => apuntar(`${nombre(atacante.habilidad)} (${HABILIDADES[habA]})`);
+  const usaD = () => apuntar(`${nombre(defensor.habilidad)} (${HABILIDADES[habD]})`);
   if (ROMPEMOLDES.includes(habA) && HABILIDADES[habD] && !IRROMPIBLES.includes(habD)) {
-    apuntar(`${atacante.habilidad.es}: no cuenta ${defensor.habilidad.es}`);
+    apuntar(t("{habilidad}: no cuenta {otra}", { habilidad: nombre(atacante.habilidad), otra: nombre(defensor.habilidad) }));
     habD = "";
   }
 
@@ -270,7 +276,7 @@ export function calcularDanio(atacante, defensor, ataqueElegido, campo = {}) {
 
   const objetoA = efectoObjeto(atacante.objeto, atacante.especie);
   const objetoD = efectoObjeto(defensor.objeto, defensor.especie);
-  const cuenta = (objeto, efecto) => apuntar(`${objeto.es} (${efecto.texto})`);
+  const cuenta = (objeto, efecto) => apuntar(`${nombre(objeto)} (${efecto.texto})`);
 
   // El crítico no hace caso de las bajadas del atacante ni de las subidas del defensor
   let etapaA = (atacante.etapas || [])[iAtaque] || 0;
@@ -350,14 +356,14 @@ export function calcularDanio(atacante, defensor, ataqueElegido, campo = {}) {
   if (campo.clima === "sol" || campo.clima === "lluvia") {
     const aFavor = campo.clima === "sol" ? "fire" : "water";
     const enContra = campo.clima === "sol" ? "water" : "fire";
-    const nombre = campo.clima === "sol" ? "Sol" : "Lluvia";
+    const clima = campo.clima === "sol" ? t("Sol") : t("Lluvia");
     if (ataque.tipo === aFavor) {
       base = redondear(base * 1.5);
-      apuntar(`${nombre} ×1,5`);
+      apuntar(t("{clima} ×1,5", { clima }));
     }
     if (ataque.tipo === enContra) {
       base = redondear(base * 0.5);
-      apuntar(`${nombre} ×½`);
+      apuntar(t("{clima} ×½", { clima }));
     }
   }
   if (critico) base = Math.floor(base * 1.5);
@@ -370,10 +376,10 @@ export function calcularDanio(atacante, defensor, ataqueElegido, campo = {}) {
   };
   const pantalla = fisico ? campo.reflejo : campo.luz;
   if (pantalla) {
-    if (critico) apuntar("El crítico se salta la pantalla");
+    if (critico) apuntar(t("El crítico se salta la pantalla"));
     else {
       final *= 0.5;
-      apuntar(`${fisico ? "Reflejo" : "Pantalla de luz"} ×½`);
+      apuntar(t("{pantalla} ×½", { pantalla: fisico ? t("Reflejo") : t("Pantalla de luz") }));
     }
   }
   if (objetoA && objetoA.final && (!objetoA.superEficaz || efectividad > 1)) {
@@ -407,7 +413,7 @@ export function calcularDanio(atacante, defensor, ataqueElegido, campo = {}) {
     d = redondear(d * final);
     tiradas.push(Math.max(1, d));
   }
-  if (quemadura) apuntar("Quemado ×½");
+  if (quemadura) apuntar(t("Quemado ×½"));
   return { tiradas, efectividad, stab, extras };
 }
 

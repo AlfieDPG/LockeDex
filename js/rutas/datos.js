@@ -11,6 +11,15 @@
 // Un juego puede usar otros apartados indicándolos en «apartados» (Alola va por islas).
 // Si se cambia el nombre de un lugar, se pierde su marca (se guarda por nombre).
 
+import { LUGARES_EN } from "./lugares-en.js";
+import { enIngles } from "../comun/idioma.js";
+
+// Un lugar en el idioma de la web («Ruta 3» -> «Route 3»). Se guarda y se compara en español;
+// los que no están en LUGARES_EN (los escritos a mano) salen tal cual.
+export function nombreDeLugar(texto) {
+  return (enIngles && LUGARES_EN[texto]) || texto;
+}
+
 // "Ruta 101" ... "Ruta 134"
 function rango(desde, hasta) {
   return Array.from({ length: hasta - desde + 1 }, (_, i) => `Ruta ${desde + i}`);

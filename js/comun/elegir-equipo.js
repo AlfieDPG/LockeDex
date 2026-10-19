@@ -9,6 +9,7 @@
 //   // undefined si se ha cerrado sin elegir
 
 import { escaparHTML } from "./utilidades.js";
+import { t, nombre } from "./idioma.js";
 import { icono } from "./iconos.js";
 import { imagenConRespaldo, urlsRetrato } from "./imagenes.js";
 import { pokemonParaCopia } from "./pokemon.js";
@@ -18,7 +19,7 @@ import { leerGuardados, leerGrupos } from "../equipos/estado.js";
 export function caraDePokemon(p, clase = "") {
   return imagenConRespaldo(
     urlsRetrato(p),
-    `class="${clase}" alt="${escaparHTML(p.es || "")}" title="${escaparHTML(p.mote ? `${p.mote} (${p.es})` : p.es || "")}" loading="lazy" draggable="false"`
+    `class="${clase}" alt="${escaparHTML(nombre(p))}" title="${escaparHTML(p.mote ? `${p.mote} (${nombre(p)})` : nombre(p))}" loading="lazy" draggable="false"`
   );
 }
 
@@ -33,7 +34,7 @@ export function carasDeEquipo(equipo, { mvp = -1, clase = "caras-equipo" } = {})
 
 // Copia de un equipo guardado para llevarla a otra parte (Firestore no acepta «undefined»)
 export function copiaDeEquipo(equipo) {
-  return JSON.parse(JSON.stringify({ nombre: equipo.nombre || "Equipo", pokemon: (equipo.pokemon || []).map(pokemonParaCopia) }));
+  return JSON.parse(JSON.stringify({ nombre: equipo.nombre || t("Equipo"), pokemon: (equipo.pokemon || []).map(pokemonParaCopia) }));
 }
 
 let abierto = null; // { menu, terminar }
@@ -49,7 +50,7 @@ function cerrar(valor) {
 function filaEquipo(equipo) {
   return `
     <button type="button" class="elegir-equipo-opcion" data-id="${escaparHTML(equipo.id)}">
-      <strong>${escaparHTML(equipo.nombre || "Equipo")}</strong>
+      <strong>${escaparHTML(equipo.nombre || t("Equipo"))}</strong>
       ${carasDeEquipo(equipo)}
     </button>`;
 }
@@ -82,8 +83,8 @@ export function elegirEquipo(ancla, { conQuitar = false, primero = null, complet
   menu.className = "elegir-equipo";
   menu.innerHTML = `
     ${arriba}
-    ${deMisEquipos.length ? bloques + sueltos : destacado ? "" : `<p class="elegir-equipo-vacio">No tienes equipos guardados.</p>`}
-    ${conQuitar ? `<button type="button" class="elegir-equipo-quitar">${icono("aspa")} Sin equipo</button>` : ""}`;
+    ${deMisEquipos.length ? bloques + sueltos : destacado ? "" : `<p class="elegir-equipo-vacio">${t("No tienes equipos guardados.")}</p>`}
+    ${conQuitar ? `<button type="button" class="elegir-equipo-quitar">${icono("aspa")} ${t("Sin equipo")}</button>` : ""}`;
   // Dentro de la ventana si la hay: con una ventana abierta, lo de fuera no se puede pulsar
   (ancla.closest("dialog") || document.body).appendChild(menu);
 

@@ -257,13 +257,6 @@ export function tablasFB(bytes, t, k) {
   return Array.from({ length: v.getUint32(p, true) }, (_, i) => p + 4 + i * 4 + v.getUint32(p + 4 + i * 4, true));
 }
 
-// Dónde está cada número de un vector de números de 4 bytes (el campo k de la tabla t)
-export function vector32FB(bytes, t, k) {
-  const p = refFB(bytes, t, k);
-  if (!p) return [];
-  return Array.from({ length: new DataView(bytes.buffer, bytes.byteOffset).getUint32(p, true) }, (_, i) => p + 4 + i * 4);
-}
-
 export function escribirFB(obj, esquema) {
   const c = new Constructor();
   c.avanzar(4); // la referencia a la raíz

@@ -14,7 +14,7 @@ import { escaparHTML } from "../comun/utilidades.js";
 import { usuarioActual } from "../comun/nube.js";
 import { cargarDatos, datos } from "../comun/datos.js";
 import { activarAutocompletado, iconoPokemon } from "../comun/autocompletado.js";
-import { obtenerVariedades } from "../comun/formas.js";
+import { obtenerVariedades, etiquetaForma } from "../comun/formas.js";
 import { elegirForma, datosDeForma } from "../comun/elegir-forma.js";
 import { imagenConRespaldo, urlsRetrato } from "../comun/imagenes.js";
 import { activarArrastre } from "../comun/arrastrar.js";
@@ -23,6 +23,7 @@ import {
   estaEliminado, REACCIONES, reaccionar
 } from "../comun/lockes.js";
 import { confirmar } from "../comun/ventanas.js";
+import { t, LOCALE, enIngles, nombre as nombreDe } from "../comun/idioma.js";
 
 let dialogoCementerio = null;
 let dialogoMuerte = null;
@@ -30,7 +31,7 @@ let idCementerio = null; // locke del cementerio abierto
 
 let idMuerte = null;     // locke en el que se apunta el muerto
 let desdeVidas = false;  // se abrió con el «−» de las vidas
-let elegido = null;      // Pokémon elegido: { id, es, texto (lo que sale en la casilla), forma }
+let elegido = null;      // Pokémon elegido: { id, es, texto (lo que sale en la casilla), es/en (con la forma), forma }
 let eligiendo = null;    // promesa mientras se pregunta la forma (al guardar se espera a que acabe)
 let listaPokemon = [];   // la que mira el autocompletado (se rellena al cargar los datos)
 let autocompletado = null;
@@ -45,8 +46,13 @@ export function retratoMuerto(muerto, clase = "") {
   );
 }
 
+// El nombre se guarda en español («nombre») y en inglés («en», los apuntados desde que hay inglés)
+function especieMuerto(muerto) {
+  return (enIngles && muerto.en) || muerto.nombre;
+}
+
 export function nombreMuerto(muerto) {
-  return muerto.mote ? `${muerto.nombre} «${muerto.mote}»` : muerto.nombre;
+  return muerto.mote ? `${especieMuerto(muerto)} «${muerto.mote}»` : especieMuerto(muerto);
 }
 
 // ---------- Cementerio ----------
@@ -77,7 +83,7 @@ function plantillaReacciones(locke, muerto) {
     <div class="tumba-reacciones">
       ${usadas}
       <span class="reaccion-mas">
-        <button class="reaccion-abrir" title="Reaccionar">${icono("mas")}</button>
+        <button class="reaccion-abrir" title="${t("Reaccionar")}">${icono("mas")}</button>
         <span class="reaccion-opciones">${opciones}</span>
       </span>
     </div>`;
@@ -85,18 +91,18 @@ function plantillaReacciones(locke, muerto) {
 
 function plantillaTumba(locke, muerto, mia) {
   const fecha = muerto.fecha
-    ? new Date(muerto.fecha).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })
+    ? new Date(muerto.fecha).toLocaleDateString(LOCALE, { day: "numeric", month: "long", year: "numeric" })
     : "";
   // «Contra quién» ya no se pregunta; solo lo llevan los de antes
-  const detalle = [muerto.causa && `Contra ${muerto.causa}`, fecha].filter(Boolean).join(" · ");
+  const detalle = [muerto.causa && t("Contra {causa}", { causa: muerto.causa }), fecha].filter(Boolean).join(" · ");
   // Las tuyas se pueden arrastrar para cambiarlas de sitio
   return `
     <div class="tumba ${mia ? "movible" : ""}" title="${escaparHTML(detalle)}" data-id="${escaparHTML(muerto.id)}"
          ${mia ? `draggable="true"` : ""}>
       ${retratoMuerto(muerto, "tumba-cara")}
-      <span class="tumba-mote">${escaparHTML(muerto.mote || muerto.nombre)}</span>
-      ${muerto.mote ? `<span class="tumba-especie">${escaparHTML(muerto.nombre)}</span>` : ""}
-      ${mia ? `<button class="tumba-quitar" data-muerto="${escaparHTML(muerto.id)}" title="Quitar">${icono("aspa")}</button>` : ""}
+      <span class="tumba-mote">${escaparHTML(muerto.mote || especieMuerto(muerto))}</span>
+      ${muerto.mote ? `<span class="tumba-especie">${escaparHTML(especieMuerto(muerto))}</span>` : ""}
+      ${mia ? `<button class="tumba-quitar" data-muerto="${escaparHTML(muerto.id)}" title="${t("Quitar")}">${icono("aspa")}</button>` : ""}
       ${plantillaReacciones(locke, muerto)}
     </div>`;
 }
@@ -105,21 +111,21 @@ function plantillaColumna(locke, uid) {
   const usuario = usuarioActual();
   const mia = uid === usuario.uid;
   const muertos = [...muertosDe(locke, uid)].reverse(); // el último, primero
-  const nombre = (locke.nombres || {})[uid] || "Jugador";
+  const nombre = (locke.nombres || {})[uid] || t("Jugador");
   const foto = (locke.fotos || {})[uid] || "";
   const abierto = locke.estado !== "cerrado";
 
   return `
     <section class="cementerio-jugador ${mia ? "mio" : ""}">
       <header>
-        <span class="cementerio-cara" data-perfil="${escaparHTML(uid)}" title="Ver perfil">${foto ? `<img src="${escaparHTML(foto)}" alt="" referrerpolicy="no-referrer">` : escaparHTML(nombre[0] || "?")}</span>
+        <span class="cementerio-cara" data-perfil="${escaparHTML(uid)}" title="${t("Ver perfil")}">${foto ? `<img src="${escaparHTML(foto)}" alt="" referrerpolicy="no-referrer">` : escaparHTML(nombre[0] || "?")}</span>
         <span class="cementerio-nombre">${escaparHTML(nombre)}</span>
         <span class="cementerio-cuenta">${icono("calavera")} ${muertos.length}</span>
       </header>
       <div class="tumbas">
-        ${mia && abierto ? `<button class="tumba tumba-nueva" title="Apuntar un muerto">${icono("mas")}</button>` : ""}
+        ${mia && abierto ? `<button class="tumba tumba-nueva" title="${t("Apuntar un muerto")}">${icono("mas")}</button>` : ""}
         ${muertos.map((muerto) => plantillaTumba(locke, muerto, mia)).join("")}
-        ${!muertos.length && !(mia && abierto) ? `<p class="cementerio-vacio">Ninguno</p>` : ""}
+        ${!muertos.length && !(mia && abierto) ? `<p class="cementerio-vacio">${t("Ninguno")}</p>` : ""}
       </div>
     </section>`;
 }
@@ -168,7 +174,7 @@ function pintarCementerio() {
     .sort((uno, otro) => Number(otro === usuario.uid) - Number(uno === usuario.uid));
 
   dialogoCementerio.querySelector(".cementerio-titulo").innerHTML =
-    `${icono("calavera")} Cementerio · ${escaparHTML(locke.nombre)}`;
+    `${icono("calavera")} ${t("Cementerio")} · ${escaparHTML(locke.nombre)}`;
   dialogoCementerio.querySelector(".cementerio-cuerpo").innerHTML =
     `<div class="cementerio-columnas">${jugadores.map((uid) => plantillaColumna(locke, uid)).join("")}</div>`;
 }
@@ -197,11 +203,11 @@ export function abrirMuerte(id, desdeLasVidas) {
   const vidaCero = !locke.vidasIlimitadas && usuario && ((locke.vidas || {})[usuario.uid] || 0) === 0;
 
   dialogoMuerte.querySelector(".muerte-titulo").textContent =
-    desdeLasVidas ? (vidaCero ? "Perder la vida cero" : "Perder una vida") : "Apuntar un muerto";
+    desdeLasVidas ? (vidaCero ? t("Perder la vida cero") : t("Perder una vida")) : t("Apuntar un muerto");
   dialogoMuerte.querySelector(".muerte-ok").textContent =
-    desdeLasVidas ? (vidaCero ? "Perder el locke" : "Quitar vida") : "Apuntar";
+    desdeLasVidas ? (vidaCero ? t("Perder el locke") : t("Quitar vida")) : t("Apuntar");
   dialogoMuerte.querySelector(".muerte-vida-texto").textContent =
-    vidaCero ? "Perder también la vida cero (quedas eliminado)" : "Quitar también una vida";
+    vidaCero ? t("Perder también la vida cero (quedas eliminado)") : t("Quitar también una vida");
   for (const selector of [".muerte-pokemon", ".muerte-mote"]) {
     dialogoMuerte.querySelector(selector).value = "";
   }
@@ -223,8 +229,8 @@ export function abrirMuerte(id, desdeLasVidas) {
 // Elegida la especie: si tiene varias formas, se pregunta cuál (cancelar = la normal)
 async function elegirEspecie(pokemon) {
   const campo = dialogoMuerte.querySelector(".muerte-pokemon");
-  elegido = { id: pokemon.id, es: pokemon.es, texto: pokemon.es, forma: {} };
-  campo.value = pokemon.es;
+  elegido = { id: pokemon.id, es: pokemon.es, en: pokemon.en, texto: nombreDe(pokemon), forma: {} };
+  campo.value = elegido.texto;
 
   let info = { especie: "", lista: [] };
   try {
@@ -238,7 +244,9 @@ async function elegirEspecie(pokemon) {
     try {
       const forma = slug ? await datosDeForma(info, slug) : {};
       if (forma.etiqueta) {
-        elegido = { ...elegido, texto: `${pokemon.es} (${forma.etiqueta})`, forma };
+        const es = `${pokemon.es} (${etiquetaForma(slug, info.especie, "es")})`;
+        const en = `${pokemon.en} (${etiquetaForma(slug, info.especie, "en")})`;
+        elegido = { ...elegido, es, en, texto: `${nombreDe(pokemon)} (${forma.etiqueta})`, forma };
         campo.value = elegido.texto;
       }
     } catch (error) {
@@ -256,11 +264,11 @@ async function guardarMuerte() {
   if (texto && (!elegido || elegido.texto !== texto)) autocompletado.elegirPrimera();
   if (eligiendo) await eligiendo;
   if (texto && !elegido) {
-    error.textContent = "Elige un Pokémon de la lista.";
+    error.textContent = t("Elige un Pokémon de la lista.");
     return;
   }
   if (!desdeVidas && !elegido) {
-    error.textContent = "¿Qué Pokémon ha muerto?";
+    error.textContent = t("¿Qué Pokémon ha muerto?");
     return;
   }
 
@@ -277,7 +285,8 @@ async function guardarMuerte() {
     id,
     {
       especie: elegido.id,
-      nombre: elegido.texto,
+      nombre: elegido.es,
+      en: elegido.en || "",
       mote: dialogoMuerte.querySelector(".muerte-mote").value.trim(),
       idForma,
       formaPMD,
@@ -317,7 +326,7 @@ export function iniciarCementerio(alFallar) {
       return;
     }
     const quitar = e.target.closest(".tumba-quitar");
-    if (quitar && (await confirmar("¿Quitar este Pokémon del cementerio?\n\nLa vida no se devuelve: eso se hace con el «+»."))) {
+    if (quitar && (await confirmar(`${t("¿Quitar este Pokémon del cementerio?")}\n\n${t("La vida no se devuelve: eso se hace con el «+».")}`))) {
       borrarMuerto(idCementerio, quitar.dataset.muerto).catch(alFallar);
     }
   });

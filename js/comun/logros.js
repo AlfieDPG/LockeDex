@@ -25,17 +25,19 @@ import {
 import { misLockes, estadoDe, alCambiarLockes, victoriasDe, combatesDe, estaEliminado } from "./lockes.js";
 import { conjuntos } from "./normas.js";
 import { contadores } from "./contadores.js";
+import { CLAVE_AJUSTES } from "./claves-ajustes.js";
 import { icono } from "./iconos.js";
 import { escaparHTML } from "./utilidades.js";
 import { tiposEs, urlIconoTipo } from "./tipos.js";
 import { generoDe } from "./pokemon.js";
 import { registrados, TOTAL_ESPECIES } from "./registro.js";
+import { t } from "./idioma.js";
 
 export const NIVELES = {
-  bronce: "Bronce",
-  plata: "Plata",
-  oro: "Oro",
-  platino: "Platino"
+  bronce: t("Bronce"),
+  plata: t("Plata"),
+  oro: t("Oro"),
+  platino: t("Platino")
 };
 
 export const CATEGORIAS = [
@@ -44,12 +46,13 @@ export const CATEGORIAS = [
   { id: "equipos", nombre: "Equipos" },
   { id: "rutas", nombre: "Rutas y level caps" },
   { id: "personalizados", nombre: "A tu manera" },
+  { id: "partida", nombre: "Partida y randomizer" },
   { id: "social", nombre: "Amigos y perfil" },
   { id: "otros", nombre: "Otros" },
   { id: "pokedex", nombre: "Pokédex" },
   { id: "tipos", nombre: "Tipos" },
   { id: "logros", nombre: "Logros" }
-];
+].map((categoria) => ({ ...categoria, nombre: t(categoria.nombre) }));
 
 // ---------- Logros de tipo ----------
 //
@@ -74,7 +77,7 @@ export const LOGROS_PARA_ORO = 50;
 const LOGROS_DE_TIPO = Object.keys(tiposEs).map((tipo) => ({
   id: `t-${tipo}`, categoria: "tipos", nivel: "plata", icono: "pokeball", tipo, fondo: `tipo-${tipo}`,
   nombre: NOMBRES_DE_TIPO[tipo],
-  descripcion: `Ten ${POKEMON_POR_TIPO} Pokémon distintos de tipo ${tiposEs[tipo]} en tus equipos guardados.`,
+  descripcion: t("Ten {n} Pokémon distintos de tipo {tipo} en tus equipos guardados.", { n: POKEMON_POR_TIPO, tipo: tiposEs[tipo] }), traducido: true,
   valor: (c) => (c.especiesPorTipo.get(tipo) || new Set()).size, meta: POKEMON_POR_TIPO
 }));
 
@@ -97,7 +100,7 @@ export const EEVEELUTIONS = [
 
 const LOGROS_DE_EEVEE = EEVEELUTIONS.map((eevee) => ({
   id: `x-${eevee.especie}`, categoria: "pokedex", nivel: "plata", icono: "pokedex", fondo: `eevee-${eevee.especie}`,
-  nombre: eevee.logro, descripcion: `Registra a ${eevee.nombre}.`,
+  nombre: eevee.logro, descripcion: t("Registra a {nombre}.", { nombre: eevee.nombre }), traducido: true,
   valor: (c) => c.registrados.has(eevee.numero)
 }));
 
@@ -391,7 +394,7 @@ export const LOGROS = [
     nombre: "Sin dejar a nadie", descripcion: "Supera todos los combates de un juego.",
     valor: (c) => c.juegosConTodosLosCombates },
   { id: "l-multiplicador", categoria: "rutas", nivel: "bronce", icono: "actividad",
-    nombre: "Randomizer", descripcion: "Cambia el multiplicador de nivel en «Level caps».",
+    nombre: "Subir el listón", descripcion: "Cambia el multiplicador de nivel en «Level caps».",
     valor: (c) => cuantos(Object.values(c.multiplicadores), (valor) => valor !== 1) },
 
   // ---------- Personalizados ----------
@@ -423,6 +426,35 @@ export const LOGROS = [
     nombre: "Fan game", descripcion: "Crea un locke con tus normas, rutas o level caps personalizados.",
     valor: (c) => cuantos(c.lockes, (l) => l.creador === c.yo &&
       ((l.normas && l.normas.id && l.normas.id !== "generales") || l.rutasPropias || l.capsPropios)) },
+
+  // ---------- Partida y randomizer ----------
+  { id: "z-vincular", categoria: "partida", nivel: "bronce", icono: "enlace",
+    nombre: "Conexión establecida", descripcion: "Vincula la partida de un locke.",
+    valor: (c) => c.partidas },
+  { id: "z-copiar", categoria: "partida", nivel: "bronce", icono: "copiar",
+    nombre: "Del juego a la web", descripcion: "Copia el equipo de tu partida a «Mis equipos».",
+    valor: (c) => c.contadores["copiar-partida"] || 0 },
+  { id: "z-editar", categoria: "partida", nivel: "bronce", icono: "lapiz",
+    nombre: "Retoque", descripcion: "Guarda un cambio en tu partida vinculada desde la web.",
+    valor: (c) => c.contadores["editar-partida"] || 0 },
+  { id: "z-editar-10", categoria: "partida", nivel: "plata", icono: "lapiz",
+    nombre: "Editor jefe", descripcion: "Guarda 10 veces cambios en tu partida.",
+    valor: (c) => c.contadores["editar-partida"] || 0, meta: 10 },
+  { id: "z-bolsa", categoria: "partida", nivel: "bronce", icono: "mochila",
+    nombre: "Mochila llena", descripcion: "Cambia los objetos de la bolsa de tu partida.",
+    valor: (c) => c.contadores["bolsa-partida"] || 0 },
+  { id: "z-randomizar", categoria: "partida", nivel: "bronce", icono: "mezclar",
+    nombre: "Dados cargados", descripcion: "Randomiza una ROM.",
+    valor: (c) => c.contadores.randomizar || 0 },
+  { id: "z-randomizar-locke", categoria: "partida", nivel: "bronce", icono: "mando",
+    nombre: "Mismas reglas para todos", descripcion: "Randomiza tu ROM desde un locke.",
+    valor: (c) => c.contadores["randomizar-locke"] || 0 },
+  { id: "z-randomizar-10", categoria: "partida", nivel: "plata", icono: "mezclar",
+    nombre: "Caos organizado", descripcion: "Randomiza 10 ROMs.",
+    valor: (c) => c.contadores.randomizar || 0, meta: 10 },
+  { id: "z-consolas", categoria: "partida", nivel: "oro", icono: "mando",
+    nombre: "Multiconsola", descripcion: "Randomiza juegos de DS, 3DS y Switch.",
+    valor: (c) => cuantos(["nds", "3ds", "switch"], (consola) => c.contadores[`randomizar-${consola}`]), meta: 3 },
 
   // ---------- Amigos y perfil ----------
   { id: "s-amigo", categoria: "social", nivel: "bronce", icono: "amigos",
@@ -472,6 +504,9 @@ export const LOGROS = [
   { id: "o-calculos-50", categoria: "otros", nivel: "plata", icono: "calculadora",
     nombre: "Analista de combate", descripcion: "Haz 50 cálculos distintos en la calculadora.",
     valor: (c) => c.contadores.calculos || 0, meta: 50 },
+  { id: "o-ajustes", categoria: "otros", nivel: "bronce", icono: "ajustes",
+    nombre: "Cambio de aires", descripcion: "Cambia el tema o el idioma de la web en los ajustes.",
+    valor: (c) => Boolean(c.ajustes.tema || c.ajustes.idioma) },
 
   // ---------- Pokédex ----------
   { id: "x-25", categoria: "pokedex", nivel: "bronce", icono: "pokedex",
@@ -490,7 +525,7 @@ export const LOGROS = [
     nombre: "Enciclopedia andante", descripcion: "Registra 800 Pokémon distintos.",
     valor: (c) => c.registrados.size, meta: 800 },
   { id: "x-todos", categoria: "pokedex", nivel: "platino", icono: "pokeball",
-    nombre: "Hazte con todos", descripcion: `Registra los ${TOTAL_ESPECIES} Pokémon.`,
+    nombre: "Hazte con todos", descripcion: t("Registra los {n} Pokémon.", { n: TOTAL_ESPECIES }), traducido: true,
     valor: (c) => c.registrados.size, meta: TOTAL_ESPECIES },
   ...LOGROS_DE_EEVEE,
   { id: "x-eeveelutions", categoria: "pokedex", nivel: "oro", icono: "estrella", fondo: "eevee-eevee",
@@ -504,15 +539,21 @@ export const LOGROS = [
   // Cada uno da un fondo de metal para la tarjeta (fondos.js). Los id son los de antes (pedían
   // 30 y 60): así quien ya los tenía los conserva.
   { id: "m-30", categoria: "logros", nivel: "plata", icono: "trofeo", fondo: "plata",
-    nombre: "Brillo de plata", descripcion: `Consigue ${LOGROS_PARA_PLATA} logros.`,
+    nombre: "Brillo de plata", descripcion: t("Consigue {n} logros.", { n: LOGROS_PARA_PLATA }), traducido: true,
     valor: (c) => c.conseguidos, meta: LOGROS_PARA_PLATA },
   { id: "m-60", categoria: "logros", nivel: "oro", icono: "trofeo", fondo: "oro",
-    nombre: "Toque de oro", descripcion: `Consigue ${LOGROS_PARA_ORO} logros.`,
+    nombre: "Toque de oro", descripcion: t("Consigue {n} logros.", { n: LOGROS_PARA_ORO }), traducido: true,
     valor: (c) => c.conseguidos, meta: LOGROS_PARA_ORO },
   { id: "m-todos", categoria: "logros", nivel: "platino", icono: "trofeo", fondo: "platino",
     nombre: "Completista", descripcion: "Consigue todos los demás logros.",
     valor: (c) => c.conseguidos }
 ];
+
+// Nombres y descripciones, en el idioma de la web (las que llevan números ya lo están: traducido)
+for (const logro of LOGROS) {
+  logro.nombre = t(logro.nombre);
+  if (!logro.traducido) logro.descripcion = t(logro.descripcion);
+}
 
 const DE_LOGROS = new Set(LOGROS.filter((logro) => logro.categoria === "logros").map((logro) => logro.id));
 LOGROS.find((logro) => logro.id === "m-todos").meta = LOGROS.length - 1;
@@ -607,6 +648,9 @@ async function contexto() {
     multiplicadores: leer("poketeams-levelcaps-multiplicador-v1", {}) || {},
     capturasApuntadas: Object.values(capturas).reduce((suma, delJuego) => suma + Object.keys(delJuego || {}).length, 0),
     ruletas,
+    // Partidas vinculadas ahora mismo a tus lockes (js/partida/partidas.js)
+    partidas: Object.keys(leer("poketeams-partidas-v1", {}) || {}).length,
+    ajustes: leer(CLAVE_AJUSTES, {}) || {},
     contadores: contadores(),
     ...progresoRutas(LUGARES, rutasTodas),
     ...progresoCaps(COMBATES, capsTodos)
@@ -814,8 +858,8 @@ function anunciar(logros) {
   }
 
   const avisos = logros.length > 3
-    ? [{ html: `${insignia({ nivel: "oro", icono: "trofeo" })}<span><small>¡Logros conseguidos!</small><strong>${logros.length} logros nuevos</strong></span>` }]
-    : logros.map((logro) => ({ html: `${insignia(logro)}<span><small>¡Logro conseguido!</small><strong>${escaparHTML(logro.nombre)}</strong></span>` }));
+    ? [{ html: `${insignia({ nivel: "oro", icono: "trofeo" })}<span><small>${t("¡Logros conseguidos!")}</small><strong>${t("{n} logros nuevos", { n: logros.length })}</strong></span>` }]
+    : logros.map((logro) => ({ html: `${insignia(logro)}<span><small>${t("¡Logro conseguido!")}</small><strong>${escaparHTML(logro.nombre)}</strong></span>` }));
 
   avisos.forEach(({ html }, i) => {
     const aviso = document.createElement("button");

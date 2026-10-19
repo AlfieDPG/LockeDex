@@ -15,6 +15,7 @@
 
 import { REGIONES, JUEGOS } from "./juegos.js";
 import { escaparHTML } from "./utilidades.js";
+import { t } from "./idioma.js";
 
 const OTRO = "__otro";
 
@@ -61,12 +62,12 @@ export function plantillaCampoJuego(datos = {}, clase = "") {
   return `
     <span class="campo-juego ${clase}">
       <select class="juego-select">
-        <option value="" ${elegido ? "" : "selected"}>Sin decir</option>
+        <option value="" ${elegido ? "" : "selected"}>${t("Sin decir")}</option>
         ${grupos}
         ${antiguo}
-        <option value="${OTRO}" ${elegido === OTRO ? "selected" : ""}>Otro (fan game...)</option>
+        <option value="${OTRO}" ${elegido === OTRO ? "selected" : ""}>${t("Otro (fan game...)")}</option>
       </select>
-      <input class="juego-otro" type="text" placeholder="¿Qué juego?"
+      <input class="juego-otro" type="text" placeholder="${t("¿Qué juego?")}"
         value="${escaparHTML(datos.juegoOtro || "")}" ${elegido === OTRO ? "" : "hidden"}>
     </span>`;
 }

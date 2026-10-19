@@ -7,16 +7,18 @@ import { imagenConRespaldo, urlsIconoObjeto } from "../comun/imagenes.js";
 import { tiposEs } from "../comun/tipos.js";
 import { cargarDatos, datos, buscarPorNombreIngles } from "../comun/datos.js";
 import { pedirJSON, URL_API } from "../comun/api.js";
-import { formasDeTipoDe } from "../comun/formas.js";
+import { formasDeTipoDe, etiquetaEnIngles } from "../comun/formas.js";
 import { generoDe, generosPosibles } from "../comun/pokemon.js";
 import { cargarPokedex } from "../pokedex/datos.js";
 import { NATURALEZAS, entrenoDe } from "../equipos/entreno.js";
 import { apuntarSuceso } from "../comun/lockes.js";
+import { sumarContador } from "../comun/contadores.js";
 import { leerArchivo, escribirPartida } from "../partida/vinculo.js";
 import { abrirHuecos, escribirHuecos, mirar, llaveDe } from "../partida/huecos.js";
 import { formatoDeSeguro } from "../partida/formato.js";
 import { marcarMetidos, marcarCreados, esCreado } from "../partida/partidas.js";
-import { FORMAS, convertirPartida } from "../partida/convertir.js";
+import { FORMAS, convertirPartida, lugarEnIngles } from "../partida/convertir.js";
+import { t, enIngles, nombre as nombreDe } from "../comun/idioma.js";
 import { OBJETOS_EN, LUGARES_GEN6, LUGARES_GEN7 } from "../partida/datos-3ds.js";
 import { LUGARES_GEN4, LUGARES_GEN4_OTROS, LUGARES_GEN5, LUGARES_GEN5_OTROS } from "../partida/datos-ds.js";
 import { LUGARES_GEN8, LUGARES_BDSP, LUGARES_BDSP_OTROS } from "../partida/datos-switch.js";
@@ -139,32 +141,34 @@ export function especieEnJuego(especie, juego) {
 }
 
 export function objeto(id, juego) {
-  return id ? objetosDe(juego).find((o) => o.id === id) || { id, es: `Objeto ${id}`, en: "" } : null;
+  return id ? objetosDe(juego).find((o) => o.id === id) || { id, es: t("Objeto {n}", { n: id }), en: "" } : null;
 }
 
 export function habilidad(id) {
-  return datos.habilidades.find((h) => h.id === id) || { id, es: `Habilidad ${id}`, en: "" };
+  return datos.habilidades.find((h) => h.id === id) || { id, es: t("Habilidad {n}", { n: id }), en: "" };
 }
 
 export function ataque(id) {
-  return datos.ataques.find((a) => a.id === id) || { id, es: `Ataque ${id}`, en: "" };
+  return datos.ataques.find((a) => a.id === id) || { id, es: t("Ataque {n}", { n: id }), en: "" };
 }
 
 // ---------- Origen: dónde se conoció, juego y entrenador ----------
 
 // Los juegos de origen que puede llevar un Pokémon (número en el juego), con la generación
 // en que salieron
+// (es: en español; en: en inglés; nombre: el del idioma de la web)
 export const VERSIONES = [
-  [48, "Diamante Brillante", 8], [49, "Perla Reluciente", 8], [44, "Espada", 8], [45, "Escudo", 8], [42, "Let's Go, Pikachu!", 8], [43, "Let's Go, Eevee!", 8], [34, "Pokémon GO", 8],
-  [30, "Sol", 7], [31, "Luna", 7], [32, "Ultrasol", 7], [33, "Ultraluna", 7],
-  [35, "Rojo (Consola Virtual)", 7], [36, "Verde (Consola Virtual)", 7], [37, "Azul (Consola Virtual)", 7],
-  [38, "Amarillo (Consola Virtual)", 7], [39, "Oro (Consola Virtual)", 7], [40, "Plata (Consola Virtual)", 7],
-  [41, "Cristal (Consola Virtual)", 7],
-  [24, "X", 6], [25, "Y", 6], [27, "Rubí Omega", 6], [26, "Zafiro Alfa", 6],
-  [21, "Negro", 5], [20, "Blanco", 5], [23, "Negro 2", 5], [22, "Blanco 2", 5],
-  [10, "Diamante", 4], [11, "Perla", 4], [12, "Platino", 4], [7, "Oro HeartGold", 4], [8, "Plata SoulSilver", 4],
-  [2, "Rubí", 3], [1, "Zafiro", 3], [3, "Esmeralda", 3], [4, "Rojo Fuego", 3], [5, "Verde Hoja", 3], [15, "Colosseum / XD", 3]
-].map(([id, es, gen]) => ({ id, es, gen }));
+  [48, "Diamante Brillante", "Brilliant Diamond", 8], [49, "Perla Reluciente", "Shining Pearl", 8], [44, "Espada", "Sword", 8], [45, "Escudo", "Shield", 8],
+  [42, "Let's Go, Pikachu!", "Let's Go, Pikachu!", 8], [43, "Let's Go, Eevee!", "Let's Go, Eevee!", 8], [34, "Pokémon GO", "Pokémon GO", 8],
+  [30, "Sol", "Sun", 7], [31, "Luna", "Moon", 7], [32, "Ultrasol", "Ultra Sun", 7], [33, "Ultraluna", "Ultra Moon", 7],
+  [35, "Rojo (Consola Virtual)", "Red (Virtual Console)", 7], [36, "Verde (Consola Virtual)", "Green (Virtual Console)", 7], [37, "Azul (Consola Virtual)", "Blue (Virtual Console)", 7],
+  [38, "Amarillo (Consola Virtual)", "Yellow (Virtual Console)", 7], [39, "Oro (Consola Virtual)", "Gold (Virtual Console)", 7], [40, "Plata (Consola Virtual)", "Silver (Virtual Console)", 7],
+  [41, "Cristal (Consola Virtual)", "Crystal (Virtual Console)", 7],
+  [24, "X", "X", 6], [25, "Y", "Y", 6], [27, "Rubí Omega", "Omega Ruby", 6], [26, "Zafiro Alfa", "Alpha Sapphire", 6],
+  [21, "Negro", "Black", 5], [20, "Blanco", "White", 5], [23, "Negro 2", "Black 2", 5], [22, "Blanco 2", "White 2", 5],
+  [10, "Diamante", "Diamond", 4], [11, "Perla", "Pearl", 4], [12, "Platino", "Platinum", 4], [7, "Oro HeartGold", "HeartGold", 4], [8, "Plata SoulSilver", "SoulSilver", 4],
+  [2, "Rubí", "Ruby", 3], [1, "Zafiro", "Sapphire", 3], [3, "Esmeralda", "Emerald", 3], [4, "Rojo Fuego", "FireRed", 3], [5, "Verde Hoja", "LeafGreen", 3], [15, "Colosseum / XD", "Colosseum / XD", 3]
+].map(([id, es, en, gen]) => ({ id, es, en, nombre: enIngles ? en : es, gen }));
 
 // Los que caben en una partida de ese juego (los de su generación o de antes)
 export function versionesDe(juego) {
@@ -188,15 +192,24 @@ export function lugaresDe(juego) {
     tabla.forEach((es, i) => {
       if (!es || vistos.has(es) || !i || i > hasta) return;
       vistos.add(es);
-      lista.push({ id: gen === 6 || gen === 7 ? i * 2 : i, es, en: "", buscar: quitarAcentos(es) });
+      const en = lugarEnIngles(es, juego);
+      lista.push({ id: gen === 6 || gen === 7 ? i * 2 : i, es, en, buscar: quitarAcentos(`${es} ${en}`) });
     });
-    lista.push({ id: INTERCAMBIO[gen], es: "Intercambio", en: "", buscar: "intercambio" });
+    lista.push({ id: INTERCAMBIO[gen], es: "Intercambio", en: "Link Trade", buscar: "intercambio link trade" });
     listas.set(clave, lista);
   }
   return listas.get(clave);
 }
 
+// En el idioma de la web
 export function nombreLugar(numero, creado = false, juego = "xy") {
+  const nombre = nombreLugarEs(numero, creado, juego);
+  const lugar = /^Lugar (\d+)$/.exec(nombre);
+  if (lugar) return t("Lugar {n}", { n: lugar[1] });
+  return enIngles ? lugarEnIngles(nombre, juego) : nombre;
+}
+
+function nombreLugarEs(numero, creado = false, juego = "xy") {
   const gen = genDe(juego);
   if (creado && numero === INTERCAMBIO[gen]) return "LockeDex";
   if (gen === 4) return LUGARES_GEN4[numero] || LUGARES_GEN4_OTROS[numero] || (numero ? `Lugar ${numero}` : "");
@@ -239,7 +252,7 @@ export function bolsilloDe(objetoId, juego = "xy") {
 export function nombreObjeto(id, juego) {
   const enseña = (((delEditor && delEditor.maquinas) || {})[juego] || {})[id];
   const o = objeto(id, juego);
-  return enseña ? `${o.es} ${ataque(enseña).es}` : o.es;
+  return enseña ? `${nombreDe(o)} ${nombreDe(ataque(enseña))}` : nombreDe(o);
 }
 
 // El icono: el de siempre (js/comun/imagenes.js) y, en las MT y MO, todas con el mismo disco
@@ -275,7 +288,7 @@ function resumenMochila(antes, despues, juego) {
     const nombre = nombreObjeto(id, juego);
     partes.push(!x ? `+${nombre} ×${y}` : !y ? `−${nombre}` : `${nombre} ${x} → ${y}`);
   }
-  return partes.length ? `bolsa: ${partes.join(", ")}` : "";
+  return partes.length ? `${t("bolsa")}: ${partes.join(", ")}` : "";
 }
 
 export function balls(juego = "xy") {
@@ -312,9 +325,9 @@ function nombreDeForma(fila) {
 export function formasDe(especie, juego) {
   const lista = [{ forma: 0, texto: "Normal" }];
   if (especie === 493) {
-    lista[0].texto = "Tipo Normal";
+    lista[0].texto = t("Tipo {tipo}", { tipo: tiposEs.normal });
     formasDeTipoDe(493).forEach((f, i) =>
-      lista.push({ forma: i + 1, texto: `Tipo ${tiposEs[f.tipo]}`, formaPMD: f.pmd, imagenForma: f.imagenForma })
+      lista.push({ forma: i + 1, texto: t("Tipo {tipo}", { tipo: tiposEs[f.tipo] }), formaPMD: f.pmd, imagenForma: f.imagenForma })
     );
   }
   for (const [numero, [idForma, showdown]] of Object.entries(FORMAS[especie] || {})) {
@@ -323,7 +336,7 @@ export function formasDe(especie, juego) {
     // Perla Reluciente no tiene formas regionales (ni las de Alola ni las de Galar)
     if (juego === "bdsp" && idForma > ULTIMA_FORMA_GEN6) continue;
     const fila = filasPokedex.get(idForma);
-    lista.push({ forma: Number(numero), texto: fila ? nombreDeForma(fila) : showdown, idForma, formaPMD: fila ? fila.forma : 0 });
+    lista.push({ forma: Number(numero), texto: fila ? (enIngles ? etiquetaEnIngles(nombreDeForma(fila)) : nombreDeForma(fila)) : showdown, idForma, formaPMD: fila ? fila.forma : 0 });
   }
   return lista;
 }
@@ -415,12 +428,12 @@ export function generoAlAzar(generoRatio) {
 export async function editableDeEquipo(p, juego) {
   const problemas = [];
   const limites = LIMITES[juego];
-  const quien = p.mote || p.es;
-  if (!especieEnJuego(p.id, juego)) throw new Error(`${p.es} no está en este juego.`);
+  const quien = p.mote || nombreDe(p);
+  if (!especieEnJuego(p.id, juego)) throw new Error(t("{nombre} no está en este juego.", { nombre: nombreDe(p) }));
 
   const formas = formasDe(p.id, juego);
   const suya = formas.find((f) => (p.imagenForma ? f.imagenForma === p.imagenForma : f.idForma && f.idForma === p.idForma));
-  if (!suya && p.idForma && p.idForma !== p.id && !/mega|primal/.test(p.formaSlug || "")) problemas.push(`${quien}: va con la forma normal`);
+  if (!suya && p.idForma && p.idForma !== p.id && !/mega|primal/.test(p.formaSlug || "")) problemas.push(`${quien}: ${t("va con la forma normal")}`);
   const forma = suya ? suya.forma : 0;
   const especie = await datosEspecie(p.id, forma, juego);
 
@@ -429,7 +442,7 @@ export async function editableDeEquipo(p, juego) {
     const propia = especie.habilidades.find((h) => h.id === p.habilidad.id);
     if (propia) hab = propia;
     else if (p.habilidad.id <= limites.habilidades) hab = { id: p.habilidad.id, num: 1 };
-    else problemas.push(`${quien}: ${p.habilidad.es} no está en este juego`);
+    else problemas.push(`${quien}: ${t("{nombre} no está en este juego", { nombre: nombreDe(p.habilidad) })}`);
   }
 
   let idObjeto = 0;
@@ -437,13 +450,13 @@ export async function editableDeEquipo(p, juego) {
     const nombre = normalizarNombre(p.objeto.en || "");
     const delJuego = objetosDe(juego).find((o) => normalizarNombre(o.en) === nombre || o.es === p.objeto.es);
     if (delJuego) idObjeto = delJuego.id;
-    else problemas.push(`${quien}: ${p.objeto.es} no está en este juego`);
+    else problemas.push(`${quien}: ${t("{nombre} no está en este juego", { nombre: nombreDe(p.objeto) })}`);
   }
 
   const ataques = [];
   for (const a of (p.ataques || []).filter(Boolean)) {
     if (a.id > limites.ataques) {
-      problemas.push(`${quien}: ${a.es} no está en este juego`);
+      problemas.push(`${quien}: ${t("{nombre} no está en este juego", { nombre: nombreDe(a) })}`);
       continue;
     }
     await cargarInfoAtaque(a.id);
@@ -487,6 +500,10 @@ export async function editableDeEquipo(p, juego) {
 //   borrador: { idLocke, base (la del disco al empezar), bytes (con los cambios), vista (para
 //               pintarla, como las de js/partida/partidas.js), metidos: [llaves], detalles: [] }
 
+// Marcas de los detalles (no se enseñan tal cual: los de la bolsa se resumen al guardar)
+const CAMBIOS_DE_SITIO = "cambios de sitio";
+export const BOLSA = "bolsa";
+
 let borrador = null;
 let alCambiar = () => {};
 
@@ -523,7 +540,7 @@ export function descartarCambios() {
 
 // Que en ese sitio siga el mismo Pokémon (llave 0: que siga vacío)
 export function comprobarSitio(h, sitio, llave) {
-  if (llaveDe(mirar(h, sitio)) !== llave) throw new Error("La partida ha cambiado. Ciérrala y vuelve a abrirla.");
+  if (llaveDe(mirar(h, sitio)) !== llave) throw new Error(t("La partida ha cambiado. Ciérrala y vuelve a abrirla."));
 }
 
 // Mover, borrar, meter...: hacer(h) cambia los huecos (js/partida/huecos.js) y devuelve las
@@ -550,7 +567,7 @@ export async function cambiarPartida(idLocke, transformar, detalle = "") {
   borrador.metidos.push(...metidos);
   borrador.creados.push(...creados);
   borrador.noCreados.push(...noCreados);
-  borrador.detalles.push(detalle || "cambios de sitio");
+  borrador.detalles.push(detalle || CAMBIOS_DE_SITIO);
   alCambiar();
 }
 
@@ -560,7 +577,7 @@ export async function guardarCambios(idLocke) {
   const b = borrador;
   await escribirPartida(idLocke, (enDisco) => {
     if (enDisco.length !== b.base.length || enDisco.some((byte, i) => byte !== b.base[i])) {
-      throw new Error("La partida del disco ha cambiado desde que empezaste (¿has guardado en el juego?). Descarta los cambios y vuelve a hacerlos con el juego cerrado.");
+      throw new Error(t("La partida del disco ha cambiado desde que empezaste (¿has guardado en el juego?). Descarta los cambios y vuelve a hacerlos con el juego cerrado."));
     }
     if (b.metidos.length) marcarMetidos(idLocke, b.metidos);
     if (b.creados.length) marcarCreados(idLocke, b.creados);
@@ -568,12 +585,14 @@ export async function guardarCambios(idLocke) {
     return b.bytes;
   });
   if (borrador === b) borrador = null;
+  sumarContador("editar-partida"); // para los logros
+  if (b.detalles.includes(BOLSA)) sumarContador("bolsa-partida");
   alCambiar();
   // En la actividad, una sola línea (los cambios de sitio no cuentan, salvo si no hay más). Lo
   // de la bolsa, como ha quedado al final.
   const formato = formatoDeSeguro(b.bytes);
   const { leerMochila } = formato.mochila;
-  const bolsa = b.detalles.includes("bolsa") ? resumenMochila(leerMochila(b.base), leerMochila(b.bytes), formato.id) : "";
-  const detalles = [...new Set(b.detalles.filter((d) => d !== "cambios de sitio" && d !== "bolsa")), ...(bolsa ? [bolsa] : [])];
-  await apuntarSuceso(idLocke, "edicion", { detalle: detalles.length ? detalles.join("; ") : "cambios de sitio" });
+  const bolsa = b.detalles.includes(BOLSA) ? resumenMochila(leerMochila(b.base), leerMochila(b.bytes), formato.id) : "";
+  const detalles = [...new Set(b.detalles.filter((d) => d !== CAMBIOS_DE_SITIO && d !== BOLSA)), ...(bolsa ? [bolsa] : [])];
+  await apuntarSuceso(idLocke, "edicion", { detalle: detalles.length ? detalles.join("; ") : t(CAMBIOS_DE_SITIO) });
 }

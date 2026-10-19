@@ -37,7 +37,7 @@
 .amigos-aviso {
   font-size: 0.85rem;
   font-weight: bold;
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 /* ---------- Solicitudes ---------- */
@@ -56,7 +56,7 @@
   padding: 0.5rem 0.7rem;
   border-left: 0.3rem solid #7f8c8d;
   border-radius: 0.45rem;
-  background: #2c2e3e;
+  background: var(--t-panel);
   font-size: 0.9rem;
 }
 
@@ -74,13 +74,13 @@
   padding: 0;
   border: none;
   border-radius: 0.35rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   cursor: pointer;
 }
 
 .solicitud button:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .solicitud .solicitud-aceptar {
@@ -134,7 +134,7 @@
   align-items: center;
   padding: 1.15rem 1rem;
   border-radius: 0.7rem;
-  background: #2c2e3e;
+  background: var(--t-panel);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
 }
 
@@ -150,14 +150,14 @@
 
 /* La tuya, un poco destacada */
 .ficha-jugador.mia {
-  background: #32354a;
+  background: var(--t-panel-3);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(var(--color-vista), 0.35);
 }
 
 /* Amigo con la web abierta ahora mismo: el fondo de la tuya, borde verde y un punto verde
    que late en la esquina */
 .ficha-jugador.conectado {
-  background: #32354a;
+  background: var(--t-panel-3);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 0 0 2px rgba(46, 204, 113, 0.75);
 }
 
@@ -319,13 +319,13 @@
   padding: 0;
   border: none;
   border-radius: 0.35rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   cursor: pointer;
 }
 
 .ficha-acciones button:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .ficha-acciones .accion-quitar:hover {
@@ -342,24 +342,6 @@
   height: 0.95rem;
 }
 
-.accion-soy-yo {
-  margin-top: 0.85rem;
-  padding: 0.45rem 0.9rem;
-  border: none;
-  border-radius: 0.45rem;
-  background: #3a3d52;
-  color: #f2f2f2;
-  font-family: inherit;
-  font-size: 0.82rem;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.accion-soy-yo:hover {
-  background: rgb(var(--color-vista));
-  color: #2b2d3a;
-}
-
 /* ---------- Foto y nombre ---------- */
 
 /* Borde de la foto y nombre: azul pizarra, oscuro pero legible sobre la ficha; en la tuya, dorado como
@@ -369,8 +351,8 @@
   width: 8.5rem;
   height: 8.5rem;
   border-radius: 50%;
-  border: 0.25rem solid #6a7bb0;
-  background: #1e1f2b;
+  border: 0.25rem solid var(--t-azulado);
+  background: var(--t-fondo);
   overflow: hidden;
 }
 
@@ -384,7 +366,7 @@
   justify-content: center;
   font-size: 3.5rem;
   font-weight: bold;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(var(--t-tinte), 0.35);
 }
 
 .jugador-foto img {
@@ -398,7 +380,7 @@
 .jugador-nombre {
   margin: 0.7rem 0 0;
   font-size: 1.35rem;
-  color: #6a7bb0;
+  color: var(--t-azulado);
   text-align: center;
 }
 
@@ -411,20 +393,11 @@
 }
 
 .ficha-jugador.conectado .jugador-nombre {
-  color: #2ecc71;
+  color: color-mix(in srgb, #2ecc71 var(--t-vivo), black);
 }
 
 .ficha-jugador.mia .jugador-nombre {
-  color: rgb(var(--color-vista));
-}
-
-.jugador-etiqueta {
-  margin-top: 0.2rem;
-  font-size: 0.7rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 /* ---------- Contadores por tipo de locke ---------- */
@@ -444,7 +417,7 @@
   min-width: 4.6rem;
   padding: 0.5rem 0.5rem;
   border-radius: 0.45rem;
-  background: #252735;
+  background: var(--t-fondo-2);
   /* Borde del color del tipo y sombra: que no se pierda sobre los fondos de la tarjeta */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), inset 0 0 0 1px color-mix(in srgb, var(--color-locke, #3498db) 45%, transparent);
 }
@@ -485,7 +458,7 @@
   padding: 0.45rem 0.7rem;
   border-left: 0.3rem solid var(--color-locke, #3498db);
   border-radius: 0.45rem;
-  background: #252735;
+  background: var(--t-fondo-2);
   /* Sombra y reborde fino del color del tipo: que no se funda con el fondo de la ficha */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), inset 0 0 0 1px color-mix(in srgb, var(--color-locke, #3498db) 45%, transparent);
 }
@@ -524,10 +497,10 @@
   gap: 0.35rem;
   width: 100%;
   padding: 0.4rem 0.7rem;
-  border: 1px dashed rgba(255, 255, 255, 0.25);
+  border: 1px dashed rgba(var(--t-tinte), 0.25);
   border-radius: 0.45rem;
   background: transparent;
-  color: #f2f2f2;
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.82rem;
   font-weight: bold;
@@ -553,8 +526,8 @@
   padding: 0.8rem 0.9rem;
   border-left: 0.3rem solid var(--color-locke, #3498db);
   border-radius: 0.6rem;
-  background: #2c2e3e;
-  color: #f2f2f2;
+  background: var(--t-panel);
+  color: var(--t-texto);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
   font-size: 0.85rem;
 }
@@ -588,7 +561,7 @@
   font-size: 0.75rem;
   font-weight: bold;
   text-transform: uppercase;
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 .flotante-fila {
@@ -606,7 +579,7 @@
 }
 
 .flotante-fila.ganador .icono {
-  color: #f1c40f;
+  color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
   opacity: 1;
 }
 
@@ -635,7 +608,7 @@
   gap: 0.5rem;
   padding: 0.3rem 0.5rem;
   border-radius: 0.35rem;
-  background: #252735;
+  background: var(--t-fondo-2);
 }
 
 .flotante-participantes li > span:first-child {
@@ -654,7 +627,7 @@
 }
 
 .flotante-participantes li.gano .icono {
-  color: #f1c40f;
+  color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
 }
 
 .flotante-vidas {
@@ -668,7 +641,7 @@
 /* El ganador, todo en dorado: el número de vidas y su corazón */
 .flotante-participantes li.gano .flotante-vidas,
 .flotante-participantes li.gano .flotante-vidas .icono {
-  color: #f1c40f;
+  color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
 }
 
 .flotante-vacio {
@@ -681,7 +654,7 @@
   font-size: 0.78rem;
   font-weight: bold;
   text-transform: uppercase;
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
   opacity: 0.85;
 }
 
@@ -706,7 +679,7 @@
   gap: 0.25rem;
   padding: 1.1rem 0.7rem 0.9rem;
   border-radius: 0.7rem;
-  background: #252735;
+  background: var(--t-fondo-2);
   transition: opacity 0.2s;
 }
 
@@ -727,13 +700,13 @@
   margin-top: 0.35rem;
   font-size: 1.15rem;
   font-weight: bold;
-  color: #6a7bb0;
+  color: var(--t-azulado);
   text-align: center;
   overflow-wrap: anywhere;
 }
 
 .luchador.mio .luchador-nombre {
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 .luchador-victorias {
@@ -752,12 +725,12 @@
 
 /* El que va ganando: resaltado, con corona y el número en verde */
 .luchador.gana {
-  background: #32354a;
+  background: var(--t-panel-3);
   box-shadow: 0 0 0 2px #2ecc71, 0 0 18px rgba(46, 204, 113, 0.35);
 }
 
 .luchador.gana .luchador-victorias {
-  color: #2ecc71;
+  color: color-mix(in srgb, #2ecc71 var(--t-vivo), black);
 }
 
 .luchador.pierde {
@@ -772,8 +745,8 @@
   display: inline-flex;
   padding: 0.25rem;
   border-radius: 50%;
-  background: #2c2e3e;
-  color: #f1c40f;
+  background: var(--t-panel);
+  color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
 }
 
 .luchador-corona .icono {
@@ -798,7 +771,7 @@
 .comparar-empate {
   margin-top: 0.3rem;
   font-weight: bold;
-  color: #f1c40f;
+  color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
 }
 
 /* Lista de los lockes jugados juntos, del más reciente al más antiguo */
@@ -821,7 +794,7 @@
   padding: 0.45rem 0.7rem;
   border-left: 0.3rem solid var(--color-locke, #3498db);
   border-radius: 0.45rem;
-  background: #252735;
+  background: var(--t-fondo-2);
 }
 
 .comparar-locke-nombre {
@@ -854,12 +827,12 @@
 }
 
 .comparar-resultado.mia {
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
   opacity: 1;
 }
 
 .comparar-resultado.suya {
-  color: #6a7bb0;
+  color: var(--t-azulado);
   opacity: 1;
 }
 
@@ -868,8 +841,8 @@
 }
 
 #dialogo-comparar .comparar-cerrar {
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
 }
 
 /* ---------- Diálogos de tipos y de palmarés ---------- */
@@ -894,7 +867,7 @@
 .fila-palmares {
   padding: 0.5rem;
   border-radius: 0.5rem;
-  background: #252735;
+  background: var(--t-fondo-2);
 }
 
 #dialogo-palmares {
@@ -984,7 +957,7 @@
   gap: 0.3rem;
   padding: 0.4rem 0.5rem;
   border-radius: 0.5rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(var(--t-tinte), 0.03);
 }
 
 .participante-fila {
@@ -1013,15 +986,15 @@
   gap: 0.3rem;
   padding: 0.35rem 0.55rem;
   border-radius: 0.4rem;
-  background: #3a3d52;
-  color: #9a9cb0;
+  background: var(--t-control);
+  color: var(--t-gris);
   font-size: 0.78rem;
   font-weight: bold;
 }
 
 .participante-rom input:checked + span {
   background: rgba(46, 204, 113, 0.2);
-  color: #2ecc71;
+  color: color-mix(in srgb, #2ecc71 var(--t-vivo), black);
   box-shadow: inset 0 0 0 1px rgba(46, 204, 113, 0.5);
 }
 
@@ -1071,8 +1044,8 @@ button.cara-equipo.mvp:hover img {
   padding: 0.3rem 0.6rem;
   border: none;
   border-radius: 0.4rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.78rem;
   font-weight: bold;
@@ -1085,7 +1058,7 @@ button.cara-equipo.mvp:hover img {
 
 .palmares-elegir-equipo:hover,
 .palmares-anadir-combate:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .palmares-elegir-equipo .icono,
@@ -1105,7 +1078,7 @@ button.cara-equipo.mvp:hover img {
   gap: 0.35rem;
   padding: 0.45rem 0.5rem;
   border-radius: 0.5rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(var(--t-tinte), 0.03);
   box-shadow: inset 3px 0 0 rgb(var(--color-vista));
 }
 
@@ -1127,8 +1100,8 @@ button.cara-equipo.mvp:hover img {
   padding: 0.35rem 0.5rem;
   border: none;
   border-radius: 0.4rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.8rem;
 }
@@ -1142,8 +1115,8 @@ button.cara-equipo.mvp:hover img {
   padding: 0;
   border: none;
   border-radius: 0.4rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   cursor: pointer;
 }
 
@@ -1192,11 +1165,11 @@ button.cara-equipo.mvp:hover img {
 
 .flotante-rom {
   display: inline-flex;
-  color: #2ecc71;
+  color: color-mix(in srgb, #2ecc71 var(--t-vivo), black);
 }
 
 .flotante-participantes li .flotante-rom .icono {
-  color: #2ecc71;
+  color: color-mix(in srgb, #2ecc71 var(--t-vivo), black);
 }
 
 .flotante-equipo {
@@ -1211,8 +1184,8 @@ button.cara-equipo.mvp:hover img {
   padding: 0.25rem 0.55rem;
   border: none;
   border-radius: 0.35rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.72rem;
   font-weight: bold;
@@ -1250,7 +1223,7 @@ button.cara-equipo.mvp:hover img {
   gap: 0.25rem;
   padding: 0.3rem 0.5rem;
   border-radius: 0.35rem;
-  background: #252735;
+  background: var(--t-fondo-2);
 }
 
 .flotante-combate-cabeza {
@@ -1264,7 +1237,7 @@ button.cara-equipo.mvp:hover img {
 .flotante-combate-cabeza .icono {
   width: 0.8rem;
   height: 0.8rem;
-  color: #f1c40f;
+  color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
 }
 
 .flotante-combate-equipos {
@@ -1302,8 +1275,8 @@ button.cara-equipo.mvp:hover img {
   padding: 0;
   border: none;
   border-radius: 0.4rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   cursor: pointer;
 }
 
@@ -1322,8 +1295,8 @@ button.cara-equipo.mvp:hover img {
   padding: 0.35rem 0.6rem;
   border: none;
   border-radius: 0.4rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: bold;
@@ -1331,7 +1304,7 @@ button.cara-equipo.mvp:hover img {
 }
 
 .participante-elegir:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 /* Casilla «Vidas ilimitadas» */
@@ -1380,8 +1353,8 @@ button.cara-equipo.mvp:hover img {
   padding: 0;
   border: none;
   border-radius: 0.45rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   cursor: pointer;
 }
 
@@ -1402,8 +1375,8 @@ button.cara-equipo.mvp:hover img {
   padding: 0.45rem 0.9rem;
   border: none;
   border-radius: 0.45rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: bold;
@@ -1412,7 +1385,7 @@ button.cara-equipo.mvp:hover img {
 
 .tipos-anadir:hover,
 .palmares-anadir:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 #tipos-guardar,
@@ -1423,8 +1396,8 @@ button.cara-equipo.mvp:hover img {
 
 #tipos-cancelar,
 #palmares-cancelar {
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
 }
 
 /* De Eevee (una por Eeveelution y la de Eevee): cada una con su dibujo y sus dos colores

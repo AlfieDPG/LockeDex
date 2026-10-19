@@ -72,9 +72,6 @@ function crc32(bytes) {
   return ((c ^ 0xffffffff) >>> 0).toString(16).toUpperCase().padStart(8, "0");
 }
 
-// Juegos que se saben randomizar, por las tres primeras letras del código de la ROM
-export const JUEGOS_GEN4 = { ADA: "Diamante", APA: "Perla", CPU: "Platino", IPK: "HeartGold", IPG: "SoulSilver" };
-
 const memoria = new WeakMap();
 
 // La entrada de la tabla de esta ROM: por código (y, si hay varias con el mismo, por el CRC32 del

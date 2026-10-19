@@ -1,4 +1,5 @@
 import { REGIONES, JUEGOS } from "./juegos.js";
+import { t } from "./idioma.js";
 import { leer, escribir } from "./almacen.js";
 import { escaparHTML } from "./utilidades.js";
 
@@ -20,7 +21,7 @@ export const REGION_PROPIOS = "propios";
 export function crearSelectorJuego(contenedor, claveGuardado, alElegir, propios) {
   const regiones = [
     ...REGIONES.filter((r) => JUEGOS.some((j) => j.region === r.id)),
-    { id: REGION_PROPIOS, nombre: "Personalizado" }
+    { id: REGION_PROPIOS, nombre: t("Personalizado") }
   ];
 
   function todos() {
@@ -47,7 +48,7 @@ export function crearSelectorJuego(contenedor, claveGuardado, alElegir, propios)
         ${deLaRegion
           .map((j) => `<button data-juego="${escaparHTML(j.id)}" class="${j.id === idActual ? "activo" : ""}">${escaparHTML(j.nombre)}</button>`)
           .join("")}
-        ${region === REGION_PROPIOS ? `<button class="juego-nuevo">+ Nuevo</button>` : ""}
+        ${region === REGION_PROPIOS ? `<button class="juego-nuevo">+ ${t("Nuevo")}</button>` : ""}
       </div>
     `;
   }

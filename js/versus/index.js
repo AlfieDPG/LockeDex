@@ -44,6 +44,7 @@ import {
 import { iniciarPartida, plantillaPartida, accionPartida } from "./partida.js";
 import { completarReglas, hayAlgo, misReglas, normasGuardadas, resumenNormas, hierbaEnPueblos } from "../randomizer/reglas.js";
 import { confirmar } from "../comun/ventanas.js";
+import { t, LOCALE } from "../comun/idioma.js";
 
 let seccion = null;
 let lista = null;
@@ -86,14 +87,14 @@ function plantillaCifras(locke, uid, editable) {
     return `
       <div class="locke-cifras">
         <div class="locke-cifra victorias">
-          <span class="locke-etiqueta">${icono("espadas")} Victorias</span>
+          <span class="locke-etiqueta">${icono("espadas")} ${t("Victorias")}</span>
           <div class="locke-numero marcador">${botonesCifra("marcador", false, victorias)}</div>
         </div>
         <div class="locke-cifra vidas">
-          <span class="locke-etiqueta">${icono("corazon")} Vidas</span>
+          <span class="locke-etiqueta">${icono("corazon")} ${t("Vidas")}</span>
           <div class="locke-numero vidas">
             <span class="locke-valor locke-sin-vidas">${icono("calavera")}</span>
-            ${editable ? `<button class="mas" data-campo="vidas" aria-label="Recuperar la vida cero" title="Recuperar la vida cero">${icono("mas")}</button>` : ""}
+            ${editable ? `<button class="mas" data-campo="vidas" aria-label="${t("Recuperar la vida cero")}" title="${t("Recuperar la vida cero")}">${icono("mas")}</button>` : ""}
           </div>
         </div>
       </div>`;
@@ -102,15 +103,15 @@ function plantillaCifras(locke, uid, editable) {
   return `
     <div class="locke-cifras">
       <div class="locke-cifra victorias">
-        <span class="locke-etiqueta">${icono("espadas")} Victorias</span>
+        <span class="locke-etiqueta">${icono("espadas")} ${t("Victorias")}</span>
         <div class="locke-numero marcador">
-          ${botonesCifra("marcador", victoriasAMano, victorias, "Quitar una victoria", "Sumar una victoria")}
+          ${botonesCifra("marcador", victoriasAMano, victorias, t("Quitar una victoria"), t("Sumar una victoria"))}
         </div>
       </div>
       <div class="locke-cifra vidas ${locke.vidasIlimitadas ? "ilimitadas" : ""} ${vidas === 0 ? "vida-cero" : ""}">
-        <span class="locke-etiqueta">${icono("corazon")} Vidas</span>
+        <span class="locke-etiqueta">${icono("corazon")} ${t("Vidas")}</span>
         <div class="locke-numero vidas">
-          ${botonesCifra("vidas", editable && !locke.vidasIlimitadas, vidas, vidas === 0 ? "Perder la vida cero" : "Quitar una vida", "Sumar una vida")}
+          ${botonesCifra("vidas", editable && !locke.vidasIlimitadas, vidas, vidas === 0 ? t("Perder la vida cero") : t("Quitar una vida"), t("Sumar una vida"))}
         </div>
       </div>
     </div>`;
@@ -118,7 +119,7 @@ function plantillaCifras(locke, uid, editable) {
 
 function plantillaJugador(locke, uid) {
   const usuario = usuarioActual();
-  const nombre = escaparHTML((locke.nombres || {})[uid] || "Jugador");
+  const nombre = escaparHTML((locke.nombres || {})[uid] || t("Jugador"));
   const foto = (locke.fotos || {})[uid] || "";
   const cerrado = locke.estado === "cerrado";
   const gano = locke.ganador === uid;
@@ -130,14 +131,14 @@ function plantillaJugador(locke, uid) {
     <div class="locke-jugador ${gano ? "ganador" : ""} ${pendiente ? "pendiente" : ""} ${esMio ? "mio" : ""} ${eliminado ? "eliminado" : ""}"
          data-uid="${escaparHTML(uid)}">
       <div class="locke-persona">
-        <div class="locke-cara" data-perfil="${escaparHTML(uid)}" title="Ver perfil">
+        <div class="locke-cara" data-perfil="${escaparHTML(uid)}" title="${t("Ver perfil")}">
           ${foto ? `<img src="${escaparHTML(foto)}" alt="" referrerpolicy="no-referrer" data-respaldo="" data-quitar-si-falla>` : ""}
           ${eliminado ? `<span class="locke-cara-fuera">${icono("calavera")}</span>` : ""}
         </div>
-        <span class="locke-quien">${nombre}${esMio ? ` <small>(tú)</small>` : ""}</span>
+        <span class="locke-quien">${nombre}${esMio ? ` <small>(${t("tú")})</small>` : ""}</span>
         ${gano ? `<span class="locke-corona">${icono("corona")}</span>` : ""}
-        ${pendiente ? `<span class="locke-pendiente">Sin contestar</span>` : ""}
-        ${eliminado ? `<span class="locke-eliminado">Eliminado</span>` : ""}
+        ${pendiente ? `<span class="locke-pendiente">${t("Sin contestar")}</span>` : ""}
+        ${eliminado ? `<span class="locke-eliminado">${t("Eliminado")}</span>` : ""}
       </div>
 
       ${plantillaCifras(locke, uid, esMio && !cerrado)}
@@ -156,17 +157,17 @@ function plantillaJuego(locke) {
   const rutas = destinoDe(locke, "rutas");
   const caps = destinoDe(locke, "caps");
   const atajos = `
-    ${rutas ? `<button class="locke-ir" data-ir="rutas" data-juego="${escaparHTML(rutas)}">${icono("mapa")} Rutas</button>` : ""}
+    ${rutas ? `<button class="locke-ir" data-ir="rutas" data-juego="${escaparHTML(rutas)}">${icono("mapa")} ${t("Rutas")}</button>` : ""}
     ${caps ? `<button class="locke-ir" data-ir="levelcaps" data-juego="${escaparHTML(caps)}">${icono("escudo")} Level caps</button>` : ""}`;
 
   return `
     <div class="locke-juego">
       ${nombre ? `<span class="locke-juego-nombre">${icono("mando")} ${escaparHTML(nombre)}</span>` : ""}
       ${atajos}
-      ${normas ? `<button class="locke-ir" data-ir="normas">${icono("libro")} Normas (${normas})</button>` : ""}
-      ${locke.randomizer && locke.estado !== "cerrado" ? `<button class="locke-ir" data-ir="randomizer">${icono("mezclar")} Randomizar mi ROM</button>` : ""}
-      <button class="locke-ir" data-ir="cementerio">${icono("calavera")} Cementerio (${totalMuertos(locke)})</button>
-      <button class="locke-ir" data-ir="actividad">${icono("actividad")} Actividad</button>
+      ${normas ? `<button class="locke-ir" data-ir="normas">${icono("libro")} ${t("Normas")} (${normas})</button>` : ""}
+      ${locke.randomizer && locke.estado !== "cerrado" ? `<button class="locke-ir" data-ir="randomizer">${icono("mezclar")} ${t("Randomizar mi ROM")}</button>` : ""}
+      <button class="locke-ir" data-ir="cementerio">${icono("calavera")} ${t("Cementerio")} (${totalMuertos(locke)})</button>
+      <button class="locke-ir" data-ir="actividad">${icono("actividad")} ${t("Actividad")}</button>
     </div>`;
 }
 
@@ -176,8 +177,8 @@ function plantillaLocke(locke) {
 
   // Cerrado sin ganador: nadie se pasó la ROM
   const resultado = !cerrado ? "" : locke.ganador
-    ? `${icono("corona")} Ganó ${escaparHTML((locke.nombres || {})[locke.ganador] || "alguien")}`
-    : `${icono("aspa")} Nadie ganó`;
+    ? `${icono("corona")} ${t("Ganó {nombre}", { nombre: escaparHTML((locke.nombres || {})[locke.ganador] || t("alguien")) })}`
+    : `${icono("aspa")} ${t("Nadie ganó")}`;
   const fecha = cerrado && locke.fechaFin ? ` · ${escaparHTML(fechaLarga(locke.fechaFin))}` : "";
 
   // Un locke cerrado ya no se toca, salvo para que quien lo creó pueda borrarlo. Terminado,
@@ -193,12 +194,12 @@ function plantillaLocke(locke) {
         <h2 class="locke-titulo">${escaparHTML(locke.nombre)}</h2>
         ${cerrado ? `<span class="locke-resultado ${locke.ganador ? "" : "sin-ganador"}">${resultado}${fecha}</span>` : ""}
         <div class="locke-acciones">
-          ${!cerrado && soyCreador(locke) ? `<button class="locke-terminar" title="Terminar el locke">${icono("corona")} Terminar</button>` : ""}
-          ${puedeEditar ? `<button class="locke-editar" title="Editar locke">${icono("lapiz")}</button>` : ""}
+          ${!cerrado && soyCreador(locke) ? `<button class="locke-terminar" title="${t("Terminar el locke")}">${icono("corona")} ${t("Terminar")}</button>` : ""}
+          ${puedeEditar ? `<button class="locke-editar" title="${t("Editar locke")}">${icono("lapiz")}</button>` : ""}
           ${cerrado
-            ? `<button class="locke-quitar-lista" title="${quitado ? "Volver a ponerlo en tu lista" : "Quitar de tu lista"}">${icono(quitado ? "deshacer" : "aspa")}</button>`
+            ? `<button class="locke-quitar-lista" title="${quitado ? t("Volver a ponerlo en tu lista") : t("Quitar de tu lista")}">${icono(quitado ? "deshacer" : "aspa")}</button>`
             : ""}
-          ${soyCreador(locke) ? `<button class="locke-borrar" title="Borrar locke">${icono("papelera")}</button>` : ""}
+          ${soyCreador(locke) ? `<button class="locke-borrar" title="${t("Borrar locke")}">${icono("papelera")}</button>` : ""}
         </div>
       </header>
 
@@ -228,9 +229,9 @@ function pintar() {
 
   if (fallo) aviso.textContent = fallo;
   else if (pendientes) {
-    aviso.textContent = `Tienes ${pendientes} invitación${pendientes === 1 ? "" : "es"} sin contestar en las notificaciones (la campana de abajo).`;
+    aviso.textContent = t(pendientes === 1 ? "Tienes {n} invitación sin contestar en las notificaciones (la campana de abajo)." : "Tienes {n} invitaciones sin contestar en las notificaciones (la campana de abajo).", { n: pendientes });
   } else if (!mios.length) {
-    aviso.textContent = "Todavía no tienes ningún locke. Crea uno con «Nuevo locke».";
+    aviso.textContent = t("Todavía no tienes ningún locke. Crea uno con «Nuevo locke».");
   } else {
     aviso.textContent = "";
   }
@@ -249,12 +250,12 @@ function pintar() {
     visibles.map(plantillaLocke).join("") +
     (quedan > 0
       ? `<button class="versus-ver-mas">${icono(verTodos ? "menos" : "mas")} ${
-          verTodos ? "Ver solo los últimos" : `Ver todos (${quedan} más)`
+          verTodos ? t("Ver solo los últimos") : t("Ver todos ({n} más)", { n: quedan })
         }</button>`
       : "") +
     (apartados.length
       ? `<button class="versus-ver-quitados">${icono(verQuitados ? "menos" : "mas")} ${
-          verQuitados ? "Esconder los quitados" : `Quitados de tu lista (${apartados.length})`
+          verQuitados ? t("Esconder los quitados") : t("Quitados de tu lista ({n})", { n: apartados.length })
         }</button>`
       : "") +
     (verQuitados ? apartados.map(plantillaLocke).join("") : "");
@@ -305,29 +306,29 @@ function plantillaIntegrantes(locke) {
     const creador = soyCreador(locke);
     html += locke.jugadores
       .map((uid) => {
-        const nombre = escaparHTML((locke.nombres || {})[uid] || "Jugador");
+        const nombre = escaparHTML((locke.nombres || {})[uid] || t("Jugador"));
         const pendiente = estadoDe(locke, uid) === "pendiente";
         const sePuedeQuitar = !cerrado && uid !== locke.creador && (creador || pendiente);
         const quitar = sePuedeQuitar
-          ? botonQuitar("locke-quitar", uid, pendiente ? "Quitar del locke" : "Expulsar del locke")
+          ? botonQuitar("locke-quitar", uid, pendiente ? t("Quitar del locke") : t("Expulsar del locke"))
           : "";
-        return `<span class="locke-dentro-uno ${pendiente ? "pendiente" : ""}">${nombre}${pendiente ? " <small>(sin contestar)</small>" : ""}${quitar}</span>`;
+        return `<span class="locke-dentro-uno ${pendiente ? "pendiente" : ""}">${nombre}${pendiente ? ` <small>(${t("sin contestar")})</small>` : ""}${quitar}</span>`;
       })
       .join("");
   } else {
     const mio = miPerfilOProvisional();
-    html += `<span class="locke-dentro-uno">${escaparHTML((mio && mio.nombre) || "Tú")} <small>(tú)</small></span>`;
+    html += `<span class="locke-dentro-uno">${escaparHTML((mio && mio.nombre) || t("Tú"))} <small>(${t("tú")})</small></span>`;
   }
 
   html += elegidos
     .map(
       (perfil) =>
-        `<span class="locke-dentro-uno pendiente">${escaparHTML(perfil.nombre)} <small>(por añadir)</small>${botonQuitar("locke-desmarcar", perfil.uid, "No añadir")}</span>`
+        `<span class="locke-dentro-uno pendiente">${escaparHTML(perfil.nombre)} <small>(${t("por añadir")})</small>${botonQuitar("locke-desmarcar", perfil.uid, t("No añadir"))}</span>`
     )
     .join("");
 
   if (!cerrado) {
-    html += `<button class="locke-dentro-uno pendiente locke-anadir" title="Añadir gente">${icono("mas")}</button>`;
+    html += `<button class="locke-dentro-uno pendiente locke-anadir" title="${t("Añadir gente")}">${icono("mas")}</button>`;
   }
   return html;
 }
@@ -349,8 +350,8 @@ async function quitarDesdeElDialogo(uid) {
 
   // A quien ya juega se le pregunta: pierde sus vidas y victorias en este locke
   if (estadoDe(locke, uid) !== "pendiente") {
-    const nombre = (locke.nombres || {})[uid] || "este jugador";
-    if (!(await confirmar(`¿Expulsar a ${nombre} de «${locke.nombre}»?`+"\n\n"+`Perderá sus vidas y victorias en este locke.`))) return;
+    const nombre = (locke.nombres || {})[uid] || t("este jugador");
+    if (!(await confirmar(`${t("¿Expulsar a {nombre} de «{locke}»?", { nombre, locke: locke.nombre })}\n\n${t("Perderá sus vidas y victorias en este locke.")}`))) return;
   }
 
   await quitarDeLocke(locke.id, uid);
@@ -384,8 +385,8 @@ function pintarNormas(locke, creador) {
     <select class="locke-normas-elegir" ${creador ? "" : "disabled"}>
       ${opcion(ID_GENERALES, NOMBRE_GENERALES)}
       ${mios.map((conjunto) => opcion(conjunto.id, conjunto.nombre)).join("")}
-      ${delLocke && !loTengo ? opcion(LAS_DEL_LOCKE, `${delLocke.nombre} (la del locke)`) : ""}
-      ${opcion(SIN_NORMAS, "Sin normas")}
+      ${delLocke && !loTengo ? opcion(LAS_DEL_LOCKE, `${delLocke.nombre} (${t("la del locke")})`) : ""}
+      ${opcion(SIN_NORMAS, t("Sin normas"))}
     </select>`;
 }
 
@@ -421,9 +422,9 @@ function pintarPersonalizado(tipo, locke, creador) {
 
   campo(hueco).innerHTML = `
     <select class="locke-normas-elegir locke-${tipo}-elegir" ${creador ? "" : "disabled"}>
-      ${opcion(DEL_JUEGO, "Las del juego")}
+      ${opcion(DEL_JUEGO, t("Las del juego"))}
       ${mios.map((lista) => opcion(lista.id, lista.nombre)).join("")}
-      ${delLocke && !loTengo ? opcion(LAS_DEL_LOCKE, `${delLocke.nombre} (la del locke)`) : ""}
+      ${delLocke && !loTengo ? opcion(LAS_DEL_LOCKE, `${delLocke.nombre} (${t("la del locke")})`) : ""}
     </select>`;
 }
 
@@ -455,12 +456,12 @@ function pintarRandomizer(locke, creador) {
   campo(".locke-randomizer").innerHTML = `
     <div class="locke-randomizer-fila">
       <select class="locke-normas-elegir locke-randomizer-elegir" ${creador ? "" : "disabled"}>
-        ${opcion(SIN_RANDOMIZER, "Sin randomizer")}
-        ${delLocke ? opcion(LAS_DEL_LOCKE, `Las del locke${delLocke.nombre ? ` (${delLocke.nombre})` : ""}`) : ""}
+        ${opcion(SIN_RANDOMIZER, t("Sin randomizer"))}
+        ${delLocke ? opcion(LAS_DEL_LOCKE, `${t("Las del locke")}${delLocke.nombre ? ` (${delLocke.nombre})` : ""}`) : ""}
         ${guardadas.map((n) => opcion(`${GUARDADA}${n.id}`, n.nombre)).join("")}
-        ${mias && hayAlgo(mias) ? opcion(LAS_MIAS, "Las sueltas de mi sección Randomizer") : ""}
+        ${mias && hayAlgo(mias) ? opcion(LAS_MIAS, t("Las sueltas de mi sección Randomizer")) : ""}
       </select>
-      ${creador ? `<button type="button" class="locke-randomizer-editar">${icono("lapiz")} Preparar normas</button>` : ""}
+      ${creador ? `<button type="button" class="locke-randomizer-editar">${icono("lapiz")} ${t("Preparar normas")}</button>` : ""}
     </div>
     <p class="locke-randomizer-resumen"></p>`;
   resumenRandomizer(locke);
@@ -472,7 +473,7 @@ function resumenRandomizer(locke) {
   const elegidas = randomizerElegido(locke);
   const texto = campo(".locke-randomizer-resumen");
   if (!texto) return;
-  texto.textContent = elegidas ? `Cambian: ${resumenNormas(elegidas.reglas) || "nada"}.` : "";
+  texto.textContent = elegidas ? t("Cambian: {cambios}.", { cambios: resumenNormas(elegidas.reglas) || t("nada") }) : "";
   texto.hidden = !elegidas;
 }
 
@@ -480,7 +481,7 @@ function randomizerElegido(locke) {
   const valor = campo(".locke-randomizer-elegir").value;
   if (valor === SIN_RANDOMIZER) return null;
   if (valor === LAS_DEL_LOCKE) return (locke && locke.randomizer) || null;
-  if (valor === LAS_MIAS) return { nombre: "Personalizadas", reglas: misReglas() };
+  if (valor === LAS_MIAS) return { nombre: t("Personalizadas"), reglas: misReglas() };
   if (valor.startsWith(GUARDADA)) {
     const n = normasGuardadas().find((x) => x.id === valor.slice(GUARDADA.length));
     return n ? { nombre: n.nombre, reglas: n.reglas } : null;
@@ -518,7 +519,7 @@ function abrirElegirAmigos() {
 
   cuerpo.innerHTML = libres.length
     ? libres
-        .sort((uno, otro) => uno.nombre.localeCompare(otro.nombre, "es"))
+        .sort((uno, otro) => uno.nombre.localeCompare(otro.nombre, LOCALE))
         .map(
           (perfil) => `
             <label class="locke-amigo">
@@ -529,8 +530,8 @@ function abrirElegirAmigos() {
         .join("")
     : `<p class="locke-sin-amigos">${
         amigosAceptados().length
-          ? "Ya están todos tus amigos."
-          : "Todavía no tienes amigos. Agrégalos en «Amigos» y espera a que te acepten."
+          ? t("Ya están todos tus amigos.")
+          : t("Todavía no tienes amigos. Agrégalos en «Amigos» y espera a que te acepten.")
       }</p>`;
 
   dialogoElegir.querySelector(".elegir-ok").disabled = !libres.length;
@@ -555,7 +556,7 @@ function pintarNombresCombates(nombres, editable) {
   campo(".locke-combates-nombres").innerHTML = nombres
     .map(
       (nombre, i) =>
-        `<input class="locke-combate-nombre" type="text" maxlength="30" autocomplete="off" placeholder="Combate ${i + 1}"
+        `<input class="locke-combate-nombre" type="text" maxlength="30" autocomplete="off" placeholder="${t("Combate {n}", { n: i + 1 })}"
                 value="${escaparHTML(nombre)}" ${editable ? "" : "disabled"}>`
     )
     .join("");
@@ -582,8 +583,8 @@ async function abrirDialogo(locke = null) {
   const mio = miPerfilOProvisional();
   error.textContent = fallaElPerfil() || fallaLasAmistades();
 
-  campo(".locke-dialogo-titulo").textContent = locke ? "Editar locke" : "Nuevo locke";
-  campo("#locke-crear").textContent = locke ? "Guardar" : "Crear locke";
+  campo(".locke-dialogo-titulo").textContent = locke ? t("Editar locke") : t("Nuevo locke");
+  campo("#locke-crear").textContent = locke ? t("Guardar") : t("Crear locke");
   campo("#locke-crear").hidden = cerrado && !creador;
   campo("#locke-borrar").hidden = !locke || !creador;
 
@@ -611,7 +612,7 @@ async function abrirDialogo(locke = null) {
   }
   campo("#locke-infinitas").disabled = !vidasLibres;
   campo("#locke-vidas").disabled = !vidasLibres || campo("#locke-infinitas").checked;
-  campo(".campo-vidas").title = vidasLibres ? "" : "Ya hay gente jugando: sus vidas solo las cambia cada uno.";
+  campo(".campo-vidas").title = vidasLibres ? "" : t("Ya hay gente jugando: sus vidas solo las cambia cada uno.");
 
   const combates = locke ? combatesDe(locke) : [];
   const combatesLibres = creador && !cerrado;
@@ -663,7 +664,7 @@ async function guardar() {
 
   // Lo único imprescindible es el nombre: un locke para ti solo también vale
   if (!nombre) {
-    error.textContent = "Ponle un nombre.";
+    error.textContent = t("Ponle un nombre.");
     dialogo.querySelector("#locke-nombre").focus();
     return;
   }
@@ -702,7 +703,7 @@ async function guardar() {
 async function borrarDesdeElDialogo() {
   const locke = editando ? lockePorId(editando) : null;
   if (!locke) return;
-  if (!(await confirmar(`¿Borrar «${locke.nombre}»?`+"\n\n"+"Lo pierden todos los que juegan."))) return;
+  if (!(await confirmar(`${t("¿Borrar «{nombre}»?", { nombre: locke.nombre })}\n\n${t("Lo pierden todos los que juegan.")}`))) return;
 
   await borrarLocke(locke.id);
   dialogo.close();
@@ -734,8 +735,8 @@ function irAlJuego(seccionDestino, idJuego, locke) {
 
 function textoDeError(error, que) {
   return error && error.code === "permission-denied"
-    ? `Firebase no deja ${que}. Falta publicar las reglas de Firestore.`
-    : `No se ha podido ${que}. Inténtalo otra vez.`;
+    ? t("Firebase no deja {que}. Falta publicar las reglas de Firestore.", { que: t(que) })
+    : t("No se ha podido {que}. Inténtalo otra vez.", { que: t(que) });
 }
 
 // ---------- Arranque ----------
@@ -750,7 +751,7 @@ export function iniciar() {
 
   const alFallar = (error) => {
     console.error(error);
-    aviso.textContent = "No se ha podido guardar el cambio.";
+    aviso.textContent = t("No se ha podido guardar el cambio.");
   };
   iniciarCementerio(alFallar);
   iniciarActividad();
@@ -765,7 +766,7 @@ export function iniciar() {
       console.error(error);
       // Se dice en los dos sitios: dentro del diálogo si llegó a abrirse, y debajo del
       // botón por si no.
-      const texto = error && error.message ? error.message : "No se ha podido abrir.";
+      const texto = error && error.message ? error.message : t("No se ha podido abrir.");
       const hueco = dialogo.querySelector(".locke-error");
       if (hueco) hueco.textContent = texto;
       aviso.textContent = texto;
@@ -895,7 +896,7 @@ export function iniciar() {
     } else if (boton.classList.contains("locke-quitar-lista")) {
       alternarQuitado(id);
     } else if (boton.classList.contains("locke-borrar")) {
-      if (await confirmar(`¿Borrar «${locke.nombre}»?`+"\n\n"+"Lo pierden todos los que juegan.")) tarea = borrarLocke(id);
+      if (await confirmar(`${t("¿Borrar «{nombre}»?", { nombre: locke.nombre })}\n\n${t("Lo pierden todos los que juegan.")}`)) tarea = borrarLocke(id);
     } else if (boton.classList.contains("locke-terminar")) {
       abrirTerminar(id);
     } else if (boton.classList.contains("locke-combate")) {
@@ -915,7 +916,7 @@ export function iniciar() {
     if (tarea) {
       tarea.catch((error) => {
         console.error(error);
-        aviso.textContent = "No se ha podido guardar el cambio.";
+        aviso.textContent = t("No se ha podido guardar el cambio.");
       });
     }
   });

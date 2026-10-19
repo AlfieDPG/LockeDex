@@ -9,7 +9,7 @@ import { RomNDS } from "./rom-nds.js";
 import { crearAzar } from "./azar.js";
 import { completarReglas } from "./reglas.js";
 import { cargarDatosRandomizer, montarDatosRandomizer, clasificarObjetos, deGeneracion } from "./datos.js";
-import { tiposEs } from "../comun/tipos.js";
+import { TIPOS_ES } from "../comun/tipos.js"; // en español: van dentro del juego
 import { ULTIMA_ESPECIE, ULTIMO_ATAQUE, ULTIMA_HABILIDAD, EVO, TIPOS } from "./juego-gen5.js";
 import { esGen4 } from "./juego-gen4-ident.js";
 
@@ -976,7 +976,7 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
   const textoIniciales = r.iniciales.modo !== "no" || r.tipos.modo !== "no";
   M.actualizarTextos(rom, {
     mt: movimientos && r.mt.ataques && !datos.perfil.mtFijas ? movimientos.mt : null,
-    iniciales: textoIniciales ? Object.assign(datos.iniciales.map((id) => ({ tipo: tiposEs[datos.especies[id].tipos[0]] })), { antes: inicialesAntes, ahora: datos.iniciales }) : null,
+    iniciales: textoIniciales ? Object.assign(datos.iniciales.map((id) => ({ tipo: TIPOS_ES[datos.especies[id].tipos[0]] })), { antes: inicialesAntes, ahora: datos.iniciales }) : null,
     intercambios: cambiosIntercambio,
     entrenadores: nombresEntrenadores
   });

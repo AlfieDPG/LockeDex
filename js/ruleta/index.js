@@ -18,6 +18,7 @@ import { icono } from "../comun/iconos.js";
 import { escaparHTML } from "../comun/utilidades.js";
 import { sumarContador } from "../comun/contadores.js";
 import { confirmar } from "../comun/ventanas.js";
+import { t } from "../comun/idioma.js";
 
 const CLAVE = "poketeams-ruletas-v1";
 const MAX_RULETAS = 20;
@@ -26,8 +27,8 @@ const MAX_HISTORIAL = 8;
 
 // Con la que se empieza: recompensas típicas de un locke por ganar un combate importante
 const DE_EJEMPLO = {
-  nombre: "Recompensas",
-  opciones: ["Objeto a elegir", "Revivir a un Pokémon", "Una vida extra", "Captura extra", "MT a elegir", "Nada"]
+  nombre: t("Recompensas"),
+  opciones: ["Objeto a elegir", "Revivir a un Pokémon", "Una vida extra", "Captura extra", "MT a elegir", "Nada"].map((opcion) => t(opcion))
 };
 
 // Las de ejemplo de antes: a quien las tenga tal cual (sin tocar), se le quitan esas dos
@@ -141,7 +142,7 @@ function pintarRueda() {
     rueda.style.transform = "";
     rueda.innerHTML = `
       <circle r="${RADIO}" class="ruleta-vacia"/>
-      <text class="ruleta-vacia-texto" y="-34" text-anchor="middle">Añade opciones</text>`;
+      <text class="ruleta-vacia-texto" y="-34" text-anchor="middle">${t("Añade opciones")}</text>`;
     return;
   }
 
@@ -297,11 +298,11 @@ function terminar(casilla, texto) {
   pintarRueda();
   pintarHistorial();
   resultado.innerHTML = `
-    <span class="ruleta-resultado-etiqueta">Ha salido</span>
+    <span class="ruleta-resultado-etiqueta">${t("Ha salido")}</span>
     <strong class="ruleta-resultado-texto">${escaparHTML(texto)}</strong>
     <div class="ruleta-resultado-botones">
-      <button class="ruleta-otra">${icono("ruleta")} Otra vez</button>
-      <button class="ruleta-quitar-ganadora" data-casilla="${casilla}">${icono("aspa")} Quitarla de la ruleta</button>
+      <button class="ruleta-otra">${icono("ruleta")} ${t("Otra vez")}</button>
+      <button class="ruleta-quitar-ganadora" data-casilla="${casilla}">${icono("aspa")} ${t("Quitarla de la ruleta")}</button>
     </div>`;
   resultado.classList.remove("oculto");
   // Oculto no desaparece (guarda su hueco, ver ruleta.css): la animación de salir, a mano
@@ -318,11 +319,11 @@ function pintarOpciones() {
     .map(
       ({ texto }, i) => `
         <div class="ruleta-opcion" data-indice="${i}">
-          <label class="ruleta-color" title="Cambiar el color" style="background:${colorDe(opciones, i)}">
+          <label class="ruleta-color" title="${t("Cambiar el color")}" style="background:${colorDe(opciones, i)}">
             <input type="color" class="ruleta-elegir-color" value="${colorDe(opciones, i)}">
           </label>
           <input type="text" class="ruleta-texto" maxlength="40" autocomplete="off" value="${escaparHTML(texto)}">
-          <button class="ruleta-quitar" title="Quitar">${icono("aspa")}</button>
+          <button class="ruleta-quitar" title="${t("Quitar")}">${icono("aspa")}</button>
         </div>`
     )
     .join("");
@@ -334,10 +335,10 @@ function pintarPestanas() {
     estado.ruletas
       .map(
         (ruleta) =>
-          `<button data-ruleta="${escaparHTML(ruleta.id)}" class="${ruleta.id === estado.activa ? "activa" : ""}">${escaparHTML(ruleta.nombre || "Sin nombre")}</button>`
+          `<button data-ruleta="${escaparHTML(ruleta.id)}" class="${ruleta.id === estado.activa ? "activa" : ""}">${escaparHTML(ruleta.nombre || t("Sin nombre"))}</button>`
       )
       .join("") +
-    (estado.ruletas.length < MAX_RULETAS ? `<button class="ruleta-nueva-pestana" title="Nueva ruleta" aria-label="Nueva ruleta">${icono("mas")}</button>` : "");
+    (estado.ruletas.length < MAX_RULETAS ? `<button class="ruleta-nueva-pestana" title="${t("Nueva ruleta")}" aria-label="${t("Nueva ruleta")}">${icono("mas")}</button>` : "");
 }
 
 function pintarHistorial() {
@@ -386,8 +387,8 @@ function quitarOpcion(indice) {
 export function iniciar() {
   estado = guardado();
   vista.querySelector(".ruleta-borrar").innerHTML = icono("papelera");
-  vista.querySelector(".ruleta-mezclar").innerHTML = `${icono("mezclar")} Mezclar`;
-  vista.querySelector(".ruleta-vaciar").innerHTML = `${icono("papelera")} Vaciar`;
+  vista.querySelector(".ruleta-mezclar").innerHTML = `${icono("mezclar")} ${t("Mezclar")}`;
+  vista.querySelector(".ruleta-vaciar").innerHTML = `${icono("papelera")} ${t("Vaciar")}`;
 
   botonGirar.addEventListener("click", girar);
 
@@ -396,7 +397,7 @@ export function iniciar() {
     const boton = e.target.closest("button");
     if (!boton) return;
     if (boton.classList.contains("ruleta-nueva-pestana")) {
-      const nueva = { id: nuevoId(), nombre: `Ruleta ${estado.ruletas.length + 1}`, opciones: [] };
+      const nueva = { id: nuevoId(), nombre: t("Ruleta {n}", { n: estado.ruletas.length + 1 }), opciones: [] };
       estado.ruletas.push(nueva);
       estado.activa = nueva.id;
     } else if (boton.dataset.ruleta) {
@@ -409,15 +410,15 @@ export function iniciar() {
   });
 
   campoNombre.addEventListener("input", () => {
-    actual().nombre = campoNombre.value.trim() || "Sin nombre";
+    actual().nombre = campoNombre.value.trim() || t("Sin nombre");
     guardar();
     pintarPestanas();
   });
 
   vista.querySelector(".ruleta-borrar").addEventListener("click", async () => {
-    if (!(await confirmar(`¿Borrar la ruleta «${actual().nombre}»?`))) return;
+    if (!(await confirmar(t("¿Borrar la ruleta «{nombre}»?", { nombre: actual().nombre })))) return;
     estado.ruletas = estado.ruletas.filter((ruleta) => ruleta.id !== estado.activa);
-    if (!estado.ruletas.length) estado.ruletas.push({ id: nuevoId(), nombre: "Ruleta", opciones: [] });
+    if (!estado.ruletas.length) estado.ruletas.push({ id: nuevoId(), nombre: t("Ruleta"), opciones: [] });
     estado.activa = estado.ruletas[0].id;
     guardar();
     olvidarResultado();
@@ -473,7 +474,7 @@ export function iniciar() {
   });
 
   vista.querySelector(".ruleta-vaciar").addEventListener("click", async () => {
-    if (!actual().opciones.length || !(await confirmar("¿Quitar todas las opciones de esta ruleta?"))) return;
+    if (!actual().opciones.length || !(await confirmar(t("¿Quitar todas las opciones de esta ruleta?")))) return;
     actual().opciones = [];
     guardar();
     olvidarResultado();

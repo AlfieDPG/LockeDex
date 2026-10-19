@@ -54,14 +54,14 @@
 .random-elegir,
 .random-elegir-carpeta,
 .random-vaciar {
-  background: #2c2e3e;
-  color: #f2f2f2;
+  background: var(--t-panel);
+  color: var(--t-texto);
 }
 
 .random-elegir:hover,
 .random-elegir-carpeta:hover,
 .random-vaciar:hover:not(:disabled) {
-  background: #363949;
+  background: var(--t-panel-5);
 }
 
 /* «?»: qué elegir en cada consola (#dialogo-ayuda-rom), como el de la partida de los lockes */
@@ -75,8 +75,8 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.9rem;
   font-weight: bold;
@@ -119,7 +119,7 @@
   min-height: 1.3rem;
   margin-bottom: 0.6rem;
   font-size: 0.9rem;
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 .random-rom.con-error,
@@ -148,22 +148,22 @@
   padding: 0.42rem 0.6rem;
   border: none;
   border-radius: 0.45rem;
-  background: #2c2e3e;
-  color: #f2f2f2;
+  background: var(--t-panel);
+  color: var(--t-texto);
 }
 
 .random-boton-normas {
   padding: 0.42rem 0.85rem;
   border: none;
   border-radius: 0.45rem;
-  background: #2c2e3e;
-  color: #f2f2f2;
+  background: var(--t-panel);
+  color: var(--t-texto);
   font-size: 0.9rem;
   cursor: pointer;
 }
 
 .random-boton-normas:hover {
-  background: #363949;
+  background: var(--t-panel-5);
 }
 /* Un apartado por tarjeta, todas en una columna */
 .random-tarjetas {
@@ -177,7 +177,7 @@
 .random-tarjeta {
   padding: 0.3rem 1rem 0.5rem;
   border-radius: 0.7rem;
-  background: #2c2e3e;
+  background: var(--t-panel);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   border: 1px solid transparent;
 }
@@ -206,7 +206,7 @@
 }
 
 .random-tarjeta h3 svg {
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 /* Cada opción, una fila: el nombre a la izquierda y el control a la derecha */
@@ -217,7 +217,7 @@
   gap: 0.5rem 1rem;
   min-height: 2.9rem;
   padding: 0.35rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid rgba(var(--t-tinte), 0.07);
   font-size: 0.93rem;
 }
 
@@ -247,7 +247,7 @@
   padding: 0.2rem;
   gap: 0.2rem;
   border-radius: 0.55rem;
-  background: #1e1f2b;
+  background: var(--t-fondo);
 }
 
 .random-segmentado button {
@@ -261,8 +261,8 @@
 }
 
 .random-segmentado button:hover:not(:disabled):not(.activa) {
-  background: #363949;
-  color: #f2f2f2;
+  background: var(--t-panel-5);
+  color: var(--t-texto);
 }
 
 .random-segmentado button.activa {
@@ -284,7 +284,7 @@
   padding: 0;
   border: none;
   border-radius: 1rem;
-  background: #1e1f2b;
+  background: var(--t-fondo);
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -306,7 +306,7 @@
 
 .random-interruptor.activa i {
   transform: translateX(1.15rem);
-  background: #1e1f2b;
+  background: var(--t-fondo);
 }
 
 .random-interruptor:disabled {
@@ -319,8 +319,8 @@
   padding: 0.38rem 0.6rem;
   border: none;
   border-radius: 0.45rem;
-  background: #1e1f2b;
-  color: #f2f2f2;
+  background: var(--t-fondo);
+  color: var(--t-texto);
   font-size: 0.88rem;
 }
 
@@ -342,7 +342,7 @@
   text-align: right;
   font-size: 0.88rem;
   font-weight: bold;
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 .random-barra-valor input {
@@ -385,9 +385,16 @@
     width: 8rem;
   }
 }
-/* Pestaña con algo cambiado */
+/* Pestaña con algo cambiado: el punto, centrado con el texto (si no, se queda en la línea
+   de base y parece caído) */
+.random-pestanas button {
+  display: inline-flex;
+  align-items: center;
+}
+
 .random-punto {
   display: inline-block;
+  flex: none;
   width: 0.4rem;
   height: 0.4rem;
   margin-left: 0.4rem;
@@ -396,5 +403,33 @@
 }
 
 .random-pestanas .activa .random-punto {
-  background: #1e1f2b;
+  background: var(--t-fondo);
+}
+/* «i» al lado del nombre de una opción (o del título de un apartado): abre su explicación */
+.random-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-left: 0.4rem;
+  padding: 0;
+  border: 1px solid rgba(var(--t-tinte), 0.35);
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(var(--t-tinte), 0.75);
+  font-family: Georgia, serif;
+  font-size: 0.75rem;
+  font-style: italic;
+  font-weight: bold;
+  line-height: 1;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.random-info:hover,
+.random-info:focus-visible {
+  border-color: rgb(var(--color-vista));
+  background: rgb(var(--color-vista));
+  color: #1e1f2b;
 }

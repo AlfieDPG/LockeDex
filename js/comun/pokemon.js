@@ -1,6 +1,8 @@
 import { pedirJSON, URL_API } from "./api.js";
 import { etiquetaForma, obtenerVariedades, formaDeTipo } from "./formas.js";
 import { indicePMD } from "./formas-pmd.js";
+import { t, enIngles } from "./idioma.js";
+import { TIPOS_EN } from "./tipos.js";
 
 const URL_SPRITES = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
 
@@ -28,19 +30,29 @@ function obtenerSpriteIcono(p) {
   return gen8 || gen7 || p.sprites.front_default;
 }
 
-function extraerDescripcion(m) {
-  const es = (m.flavor_text_entries || []).find((e) => e.language.name === "es");
-  if (es) return es.flavor_text.replace(/[\n\f\r]+/g, " ").trim();
+// La de un ataque: en español (si no hay, la de inglés) o en inglés
+function extraerDescripcion(m, idioma = "es") {
+  const limpio = (texto) => (texto || "").replace(/[\n\f\r]+/g, " ").trim();
+  if (idioma === "es") {
+    const es = (m.flavor_text_entries || []).find((e) => e.language.name === "es");
+    if (es) return limpio(es.flavor_text);
+  } else {
+    const textos = (m.flavor_text_entries || []).filter((e) => e.language.name === "en");
+    if (textos.length) return limpio(textos[textos.length - 1].flavor_text);
+  }
 
   const en = (m.effect_entries || []).find((e) => e.language.name === "en");
-  if (en) return (en.short_effect || en.effect || "").replace(/[\n\f\r]+/g, " ").trim();
+  if (en) return limpio(en.short_effect || en.effect);
 
   return "";
 }
 
+// Las descripciones de habilidades y objetos se guardan en el equipo, cada idioma en su campo
+export const CAMPO_DESCRIPCION = enIngles ? "descripcionEn" : "descripcion";
+
 // Texto más reciente de una lista de PokeAPI (objetos usan «text»; el resto, «flavor_text»).
-// En español; si no lo hay (objetos y habilidades muy nuevos), en inglés.
-function textoReciente(entradas, idiomas = ["es", "en"]) {
+// En el idioma de la web; si no lo hay (objetos y habilidades muy nuevos), en inglés.
+function textoReciente(entradas, idiomas = enIngles ? ["en"] : ["es", "en"]) {
   for (const idioma of idiomas) {
     const textos = (entradas || []).filter((e) => e.language.name === idioma);
     const ultima = textos[textos.length - 1];
@@ -92,6 +104,7 @@ async function descripcionShowdown(nombreIngles) {
 
 export async function descripcionObjeto(objeto) {
   const entradas = (await pedirJSON(`${URL_API}item/${objeto.id}`)).flavor_text_entries;
+  if (enIngles) return textoReciente(entradas, ["en"]) || descripcionShowdown(objeto.en);
   return (
     textoReciente(entradas, ["es"]) ||
     (await descripcionWikidex(objeto.en)) ||
@@ -100,6 +113,12 @@ export async function descripcionObjeto(objeto) {
   );
 }
 
+// La descripción de un ataque en el idioma de la web (para los guardados antes de tenerla)
+export async function descripcionAtaque(id) {
+  return extraerDescripcion(await pedirJSON(`${URL_API}move/${id}`), enIngles ? "en" : "es");
+}
+
+// Se guardan en español; para enseñarlas, t(categoria)
 const CATEGORIAS = { physical: "Físico", special: "Especial", status: "Estado" };
 
 function datosCombate(m) {
@@ -115,9 +134,14 @@ export async function obtenerDatosCombate(ataque) {
   return datosCombate(await pedirJSON(`${URL_API}move/${ataque.id}`));
 }
 
-// Forma para mostrar junto al nombre: nada si es la forma normal
+// Forma para mostrar junto al nombre: nada si es la forma normal. Se guarda en español
+// («Forma Alola», «Tipo Fuego»); en inglés se saca del slug de la forma.
 export function textoForma(poke) {
-  return poke.forma && poke.forma !== "Forma Normal" ? poke.forma : null;
+  if (!poke.forma || poke.forma === "Forma Normal") return null;
+  if (!enIngles || !poke.formaSlug) return poke.forma;
+  if (poke.imagenForma) return t("Tipo {tipo}", { tipo: TIPOS_EN[poke.formaSlug] || poke.formaSlug });
+  const especie = String(poke.en || "x").toLowerCase();
+  return t("Forma {forma}", { forma: etiquetaForma(`${especie}-${poke.formaSlug}`, especie, "en") });
 }
 
 // Stats base en este orden: PS, Ataque, Defensa, At. Esp., Def. Esp., Velocidad
@@ -172,14 +196,14 @@ export function generoDe(poke) {
 
 // Icono de js/comun/iconos.js (los caracteres ♂ y ♀ salen muy finos)
 export const ICONO_GENERO = { M: "macho", F: "hembra" };
-export const NOMBRE_GENERO = { M: "Macho", F: "Hembra" };
+export const NOMBRE_GENERO = { M: t("Macho"), F: t("Hembra") };
 
 // Lo justo de un Pokémon para pintarlo en otra parte (Versus, el perfil...). JSON de ida y
 // vuelta en quien lo guarde: Firestore no acepta «undefined».
 export function pokemonParaCopia(p) {
   return {
     id: p.id, idForma: p.idForma, formaPMD: p.formaPMD, imagenForma: p.imagenForma,
-    shiny: Boolean(p.shiny), es: p.es, mote: p.mote || "", sprite: p.sprite || "",
+    shiny: Boolean(p.shiny), es: p.es, en: p.en || "", mote: p.mote || "", sprite: p.sprite || "",
     genero: generoDe(p), difGenero: Boolean(p.difGenero)
   };
 }
@@ -204,7 +228,7 @@ export async function pokemonDesdeAPI(p, entrada) {
   }
   const posicion = info.lista.indexOf(p.name);
   // Solo se guarda la forma si no es la normal (Alola, Mega, Galar...)
-  const etiqueta = info.lista.length > 1 && posicion >= 0 ? etiquetaForma(p.name, info.especie) : "Normal";
+  const etiqueta = info.lista.length > 1 && posicion >= 0 ? etiquetaForma(p.name, info.especie, "es") : "Normal";
 
   // Lo que PokeAPI le añade al nombre de la especie ("meowstic-female-mega" -> "female-mega").
   // Hace falta para exportar el equipo con el nombre que entiende Showdown.
@@ -250,7 +274,7 @@ function pokemonDeTipo(p, entrada) {
     imagen: `${URL_SPRITES}other/official-artwork/${archivo}.png`,
     sprite: `${URL_SPRITES}versions/generation-viii/icons/${archivo}.png`,
     shiny: false,
-    forma: `Tipo ${etiquetaForma(p.name)}`,
+    forma: `Tipo ${etiquetaForma(p.name, "", "es")}`,
     formaPMD: pmd,
     tipos: [tipo],
     stats: statsBase(p),
@@ -269,7 +293,7 @@ export function variedadActual(poke, info) {
   if (porSlug) return porSlug;
 
   // Los guardados antes de que se apuntara el slug solo tienen el texto («Forma Alola»)
-  const porTexto = poke.forma && info.lista.find((slug) => `Forma ${etiquetaForma(slug, info.especie)}` === poke.forma);
+  const porTexto = poke.forma && info.lista.find((slug) => `Forma ${etiquetaForma(slug, info.especie, "es")}` === poke.forma);
   return porTexto || info.lista[0];
 }
 
@@ -298,6 +322,7 @@ export async function ataqueDesdeAPI(entrada) {
     ppMax: ppMax,
     pp: ppMax,
     descripcion: extraerDescripcion(m),
+    descripcionEn: extraerDescripcion(m, "en"),
     ...datosCombate(m)
   };
 }

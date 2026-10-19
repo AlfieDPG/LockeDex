@@ -18,18 +18,14 @@ import { convertirPartida } from "./convertir.js";
 import { marcarCapturas } from "./rutas.js";
 import { hierbaEnPueblos } from "../randomizer/reglas.js";
 import { CLAVE_HIERBA_RUTAS } from "../comun/selector-juego.js";
+import { nombreDeJuego } from "../comun/juegos.js";
+import { t } from "../comun/idioma.js";
 
 // NO cambiar esta clave: si se cambia, se pierden las partidas vinculadas
 const CLAVE = "poketeams-partidas-v1";
 
 // Juegos que se saben leer (ids de js/comun/juegos.js)
 export const JUEGOS_LEIBLES = ["dp", "platino", "hgss", "bw", "b2w2", "xy", "oras", "sm", "usum", "swsh", "bdsp"];
-
-const NOMBRES = {
-  dp: "Diamante / Perla", platino: "Platino", hgss: "HeartGold / SoulSilver", bw: "Negro / Blanco",
-  b2w2: "Negro 2 / Blanco 2", xy: "X / Y", oras: "Rubí Omega / Zafiro Alfa", sm: "Sol / Luna", usum: "Ultrasol / Ultraluna",
-  swsh: "Espada / Escudo", bdsp: "Diamante Brillante / Perla Reluciente"
-};
 
 // De qué consola es la partida (la que sepa leerla), o null
 function lectorDe(bytes) {
@@ -88,17 +84,17 @@ export function alternarCajaMuertos(idLocke, posicion) {
 export async function procesarArchivo(locke, bytes, archivo = "") {
   const lector = lectorDe(bytes);
   // dudoso: puede ser una partida a medio guardar (el emulador escribiendo justo entonces)
-  if (!lector) return { error: "Ese archivo no es una partida que se sepa leer.", dudoso: true };
+  if (!lector) return { error: t("Ese archivo no es una partida que se sepa leer."), dudoso: true };
 
   let leida;
   try {
     leida = lector(bytes);
   } catch (error) {
     // Lo normal: el emulador estaba a mitad de guardar
-    return { error: "No se ha podido leer la partida.", reintentar: true };
+    return { error: t("No se ha podido leer la partida."), reintentar: true };
   }
   if (locke.juego && leida.juego !== locke.juego) {
-    return { error: `Esa partida es de ${NOMBRES[leida.juego] || leida.juego} y el locke, de ${NOMBRES[locke.juego] || locke.juego}.` };
+    return { error: t("Esa partida es de {partida} y el locke, de {locke}.", { partida: nombreDeJuego(leida.juego), locke: nombreDeJuego(locke.juego) }) };
   }
 
   const nueva = await convertirPartida(leida);
@@ -183,5 +179,5 @@ export function equipoParaCombate(idLocke) {
   const partida = partidaDe(idLocke);
   if (!partida || !partida.equipo.length) return null;
   const pokemon = partida.equipo.filter((p) => !p.huevo).map((p) => pokemonParaCopia(p));
-  return JSON.parse(JSON.stringify({ nombre: "Equipo de la partida", pokemon }));
+  return JSON.parse(JSON.stringify({ nombre: t("Equipo de la partida"), pokemon }));
 }

@@ -49,7 +49,7 @@
   white-space: nowrap;
   font-size: 0.85rem;
   font-weight: bold;
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 .buscador {
@@ -191,7 +191,7 @@
   gap: 0.85rem;
   align-items: stretch;
   min-height: 0;
-  background: #2c2e3e;
+  background: var(--t-panel);
   border-radius: 0.7rem;
   padding: 0.85rem;
   text-align: left;
@@ -217,15 +217,15 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 2px dashed rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.3);
+  border: 2px dashed rgba(var(--t-tinte), 0.15);
+  color: rgba(var(--t-tinte), 0.3);
   font-family: inherit;
   cursor: pointer;
 }
 
 .tarjeta-vacia:hover {
   border-color: rgb(var(--color-vista));
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
   outline: none;
 }
 
@@ -275,7 +275,7 @@
 }
 
 .nombre-editable:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(var(--t-tinte), 0.06);
 }
 
 .mote-campo {
@@ -332,10 +332,10 @@
   max-width: 100%;
   height: 1.4rem;
   padding: 0 0.35rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(var(--t-tinte), 0.15);
   border-radius: 0.35rem;
-  background: #252735;
-  color: #f2f2f2;
+  background: var(--t-fondo-2);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.78rem;
   cursor: pointer;
@@ -370,7 +370,7 @@
 }
 
 .btn-shiny:hover {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(var(--t-oscurecer), 0.5);
 }
 
 .btn-shiny.activo {
@@ -389,8 +389,8 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.3);
-  color: #9a9cb0;
+  background: rgba(var(--t-oscurecer), 0.3);
+  color: var(--t-gris);
   font-size: 1.15rem;
   font-weight: bold;
   line-height: 1;
@@ -398,7 +398,7 @@
 }
 
 .btn-genero:hover {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(var(--t-oscurecer), 0.5);
 }
 
 /* Mismo fondo que el del shiny; el color va en el icono */
@@ -456,8 +456,8 @@
   padding: 0.45rem 0.5rem;
   border: none;
   border-radius: 0.45rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: bold;
@@ -468,7 +468,7 @@
 }
 
 .abrir-entreno:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .abrir-entreno .icono {
@@ -498,7 +498,7 @@
   width: 2.6rem;
   height: 2.6rem;
   border-radius: 0.5rem;
-  background: #1e1f2b;
+  background: var(--t-fondo);
   image-rendering: pixelated;
 }
 
@@ -521,10 +521,10 @@
 .entreno-campo select,
 .entreno-fila input[type="number"] {
   padding: 0.35rem 0.45rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(var(--t-tinte), 0.12);
   border-radius: 0.4rem;
-  background: #1e1f2b;
-  color: #f2f2f2;
+  background: var(--t-fondo);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.9rem;
   text-transform: none;
@@ -554,7 +554,7 @@
 }
 
 .entreno-restantes.lleno strong {
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 /* Deshacer y la ✕, juntos en la esquina y a la altura de la primera fila de la cabecera (la
@@ -577,14 +577,14 @@
   padding: 0;
   border: none;
   border-radius: 0.4rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   cursor: pointer;
 }
 
 .entreno-deshacer:hover:not(:disabled),
 .entreno-cerrar:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .entreno-deshacer:disabled {
@@ -636,8 +636,8 @@
   padding: 0;
   border: none;
   border-radius: 0.3rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   vertical-align: middle;
   cursor: pointer;
 }
@@ -687,7 +687,7 @@
 .entreno-barra {
   height: 0.55rem;
   border-radius: 0.3rem;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(var(--t-oscurecer), 0.3);
   overflow: hidden;
 }
 
@@ -707,7 +707,7 @@
 .entreno-todas {
   margin-top: 0.2rem;
   padding-top: 0.5rem;
-  border-top: 1px dashed rgba(255, 255, 255, 0.15);
+  border-top: 1px dashed rgba(var(--t-tinte), 0.15);
 }
 
 .entreno-todas .entreno-stat {
@@ -814,7 +814,7 @@
 }
 
 .pp button:hover {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(var(--t-oscurecer), 0.4);
 }
 
 .pp-valor {
@@ -870,7 +870,7 @@
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: center;
-  background: rgba(0, 0, 0, 0.12);
+  background: rgba(var(--t-oscurecer), 0.12);
   color: #2b2d3a;
 }
 
@@ -922,8 +922,8 @@
   padding: 0.45rem 0.85rem;
   border: none;
   border-radius: 0.45rem;
-  background: #2c2e3e;
-  color: #f2f2f2;
+  background: var(--t-panel);
+  color: var(--t-texto);
   font-weight: bold;
   cursor: pointer;
 }
@@ -932,7 +932,7 @@
 #nuevo-grupo:hover,
 #importar-varios:hover,
 #exportar-todos:hover:not(:disabled) {
-  background: #3a3d52;
+  background: var(--t-control);
 }
 
 #lista-equipos {
@@ -951,7 +951,7 @@
 /* Un grupo vacío: un hueco donde soltar equipos */
 .equipos-zona:empty {
   min-height: 3.2rem;
-  border: 2px dashed rgba(255, 255, 255, 0.12);
+  border: 2px dashed rgba(var(--t-tinte), 0.12);
   border-radius: 0.7rem;
 }
 
@@ -974,8 +974,8 @@
 .grupo-equipos:not(.sueltos) {
   padding: 0.6rem;
   border-radius: 0.85rem;
-  background: rgba(255, 255, 255, 0.03);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  background: rgba(var(--t-tinte), 0.03);
+  box-shadow: inset 0 0 0 1px rgba(var(--t-tinte), 0.06);
 }
 
 .grupo-equipos.plegado > .equipos-zona {
@@ -994,7 +994,7 @@
 }
 
 .grupo-cabecera:not(.sin-grupo):hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(var(--t-tinte), 0.05);
 }
 
 .grupo-cabecera.sin-grupo {
@@ -1005,7 +1005,7 @@
 .grupo-flecha,
 .grupo-icono {
   display: inline-flex;
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 .grupo-flecha .icono {
@@ -1042,8 +1042,8 @@
   padding: 0.2rem 0.45rem;
   border: 1px solid rgba(var(--color-vista), 0.6);
   border-radius: 0.4rem;
-  background: #252735;
-  color: #f2f2f2;
+  background: var(--t-fondo-2);
+  color: var(--t-texto);
   font: inherit;
 }
 
@@ -1052,7 +1052,7 @@
   min-width: 1.5rem;
   padding: 0.05rem 0.45rem;
   border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--t-tinte), 0.08);
   font-size: 0.8rem;
   font-weight: bold;
   text-align: center;
@@ -1076,7 +1076,7 @@
   width: 1.7rem;
   height: 1.7rem;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(var(--t-tinte), 0.06);
   image-rendering: pixelated;
 }
 
@@ -1134,9 +1134,9 @@
   max-height: 50vh;
   overflow-y: auto;
   padding: 0.3rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(var(--t-tinte), 0.1);
   border-radius: 0.6rem;
-  background: #252735;
+  background: var(--t-fondo-2);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
@@ -1148,7 +1148,7 @@
   border: none;
   border-radius: 0.4rem;
   background: none;
-  color: #f2f2f2;
+  color: var(--t-texto);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -1161,11 +1161,11 @@
 }
 
 .menu-grupos button:hover {
-  background: #3a3d52;
+  background: var(--t-control);
 }
 
 .menu-grupos button.actual {
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
   font-weight: bold;
 }
 
@@ -1176,12 +1176,12 @@
 }
 
 .equipo-botones .mover {
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
 }
 
 .equipo-botones .mover:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 /* ---------- Modo lista: una fila por equipo, de lado a lado ---------- */
@@ -1245,7 +1245,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  background: #2c2e3e;
+  background: var(--t-panel);
   border-radius: 0.7rem;
   padding: 0.85rem;
 }
@@ -1332,7 +1332,7 @@
   flex: 1 1 0;
   min-width: 0;
   max-width: 5rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(var(--t-tinte), 0.05);
   border-radius: 0.45rem;
   padding: 0.2rem;
   box-sizing: border-box;
@@ -1376,8 +1376,8 @@
 
 #importar-cancelar,
 #forma-cancelar {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
+  background: rgba(var(--t-tinte), 0.15);
+  color: var(--t-texto-fuerte);
 }
 
 #importar-aceptar:disabled {
@@ -1407,7 +1407,7 @@
 
 /* La marcada con las flechas (Enter la elige) */
 .forma-opciones button:focus {
-  outline: 2px solid #f2f2f2;
+  outline: 2px solid var(--t-texto);
   outline-offset: 2px;
   background: #f7d44a;
 }
@@ -1468,8 +1468,8 @@
 .ficha-stats {
   /* algo más ancha que las demás fichas: ahora lleva también las debilidades */
   width: 19rem;
-  background: #171822;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--t-hundido);
+  border: 1px solid rgba(var(--t-tinte), 0.12);
 }
 
 .ficha-stats .ficha-titulo {
@@ -1497,7 +1497,7 @@
 .stat-barra {
   height: 0.55rem;
   border-radius: 0.3rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(var(--t-tinte), 0.1);
   overflow: hidden;
 }
 
@@ -1510,7 +1510,7 @@
 .stat-total {
   margin-top: 0.3rem;
   padding-top: 0.4rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(var(--t-tinte), 0.12);
 }
 
 .stat-total .stat-nombre {
@@ -1544,8 +1544,8 @@
 
 /* Ficha de habilidad u objeto */
 .ficha-texto {
-  background: #171822;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--t-hundido);
+  border: 1px solid rgba(var(--t-tinte), 0.12);
 }
 
 .ficha-texto .ficha-tipo {
@@ -1568,7 +1568,7 @@
 }
 
 #dialogo-debilidades h2 {
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 .debilidades-vacio {
@@ -1594,7 +1594,7 @@
   padding: 0.35rem 0.6rem;
   border-left: 0.3rem solid var(--color-tipo);
   border-radius: 0.45rem;
-  background: #252735;
+  background: var(--t-fondo-2);
 }
 
 .debilidad-tipo {
@@ -1612,7 +1612,7 @@
   width: 4rem;
   height: 0.45rem;
   border-radius: 0.25rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(var(--t-tinte), 0.1);
   overflow: hidden;
 }
 
@@ -1634,7 +1634,7 @@
 .debilidades-bien {
   margin: 0;
   font-size: 0.9rem;
-  color: #2ecc71;
+  color: color-mix(in srgb, #2ecc71 var(--t-vivo), black);
 }
 
 .debilidades-sin-aguante {
@@ -1649,7 +1649,7 @@
    separa las estadísticas del Total: 0.3rem por encima y 0.4rem por debajo. */
 .ficha-tipos {
   margin-top: 0.3rem; /* + los 0.12rem de debajo del Total = igual que encima de su línea */
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(var(--t-tinte), 0.12);
   display: flex;
   flex-direction: column;
 }
@@ -1661,7 +1661,7 @@
 /* 0.42rem = los 0.3rem de margen + los 0.12rem que deja debajo cada fila de estadística */
 .ficha-tipos-fila + .ficha-tipos-fila {
   margin-top: 0.42rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(var(--t-tinte), 0.12);
 }
 
 .ficha-tipos-fila {

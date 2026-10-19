@@ -13,6 +13,7 @@
 
 import { icono } from "./comun/iconos.js";
 import { escaparHTML } from "./comun/utilidades.js";
+import { t } from "./comun/idioma.js";
 import { hayNube, usuarioActual } from "./comun/nube.js";
 import {
   alCambiarAmistades, solicitudesRecibidas, aceptarAmistad, borrarAmistad, perfilesDe, colorDeTipo
@@ -32,29 +33,29 @@ let nombres = new Map();
 // ---------- Pintar ----------
 
 function plantillaAmistad(amistad) {
-  const nombre = escaparHTML(nombres.get(amistad.otro) || "Alguien");
+  const nombre = escaparHTML(nombres.get(amistad.otro) || t("Alguien"));
   return `
     <div class="aviso" data-tipo="amistad" data-id="${escaparHTML(amistad.id)}">
       <span class="aviso-icono amistad">${icono("personaMas")}</span>
-      <span class="aviso-texto"><b>${nombre}</b> quiere ser tu amigo</span>
-      <button class="aviso-si" title="Aceptar">${icono("visto")}</button>
-      <button class="aviso-no" title="Rechazar">${icono("aspa")}</button>
+      <span class="aviso-texto">${t("{nombre} quiere ser tu amigo", { nombre: `<b>${nombre}</b>` })}</span>
+      <button class="aviso-si" title="${t("Aceptar")}">${icono("visto")}</button>
+      <button class="aviso-no" title="${t("Rechazar")}">${icono("aspa")}</button>
     </div>`;
 }
 
 function plantillaLocke(locke) {
   const tipo = locke.tipo || { nombre: "Locke", color: "#3498db" };
-  const quien = escaparHTML((locke.nombres || {})[locke.creador] || "Alguien");
+  const quien = escaparHTML((locke.nombres || {})[locke.creador] || t("Alguien"));
 
   return `
     <div class="aviso" data-tipo="locke" data-id="${escaparHTML(locke.id)}">
       <span class="aviso-icono de-locke" style="--color-locke: ${colorDeTipo(tipo)}">${icono("espadas")}</span>
       <span class="aviso-texto">
-        <b>${quien}</b> te mete en <b>${escaparHTML(locke.nombre)}</b>
-        <small>${escaparHTML(tipo.nombre)} · ${locke.vidasIniciales} vidas</small>
+        ${t("{quien} te mete en {locke}", { quien: `<b>${quien}</b>`, locke: `<b>${escaparHTML(locke.nombre)}</b>` })}
+        <small>${escaparHTML(tipo.nombre)} · ${t("{n} vidas", { n: locke.vidasIniciales })}</small>
       </span>
-      <button class="aviso-si" title="Entrar">${icono("visto")}</button>
-      <button class="aviso-no" title="No entrar">${icono("aspa")}</button>
+      <button class="aviso-si" title="${t("Entrar")}">${icono("visto")}</button>
+      <button class="aviso-no" title="${t("No entrar")}">${icono("aspa")}</button>
     </div>`;
 }
 
@@ -70,11 +71,11 @@ function pintar() {
   cuenta.textContent = total;
   cuenta.hidden = total === 0;
   boton.classList.toggle("con-avisos", total > 0);
-  boton.title = total === 0 ? "Notificaciones" : `Tienes ${total} notificación${total === 1 ? "" : "es"}`;
+  boton.title = total === 0 ? t("Notificaciones") : t(total === 1 ? "Tienes {n} notificación" : "Tienes {n} notificaciones", { n: total });
 
   listaDialogo.innerHTML = total
     ? [...amistades.map(plantillaAmistad), ...lockes.map(plantillaLocke)].join("")
-    : `<p class="aviso-vacio">No tienes nada pendiente.</p>`;
+    : `<p class="aviso-vacio">${t("No tienes nada pendiente.")}</p>`;
 }
 
 // Los nombres de quien te manda una solicitud hay que ir a buscarlos a su perfil

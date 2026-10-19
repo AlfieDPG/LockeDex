@@ -5,6 +5,16 @@
 //
 // Tipos: gimnasio, alto-mando, campeon, historia (rival, jefes, pruebas...), extra (después de la Liga)
 
+import { TEXTOS_EN } from "./textos-en.js";
+import { LUGARES_EN } from "../rutas/lugares-en.js";
+import { enIngles } from "../comun/idioma.js";
+
+// Un nombre, lugar, etiqueta o apartado de un combate en el idioma de la web. Se guarda y se
+// compara en español (las marcas, los retratos). Los escritos a mano salen tal cual.
+export function textoDeCombate(texto) {
+  return (enIngles && texto && (TEXTOS_EN[texto] || LUGARES_EN[texto])) || texto;
+}
+
 const gim = (n, nombre, lugar, nivel) => ({ tipo: "gimnasio", etiqueta: `Gimnasio ${n}`, nombre, lugar, nivel });
 const am = (nombre, nivel, extra = {}) => ({ tipo: "alto-mando", etiqueta: "Alto Mando", nombre, nivel, ...extra });
 const campeon = (nombre, nivel, extra = {}) => ({ tipo: "campeon", etiqueta: "Campeón", nombre, nivel, ...extra });

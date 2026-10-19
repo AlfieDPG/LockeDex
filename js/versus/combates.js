@@ -26,6 +26,7 @@ import {
 } from "../comun/lockes.js";
 import { equipoParaCombate } from "../partida/partidas.js";
 import { confirmar } from "../comun/ventanas.js";
+import { t } from "../comun/idioma.js";
 
 const MARCADORES = ["2-0", "2-1", "1-0", "3-0", "3-1", "3-2"];
 
@@ -36,7 +37,7 @@ function aceptados(locke) {
 }
 
 function nombreDe(locke, uid) {
-  return (locke.nombres || {})[uid] || "Jugador";
+  return (locke.nombres || {})[uid] || t("Jugador");
 }
 
 function fotoDe(locke, uid, clase) {
@@ -68,7 +69,7 @@ export function plantillaCombates(locke) {
             ? `${fotoDe(locke, resultado.ganador, "combate-foto")}
                <span class="combate-ganador">${escaparHTML(nombreDe(locke, resultado.ganador))}</span>
                ${resultado.marcador ? `<span class="combate-marcador">${escaparHTML(resultado.marcador)}</span>` : ""}`
-            : `<span class="combate-pendiente">Por jugar</span>`;
+            : `<span class="combate-pendiente">${t("Por jugar")}</span>`;
           // Con qué equipo lo jugó cada uno (los que lo hayan puesto)
           const equipos = aceptados(locke)
             .map((uid) => ({ uid, equipo: equipoDeCombate(locke, uid, combate.id) }))
@@ -81,7 +82,7 @@ export function plantillaCombates(locke) {
           // Cerrado, se abre igual (para ver los equipos), pero sin poder cambiar nada
           return `
             <button class="locke-combate ${resultado ? "jugado" : ""} ${abierto ? "" : "solo-ver"}" data-combate="${escaparHTML(combate.id)}"
-                    title="${abierto ? "Apuntar el resultado y los equipos" : "Ver el combate"}">
+                    title="${abierto ? t("Apuntar el resultado y los equipos") : t("Ver el combate")}">
               <span class="combate-nombre">${icono("espadas")} ${escaparHTML(nombreCombate(locke, combate.id))}</span>
               <span class="combate-resultado">${contenido}</span>
               ${filaEquipos}
@@ -94,9 +95,9 @@ export function plantillaCombates(locke) {
 // ¿Se ha pasado la ROM? En tu bloque, un botón para marcarlo
 export function plantillaRom(locke, uid, editable) {
   const pasada = seHaPasadoLaRom(locke, uid);
-  const texto = `${icono(pasada ? "visto" : "mando")} ${pasada ? "ROM superada" : "ROM sin pasar"}`;
+  const texto = `${icono(pasada ? "visto" : "mando")} ${pasada ? t("ROM superada") : t("ROM sin pasar")}`;
   return editable
-    ? `<button class="locke-rom ${pasada ? "pasada" : ""}" title="${pasada ? "Desmarcar" : "Me he pasado la ROM"}">${texto}</button>`
+    ? `<button class="locke-rom ${pasada ? "pasada" : ""}" title="${pasada ? t("Desmarcar") : t("Me he pasado la ROM")}">${texto}</button>`
     : `<span class="locke-rom ${pasada ? "pasada" : ""}">${texto}</span>`;
 }
 
@@ -105,7 +106,7 @@ export function plantillaSalon(locke, uid, mio) {
   const salon = (locke.salon || {})[uid];
   // Sin equipo, el hueco igual (vacío): así los bloques del locke quedan alineados
   if (!salon) {
-    return mio ? `<button class="locke-salon-poner">${icono("estrella")} Equipo final</button>` : `<div class="locke-salon"></div>`;
+    return mio ? `<button class="locke-salon-poner">${icono("estrella")} ${t("Equipo final")}</button>` : `<div class="locke-salon"></div>`;
   }
   return `
     <div class="locke-salon">
@@ -114,7 +115,7 @@ export function plantillaSalon(locke, uid, mio) {
           .map((p, i) => `<span class="salon-cara ${i === salon.mvp ? "mvp" : ""}">${cara(p)}${i === salon.mvp ? `<span class="salon-mvp">MVP</span>` : ""}</span>`)
           .join("")}
       </div>
-      ${mio ? `<button class="locke-salon-cambiar" title="Cambiar equipo final">${icono("lapiz")}</button>` : ""}
+      ${mio ? `<button class="locke-salon-cambiar" title="${t("Cambiar equipo final")}">${icono("lapiz")}</button>` : ""}
     </div>`;
 }
 
@@ -156,8 +157,8 @@ function pintarCombate() {
           ${fotoDe(locke, uid, "combate-opcion-foto")}
           <span class="combate-equipo-nombre">${escaparHTML(nombreDe(locke, uid))}
             ${equipo ? `<small>${escaparHTML(equipo.nombre)}</small>` : ""}</span>
-          ${equipo ? carasDeEquipo(equipo) : `<span class="combate-sin-equipo">Sin equipo</span>`}
-          ${mio ? `<button type="button" class="boton-gris combate-elegir-equipo">${icono("pokeball")} ${equipo ? "Cambiar" : "Elegir"}</button>` : ""}
+          ${equipo ? carasDeEquipo(equipo) : `<span class="combate-sin-equipo">${t("Sin equipo")}</span>`}
+          ${mio ? `<button type="button" class="boton-gris combate-elegir-equipo">${icono("pokeball")} ${equipo ? t("Cambiar") : t("Elegir")}</button>` : ""}
         </div>`;
     })
     .join("");
@@ -165,7 +166,7 @@ function pintarCombate() {
   dialogoCombate.querySelector(".combate-ok").hidden = soloVer;
   dialogoCombate.querySelector(".combate-ok").disabled = !enCombate.ganador;
   dialogoCombate.querySelector(".combate-borrar").hidden = soloVer || !((locke.resultados || {})[enCombate.idCombate]);
-  dialogoCombate.querySelector(".combate-cancelar").textContent = soloVer ? "Cerrar" : "Cancelar";
+  dialogoCombate.querySelector(".combate-cancelar").textContent = soloVer ? t("Cerrar") : t("Cancelar");
 }
 
 export function abrirCombate(id, idCombate) {
@@ -183,9 +184,9 @@ let dialogoTerminar = null;
 let terminando = null; // { id, elegido: uid o "" (nadie) }
 
 function textoPropuesta(locke, ganadores) {
-  if (!ganadores.length) return "Nadie se ha pasado la ROM: no gana nadie.";
-  if (ganadores.length === 1) return `Gana ${nombreDe(locke, ganadores[0])}.`;
-  return `Empate entre ${ganadores.map((uid) => nombreDe(locke, uid)).join(" y ")}: elige tú.`;
+  if (!ganadores.length) return t("Nadie se ha pasado la ROM: no gana nadie.");
+  if (ganadores.length === 1) return t("Gana {nombre}.", { nombre: nombreDe(locke, ganadores[0]) });
+  return t("Empate entre {nombres}: elige tú.", { nombres: ganadores.map((uid) => nombreDe(locke, uid)).join(` ${t("y")} `) });
 }
 
 function pintarTerminar() {
@@ -201,7 +202,7 @@ function pintarTerminar() {
       <button type="button" class="terminar-opcion ${terminando.elegido === uid ? "elegido" : ""}" data-ganador="${escaparHTML(uid)}">
         ${fotoDe(locke, uid, "combate-opcion-foto")}
         <span class="terminar-nombre">${escaparHTML(nombreDe(locke, uid))}</span>
-        <span class="terminar-dato ${rom && !eliminado ? "bien" : ""}">${eliminado ? `${icono("calavera")} Eliminado` : `${icono(rom ? "visto" : "aspa")} ROM`}</span>
+        <span class="terminar-dato ${rom && !eliminado ? "bien" : ""}">${eliminado ? `${icono("calavera")} ${t("Eliminado")}` : `${icono(rom ? "visto" : "aspa")} ROM`}</span>
         <span class="terminar-dato">${icono("espadas")} ${victoriasDe(locke, uid)}${conCombates ? ` / ${combatesDe(locke).length}` : ""}</span>
       </button>`;
   };
@@ -210,7 +211,7 @@ function pintarTerminar() {
   dialogoTerminar.querySelector(".terminar-lista").innerHTML =
     aceptados(locke).map(fila).join("") +
     `<button type="button" class="terminar-opcion nadie ${terminando.elegido === "" ? "elegido" : ""}" data-ganador="">
-       <span class="terminar-nombre">${icono("aspa")} Nadie gana</span>
+       <span class="terminar-nombre">${icono("aspa")} ${t("Nadie gana")}</span>
      </button>`;
 }
 
@@ -235,12 +236,12 @@ function pintarSalon() {
         .map(
           (equipo) => `
             <button type="button" class="escaparate-equipo ${enSalon.idEquipo === equipo.id ? "destacado" : ""}" data-id="${escaparHTML(equipo.id)}">
-              <strong>${escaparHTML(equipo.nombre || "Equipo")}</strong>
+              <strong>${escaparHTML(equipo.nombre || t("Equipo"))}</strong>
               <span class="perfil-equipo-caras">${equipo.pokemon.map((p) => cara(p)).join("")}</span>
             </button>`
         )
         .join("")
-    : `<p class="perfil-vacio">No tienes equipos guardados.</p>`;
+    : `<p class="perfil-vacio">${t("No tienes equipos guardados.")}</p>`;
 
   const mvp = dialogoSalon.querySelector(".salon-mvp-elegir");
   mvp.hidden = !enSalon.equipo;
@@ -317,8 +318,10 @@ export function iniciarCombates(fallo) {
     const { id, elegido } = terminando;
     const locke = lockePorId(id);
     if (!locke || elegido === null) return;
-    const texto = elegido ? `con ${nombreDe(locke, elegido)} como ganador` : "sin ganador";
-    if (!(await confirmar(`¿Terminar «${locke.nombre}» ${texto}?\n\nEl locke dejará de poder editarse.`, { aceptar: "Terminar" }))) return;
+    const pregunta = elegido
+      ? t("¿Terminar «{locke}» con {nombre} como ganador?", { locke: locke.nombre, nombre: nombreDe(locke, elegido) })
+      : t("¿Terminar «{locke}» sin ganador?", { locke: locke.nombre });
+    if (!(await confirmar(`${pregunta}\n\n${t("El locke dejará de poder editarse.")}`, { aceptar: t("Terminar") }))) return;
     dialogoTerminar.close();
     elegirGanador(id, elegido).catch(alFallar);
   });

@@ -11,6 +11,7 @@ import { irA } from "../navegacion.js";
 import { sumarContador } from "../comun/contadores.js";
 import { entrenoDesdeShowdown } from "./entreno.js";
 import { confirmar, avisar } from "../comun/ventanas.js";
+import { t, nombre as nombreDe } from "../comun/idioma.js";
 
 // ---------- Importar paste de Showdown ----------
 
@@ -222,7 +223,7 @@ async function resolverEquipo(interpretado) {
     lista.map(async (p) => {
       const resuelto = await resolverPokemon(p.especie);
       if (!resuelto) {
-        problemas.push(`Pokémon no reconocido: ${p.especie}`);
+        problemas.push(t("Pokémon no reconocido: {pokemon}", { pokemon: p.especie }));
         return null;
       }
 
@@ -236,7 +237,7 @@ async function resolverEquipo(interpretado) {
         if (h) {
           resuelto.habilidad = { id: h.id, es: h.es, en: h.en };
         } else {
-          problemas.push(`Habilidad no encontrada: ${p.habilidad} (${resuelto.es})`);
+          problemas.push(t("Habilidad no encontrada: {habilidad} ({pokemon})", { habilidad: p.habilidad, pokemon: nombreDe(resuelto) }));
         }
       }
 
@@ -245,7 +246,7 @@ async function resolverEquipo(interpretado) {
         if (o) {
           resuelto.objeto = { id: o.id, es: o.es, en: o.en };
         } else {
-          problemas.push(`Objeto no encontrado: ${p.objeto} (${resuelto.es})`);
+          problemas.push(t("Objeto no encontrado: {objeto} ({pokemon})", { objeto: p.objeto, pokemon: nombreDe(resuelto) }));
         }
       }
 
@@ -263,7 +264,7 @@ async function resolverEquipo(interpretado) {
         if (ataque) {
           resuelto.ataques[i] = ataque;
         } else {
-          problemas.push(`Ataque no encontrado: ${p.ataques[i]} (${resuelto.es})`);
+          problemas.push(t("Ataque no encontrado: {ataque} ({pokemon})", { ataque: p.ataques[i], pokemon: nombreDe(resuelto) }));
         }
       });
 
@@ -273,7 +274,7 @@ async function resolverEquipo(interpretado) {
 
   if (interpretado.pokemon.length > MAX_EQUIPO) {
     problemas.push(
-      `El paste tenía más de ${MAX_EQUIPO} Pokémon: solo se han importado los primeros ${MAX_EQUIPO}.`
+      t("El paste tenía más de {max} Pokémon: solo se han importado los primeros {max}.", { max: MAX_EQUIPO })
     );
   }
 
@@ -285,21 +286,21 @@ async function importarPaste(texto) {
   const interpretado = interpretarPaste(texto);
 
   if (interpretado.pokemon.length === 0) {
-    await avisar("No he encontrado ningún Pokémon en ese texto. Revisa que sea un paste de Showdown.");
+    await avisar(t("No he encontrado ningún Pokémon en ese texto. Revisa que sea un paste de Showdown."));
     return false;
   }
 
   if (hayCambiosSinGuardar()) {
     const seguro = await confirmar(
-      "Tienes cambios sin guardar en el equipo actual. ¿Reemplazarlo con el equipo importado?",
-      { aceptar: "Reemplazar", peligro: true }
+      t("Tienes cambios sin guardar en el equipo actual. ¿Reemplazarlo con el equipo importado?"),
+      { aceptar: t("Reemplazar"), peligro: true }
     );
     if (!seguro) return false;
   }
 
   const { validos, problemas } = await resolverEquipo(interpretado);
   if (validos.length === 0) {
-    await avisar("No he podido reconocer ningún Pokémon de ese texto:\n\n• " + problemas.join("\n• "));
+    await avisar(t("No he podido reconocer ningún Pokémon de ese texto:") + "\n\n• " + problemas.join("\n• "));
     return false;
   }
 
@@ -308,9 +309,9 @@ async function importarPaste(texto) {
   irA("crear");
 
   if (problemas.length > 0) {
-    await avisar("Equipo importado, pero algunas cosas no se han podido reconocer:\n\n• " + problemas.join("\n• "));
+    await avisar(t("Equipo importado, pero algunas cosas no se han podido reconocer:") + "\n\n• " + problemas.join("\n• "));
   } else {
-    mostrarAviso("Equipo importado ✔");
+    mostrarAviso(t("Equipo importado ✔"));
   }
 
   return true;
@@ -344,12 +345,12 @@ async function importarVarios(trozos, alAvanzar) {
   for (const [i, trozo] of trozos.entries()) {
     alAvanzar(i + 1, trozos.length);
     const interpretado = interpretarPaste(trozo);
-    const nombre = interpretado.nombre || "Equipo sin nombre";
+    const nombre = interpretado.nombre || t("Equipo sin nombre");
     if (interpretado.pokemon.length === 0) continue;
 
     const { validos, problemas: suyos } = await resolverEquipo(interpretado);
     if (validos.length === 0) {
-      problemas.push(`${nombre}: no se ha reconocido ningún Pokémon`);
+      problemas.push(`${nombre}: ${t("no se ha reconocido ningún Pokémon")}`);
       continue;
     }
     if (yaEstan.has(firma(nombre, validos))) {
@@ -369,8 +370,8 @@ async function importarVarios(trozos, alAvanzar) {
   if (nuevos.length === 0) {
     await avisar(
       repetidos
-        ? "Esos equipos ya estaban en «Mis equipos»."
-        : "No he podido reconocer ningún equipo de ese texto." + (problemas.length ? "\n\n• " + problemas.join("\n• ") : "")
+        ? t("Esos equipos ya estaban en «Mis equipos».")
+        : t("No he podido reconocer ningún equipo de ese texto.") + (problemas.length ? "\n\n• " + problemas.join("\n• ") : "")
     );
     return false;
   }
@@ -382,13 +383,13 @@ async function importarVarios(trozos, alAvanzar) {
   irA("equipos");
 
   const resumen =
-    `${nuevos.length} ${nuevos.length === 1 ? "equipo importado" : "equipos importados"}` +
-    (repetidos ? ` (${repetidos} ya ${repetidos === 1 ? "estaba" : "estaban"})` : "");
+    t(nuevos.length === 1 ? "{n} equipo importado" : "{n} equipos importados", { n: nuevos.length }) +
+    (repetidos ? ` (${t(repetidos === 1 ? "{n} ya estaba" : "{n} ya estaban", { n: repetidos })})` : "");
   if (problemas.length > 0) {
     const MAX = 20;
     const lista = problemas.slice(0, MAX).join("\n• ") +
-      (problemas.length > MAX ? `\n…y ${problemas.length - MAX} más` : "");
-    await avisar(`${resumen}, pero algunas cosas no se han podido reconocer:\n\n• ${lista}`);
+      (problemas.length > MAX ? `\n…${t("y {n} más", { n: problemas.length - MAX })}` : "");
+    await avisar(`${resumen}${t(", pero algunas cosas no se han podido reconocer:")}\n\n• ${lista}`);
   } else {
     await avisar(`${resumen} ✔`);
   }
@@ -437,13 +438,13 @@ export function iniciarImportar() {
     if (!texto.value.trim()) return;
 
     aceptar.disabled = true;
-    aceptar.textContent = "Importando...";
+    aceptar.textContent = t("Importando...");
     const trozos = separarEquipos(texto.value);
     const terminado = trozos.length > 1
-      ? await importarVarios(trozos, (hecho, total) => (aceptar.textContent = `Importando ${hecho}/${total}...`))
+      ? await importarVarios(trozos, (hecho, total) => (aceptar.textContent = t("Importando {hecho}/{total}...", { hecho, total })))
       : await importarPaste(texto.value);
     aceptar.disabled = false;
-    aceptar.textContent = "Importar";
+    aceptar.textContent = t("Importar");
 
     if (terminado) dialogo.close();
   });

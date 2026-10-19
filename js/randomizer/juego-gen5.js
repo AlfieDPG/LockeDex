@@ -32,11 +32,7 @@ import { ponerHierbaEnPueblos as hierbaEnPueblos } from "./hierba-gen5.js";
 
 export const ULTIMA_ESPECIE = 649;
 export const ULTIMO_ATAQUE = 559;
-export const ULTIMO_OBJETO = 638;
 export const ULTIMA_HABILIDAD = 164;
-
-// Juegos que se saben randomizar, por las tres primeras letras del código de la ROM
-export const JUEGOS_BW2 = JUEGOS_GEN5;
 
 const FIN_LISTA_SCRIPTS = 0xfd13;
 // Los claros ocultos (solo Negro 2 y Blanco 2): la parte de cada versión va en un sitio
@@ -73,10 +69,6 @@ function poner16(b, i, v) {
 function poner32(b, i, v) {
   poner16(b, i, v & 0xffff);
   poner16(b, i + 2, (v >>> 16) & 0xffff);
-}
-
-export function esBW2(rom) {
-  return Boolean(perfilDe(rom));
 }
 
 // ---------- Leer ----------

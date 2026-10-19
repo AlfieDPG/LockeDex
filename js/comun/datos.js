@@ -135,7 +135,11 @@ let promesaDatos = null;
 
 export function cargarDatos() {
   if (!promesaDatos) {
-    promesaDatos = leerODescargar().then((d) => (datos = d));
+    promesaDatos = leerODescargar().then((d) => {
+      // En inglés las dos «As One» se llaman igual: como en español, con el Pokémon detrás
+      for (const h of d.habilidades) if (h.id === 266 || h.id === 267) h.en = `As One (${h.id === 266 ? "Glastrier" : "Spectrier"})`;
+      return (datos = d);
+    });
     promesaDatos.catch(() => (promesaDatos = null));
   }
   return promesaDatos;

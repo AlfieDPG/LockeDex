@@ -23,14 +23,6 @@ export function lectorDeArchivo(archivo) {
   };
 }
 
-// Un lector de una dirección (con «Range»), para las pruebas
-export function lectorDeRuta(ruta, tam) {
-  return {
-    tam,
-    leer: async (desde, cuantos) => new Uint8Array(await (await fetch(ruta, { headers: { Range: `bytes=${desde}-${desde + cuantos - 1}` } })).arrayBuffer())
-  };
-}
-
 export class Rom3DS {
   constructor(lector) {
     this.lector = lector;

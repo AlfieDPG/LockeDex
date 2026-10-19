@@ -9,11 +9,21 @@
 //
 // El texto puede llevar saltos de línea: una línea en blanco separa párrafos. Si la pregunta
 // empieza por un verbo («¿Borrar…», «¿Quitar…») el botón lo lleva, y si es de los que no
-// tienen vuelta atrás, va en rojo.
+// tienen vuelta atrás, va en rojo. En inglés, igual con «Delete…?», «Remove…?»...
 
 import { escaparHTML } from "./utilidades.js";
+import { t, enIngles } from "./idioma.js";
 
-const PELIGROSOS = ["borrar", "quitar", "expulsar", "desvincular", "descartar", "vaciar", "desmarcar", "cerrar"];
+const PELIGROSOS = [
+  "borrar", "quitar", "expulsar", "desvincular", "descartar", "vaciar", "desmarcar", "cerrar",
+  "delete", "remove", "kick", "unlink", "discard", "clear", "uncheck", "close"
+];
+
+// En inglés no hay «¿» ni infinitivo en -r: los verbos que pueden ir en el botón
+const VERBOS_EN = new Set([
+  ...PELIGROSOS.slice(8), "leave", "end", "finish", "reset", "save", "open", "replace", "restore",
+  "overwrite", "send", "accept", "reject", "cancel", "change", "apply", "start", "link", "copy", "import"
+]);
 
 function parrafos(texto) {
   return String(texto)
@@ -24,6 +34,10 @@ function parrafos(texto) {
 
 // El verbo con el que empieza la pregunta («¿Borrar el equipo?» -> «Borrar»)
 function verboDe(texto) {
+  if (enIngles) {
+    const palabra = (/^\s*([A-Za-z]+)[^?]*\?/.exec(String(texto)) || [])[1];
+    return palabra && VERBOS_EN.has(palabra.toLowerCase()) ? palabra[0].toUpperCase() + palabra.slice(1).toLowerCase() : null;
+  }
   const encontrado = /^¿\s*([A-Za-zÁÉÍÓÚáéíóúñÑ]+)/.exec(String(texto));
   if (!encontrado) return null;
   const verbo = encontrado[1];
@@ -83,12 +97,12 @@ function abrir({ texto, botones, campo }) {
 }
 
 export function confirmar(texto, opciones = {}) {
-  const verbo = opciones.aceptar || verboDe(texto) || "Aceptar";
+  const verbo = opciones.aceptar || verboDe(texto) || t("Aceptar");
   const peligro = opciones.peligro ?? PELIGROSOS.includes(verbo.toLowerCase());
   return abrir({
     texto,
     botones: [
-      { texto: opciones.cancelar || "Cancelar", clase: "ventana-cancelar", valor: false, cancelar: true },
+      { texto: opciones.cancelar || t("Cancelar"), clase: "ventana-cancelar", valor: false, cancelar: true },
       { texto: verbo, clase: peligro ? "ventana-peligro" : "ventana-aceptar", valor: true }
     ]
   }).then(Boolean);
@@ -97,7 +111,7 @@ export function confirmar(texto, opciones = {}) {
 export function avisar(texto) {
   return abrir({
     texto,
-    botones: [{ texto: "Vale", clase: "ventana-aceptar", valor: undefined, cancelar: true }]
+    botones: [{ texto: t("Vale"), clase: "ventana-aceptar", valor: undefined, cancelar: true }]
   }).then(() => undefined);
 }
 
@@ -106,8 +120,8 @@ export function preguntar(texto, valor = "") {
     texto,
     campo: { valor },
     botones: [
-      { texto: "Cancelar", clase: "ventana-cancelar", valor: null, cancelar: true },
-      { texto: "Aceptar", clase: "ventana-aceptar", campo: true }
+      { texto: t("Cancelar"), clase: "ventana-cancelar", valor: null, cancelar: true },
+      { texto: t("Aceptar"), clase: "ventana-aceptar", campo: true }
     ]
   });
 }

@@ -29,6 +29,7 @@
 //              [{ id, nombre, tipo: { id, nombre, color }, nota }]
 
 import { usuarioActual, baseDeDatos, alCambiarSesion, nombreDeUsuario, recordarNombreDeCuenta } from "./nube.js";
+import { t } from "./idioma.js";
 
 // Con lo que empieza una cuenta nueva: solo el locke normal. Cada uno puede renombrarlo,
 // cambiarle el color o añadir los suyos (Megalocke, Bebelocke... son inventos de cada grupo).
@@ -45,7 +46,7 @@ export function colorDeTipo(tipo) {
   return /^#[0-9a-f]{6}$/i.test(color) ? color : TIPOS_POR_DEFECTO[0].color;
 }
 
-const PERFIL_VACIO = { nombre: "Jugador", foto: "", tipos: [], ganados: [] };
+const PERFIL_VACIO = { nombre: t("Jugador"), foto: "", tipos: [], ganados: [] };
 
 // Un perfil tal como lo enseña la web. Si tiene mote, su nombre ES el mote, ponga lo que
 // ponga en «nombre» (que puede haberse quedado con el de Google: ver asegurarPerfil).
@@ -96,8 +97,8 @@ export function miPerfilOProvisional() {
 
 function explicar(error, queCosa) {
   return error && error.code === "permission-denied"
-    ? `Firebase no deja leer ${queCosa}. Falta publicar las reglas de Firestore.`
-    : `No se ha podido cargar ${queCosa}.`;
+    ? t("Firebase no deja leer {que}. Falta publicar las reglas de Firestore.", { que: t(queCosa) })
+    : t("No se ha podido cargar {que}.", { que: t(queCosa) });
 }
 
 // Avisa cada vez que cambia mi perfil, incluido el primer momento. Devuelve una función
@@ -367,7 +368,7 @@ async function apuntarCorreo(usuario) {
 // nombre) y se suelta el viejo. Si el nuevo está cogido, no cambia nada.
 
 export const FORMATO_MOTE = /^[A-Za-z0-9_.-]{3,20}$/;
-export const EXPLICACION_MOTE = "De 3 a 20 letras sin acentos, números, punto, guion o guion bajo.";
+export const EXPLICACION_MOTE = t("De 3 a 20 letras sin acentos, números, punto, guion o guion bajo.");
 
 export function claveMote(mote) {
   return String(mote || "").trim().toLowerCase();
@@ -387,7 +388,7 @@ export async function dueñoDelMote(mote) {
 export async function cambiarMote(nuevo) {
   const usuario = usuarioActual();
   const acceso = baseDeDatos();
-  if (!usuario || !acceso) return "Inicia sesión primero.";
+  if (!usuario || !acceso) return t("Inicia sesión primero.");
 
   nuevo = String(nuevo || "").trim();
   if (!FORMATO_MOTE.test(nuevo)) return EXPLICACION_MOTE;
@@ -402,7 +403,7 @@ export async function cambiarMote(nuevo) {
   if (actual === nuevo) return "";
 
   const dueño = await dueñoDelMote(nuevo);
-  if (dueño && dueño !== usuario.uid) return `«${nuevo}» ya lo tiene otra persona.`;
+  if (dueño && dueño !== usuario.uid) return t("«{nombre}» ya lo tiene otra persona.", { nombre: nuevo });
 
   const lote = fn.writeBatch(bd);
   // Si solo cambian mayúsculas («pepe» -> «Pepe») el documento es el mismo y solo se reescribe
@@ -416,8 +417,8 @@ export async function cambiarMote(nuevo) {
     console.error(error);
     // Lo normal: alguien lo ha cogido justo entre la comprobación y el guardado
     return error && error.code === "permission-denied"
-      ? `No se ha podido guardar «${nuevo}». Puede que ya esté cogido.`
-      : "No se ha podido guardar. Inténtalo otra vez.";
+      ? t("No se ha podido guardar «{nombre}». Puede que ya esté cogido.", { nombre: nuevo })
+      : t("No se ha podido guardar. Inténtalo otra vez.");
   }
 
   // En los lockes en los que estoy, el nombre nuevo lo pone lockes.js (ponerMiNombre) en
@@ -622,7 +623,7 @@ function resumenDeLocke(id, locke) {
   const combates = (Array.isArray(locke.combates) ? locke.combates : []).map((combate, i) => {
     const resultado = resultados[combate.id] || {};
     return {
-      nombre: combate.nombre || `Combate ${i + 1}`,
+      nombre: combate.nombre || t("Combate {n}", { n: i + 1 }),
       ganador: dentro.includes(resultado.ganador) ? resultado.ganador : "",
       marcador: resultado.marcador || "",
       equipos: Object.fromEntries(dentro.filter((uid) => (equipos[uid] || {})[combate.id]).map((uid) => [uid, equipos[uid][combate.id]]))

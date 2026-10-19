@@ -27,6 +27,7 @@ import {
   guardarMiPerfil, nuevoId, colorDeTipo
 } from "../comun/perfiles.js";
 import { confirmar } from "../comun/ventanas.js";
+import { t, LOCALE } from "../comun/idioma.js";
 
 let seccion = null;
 let lista = null;
@@ -67,7 +68,7 @@ function plantillaLocke(ganado, posicion, extra) {
   const tipo = ganado.tipo || TIPOS_POR_DEFECTO[0];
   return `
     <li class="locke-ganado ${extra ? "extra" : ""}" data-posicion="${posicion}" style="--color-locke: ${colorDeTipo(tipo)}"
-        title="Pulsa para ver los datos de este locke">
+        title="${t("Pulsa para ver los datos de este locke")}">
       <span class="locke-nombre">${escaparHTML(ganado.nombre)}</span>
       ${ganado.nota ? `<span class="locke-nota">${escaparHTML(ganado.nota)}</span>` : ""}
     </li>`;
@@ -93,7 +94,7 @@ function botonVerTodos(total) {
   if (quedan <= 0) return "";
   return `
     <li class="ver-todos-fila">
-      <button class="ver-todos" data-quedan="${quedan}">${icono("mas")} Ver todos (${quedan} más)</button>
+      <button class="ver-todos" data-quedan="${quedan}">${icono("mas")} ${t("Ver todos ({n} más)", { n: quedan })}</button>
     </li>`;
 }
 
@@ -110,8 +111,8 @@ function alternarVerTodos(boton) {
   const lista = boton.closest(".lista-plegable");
   const abierta = lista.classList.toggle("todos");
   boton.innerHTML = abierta
-    ? `${icono("menos")} Ver solo los últimos`
-    : `${icono("mas")} Ver todos (${boton.dataset.quedan} más)`;
+    ? `${icono("menos")} ${t("Ver solo los últimos")}`
+    : `${icono("mas")} ${t("Ver todos ({n} más)", { n: boton.dataset.quedan })}`;
   return abierta;
 }
 
@@ -134,14 +135,14 @@ function plantillaFlotante(ganado, ficha) {
 
   const filas = [];
   if (juego) filas.push(`<div class="flotante-fila">${icono("mando")}<span>${escaparHTML(juego)}</span></div>`);
-  if (fecha) filas.push(`<div class="flotante-fila">${icono("calendario")}<span>Terminó el ${escaparHTML(fecha)}</span></div>`);
-  if (deVidasIlimitadas(ganado)) filas.push(`<div class="flotante-fila">${icono("corazon")}<span>Vidas ilimitadas</span></div>`);
-  filas.push(`<div class="flotante-fila ganador">${icono("corona")}<span>Ganó <b>${escaparHTML(ganador)}</b></span></div>`);
+  if (fecha) filas.push(`<div class="flotante-fila">${icono("calendario")}<span>${t("Terminó el {fecha}", { fecha: escaparHTML(fecha) })}</span></div>`);
+  if (deVidasIlimitadas(ganado)) filas.push(`<div class="flotante-fila">${icono("corazon")}<span>${t("Vidas ilimitadas")}</span></div>`);
+  filas.push(`<div class="flotante-fila ganador">${icono("corona")}<span>${t("Ganó {nombre}", { nombre: `<b>${escaparHTML(ganador)}</b>` })}</span></div>`);
 
   const usuario = usuarioActual();
   const lista = participantes.length
     ? `
-      <div class="flotante-titulo">Participantes</div>
+      <div class="flotante-titulo">${t("Participantes")}</div>
       <ul class="flotante-participantes">
         ${participantes
           .map((p) => {
@@ -156,10 +157,10 @@ function plantillaFlotante(ganado, ficha) {
             return `
               <li class="${gano ? "gano" : ""}">
                 <span class="flotante-quien">${gano ? icono("corona") : ""}${escaparHTML(p.nombre)}</span>
-                ${p.rom ? `<span class="flotante-rom" title="Se pasó la ROM">${icono("mando")}</span>` : ""}
+                ${p.rom ? `<span class="flotante-rom" title="${t("Se pasó la ROM")}">${icono("mando")}</span>` : ""}
                 ${vidas === "" ? "" : `<span class="flotante-vidas">${icono("corazon")}${escaparHTML(vidas)}</span>`}
                 ${equipo ? `<span class="flotante-equipo">${carasDeEquipo(equipo, { mvp: mvp ?? -1 })}</span>` : ""}
-                ${tuyo ? `<button class="flotante-mi-equipo">${icono("estrella")} ${suyo ? "Cambiar mi equipo" : "Poner mi equipo"}</button>` : ""}
+                ${tuyo ? `<button class="flotante-mi-equipo">${icono("estrella")} ${suyo ? t("Cambiar mi equipo") : t("Poner mi equipo")}</button>` : ""}
               </li>`;
           })
           .join("")}
@@ -171,7 +172,7 @@ function plantillaFlotante(ganado, ficha) {
   const combates = (ganado.combates || []).filter((c) => c.nombre || c.ganador || Object.keys(c.equipos || {}).length);
   const listaCombates = combates.length
     ? `
-      <div class="flotante-titulo">Combates</div>
+      <div class="flotante-titulo">${t("Combates")}</div>
       <ul class="flotante-combates">
         ${combates
           .map((combate, i) => {
@@ -183,7 +184,7 @@ function plantillaFlotante(ganado, ficha) {
             return `
               <li>
                 <span class="flotante-combate-cabeza">
-                  <b>${escaparHTML(combate.nombre || `Combate ${i + 1}`)}</b>
+                  <b>${escaparHTML(combate.nombre || t("Combate {n}", { n: i + 1 }))}</b>
                   ${quien ? `<span>${icono("corona")} ${escaparHTML(quien)}${combate.marcador ? ` · ${escaparHTML(combate.marcador)}` : ""}</span>` : ""}
                 </span>
                 ${equipos ? `<span class="flotante-combate-equipos">${equipos}</span>` : ""}
@@ -196,7 +197,7 @@ function plantillaFlotante(ganado, ficha) {
   const sinDatos =
     !juego && !fecha && !participantes.length && !deVidasIlimitadas(ganado) && !(ganado.combates || []).length
       ? `<p class="flotante-vacio">${
-          ficha.mia ? "Sin más datos. Puedes añadirlos con el lápiz de tu ficha." : "Sin más datos."
+          ficha.mia ? t("Sin más datos. Puedes añadirlos con el lápiz de tu ficha.") : t("Sin más datos.")
         }</p>`
       : "";
 
@@ -287,15 +288,15 @@ function plantillaAcciones(ficha) {
   if (ficha.mia) {
     return `
       <div class="ficha-acciones">
-        <button class="accion-tipos" title="Tipos de locke">${icono("etiqueta")}</button>
-        <button class="accion-palmares" title="Editar mis lockes ganados">${icono("lapiz")}</button>
+        <button class="accion-tipos" title="${t("Tipos de locke")}">${icono("etiqueta")}</button>
+        <button class="accion-palmares" title="${t("Editar mis lockes ganados")}">${icono("lapiz")}</button>
       </div>`;
   }
 
   return `
     <div class="ficha-acciones">
-      <button class="accion-comparar" title="Comparar conmigo">${icono("espadas")}</button>
-      <button class="accion-quitar" title="Quitar de amigos">${icono("aspa")}</button>
+      <button class="accion-comparar" title="${t("Comparar conmigo")}">${icono("espadas")}</button>
+      <button class="accion-quitar" title="${t("Quitar de amigos")}">${icono("aspa")}</button>
     </div>`;
 }
 
@@ -310,8 +311,8 @@ function plantillaListaCaraACara(lista, mio, suyo) {
     const resultado = {
       mia: `${icono("corona")} ${escaparHTML(mio.nombre)}`,
       suya: `${icono("corona")} ${escaparHTML(suyo.nombre)}`,
-      marcha: "En marcha",
-      otro: `${icono("corona")} ${escaparHTML(locke.ganador || "Otra persona")}`
+      marcha: t("En marcha"),
+      otro: `${icono("corona")} ${escaparHTML(locke.ganador || t("Otra persona"))}`
     }[locke.resultado];
     const fecha = locke.fecha ? `<span class="comparar-fecha">${escaparHTML(fechaLarga(locke.fecha))}</span>` : "";
 
@@ -326,7 +327,7 @@ function plantillaListaCaraACara(lista, mio, suyo) {
 }
 
 function plantillaLuchador(perfil, victorias, clase) {
-  const nombre = escaparHTML(perfil.nombre || "Jugador");
+  const nombre = escaparHTML(perfil.nombre || t("Jugador"));
   const urls = [perfil.foto].filter(Boolean).map(escaparHTML);
   const imagen = urls.length
     ? imagenConRespaldo(urls, `alt="${nombre}" draggable="false" referrerpolicy="no-referrer" data-quitar-si-falla`)
@@ -334,10 +335,10 @@ function plantillaLuchador(perfil, victorias, clase) {
   return `
     <div class="luchador ${clase}">
       ${clase.includes("gana") ? `<span class="luchador-corona">${icono("corona")}</span>` : ""}
-      <div class="jugador-foto" data-inicial="${escaparHTML((perfil.nombre || "?")[0])}" data-perfil="${escaparHTML(perfil.uid || "")}" title="Ver perfil">${imagen}</div>
+      <div class="jugador-foto" data-inicial="${escaparHTML((perfil.nombre || "?")[0])}" data-perfil="${escaparHTML(perfil.uid || "")}" title="${t("Ver perfil")}">${imagen}</div>
       <span class="luchador-nombre">${nombre}</span>
       <span class="luchador-victorias">${victorias}</span>
-      <span class="luchador-etiqueta">${victorias === 1 ? "victoria" : "victorias"}</span>
+      <span class="luchador-etiqueta">${victorias === 1 ? t("victoria") : t("victorias")}</span>
     </div>`;
 }
 
@@ -350,12 +351,12 @@ function abrirComparacion(uid) {
   const claseMia = mias > suyas ? "gana" : mias < suyas ? "pierde" : "";
   const claseSuya = suyas > mias ? "gana" : suyas < mias ? "pierde" : "";
 
-  let resumen = "Todavía no habéis jugado ningún locke juntos.";
+  let resumen = t("Todavía no habéis jugado ningún locke juntos.");
   if (juntos) {
-    resumen = `${juntos} locke${juntos === 1 ? "" : "s"} jugado${juntos === 1 ? "" : "s"} juntos`;
-    if (enMarcha) resumen += ` · ${enMarcha} en marcha`;
+    resumen = t(juntos === 1 ? "{n} locke jugado juntos" : "{n} lockes jugados juntos", { n: juntos });
+    if (enMarcha) resumen += ` · ${t("{n} en marcha", { n: enMarcha })}`;
     const otros = juntos - enMarcha - mias - suyas;
-    if (otros > 0) resumen += ` · ${otros} los ganó otra persona`;
+    if (otros > 0) resumen += ` · ${t("{n} los ganó otra persona", { n: otros })}`;
   }
 
   dialogoComparar.querySelector(".comparar-cuerpo").innerHTML = `
@@ -365,7 +366,7 @@ function abrirComparacion(uid) {
       ${plantillaLuchador(suyo, suyas, claseSuya)}
     </div>
     <p class="comparar-resumen">${escaparHTML(resumen)}</p>
-    ${juntos && mias === suyas && mias + suyas > 0 ? `<p class="comparar-empate">Vais empatados</p>` : ""}
+    ${juntos && mias === suyas && mias + suyas > 0 ? `<p class="comparar-empate">${t("Vais empatados")}</p>` : ""}
     ${jugados.length ? plantillaListaCaraACara(jugados, mio, suyo) : ""}`;
   dialogoComparar.showModal();
 }
@@ -390,10 +391,10 @@ function plantillaFicha(ficha) {
     <article class="ficha-jugador plegada ${ficha.mia ? "mia" : ""} ${conectado ? "conectado" : ""} ${claseFondo(ficha.fondo)}"
              style="${estiloFondo(ficha.fondo)}"
              draggable="true" data-clave="${escaparHTML(ficha.clave)}"
-             title="Pulsa para ver los lockes">
-      ${ficha.mia ? "" : `<span class="punto-conectado" title="Tiene la web abierta"></span>`}
+             title="${t("Pulsa para ver los lockes")}">
+      ${ficha.mia ? "" : `<span class="punto-conectado" title="${t("Tiene la web abierta")}"></span>`}
       ${plantillaAcciones(ficha)}
-      <div class="jugador-foto" data-inicial="${escaparHTML(ficha.nombre[0] || "?")}" data-perfil="${escaparHTML(ficha.clave)}" title="Ver perfil">${imagen}</div>
+      <div class="jugador-foto" data-inicial="${escaparHTML(ficha.nombre[0] || "?")}" data-perfil="${escaparHTML(ficha.clave)}" title="${t("Ver perfil")}">${imagen}</div>
       <h2 class="jugador-nombre">${alt}</h2>
 
       <div class="contadores-locke">${tipos}</div>
@@ -407,7 +408,7 @@ function plantillaFicha(ficha) {
 function fichaDePerfil(perfil, mia) {
   return {
     clave: perfil.uid,
-    nombre: perfil.nombre || "Jugador",
+    nombre: perfil.nombre || t("Jugador"),
     urls: [perfil.foto].filter(Boolean),
     tipos: tiposParaFicha(perfil),
     ganados: perfil.ganados || [],
@@ -475,21 +476,21 @@ function pintarSolicitudes(pendientes, perfiles) {
   solicitudes.innerHTML = pendientes
     .map((amistad) => {
       const perfil = perfiles.get(amistad.otro);
-      const nombre = escaparHTML((perfil && perfil.nombre) || "Alguien");
+      const nombre = escaparHTML((perfil && perfil.nombre) || t("Alguien"));
 
       if (amistad.pidio === usuario.uid) {
         return `
           <div class="solicitud" data-amistad="${escaparHTML(amistad.id)}">
-            <span>Esperando a <b>${nombre}</b></span>
-            <button class="solicitud-cancelar" title="Cancelar">${icono("aspa")}</button>
+            <span>${t("Esperando a {nombre}", { nombre: `<b>${nombre}</b>` })}</span>
+            <button class="solicitud-cancelar" title="${t("Cancelar")}">${icono("aspa")}</button>
           </div>`;
       }
 
       return `
         <div class="solicitud entrante" data-amistad="${escaparHTML(amistad.id)}">
-          <span><b>${nombre}</b> quiere ser tu amigo</span>
-          <button class="solicitud-aceptar" title="Aceptar">${icono("visto")}</button>
-          <button class="solicitud-rechazar" title="Rechazar">${icono("aspa")}</button>
+          <span>${t("{nombre} quiere ser tu amigo", { nombre: `<b>${nombre}</b>` })}</span>
+          <button class="solicitud-aceptar" title="${t("Aceptar")}">${icono("visto")}</button>
+          <button class="solicitud-rechazar" title="${t("Rechazar")}">${icono("aspa")}</button>
         </div>`;
     })
     .join("");
@@ -506,36 +507,36 @@ async function agregar() {
 
   const usuario = usuarioActual();
   if (!usuario) {
-    aviso.textContent = "Primero inicia sesión.";
+    aviso.textContent = t("Primero inicia sesión.");
     return;
   }
 
-  aviso.textContent = "Buscando...";
+  aviso.textContent = t("Buscando...");
 
   try {
     const perfil = await buscarAmigo(texto);
     if (!perfil) {
       aviso.textContent = texto.includes("@")
-        ? "Nadie con ese correo. Tiene que entrar una vez en la web primero."
-        : "Nadie con ese mote.";
+        ? t("Nadie con ese correo. Tiene que entrar una vez en la web primero.")
+        : t("Nadie con ese mote.");
       return;
     }
     if (perfil.uid === usuario.uid) {
-      aviso.textContent = "Ese eres tú.";
+      aviso.textContent = t("Ese eres tú.");
       return;
     }
     if (amigosAceptados().some((amistad) => amistad.otro === perfil.uid)) {
-      aviso.textContent = `${perfil.nombre} ya es tu amigo.`;
+      aviso.textContent = t("{nombre} ya es tu amigo.", { nombre: perfil.nombre });
       return;
     }
 
     await pedirAmistad(perfil.uid);
     campoCorreo.value = "";
-    aviso.textContent = `Solicitud enviada a ${perfil.nombre}.`;
+    aviso.textContent = t("Solicitud enviada a {nombre}.", { nombre: perfil.nombre });
     await recargar();
   } catch (error) {
     console.error(error);
-    aviso.textContent = "No se ha podido. Inténtalo otra vez.";
+    aviso.textContent = t("No se ha podido. Inténtalo otra vez.");
   }
 }
 
@@ -550,9 +551,9 @@ function pintarTipos() {
     .map(
       (tipo, posicion) => `
         <div class="fila-tipo" data-posicion="${posicion}">
-          <input class="tipo-color" type="color" value="${colorDeTipo(tipo)}" title="Color">
-          <input class="tipo-nombre" type="text" value="${escaparHTML(tipo.nombre)}" placeholder="Nombre del tipo">
-          <button class="tipo-quitar" title="Quitar">${icono("aspa")}</button>
+          <input class="tipo-color" type="color" value="${colorDeTipo(tipo)}" title="${t("Color")}">
+          <input class="tipo-nombre" type="text" value="${escaparHTML(tipo.nombre)}" placeholder="${t("Nombre del tipo")}">
+          <button class="tipo-quitar" title="${t("Quitar")}">${icono("aspa")}</button>
         </div>`
     )
     .join("");
@@ -607,10 +608,10 @@ function pintarPalmares() {
       return `
         <div class="fila-palmares" data-posicion="${posicion}">
           <div class="fila-palmares-principal">
-            <input class="palmares-nombre" type="text" value="${escaparHTML(ganado.nombre)}" placeholder="Juego o nombre del locke">
+            <input class="palmares-nombre" type="text" value="${escaparHTML(ganado.nombre)}" placeholder="${t("Juego o nombre del locke")}">
             <select class="palmares-tipo">${opciones}</select>
-            <input class="palmares-nota" type="text" value="${escaparHTML(ganado.nota || "")}" placeholder="Nota (opcional)">
-            <button class="palmares-quitar" title="Quitar">${icono("aspa")}</button>
+            <input class="palmares-nota" type="text" value="${escaparHTML(ganado.nota || "")}" placeholder="${t("Nota (opcional)")}">
+            <button class="palmares-quitar" title="${t("Quitar")}">${icono("aspa")}</button>
           </div>
           ${plantillaDetalles(ganado)}
         </div>`;
@@ -640,7 +641,7 @@ function nombresParaParticipar(ganado) {
 
   return [...new Set(nombres)]
     .filter((nombre) => !yaEstan.has(nombre.toLowerCase()))
-    .sort((uno, otro) => uno.localeCompare(otro, "es"));
+    .sort((uno, otro) => uno.localeCompare(otro, LOCALE));
 }
 
 const OTRA_PERSONA = "__otra";
@@ -651,8 +652,8 @@ function plantillaDetalles(ganado) {
   const resumen = [
     nombreJuego(ganado),
     fechaLarga(ganado.fechaFin),
-    participantes.length ? `${participantes.length} participante${participantes.length === 1 ? "" : "s"}` : "",
-    ilimitadas ? "vidas ilimitadas" : ""
+    participantes.length ? t(participantes.length === 1 ? "{n} participante" : "{n} participantes", { n: participantes.length }) : "",
+    ilimitadas ? t("vidas ilimitadas") : ""
   ].filter(Boolean);
 
   // Cada participante: nombre, vidas, si se pasó la ROM y su equipo final (pulsando un
@@ -662,21 +663,21 @@ function plantillaDetalles(ganado) {
       (p) => `
         <div class="participante" data-participante="${escaparHTML(p.id || "")}">
           <div class="participante-fila">
-            <input class="participante-nombre" type="text" value="${escaparHTML(p.nombre || "")}" placeholder="Nombre">
+            <input class="participante-nombre" type="text" value="${escaparHTML(p.nombre || "")}" placeholder="${t("Nombre")}">
             <span class="participante-corazon">${icono("corazon")}</span>
             ${campoNumero(`<input class="participante-vidas" type="number" min="0" max="999"
               value="${p.vidas === null || p.vidas === undefined ? "" : escaparHTML(p.vidas)}"
-              placeholder="Vidas" title="Vidas con las que acabó">`)}
-            <label class="participante-rom" title="Se pasó la ROM">
+              placeholder="${t("Vidas")}" title="${t("Vidas con las que acabó")}">`)}
+            <label class="participante-rom" title="${t("Se pasó la ROM")}">
               <input class="participante-rom-casilla" type="checkbox" ${p.rom ? "checked" : ""}>
               <span>${icono("mando")} ROM</span>
             </label>
-            <button class="participante-quitar" title="Quitar">${icono("aspa")}</button>
+            <button class="participante-quitar" title="${t("Quitar")}">${icono("aspa")}</button>
           </div>
           <div class="participante-equipo">
             ${p.equipo ? plantillaEquipoMvp(p) : ""}
             <button type="button" class="palmares-elegir-equipo" data-para="final">
-              ${icono("estrella")} ${p.equipo ? "Cambiar equipo final" : "Equipo final"}
+              ${icono("estrella")} ${p.equipo ? t("Cambiar equipo final") : t("Equipo final")}
             </button>
           </div>
         </div>`
@@ -690,35 +691,35 @@ function plantillaDetalles(ganado) {
   return `
     <details class="palmares-mas" ${ganado.abierto ? "open" : ""}>
       <summary>
-        Juego, fecha, participantes y combates
+        ${t("Juego, fecha, participantes y combates")}
         ${resumen.length ? `<span class="palmares-resumen">· ${escaparHTML(resumen.join(" · "))}</span>` : ""}
       </summary>
       <div class="palmares-detalles ${ilimitadas ? "ilimitadas" : ""}">
         <div class="palmares-campo">
-          <span>Juego</span>
+          <span>${t("Juego")}</span>
           ${plantillaCampoJuego(ganado)}
         </div>
         <label class="palmares-campo">
-          <span>Terminó el</span>
+          <span>${t("Terminó el")}</span>
           <input class="palmares-fecha" type="date" value="${escaparHTML(ganado.fechaFin || "")}">
         </label>
         <label class="palmares-casilla">
           <input class="palmares-ilimitadas" type="checkbox" ${ilimitadas ? "checked" : ""}>
-          <span>Vidas ilimitadas</span>
+          <span>${t("Vidas ilimitadas")}</span>
         </label>
         <div class="palmares-campo participantes">
-          <span class="participantes-titulo">Participantes<span class="con-vidas"> y vidas con las que acabaron</span></span>
+          <span class="participantes-titulo">${t("Participantes")}<span class="con-vidas"> ${t("y vidas con las que acabaron")}</span></span>
           ${filas}
-          <select class="participante-elegir" title="Añadir participante">
-            <option value="">+ Añadir participante...</option>
+          <select class="participante-elegir" title="${t("Añadir participante")}">
+            <option value="">+ ${t("Añadir participante...")}</option>
             ${opciones}
-            <option value="${OTRA_PERSONA}">Otra persona (escribir el nombre)</option>
+            <option value="${OTRA_PERSONA}">${t("Otra persona (escribir el nombre)")}</option>
           </select>
         </div>
         <div class="palmares-campo palmares-combates">
-          <span class="participantes-titulo">Combates</span>
+          <span class="participantes-titulo">${t("Combates")}</span>
           ${(ganado.combates || []).map((combate, i) => plantillaCombatePalmares(combate, i, participantes)).join("")}
-          <button type="button" class="palmares-anadir-combate">${icono("mas")} Añadir combate</button>
+          <button type="button" class="palmares-anadir-combate">${icono("mas")} ${t("Añadir combate")}</button>
         </div>
       </div>
     </details>`;
@@ -727,7 +728,7 @@ function plantillaDetalles(ganado) {
 // El equipo final de un participante; pulsando un Pokémon se marca (o desmarca) como su MVP
 function plantillaEquipoMvp(p) {
   return `
-    <span class="participante-mvp" title="Pulsa un Pokémon para que sea su MVP">
+    <span class="participante-mvp" title="${t("Pulsa un Pokémon para que sea su MVP")}">
       ${p.equipo.pokemon
         .map((poke, i) => `<button type="button" class="cara-equipo palmares-mvp ${i === p.mvp ? "mvp" : ""}" data-mvp="${i}">${caraDePokemon(poke)}</button>`)
         .join("")}
@@ -753,8 +754,8 @@ function plantillaCombatePalmares(combate, i, participantes) {
         <div class="palmares-combate-equipo" data-participante="${escaparHTML(p.id)}">
           <span class="palmares-combate-quien">${escaparHTML(p.nombre)}</span>
           ${equipo ? carasDeEquipo(equipo) : ""}
-          <button type="button" class="palmares-elegir-equipo" data-para="${i}" title="Equipo con el que jugó este combate">
-            ${icono("pokeball")} ${equipo ? "Cambiar" : "Equipo"}
+          <button type="button" class="palmares-elegir-equipo" data-para="${i}" title="${t("Equipo con el que jugó este combate")}">
+            ${icono("pokeball")} ${equipo ? t("Cambiar") : t("Equipo")}
           </button>
         </div>`;
     })
@@ -763,16 +764,16 @@ function plantillaCombatePalmares(combate, i, participantes) {
   return `
     <div class="palmares-combate" data-combate="${i}">
       <div class="palmares-combate-fila">
-        <input class="palmares-combate-nombre" type="text" maxlength="30" value="${escaparHTML(combate.nombre || "")}" placeholder="Combate ${i + 1}">
-        <select class="palmares-combate-ganador" title="Quién lo ganó">
-          <option value="">Ganador...</option>
+        <input class="palmares-combate-nombre" type="text" maxlength="30" value="${escaparHTML(combate.nombre || "")}" placeholder="${t("Combate {n}", { n: i + 1 })}">
+        <select class="palmares-combate-ganador" title="${t("Quién lo ganó")}">
+          <option value="">${t("Ganador...")}</option>
           ${ganadores}
         </select>
-        <select class="palmares-combate-marcador" title="Resultado">
-          <option value="">Resultado</option>
+        <select class="palmares-combate-marcador" title="${t("Resultado")}">
+          <option value="">${t("Resultado")}</option>
           ${marcadores}
         </select>
-        <button class="palmares-quitar-combate" title="Quitar combate">${icono("aspa")}</button>
+        <button class="palmares-quitar-combate" title="${t("Quitar combate")}">${icono("aspa")}</button>
       </div>
       ${equipos ? `<div class="palmares-combate-equipos">${equipos}</div>` : ""}
     </div>`;
@@ -956,14 +957,14 @@ function activarFichas() {
       else if (boton.classList.contains("accion-quitar")) await quitarAmigo(ficha);
     } catch (error) {
       console.error(error);
-      aviso.textContent = "No se ha podido. Inténtalo otra vez.";
+      aviso.textContent = t("No se ha podido. Inténtalo otra vez.");
     }
   });
 }
 
 async function quitarAmigo(ficha) {
   const nombre = ficha.querySelector(".jugador-nombre").textContent;
-  if (!(await confirmar(`¿Quitar a ${nombre} de tus amigos?`))) return;
+  if (!(await confirmar(t("¿Quitar a {nombre} de tus amigos?", { nombre })))) return;
 
   const amistad = amigosAceptados().find((cada) => cada.otro === ficha.dataset.clave);
   if (amistad) await borrarAmistad(amistad.id);
@@ -1166,6 +1167,6 @@ export function mostrar() {
   aviso.textContent = "";
   recargar().catch((error) => {
     console.error(error);
-    aviso.textContent = "No se han podido cargar los amigos.";
+    aviso.textContent = t("No se han podido cargar los amigos.");
   });
 }

@@ -14,7 +14,7 @@
 
 #vista-inicio button {
   font-family: inherit;
-  color: #f2f2f2;
+  color: var(--t-texto);
   cursor: pointer;
 }
 
@@ -33,10 +33,23 @@
   padding: 0.6rem 0.2rem 0;
 }
 
+/* La Poké Ball del saludo gira sin parar (el retraso lo pone el JS para que no salte al
+   repintar) */
 .inicio-logo {
   flex: none;
   width: 3.4rem;
   height: 3.4rem;
+  animation: inicio-girar 6s linear infinite;
+}
+
+@keyframes inicio-girar {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inicio-logo {
+    animation: none;
+  }
 }
 
 .inicio-saludo {
@@ -72,7 +85,7 @@
 }
 
 .inicio-avisos .icono {
-  color: #f1c40f;
+  color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
 }
 
 .inicio-avisos:hover {
@@ -85,6 +98,11 @@
 
 .inicio-entrar:hover {
   filter: brightness(1.12);
+}
+
+.inicio-entrar.grande {
+  padding: 0.75rem 1.3rem;
+  font-size: 1rem;
 }
 
 /* ---------- Lockes en marcha y conectados ---------- */
@@ -102,7 +120,7 @@
   gap: 0.5rem;
   padding: 0.9rem;
   border-radius: 0.8rem;
-  background: #252735;
+  background: var(--t-fondo-2);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
@@ -135,13 +153,13 @@
   padding: 0.6rem 0.8rem;
   border: none;
   border-radius: 0.55rem;
-  background: #2c2e3e;
+  background: var(--t-panel);
   box-shadow: inset 4px 0 0 var(--color-locke, #3498db);
   text-align: left;
 }
 
 .inicio-locke:hover {
-  background: #32354a;
+  background: var(--t-panel-3);
 }
 
 .inicio-locke-datos {
@@ -195,9 +213,9 @@
   width: 1.9rem;
   height: 1.9rem;
   overflow: hidden;
-  border: 2px solid #2c2e3e;
+  border: 2px solid var(--t-panel);
   border-radius: 50%;
-  background: #3a3d52;
+  background: var(--t-control);
   box-sizing: border-box;
   font-size: 0.8rem;
   font-weight: bold;
@@ -230,10 +248,10 @@
   font-weight: bold;
 }
 
-.inicio-cifra.victorias .icono { color: #f1c40f; }
+.inicio-cifra.victorias .icono { color: color-mix(in srgb, #f1c40f var(--t-vivo), black); }
 .inicio-cifra.vidas .icono { color: #e74c3c; }
 .inicio-cifra.vidas.fuera { opacity: 0.6; }
-.inicio-cifra.vidas.fuera .icono { color: #f2f2f2; }
+.inicio-cifra.vidas.fuera .icono { color: var(--t-texto); }
 
 .inicio-pie {
   display: flex;
@@ -249,13 +267,13 @@
   padding: 0.45rem 0.8rem;
   border: none;
   border-radius: 0.45rem;
-  background: #3a3d52;
+  background: var(--t-control);
   font-size: 0.85rem;
   font-weight: bold;
 }
 
 .inicio-pie button:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 /* El botón de crear, en el color de su sección */
@@ -279,11 +297,6 @@
   min-width: 0;
 }
 
-/* Sin sesión, los equipos solos */
-.inicio-solo {
-  max-width: 36rem;
-}
-
 .inicio-equipos h2 .icono { color: rgb(91, 141, 239); }
 
 .inicio-equipo {
@@ -295,12 +308,12 @@
   padding: 0.55rem 0.7rem;
   border: none;
   border-radius: 0.55rem;
-  background: #2c2e3e;
+  background: var(--t-panel);
   text-align: left;
 }
 
 .inicio-equipo:hover {
-  background: #32354a;
+  background: var(--t-panel-3);
 }
 
 .inicio-equipo strong {
@@ -333,7 +346,7 @@
 }
 
 .inicio-amigo:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(var(--t-tinte), 0.06);
 }
 
 .inicio-amigo > span:last-child {
@@ -350,124 +363,317 @@
   font-size: 1.1rem;
 }
 
-/* Tarjeta de notas personales en la vista de inicio */
-.inicio-notas {
-  margin-top: 1rem;
+/* ---------- Bienvenida (sin sesión) ---------- */
+
+/* A la izquierda qué es la web y el botón de entrar; a la derecha sus secciones */
+.inicio-bienvenida {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  gap: 1.6rem;
+  padding: 1.6rem;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(var(--color-vista), 0.16), rgba(var(--color-vista), 0) 55%),
+    var(--t-fondo-2);
+  box-shadow: inset 0 0 0 1px rgba(var(--color-vista), 0.25), 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-.inicio-notas-texto {
-  width: 100%;
-  min-height: 120px;
-  margin-top: 0.8rem;
-  padding: 0.8rem 1rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(0, 0, 0, 0.2);
-  color: inherit;
-  font-family: inherit;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  resize: vertical;
-  box-sizing: border-box;
+/* Una Poké Ball grande y casi transparente de fondo, abajo a la izquierda */
+.inicio-bienvenida::before {
+  content: "";
+  position: absolute;
+  left: -5rem;
+  bottom: -6rem;
+  width: 18rem;
+  height: 18rem;
+  background: url("../img/pokeball-512.png") center / contain no-repeat;
+  opacity: 0.05;
+  transform: rotate(-20deg);
+  pointer-events: none;
 }
 
-.inicio-notas-texto:focus {
-  outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.25);
+.inicio-bienvenida-texto {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.8rem;
 }
 
-/* Tarjeta de notas y avisos de la web */
-.inicio-avisos-web {
-  margin-top: 1rem;
+.inicio-bienvenida .inicio-bienvenida-texto h2 {
+  margin: 0;
+  font-size: 1.75rem;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 1;
 }
 
-.inicio-avisos-contenido {
-  margin-top: 0.8rem;
-  font-size: 0.95rem;
+.inicio-bienvenida-texto p {
+  margin: 0;
+  font-size: 0.98rem;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.85);
-  word-break: break-word;
+  opacity: 0.85;
 }
 
-/* Bloque de sugerencias */
-.inicio-sugerencias {
-  margin-top: 1rem;
+.inicio-bienvenida-texto b {
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
-.sugerencias-subtexto {
+.inicio-bienvenida-texto .inicio-bienvenida-cuenta {
   font-size: 0.88rem;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: 0.4rem;
-  margin-bottom: 0.8rem;
+  opacity: 0.65;
+}
+
+.inicio-bienvenida-texto .inicio-entrar {
+  margin-top: 0.3rem;
+}
+
+.inicio-bienvenida-secciones {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+/* Cada sección: su icono en su color y una línea de qué hace */
+.inicio-seccion {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  min-width: 0;
+  padding: 0.65rem 0.75rem;
+  border: none;
+  border-radius: 0.55rem;
+  background: var(--t-panel);
+  text-align: left;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.inicio-seccion:hover {
+  background: var(--t-panel-3);
+  box-shadow: inset 0 0 0 1px rgba(var(--color-seccion), 0.55);
+}
+
+.inicio-seccion-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background: rgba(var(--color-seccion), 0.16);
+  color: rgb(var(--color-seccion));
+}
+
+#vista-inicio .inicio-seccion-icono .icono {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.inicio-seccion-datos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.inicio-seccion-datos strong {
+  font-size: 0.92rem;
+}
+
+.inicio-seccion-datos span {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  opacity: 0.65;
+}
+
+/* ---------- Notas y avisos ---------- */
+
+.inicio-avisos-web h2 .icono { color: color-mix(in srgb, #f1c40f var(--t-vivo), black); }
+
+.inicio-nota {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  opacity: 0.8;
+}
+
+.inicio-avisos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0.3rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Cada aviso, como los lockes: su color a la izquierda */
+.inicio-avisos-lista li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.55rem;
+  background: var(--t-panel);
+  box-shadow: inset 3px 0 0 rgb(var(--color-aviso));
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.inicio-avisos-lista b {
+  color: var(--t-texto-fuerte);
+}
+
+.inicio-aviso-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 0.45rem;
+  background: rgba(var(--color-aviso), 0.15);
+  color: rgb(var(--color-aviso));
+}
+
+/* ---------- Sugerencias ---------- */
+
+.inicio-sugerencias { --color-bloque: 231, 76, 60; }
+.inicio-sugerencias h2 .icono { color: rgb(231, 76, 60); }
+
+.sugerencias-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
 }
 
 .sugerencias-texto {
   width: 100%;
-  min-height: 90px;
-  padding: 0.8rem 1rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(0, 0, 0, 0.2);
+  min-height: 6.5rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 0.55rem;
+  background: var(--t-panel);
+  box-sizing: border-box;
   color: inherit;
   font-family: inherit;
-  font-size: 0.95rem;
-  line-height: 1.4;
+  font-size: 0.9rem;
+  line-height: 1.45;
   resize: vertical;
-  box-sizing: border-box;
+}
+
+.sugerencias-texto::placeholder {
+  color: rgba(var(--t-texto-rgb), 0.4);
 }
 
 .sugerencias-texto:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.25);
+  border-color: rgba(var(--color-bloque), 0.7);
+  background: #2f3144;
 }
 
-.sugerencias-pie {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 0.8rem;
-  flex-wrap: wrap;
-}
-
-/* Botón estilizado y centrado */
-.boton-sugerencias {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.2rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  font-family: inherit;
-  line-height: 1;
-  text-align: center;
-  cursor: pointer;
-  border: none;
-  border-radius: 6px;
-  transition: background-color 0.15s ease, transform 0.1s ease;
-}
-
-.boton-sugerencias .icono {
-  width: 1.1em;
-  height: 1.1em;
-  flex-shrink: 0;
-}
-
-.boton-sugerencias:active {
-  transform: scale(0.98);
-}
-
-.boton-sugerencias:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
+/* El mensaje de «Enviando…» / «¡Gracias!», a la izquierda del botón */
 .sugerencias-aviso {
-  font-size: 0.88rem;
-  font-weight: 500;
+  align-self: center;
+  margin-right: auto;
+  font-size: 0.82rem;
+  opacity: 0.75;
+}
+
+.sugerencias-aviso.ok {
+  color: color-mix(in srgb, #2ecc71 var(--t-vivo), black);
+  opacity: 1;
+}
+
+.sugerencias-aviso.error {
+  color: #e74c3c;
+  opacity: 1;
+}
+
+.inicio-pie button:disabled {
+  opacity: 0.6;
+  cursor: default;
+  filter: none;
+}
+
+/* ---------- Con sesión, sin scroll ----------
+   La sección ocupa justo la ventana (menos el margen de <main>): las dos filas se reparten el
+   alto y, si algo no cabe, se desplaza solo su lista, por dentro del recuadro. En el móvil
+   (una sola columna) no cabe: ahí sigue bajando como siempre. */
+
+.inicio-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+@media (min-width: 761px) {
+  #vista-inicio.inicio-fijo {
+    height: calc(100vh - 1.7rem);
+    height: calc(100dvh - 1.7rem);
+    /* Lo justo para que no se corten las sombras de los recuadros */
+    padding: 0 0.4rem 0.5rem;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .inicio-fijo > .inicio-cabecera {
+    flex: none;
+  }
+
+  .inicio-fijo > .inicio-columnas {
+    flex: 1 1 auto;
+    min-height: 0;
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .inicio-fijo .inicio-lado {
+    min-height: 0;
+  }
+
+  .inicio-fijo .inicio-bloque {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* El último de cada lado se estira hasta abajo */
+  .inicio-fijo .inicio-lado > .inicio-bloque:last-child {
+    flex-grow: 1;
+  }
+
+  .inicio-fijo .inicio-bloque > * {
+    flex: none;
+  }
+
+  .inicio-fijo .inicio-bloque > .inicio-lista,
+  .inicio-fijo .inicio-bloque > .inicio-amigos-lista,
+  .inicio-fijo .inicio-bloque > .inicio-avisos-lista {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* Las sugerencias: el cuadro de texto ocupa lo que quede */
+  .inicio-fijo .inicio-bloque > .sugerencias-form {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .inicio-fijo .sugerencias-texto {
+    flex: 1 1 auto;
+    min-height: 3rem;
+    resize: none;
+  }
+
+  .inicio-fijo .sugerencias-form .inicio-pie {
+    flex: none;
+  }
 }
 
 /* ---------- Al llegar a un locke desde Inicio: se ilumina un momento ---------- */
@@ -498,5 +704,20 @@
 
   .inicio-locke-caras {
     display: none;
+  }
+
+  .inicio-bienvenida {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 1.1rem;
+  }
+
+  .inicio-bienvenida .inicio-bienvenida-texto h2 {
+    font-size: 1.45rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .inicio-bienvenida-secciones {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

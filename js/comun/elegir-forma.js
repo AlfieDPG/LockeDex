@@ -6,6 +6,7 @@
 import { pedirJSON, URL_API } from "./api.js";
 import { nombreOpcionForma, etiquetaForma, formaDeTipo } from "./formas.js";
 import { indicePMD } from "./formas-pmd.js";
+import { t, nombre } from "./idioma.js";
 
 // Devuelve el nombre de la variedad («persian-alola») o null si se cancela.
 // entrada: { es } (para el título); info: lo de obtenerVariedades.
@@ -15,7 +16,7 @@ export function elegirForma(entrada, info) {
     const contenedor = document.getElementById("forma-opciones");
     let elegido = null;
 
-    document.getElementById("forma-titulo").textContent = `¿Qué forma de ${entrada.es}?`;
+    document.getElementById("forma-titulo").textContent = t("¿Qué forma de {pokemon}?", { pokemon: nombre(entrada) });
     contenedor.innerHTML = "";
 
     for (const slug of info.lista) {

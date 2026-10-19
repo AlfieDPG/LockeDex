@@ -16,7 +16,8 @@
 // herramientas/generar-datos.html), y la primera vez se la guarda en el navegador.
 
 import { descargarCSV, cargarDatos, datos } from "../comun/datos.js";
-import { etiquetaForma, formaVisible } from "../comun/formas.js";
+import { etiquetaForma, formaVisible, nombreConFormaEnIngles } from "../comun/formas.js";
+import { enIngles } from "../comun/idioma.js";
 import { indicePMD } from "../comun/formas-pmd.js";
 import { leer, escribir } from "../comun/almacen.js";
 
@@ -188,7 +189,7 @@ function montarTabla(bases, variedades, especies, tipos, nombresEspecies) {
 
     for (const variedad of formasDistintas(porEspecie.get(especie), bases, tipos)) {
       const datosEspecie = especies[especie] || {};
-      const etiqueta = variedad.porDefecto ? "" : etiquetaForma(variedad.slug, datosEspecie.slug);
+      const etiqueta = variedad.porDefecto ? "" : etiquetaForma(variedad.slug, datosEspecie.slug, "es");
 
       filas.push({
         clave: variedad.id,   // id de PokeAPI: único, también para las formas
@@ -248,6 +249,14 @@ export function archivoHoja(numero) {
 }
 
 const URL_POKEDEX = new URL("../../datos/pokedex.json", import.meta.url);
+
+// El nombre de una fila («Raticate (Alola)») en el idioma de la web. La tabla va en español;
+// en inglés, con el nombre inglés de la especie (si ya están cargados los nombres) y la forma.
+export function nombreDeFila(fila, idioma = enIngles ? "en" : "es") {
+  if (!fila || idioma !== "en") return fila ? fila.nombre : "";
+  const especie = datos && datos.pokemon.find((p) => p.id === fila.numero);
+  return nombreConFormaEnIngles(fila.nombre, especie && especie.en);
+}
 
 // Lista ordenada por número de Pokédex (y cada especie seguida de sus formas):
 // { clave, numero, forma, tipos, nombre, bases: [PS, At, Def, AtEsp, DefEsp, Vel], total, retrato }

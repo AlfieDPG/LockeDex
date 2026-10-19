@@ -10,7 +10,7 @@
 // Lo usan «Level caps» (los juegos de la web) y el editor de los personalizados, que deja
 // elegir cualquiera de estos personajes como imagen de un combate.
 
-import { COMBATES } from "./datos.js";
+import { COMBATES, textoDeCombate } from "./datos.js";
 import { JUEGOS } from "../comun/juegos.js";
 import { urlSpritePixel } from "../comun/imagenes.js";
 
@@ -143,7 +143,8 @@ export function retratoDeLaWeb(idJuego, nombre) {
 }
 
 // Todos los personajes con retrato, sin repetir, en el orden de los juegos:
-// [{ nombre, imagen, buscar }] (buscar: el nombre en minúsculas y sin acentos)
+// [{ nombre, imagen, buscar }] (nombre: en el idioma de la web; buscar: en los dos, en
+// minúsculas y sin acentos)
 let personajes = null;
 
 export function personajesDeLaWeb() {
@@ -155,10 +156,11 @@ export function personajesDeLaWeb() {
       const imagen = retratoDeLaWeb(juego.id, combate.nombre);
       if (!imagen || vistos.has(imagen)) continue;
       vistos.add(imagen);
+      const nombre = textoDeCombate(combate.nombre);
       personajes.push({
-        nombre: combate.nombre,
+        nombre,
         imagen,
-        buscar: combate.nombre.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+        buscar: `${combate.nombre} ${nombre}`.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
       });
     }
   }

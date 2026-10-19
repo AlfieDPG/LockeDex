@@ -10,6 +10,7 @@
 //   localStorage «poketeams-randomizer-v1»: { reglas } (las tuyas, las de la sección)
 
 import { leer, escribir } from "../comun/almacen.js";
+import { t } from "../comun/idioma.js";
 
 export const CLAVE_MIAS = "poketeams-randomizer-v1";
 const VERSION = 3;
@@ -90,7 +91,7 @@ export function resumenNormas(reglas) {
   const r = completarReglas(reglas);
   return Object.entries(NOMBRES_APARTADOS)
     .filter(([apartado]) => JSON.stringify(r[apartado]) !== JSON.stringify(REGLAS_VACIAS[apartado]))
-    .map(([, nombre]) => nombre)
+    .map(([, nombre]) => t(nombre))
     .join(", ");
 }
 

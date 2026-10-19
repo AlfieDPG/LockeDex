@@ -19,7 +19,7 @@
   gap: 0.75rem;
   padding: 0.95rem;
   border-radius: 0.8rem;
-  background: #2c2e3e;
+  background: var(--t-panel);
 }
 
 /* Atacante o defensor: una etiqueta con su icono, en rojo o azul suave (sin línea de color
@@ -80,10 +80,10 @@
   width: 100%;
   box-sizing: border-box;
   padding: 0.5rem 0.65rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(var(--t-tinte), 0.1);
   border-radius: 0.5rem;
-  background: #1e1f2b;
-  color: #f2f2f2;
+  background: var(--t-fondo);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.92rem;
 }
@@ -92,7 +92,7 @@
 .calc-equipos-boton:focus-visible,
 .calc-equipos.abierto .calc-equipos-boton {
   outline: none;
-  border-color: #aab0c8;
+  border-color: var(--t-gris-2);
 }
 
 /* «De mis equipos…»: botón y, al abrirlo, la lista de equipos que se despliegan */
@@ -135,7 +135,7 @@
   padding: 0.3rem;
   border: 1px solid rgba(170, 176, 200, 0.4);
   border-radius: 0.5rem;
-  background: #1e1f2b;
+  background: var(--t-fondo);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
 }
 
@@ -155,7 +155,7 @@
   border: none;
   border-radius: 0.4rem;
   background: transparent;
-  color: #f2f2f2;
+  color: var(--t-texto);
   font-family: inherit;
   text-align: left;
   cursor: pointer;
@@ -163,7 +163,7 @@
 
 .calc-equipo-nombre:hover,
 .calc-equipo-poke:hover {
-  background: #3a3d52;
+  background: var(--t-control);
 }
 
 .calc-equipo-nombre {
@@ -210,8 +210,8 @@
   width: 1.6rem;
   height: 1.6rem;
   border-radius: 50%;
-  background: #2c2e3e;
-  box-shadow: 0 0 0 2px #1e1f2b;
+  background: var(--t-panel);
+  box-shadow: 0 0 0 2px var(--t-fondo);
   object-fit: cover;
   image-rendering: pixelated;
 }
@@ -265,8 +265,8 @@
   width: 4.6rem;
   height: 4.6rem;
   border-radius: 0.7rem;
-  background: #1e1f2b;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+  background: var(--t-fondo);
+  box-shadow: 0 0 0 2px rgba(var(--t-tinte), 0.08);
   image-rendering: pixelated;
 }
 
@@ -305,10 +305,10 @@
   max-width: 100%;
   height: 1.5rem;
   padding: 0 0.35rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(var(--t-tinte), 0.15);
   border-radius: 0.35rem;
-  background: #252735;
-  color: #f2f2f2;
+  background: var(--t-fondo-2);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.8rem;
   cursor: pointer;
@@ -326,10 +326,10 @@
   width: 1.5rem;
   height: 1.5rem;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(var(--t-tinte), 0.15);
   border-radius: 50%;
-  background: #252735;
-  color: #9a9cb0;
+  background: var(--t-fondo-2);
+  color: var(--t-gris);
   font-size: 0.95rem;
   font-weight: bold;
   line-height: 1;
@@ -367,8 +367,8 @@
   padding: 0.45rem 0.6rem;
   border: none;
   border-radius: 0.5rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: bold;
@@ -376,7 +376,7 @@
 }
 
 .calc-entreno:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .calc-entreno .icono {
@@ -411,7 +411,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   text-align: center;
-  color: rgba(242, 242, 242, 0.5);
+  color: rgba(var(--t-texto-rgb), 0.5);
 }
 
 /* EVs e IVs de cada estadística: casillas pequeñas, sin flechas (con las del teclado sí) */
@@ -422,8 +422,8 @@
   padding: 0.15rem 0.2rem;
   border: 1px solid transparent;
   border-radius: 0.35rem;
-  background: #1e1f2b;
-  color: #f2f2f2;
+  background: var(--t-fondo);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.78rem;
   font-weight: bold;
@@ -459,8 +459,8 @@
   padding: 0.3rem 0.3rem;
   border: 1px solid transparent;
   border-radius: 0.4rem;
-  background: #1e1f2b;
-  color: #f2f2f2;
+  background: var(--t-fondo);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: bold;
@@ -472,8 +472,8 @@
   min-width: 0;
   padding: 0.3rem 0.45rem;
   border-radius: 0.4rem;
-  background: #1e1f2b;
-  color: #f2f2f2;
+  background: var(--t-fondo);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.82rem;
   font-weight: bold;
@@ -483,12 +483,12 @@
   flex: none;
   font-size: 0.72rem;
   font-weight: bold;
-  color: rgba(242, 242, 242, 0.55);
+  color: rgba(var(--t-texto-rgb), 0.55);
   font-variant-numeric: tabular-nums;
 }
 
 .calc-evs-usados.lleno {
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 .calc-stat-valor {
@@ -500,7 +500,7 @@
 }
 
 .calc-stat.sube .calc-stat-valor {
-  color: #2ecc71;
+  color: color-mix(in srgb, #2ecc71 var(--t-vivo), black);
 }
 
 .calc-stat.baja .calc-stat-valor {
@@ -510,7 +510,7 @@
 .calc-stat-barra {
   height: 0.4rem;
   border-radius: 0.2rem;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(var(--t-oscurecer), 0.3);
   overflow: hidden;
 }
 
@@ -518,7 +518,7 @@
   display: block;
   height: 100%;
   border-radius: 0.2rem;
-  background: #7f8bb0;
+  background: var(--t-azulado-2);
 }
 
 .calc-stat.importa .calc-stat-barra i {
@@ -539,7 +539,7 @@
 }
 
 .calc-etapa.sube .calc-etapa-valor {
-  color: #2ecc71;
+  color: color-mix(in srgb, #2ecc71 var(--t-vivo), black);
   opacity: 1;
 }
 
@@ -557,13 +557,13 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   cursor: pointer;
 }
 
 .calc-etapa button:hover:not(:disabled) {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .calc-etapa button:disabled {
@@ -583,7 +583,7 @@
   gap: 0.45rem;
   padding: 0.35rem 0.45rem 0.35rem 0.55rem;
   border-radius: 0.5rem;
-  background: #1e1f2b;
+  background: var(--t-fondo);
   font-size: 0.88rem;
 }
 
@@ -608,7 +608,7 @@
   padding: 0.1rem 0.45rem;
   border-radius: 0.35rem;
   background: rgba(241, 196, 15, 0.15);
-  color: #f7dc6f;
+  color: color-mix(in srgb, #f7dc6f var(--t-vivo), black);
   font-size: 0.72rem;
   text-transform: none;
   letter-spacing: normal;
@@ -620,7 +620,7 @@
 }
 
 .calc-otra {
-  border: 1px dashed rgba(255, 255, 255, 0.25);
+  border: 1px dashed rgba(var(--t-tinte), 0.25);
   background: transparent;
 }
 
@@ -645,7 +645,7 @@
   padding: 0.1rem 0.45rem;
   border-radius: 0.35rem;
   background: rgba(241, 196, 15, 0.15);
-  color: #f7dc6f;
+  color: color-mix(in srgb, #f7dc6f var(--t-vivo), black);
   font-size: 0.72rem;
   font-weight: bold;
   white-space: nowrap;
@@ -661,8 +661,8 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   cursor: pointer;
 }
 
@@ -689,11 +689,11 @@
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: rgba(242, 242, 242, 0.65);
+  color: rgba(var(--t-texto-rgb), 0.65);
 }
 
 .calc-ps-valor {
-  color: #f2f2f2;
+  color: var(--t-texto);
 }
 
 .calc-ps {
@@ -714,8 +714,8 @@
   padding: 0.3rem 0.6rem;
   border: none;
   border-radius: 1rem;
-  background: #1e1f2b;
-  color: #f2f2f2;
+  background: var(--t-fondo);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.78rem;
   font-weight: bold;
@@ -723,7 +723,7 @@
 }
 
 .calc-chip:hover {
-  background: #3a3d52;
+  background: var(--t-control);
 }
 
 .calc-chip.activa {
@@ -759,7 +759,7 @@
 }
 
 .calc-hueco.vacio input {
-  border: 2px dashed rgba(255, 255, 255, 0.18);
+  border: 2px dashed rgba(var(--t-tinte), 0.18);
   border-radius: 0.6rem;
   background: transparent;
   text-align: center;
@@ -767,7 +767,7 @@
 
 .calc-hueco.vacio input:focus {
   border-style: solid;
-  border-color: #aab0c8;
+  border-color: var(--t-gris-2);
 }
 
 .calc-hueco.vacio input:disabled {
@@ -784,10 +784,10 @@
   width: 1.35rem;
   height: 1.35rem;
   padding: 0;
-  border: 2px solid #2c2e3e;
+  border: 2px solid var(--t-panel);
   border-radius: 50%;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.15s;
@@ -879,7 +879,7 @@
   grid-row: 2;
   padding: 0.15rem 0.4rem;
   border-radius: 0.4rem;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(var(--t-oscurecer), 0.3);
   font-size: 0.78rem;
   font-weight: bold;
   white-space: nowrap;
@@ -908,7 +908,7 @@
   width: 1px;
   height: 1.3rem;
   margin: 0 0.25rem;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(var(--t-tinte), 0.15);
 }
 
 /* El resultado: el daño en grande, la barra de vida y si lo deja KO */
@@ -919,7 +919,7 @@
   gap: 0.45rem;
   padding: 1rem;
   border-radius: 0.7rem;
-  background: #1e1f2b;
+  background: var(--t-fondo);
   text-align: center;
 }
 
@@ -940,7 +940,7 @@
   height: 0.9rem;
   margin: 0.3rem 0;
   border-radius: 0.5rem;
-  background: #3a3d52;
+  background: var(--t-control);
   overflow: hidden;
 }
 
@@ -969,7 +969,7 @@
 .calc-veredicto {
   padding: 0.35rem 0.9rem;
   border-radius: 1rem;
-  background: #3a3d52;
+  background: var(--t-control);
   font-weight: bold;
 }
 
@@ -989,7 +989,7 @@
 }
 
 .calc-resultado.nada .calc-veredicto {
-  background: #3a3d52;
+  background: var(--t-control);
   opacity: 0.8;
 }
 
@@ -1003,7 +1003,7 @@
 .calc-etiqueta {
   padding: 0.15rem 0.5rem;
   border-radius: 0.35rem;
-  background: #2c2e3e;
+  background: var(--t-panel);
   font-size: 0.75rem;
   font-weight: bold;
   opacity: 0.85;
@@ -1034,7 +1034,7 @@
 
 .calc-velocidad.empate {
   background: rgba(241, 196, 15, 0.18);
-  color: #f7dc6f;
+  color: color-mix(in srgb, #f7dc6f var(--t-vivo), black);
 }
 
 .calc-intercambiar {
@@ -1046,8 +1046,8 @@
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 0.5rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.88rem;
   font-weight: bold;
@@ -1055,7 +1055,7 @@
 }
 
 .calc-intercambiar:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .calc-intercambiar .icono {

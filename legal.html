@@ -5,11 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LockeDex · Créditos y privacidad</title>
   <link rel="icon" type="image/png" sizes="32x32" href="img/pokeball-32.png">
+  <!-- El mismo tema que la web (js/comun/ajustes.js) -->
+  <script>
+    try {
+      const tema = (JSON.parse(localStorage.getItem("poketeams-ajustes-v1")) || {}).tema;
+      if (tema === "claro" || (!tema && matchMedia("(prefers-color-scheme: light)").matches)) {
+        document.documentElement.dataset.tema = "claro";
+      }
+    } catch (error) {}
+  </script>
   <style>
+    :root {
+      color-scheme: dark;
+      --fondo: #1e1f2b;
+      --texto: #f2f2f2;
+      --panel: #2c2e3e;
+      --control: #3a3d52;
+      --linea: rgba(255, 255, 255, 0.12);
+      --enlace: #7fb3e6;
+    }
+
+    :root[data-tema="claro"] {
+      color-scheme: light;
+      --fondo: #eef0f5;
+      --texto: #1e1f2b;
+      --panel: #ffffff;
+      --control: #e1e4ed;
+      --linea: rgba(0, 0, 0, 0.12);
+      --enlace: #2a6db0;
+    }
+
     body {
       margin: 0;
-      background: #1e1f2b;
-      color: #f2f2f2;
+      background: var(--fondo);
+      color: var(--texto);
       font-family: Arial, sans-serif;
       font-size: 16px;
       line-height: 1.55;
@@ -19,6 +48,7 @@
     header {
       padding: 1rem;
       background: #c0392b;
+      color: #fff;
       text-align: center;
     }
 
@@ -45,14 +75,14 @@
     nav a {
       padding: 0.4rem 0.8rem;
       border-radius: 0.45rem;
-      background: #2c2e3e;
+      background: var(--panel);
       color: inherit;
       font-weight: bold;
       text-decoration: none;
     }
 
     nav a:hover {
-      background: #3a3d52;
+      background: var(--control);
     }
 
     h1 {
@@ -62,7 +92,7 @@
     h2 {
       margin-top: 2.2rem;
       padding-bottom: 0.3rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      border-bottom: 1px solid var(--linea);
       font-size: 1.3rem;
     }
 
@@ -72,14 +102,14 @@
     }
 
     a {
-      color: #7fb3e6;
+      color: var(--enlace);
     }
 
     .aviso {
       padding: 0.8rem 1rem;
       border-left: 4px solid #f1c40f;
       border-radius: 0.45rem;
-      background: #2c2e3e;
+      background: var(--panel);
     }
 
     ul {
@@ -94,7 +124,7 @@
       margin: 0.8rem 0;
       padding: 0.7rem 0.9rem;
       border-radius: 0.6rem;
-      background: #2c2e3e;
+      background: var(--panel);
     }
 
     .fuente p {
@@ -180,6 +210,11 @@
       <p>Descripciones en inglés de objetos
         (<a href="https://github.com/smogon/pokemon-showdown" target="_blank" rel="noopener">licencia MIT</a>)
         y sprites de los entrenadores de «Level caps».</p>
+    </div>
+
+    <div class="fuente">
+      <h3><a href="https://github.com/kwsch/PKHeX" target="_blank" rel="noopener">PKHeX</a></h3>
+      <p>Formatos de las partidas guardadas y nombres de los lugares de los juegos.</p>
     </div>
 
     <div class="fuente">
@@ -283,5 +318,193 @@
       por uno mismo). Si eres más pequeño, úsala sin cuenta o pídeselo a tus padres.
     </p>
   </main>
+
+  <!-- La misma página en inglés: se enseña si la web va en inglés (script de abajo) -->
+  <main lang="en" hidden>
+    <h1>Credits, legal notice and privacy</h1>
+    <p class="fecha">Last updated: 9 October 2026</p>
+
+    <nav>
+      <a href="#legal-notice">Legal notice</a>
+      <a href="#credits">Credits</a>
+      <a href="#privacy">Privacy</a>
+    </nav>
+
+    <h2 id="legal-notice">Legal notice</h2>
+
+    <p class="aviso">
+      LockeDex is a free, non-profit fan-made site. It is not affiliated with, sponsored or endorsed by
+      Nintendo, Creatures Inc., GAME FREAK inc. or The Pokémon Company.
+    </p>
+
+    <p>
+      Pokémon and the related names, images and trademarks are property of © Nintendo, Creatures Inc.,
+      GAME FREAK inc. and The Pokémon Company. They are used here only to help play the original games,
+      without claiming any rights over them.
+    </p>
+
+    <p>
+      LockeDex has no ads, charges nothing and sells nothing. If you own any content shown here and want it
+      removed, write through the
+      <a href="https://github.com/alfiedpg" target="_blank" rel="noopener">author's GitHub profile</a>
+      and it will be taken down.
+    </p>
+
+    <h2 id="credits">Credits</h2>
+
+    <p>LockeDex relies on the work of many people. Thanks to all of them.</p>
+
+    <div class="fuente">
+      <h3><a href="https://pokeapi.co" target="_blank" rel="noopener">PokeAPI</a></h3>
+      <p>Pokémon, move, ability, item and encounter data, plus game icons and sprites
+        (<a href="https://github.com/PokeAPI/sprites" target="_blank" rel="noopener">PokeAPI/sprites</a>).
+        PokeAPI's code and data are BSD-licensed; the sprites belong to Nintendo and Game Freak.</p>
+    </div>
+
+    <div class="fuente">
+      <h3><a href="https://sprites.pmdcollab.org" target="_blank" rel="noopener">PMD Sprite Repository (SpriteCollab)</a></h3>
+      <p>Mystery Dungeon-style portraits in the Pokédex and “My teams”. Licensed under
+        <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>.
+        The Pokédex portraits have been shrunk and combined into sheets so they load faster.
+        The author of each portrait is listed in the
+        <a href="https://github.com/PMDCollab/SpriteCollab" target="_blank" rel="noopener">SpriteCollab repository</a>
+        (<a href="https://github.com/PMDCollab/SpriteCollab/blob/master/credit_names.txt" target="_blank" rel="noopener">list of authors</a>).</p>
+    </div>
+
+    <div class="fuente">
+      <h3><a href="https://www.wikidex.net" target="_blank" rel="noopener">WikiDex</a></h3>
+      <p>Spanish item descriptions and Spanish names of routes and trainers. Text licensed under
+        <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a>,
+        by the WikiDex authors. The item descriptions have been copied as-is into
+        <code>datos/descripciones-objetos.json</code>, which is shared under the same license.</p>
+    </div>
+
+    <div class="fuente">
+      <h3><a href="https://pokemonshowdown.com" target="_blank" rel="noopener">Pokémon Showdown</a> (Smogon)</h3>
+      <p>English item descriptions
+        (<a href="https://github.com/smogon/pokemon-showdown" target="_blank" rel="noopener">MIT license</a>)
+        and the trainer sprites in “Level caps”.</p>
+    </div>
+
+    <div class="fuente">
+      <h3><a href="https://github.com/kwsch/PKHeX" target="_blank" rel="noopener">PKHeX</a></h3>
+      <p>Save file formats and the English names of in-game locations.</p>
+    </div>
+
+    <div class="fuente">
+      <h3><a href="https://www.serebii.net" target="_blank" rel="noopener">Serebii.net</a></h3>
+      <p>Official Pokémon artwork and item sprites, loaded from their site.</p>
+    </div>
+
+    <div class="fuente">
+      <h3><a href="https://nuzlockeuniversity.ca" target="_blank" rel="noopener">Nuzlocke University</a></h3>
+      <p>Levels of the important battles in “Level caps”.</p>
+    </div>
+
+    <div class="fuente">
+      <h3><a href="https://fakedex.es" target="_blank" rel="noopener">Fakedex</a></h3>
+      <p>Pokémon Añil encounters.</p>
+    </div>
+
+    <div class="fuente">
+      <h3>Icons</h3>
+      <p>Type icons from
+        <a href="https://github.com/duiker101/pokemon-type-svg-icons" target="_blank" rel="noopener">duiker101/pokemon-type-svg-icons</a>,
+        based on a <a href="https://dribbble.com/shots/4862612-Pokedex-iOS-app" target="_blank" rel="noopener">Dribbble design</a>.
+        The rest of the icons follow the <a href="https://lucide.dev" target="_blank" rel="noopener">Lucide</a> style (ISC license).</p>
+    </div>
+
+    <h2 id="privacy">Privacy policy</h2>
+
+    <p>
+      You can use LockeDex without an account: then everything is saved only in your browser and never leaves it.
+      This part explains what happens when you create an account or sign in with Google.
+    </p>
+
+    <h3>Who is responsible</h3>
+    <p>
+      The author of LockeDex, a private individual. For anything about your data, write through their
+      <a href="https://github.com/alfiedpg" target="_blank" rel="noopener">GitHub profile</a>.
+    </p>
+
+    <h3>What is stored</h3>
+    <ul>
+      <li><strong>Your account:</strong> if you sign in with a username and password, the username (Firebase stores the
+        password encrypted; LockeDex never sees it). If you sign in with Google, your Google name, picture and email.</li>
+      <li><strong>Your public profile:</strong> your username, your Google picture (if you sign in with Google),
+        your locke types and your won lockes. Other people with an account can see it.</li>
+      <li><strong>Your game data:</strong> teams, routes, level caps and settings. Only you can see them.</li>
+      <li><strong>Friendships and shared lockes:</strong> who you're friends with and the lockes you play,
+        with your lives and your score. Only the people involved can see them.</li>
+      <li><strong>Online status:</strong> the last time you had the site open, so your friends know whether you're online.</li>
+    </ul>
+
+    <h3>What for</h3>
+    <p>
+      Only so the site works: saving your things to your account, letting you have friends and play lockes
+      with them. There's no advertising, what you do isn't analysed and nothing is sold or given to anyone.
+      The legal basis is that you request it when creating the account (art. 6.1.b GDPR).
+    </p>
+
+    <h3>Your email</h3>
+    <p>
+      It isn't shown to anyone. It's only used so that someone who already knows your Google email can find you
+      in “Friends”; a list of emails can't be obtained. Username and password accounts have no email.
+    </p>
+
+    <h3>Where it's stored</h3>
+    <p>
+      In <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">Firebase</a>, a Google service,
+      which may keep the data on servers outside the European Union under the guarantees of the
+      EU-US Data Privacy Framework and the standard contractual clauses.
+      The site is hosted on <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub Pages</a>,
+      which may log your IP address when you visit it.
+    </p>
+    <p>
+      Images and some data are loaded from other sites (PokeAPI, GitHub, Serebii, Pokémon Showdown, PKHeX),
+      which see your IP address as with any visit.
+    </p>
+
+    <h3>In your browser</h3>
+    <p>
+      LockeDex stores things in your browser's storage (localStorage and IndexedDB) to work
+      and load faster: your data, your session and a copy of the images. It uses no advertising or analytics cookies.
+    </p>
+
+    <h3>How long</h3>
+    <p>As long as you have the account. Deleting it deletes everything of yours.</p>
+
+    <h3>Your rights</h3>
+    <ul>
+      <li><strong>Delete your account:</strong> click your name (bottom left) and then “Delete my account”.
+        Your profile, username, data, friendships and account are deleted, and you're removed from shared lockes.</li>
+      <li><strong>See, correct or take your data:</strong> you can see and change almost everything from the site itself;
+        for anything else, write through the GitHub profile.</li>
+      <li>If you think your data isn't being handled properly, you can complain to the
+        <a href="https://www.aepd.es" target="_blank" rel="noopener">Spanish Data Protection Agency (AEPD)</a>.</li>
+    </ul>
+
+    <h3>Age</h3>
+    <p>
+      You must be at least 14 to create an account (in Spain, the age to give consent yourself).
+      If you're younger, use it without an account or ask your parents.
+    </p>
+  </main>
+
+  <!-- El idioma de la web (el mismo que en js/comun/idioma.js): si es inglés, la de arriba.
+       Los enlaces de la web llevan a #privacidad: en inglés, a la parte de privacidad suya. -->
+  <script>
+    try {
+      const idioma = (JSON.parse(localStorage.getItem("poketeams-ajustes-v1")) || {}).idioma;
+      if (idioma === "en") {
+        document.documentElement.lang = "en";
+        document.title = "LockeDex · Credits and privacy";
+        document.querySelector('main[lang="en"]').hidden = false;
+        document.querySelector("main:not([lang])").hidden = true;
+        const equivalentes = { "#privacidad": "#privacy", "#creditos": "#credits", "#aviso-legal": "#legal-notice" };
+        if (equivalentes[location.hash]) location.replace(equivalentes[location.hash]);
+      }
+    } catch (error) {}
+  </script>
 </body>
 </html>

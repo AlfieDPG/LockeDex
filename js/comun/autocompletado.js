@@ -1,4 +1,5 @@
 import { quitarAcentos } from "./utilidades.js";
+import { nombre as nombreDe } from "./idioma.js";
 import { imagenConRespaldo, urlsRetrato, urlsIconoObjeto } from "./imagenes.js";
 
 // ---------- Desplegable de sugerencias ----------
@@ -53,7 +54,7 @@ export function activarAutocompletado(campo, lista, alElegir, opciones = {}) {
     if (sinEscribir && !opciones.sinTexto) return;
 
     // Primero lo que es justo lo escrito, luego lo que empieza por ello
-    const puntos = (e) => (quitarAcentos(e.es) === texto ? 2 : e.buscar.startsWith(texto) ? 1 : 0);
+    const puntos = (e) => (quitarAcentos(nombreDe(e)) === texto ? 2 : e.buscar.startsWith(texto) ? 1 : 0);
     actuales = sinEscribir
       ? opciones.sinTexto().slice(0, MAXIMO)
       : lista
@@ -68,12 +69,14 @@ export function activarAutocompletado(campo, lista, alElegir, opciones = {}) {
       const icono = opciones.icono ? opciones.icono(entrada) : "";
       const nombre = document.createElement("span");
       nombre.className = "opcion-nombre";
-      nombre.textContent = entrada.es;
+      nombre.textContent = nombreDe(entrada);
       opcion.innerHTML = icono ? `<span class="opcion-icono">${icono}</span>` : "";
       opcion.appendChild(nombre);
-      if (entrada.en && entrada.en !== entrada.es) {
+      // El nombre en el otro idioma, en pequeño (ayuda a buscar con el que uno se sepa)
+      const otro = nombreDe(entrada) === entrada.en ? entrada.es : entrada.en;
+      if (otro && otro !== nombreDe(entrada)) {
         const ingles = document.createElement("small");
-        ingles.textContent = entrada.en;
+        ingles.textContent = otro;
         opcion.appendChild(ingles);
       }
       opcion.addEventListener("mousedown", (e) => {

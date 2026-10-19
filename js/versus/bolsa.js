@@ -13,17 +13,18 @@ import {
   prepararDatos, partidaDeTrabajo, cambiarPartida, objetosDe, nombreObjeto, bolsilloDe, urlsIconoDe, iconoDe, LIMITES
 } from "./editor-comun.js";
 import { avisar } from "../comun/ventanas.js";
+import { t } from "../comun/idioma.js";
 
 const NOMBRES = {
-  objetos: "Objetos", medicinas: "Medicinas", balls: "Balls", mt: "MT y MO", bayas: "Bayas", cartas: "Cartas", combate: "Combate",
-  cristales: "Cristales Z", roto: "Rotoprodigios", tesoros: "Tesoros", ingredientes: "Ingredientes", clave: "Objetos clave"
+  objetos: t("Objetos"), medicinas: t("Medicinas"), balls: "Balls", mt: t("MT y MO"), bayas: t("Bayas"), cartas: t("Cartas"), combate: t("bolsillo|Combate"),
+  cristales: t("Cristales Z"), roto: t("Rotoprodigios"), tesoros: t("Tesoros"), ingredientes: t("Ingredientes"), clave: t("Objetos clave")
 };
 const ICONOS = {
   objetos: "objeto", medicinas: "pocion", balls: "pokeball", mt: "disco", bayas: "baya", cartas: "etiqueta", combate: "espadas",
   cristales: "rayo", roto: "estrella", tesoros: "corona", ingredientes: "caramelo", clave: "llave"
 };
 // En los de Switch ya no hay MO: en Espada / Escudo son MT y DT; en Perla Reluciente, solo MT
-const NOMBRES_DE = { swsh: { mt: "MT y DT" }, bdsp: { mt: "MT" } };
+const NOMBRES_DE = { swsh: { mt: t("MT y DT") }, bdsp: { mt: t("MT") } };
 
 let elegido = "objetos"; // el bolsillo que se ve
 
@@ -35,9 +36,9 @@ function fila(e, bolsillo, juego) {
       <span class="bolsa-icono">${urlsIconoDe(e.objeto, juego).length ? imagenConRespaldo(urlsIconoDe(e.objeto, juego), `alt="" loading="lazy" data-quitar-si-falla`) : ""}</span>
       <span class="bolsa-nombre">${escaparHTML(nombreObjeto(e.objeto, juego))}</span>
       ${maximo > 1
-        ? campoNumero(`<input class="bolsa-cantidad" type="number" min="0" max="${maximo}" value="${e.cantidad}" aria-label="Cantidad">`)
+        ? campoNumero(`<input class="bolsa-cantidad" type="number" min="0" max="${maximo}" value="${e.cantidad}" aria-label="${t("Cantidad")}">`)
         : ""}
-      <button class="bolsa-quitar" title="Quitar">${icono("aspa")}</button>
+      <button class="bolsa-quitar" title="${t("Quitar")}">${icono("aspa")}</button>
     </div>`;
 }
 
@@ -59,13 +60,13 @@ export async function pintarBolsa(contenedor, idLocke) {
         ${bolsillos
           .map((b) => `<button class="bolsa-bolsillo ${b.id === elegido ? "activo" : ""}" data-bolsillo="${b.id}">${icono(ICONOS[b.id])} ${(NOMBRES_DE[juego] || {})[b.id] || NOMBRES[b.id]} <small>${mochila[b.id].length}</small></button>`)
           .join("")}
-        <button class="bolsa-caramelos" title="Llevar 999 Caramelos Raros">${icono("caramelo")} Caramelos raros</button>
+        <button class="bolsa-caramelos" title="${t("Llevar 999 Caramelos Raros")}">${icono("caramelo")} ${t("Caramelos raros")}</button>
       </div>
       ${lleno
-        ? `<p class="bolsa-lleno">Este bolsillo está lleno.</p>`
-        : `<span class="editor-buscar bolsa-anadir"><input class="bolsa-buscar" type="search" placeholder="Meter un objeto..." autocomplete="off"></span>`}
+        ? `<p class="bolsa-lleno">${t("Este bolsillo está lleno.")}</p>`
+        : `<span class="editor-buscar bolsa-anadir"><input class="bolsa-buscar" type="search" placeholder="${t("Meter un objeto...")}" autocomplete="off"></span>`}
       <div class="bolsa-lista">
-        ${lista.length ? lista.map((e) => fila(e, bolsillo, juego)).join("") : `<p class="bolsa-vacio">No hay nada.</p>`}
+        ${lista.length ? lista.map((e) => fila(e, bolsillo, juego)).join("") : `<p class="bolsa-vacio">${t("No hay nada.")}</p>`}
       </div>
     </div>`;
 
@@ -76,8 +77,9 @@ export async function pintarBolsa(contenedor, idLocke) {
     const opciones = objetosDe(juego)
       .filter((o) => o.id <= LIMITES[juego].objetos && !ya.has(o.id) && bolsilloDe(o.id, juego) === elegido)
       .map((o) => {
-        const es = nombreObjeto(o.id, juego);
-        return { ...o, es, buscar: quitarAcentos(`${es} ${o.en}`) };
+        // Con el ataque de las MT («MT26 Terremoto»), en el idioma de la web
+        const nombre = nombreObjeto(o.id, juego);
+        return { ...o, es: nombre, en: nombre, buscar: quitarAcentos(`${nombre} ${o.es} ${o.en}`) };
       });
     activarAutocompletado(campo, opciones, (entrada) => {
       cambiar(idLocke, (m) => m[elegido].push({ objeto: entrada.id, cantidad: 1 }), contenedor);
@@ -97,7 +99,7 @@ function cambiar(idLocke, hacer, contenedor) {
   }, "bolsa").catch((error) => {
     if (!error.message) return;
     console.error(error);
-    avisar(error.message || "No se ha podido cambiar la bolsa.");
+    avisar(t(error.message || "No se ha podido cambiar la bolsa."));
     pintarBolsa(contenedor, idLocke).catch((otro) => console.error(otro));
   });
 }

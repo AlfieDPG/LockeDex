@@ -16,14 +16,15 @@
 
 import { LOGROS, EEVEELUTIONS } from "./logros.js";
 import { coloresTipo, tiposEs } from "./tipos.js";
+import { t } from "./idioma.js";
 
 const URL_PATRONES = new URL("../../img/fondos/", import.meta.url).href;
 
 // Los de metal, con los logros de logros (25, 50 y todos: ver logros.js)
 export const FONDOS_METAL = [
-  { id: "plata", nombre: "Plata", logro: "m-30" },
-  { id: "oro", nombre: "Oro", logro: "m-60" },
-  { id: "platino", nombre: "Platino", logro: "m-todos" }
+  { id: "plata", nombre: t("Plata"), logro: "m-30" },
+  { id: "oro", nombre: t("Oro"), logro: "m-60" },
+  { id: "platino", nombre: t("Platino"), logro: "m-todos" }
 ];
 
 export const FONDOS_TIPO = Object.keys(tiposEs).map((tipo) => ({
@@ -51,15 +52,15 @@ export function desbloqueado(fondo, perfil) {
 // Lo que pide, para cuando aún no lo tienes: «Logro «Toque de oro»: Consigue 50 logros.»
 export function requisito(fondo) {
   const logro = LOGROS.find((cada) => cada.id === fondo.logro);
-  return logro ? `Logro «${logro.nombre}»: ${logro.descripcion}` : "";
+  return logro ? t("Logro «{nombre}»: {descripcion}", { nombre: logro.nombre, descripcion: logro.descripcion }) : "";
 }
 
 // Lo que pide, en corto, para debajo de la muestra («50 logros»), o "" si no hace falta
 export function requisitoCorto(fondo) {
   const logro = LOGROS.find((cada) => cada.id === fondo.logro);
   if (!logro || logro.tipo) return "";
-  if (logro.categoria === "pokedex") return logro.id === "x-eeveelutions" ? "Las 8 Eeveelutions" : "Regístralo";
-  return logro.id === "m-todos" ? "Todos los logros" : `${logro.meta} logros`;
+  if (logro.categoria === "pokedex") return logro.id === "x-eeveelutions" ? t("Las 8 Eeveelutions") : t("Regístralo");
+  return logro.id === "m-todos" ? t("Todos los logros") : t("{n} logros", { n: logro.meta });
 }
 
 // El que lleva puesto ("" si ninguno o si no lo tiene desbloqueado)

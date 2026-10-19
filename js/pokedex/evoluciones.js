@@ -17,6 +17,7 @@ import { imagenConRespaldo, urlsPMD } from "../comun/imagenes.js";
 import { tiposEs } from "../comun/tipos.js";
 import { escaparHTML } from "../comun/utilidades.js";
 import { sumarContador } from "../comun/contadores.js";
+import { t, nombre } from "../comun/idioma.js";
 
 let bocadillo = null;
 let abiertoDe = null; // botón de la foto que lo ha abierto
@@ -35,7 +36,7 @@ function nombreEn(lista, recurso) {
   if (!indices.has(lista)) indices.set(lista, new Map(lista.map((entrada) => [entrada.id, entrada])));
   const entrada = indices.get(lista).get(idDeUrl(recurso.url));
   // Si no está (algo muy nuevo), el nombre interno un poco arreglado: "tart-apple" -> "Tart Apple"
-  return entrada ? entrada.es : recurso.name.replace(/-/g, " ").replace(/\b\w/g, (letra) => letra.toUpperCase());
+  return entrada ? nombre(entrada) : recurso.name.replace(/-/g, " ").replace(/\b\w/g, (letra) => letra.toUpperCase());
 }
 
 const especie = (recurso) => nombreEn(datos.pokemon, recurso);
@@ -43,19 +44,19 @@ const objeto = (recurso) => nombreEn(datos.objetos, recurso);
 const ataque = (recurso) => nombreEn(datos.ataques, recurso);
 
 // Objeto por su nombre en inglés (para los cambios de forma de abajo)
-function objetoIngles(nombre) {
-  const entrada = buscarPorNombreIngles(datos.objetos, nombre);
-  return entrada ? entrada.es : nombre;
+function objetoIngles(ingles) {
+  const entrada = buscarPorNombreIngles(datos.objetos, ingles);
+  return entrada ? nombre(entrada) : ingles;
 }
 
-function ataqueIngles(nombre) {
-  const entrada = buscarPorNombreIngles(datos.ataques, nombre);
-  return entrada ? entrada.es : nombre;
+function ataqueIngles(ingles) {
+  const entrada = buscarPorNombreIngles(datos.ataques, ingles);
+  return entrada ? nombre(entrada) : ingles;
 }
 
 // ---------- Cómo evoluciona ----------
 
-const MOMENTOS = { day: "de día", night: "de noche", dusk: "al anochecer", "full-moon": "con luna llena" };
+const MOMENTOS = { day: t("de día"), night: t("de noche"), dusk: t("al anochecer"), "full-moon": t("con luna llena") };
 
 // Los que no son subir de nivel, usar un objeto o intercambiar. {ataque}: el que pide.
 const ESPECIALES = {
@@ -75,42 +76,43 @@ const ESPECIALES = {
   "in-battle-level-up": "Subir de nivel en combate",
   other: "Método especial"
 };
+for (const clave of Object.keys(ESPECIALES)) ESPECIALES[clave] = t(ESPECIALES[clave]);
 
 const TRIGGERS_CON_ATAQUE = ["agile-style-move", "strong-style-move", "use-move"];
 
 function textoDetalle(d) {
   const trigger = (d.trigger && d.trigger.name) || "";
-  const movimiento = ataque(d.used_move || d.known_move) || "un movimiento";
+  const movimiento = ataque(d.used_move || d.known_move) || t("un movimiento");
   const partes = [];
 
-  if (trigger === "level-up") partes.push(d.min_level ? `Nivel ${d.min_level}` : "Subir de nivel");
-  else if (trigger === "use-item") partes.push(objeto(d.item) || "Usar un objeto");
-  else if (trigger === "trade") partes.push("Intercambio");
-  else if (trigger === "use-move" && d.min_move_count) partes.push(`Usar ${movimiento} ${d.min_move_count} veces`);
+  if (trigger === "level-up") partes.push(d.min_level ? t("Nivel {n}", { n: d.min_level }) : t("Subir de nivel"));
+  else if (trigger === "use-item") partes.push(objeto(d.item) || t("Usar un objeto"));
+  else if (trigger === "trade") partes.push(t("Intercambio"));
+  else if (trigger === "use-move" && d.min_move_count) partes.push(t("Usar {ataque} {n} veces", { ataque: movimiento, n: d.min_move_count }));
   else if ((trigger === "take-damage" || trigger === "recoil-damage") && d.min_damage_taken) {
-    partes.push(`${trigger === "take-damage" ? "Recibir" : "Recibir de retroceso"} ${d.min_damage_taken} PS de daño sin debilitarse`);
+    partes.push(t(trigger === "take-damage" ? "Recibir {n} PS de daño sin debilitarse" : "Recibir de retroceso {n} PS de daño sin debilitarse", { n: d.min_damage_taken }));
   } else partes.push((ESPECIALES[trigger] || ESPECIALES.other).replace("{ataque}", movimiento));
 
-  if (d.held_item) partes.push(`llevando ${objeto(d.held_item)}`);
-  if (d.known_move && !TRIGGERS_CON_ATAQUE.includes(trigger)) partes.push(`sabiendo ${ataque(d.known_move)}`);
-  if (d.known_move_type) partes.push(`sabiendo un movimiento de tipo ${tiposEs[d.known_move_type.name] || d.known_move_type.name}`);
-  if (d.min_happiness) partes.push("con mucha amistad");
-  if (d.min_affection) partes.push("con mucho afecto");
-  if (d.min_beauty) partes.push("con mucha belleza");
-  if (d.min_steps) partes.push(`tras andar ${d.min_steps} pasos`);
+  if (d.held_item) partes.push(t("llevando {objeto}", { objeto: objeto(d.held_item) }));
+  if (d.known_move && !TRIGGERS_CON_ATAQUE.includes(trigger)) partes.push(t("sabiendo {ataque}", { ataque: ataque(d.known_move) }));
+  if (d.known_move_type) partes.push(t("sabiendo un movimiento de tipo {tipo}", { tipo: tiposEs[d.known_move_type.name] || d.known_move_type.name }));
+  if (d.min_happiness) partes.push(t("con mucha amistad"));
+  if (d.min_affection) partes.push(t("con mucho afecto"));
+  if (d.min_beauty) partes.push(t("con mucha belleza"));
+  if (d.min_steps) partes.push(t("tras andar {n} pasos", { n: d.min_steps }));
   if (d.time_of_day) partes.push(MOMENTOS[d.time_of_day] || d.time_of_day);
-  if (d.location) partes.push("en un lugar concreto");
-  if (d.needs_overworld_rain) partes.push("con lluvia");
-  if (d.party_species) partes.push(`con ${especie(d.party_species)} en el equipo`);
-  if (d.party_type) partes.push(`con un Pokémon de tipo ${tiposEs[d.party_type.name] || d.party_type.name} en el equipo`);
-  if (d.relative_physical_stats === 1) partes.push("con más Ataque que Defensa");
-  if (d.relative_physical_stats === -1) partes.push("con más Defensa que Ataque");
-  if (d.relative_physical_stats === 0) partes.push("con el mismo Ataque que Defensa");
-  if (d.trade_species) partes.push(`por ${especie(d.trade_species)}`);
-  if (d.turn_upside_down) partes.push("con la consola boca abajo");
-  if ((d.allowed_natures || []).length) partes.push("según su naturaleza");
-  if (d.gender === 1) partes.push("(hembra)");
-  if (d.gender === 2) partes.push("(macho)");
+  if (d.location) partes.push(t("en un lugar concreto"));
+  if (d.needs_overworld_rain) partes.push(t("con lluvia"));
+  if (d.party_species) partes.push(t("con {pokemon} en el equipo", { pokemon: especie(d.party_species) }));
+  if (d.party_type) partes.push(t("con un Pokémon de tipo {tipo} en el equipo", { tipo: tiposEs[d.party_type.name] || d.party_type.name }));
+  if (d.relative_physical_stats === 1) partes.push(t("con más Ataque que Defensa"));
+  if (d.relative_physical_stats === -1) partes.push(t("con más Defensa que Ataque"));
+  if (d.relative_physical_stats === 0) partes.push(t("con el mismo Ataque que Defensa"));
+  if (d.trade_species) partes.push(t("por {pokemon}", { pokemon: especie(d.trade_species) }));
+  if (d.turn_upside_down) partes.push(t("con la consola boca abajo"));
+  if ((d.allowed_natures || []).length) partes.push(t("según su naturaleza"));
+  if (d.gender === 1) partes.push(t("(hembra)"));
+  if (d.gender === 2) partes.push(t("(macho)"));
 
   return partes.join(", ");
 }
@@ -169,38 +171,38 @@ function piedraDe(slug, lista) {
 
 // slug -> [objeto en inglés, más texto] o una función que da el texto
 const CAMBIOS = {
-  "kyogre-primal": () => `Regresión primigenia con ${objetoIngles("Blue Orb")}`,
-  "groudon-primal": () => `Regresión primigenia con ${objetoIngles("Red Orb")}`,
-  "rayquaza-mega": () => `Megaevolución sabiendo ${ataqueIngles("Dragon Ascent")}`,
+  "kyogre-primal": () => t("Regresión primigenia con {objeto}", { objeto: objetoIngles("Blue Orb") }),
+  "groudon-primal": () => t("Regresión primigenia con {objeto}", { objeto: objetoIngles("Red Orb") }),
+  "rayquaza-mega": () => t("Megaevolución sabiendo {ataque}", { ataque: ataqueIngles("Dragon Ascent") }),
   "giratina-origin": () => objetoIngles("Griseous Core"),
   "dialga-origin": () => objetoIngles("Adamant Crystal"),
   "palkia-origin": () => objetoIngles("Lustrous Globe"),
-  "shaymin-sky": () => `${objetoIngles("Gracidea")}, de día`,
-  "kyurem-black": () => `${objetoIngles("DNA Splicers")} con Zekrom`,
-  "kyurem-white": () => `${objetoIngles("DNA Splicers")} con Reshiram`,
-  "necrozma-dusk": () => `${objetoIngles("N-Solarizer")} con Solgaleo`,
-  "necrozma-dawn": () => `${objetoIngles("N-Lunarizer")} con Lunala`,
-  "necrozma-ultra": () => "Ultraexplosión en combate",
+  "shaymin-sky": () => `${objetoIngles("Gracidea")}, ${t("de día")}`,
+  "kyurem-black": () => t("{objeto} con {pokemon}", { objeto: objetoIngles("DNA Splicers"), pokemon: "Zekrom" }),
+  "kyurem-white": () => t("{objeto} con {pokemon}", { objeto: objetoIngles("DNA Splicers"), pokemon: "Reshiram" }),
+  "necrozma-dusk": () => t("{objeto} con {pokemon}", { objeto: objetoIngles("N-Solarizer"), pokemon: "Solgaleo" }),
+  "necrozma-dawn": () => t("{objeto} con {pokemon}", { objeto: objetoIngles("N-Lunarizer"), pokemon: "Lunala" }),
+  "necrozma-ultra": () => t("Ultraexplosión en combate"),
   "hoopa-unbound": () => objetoIngles("Prison Bottle"),
-  "zacian-crowned": () => `Llevando ${objetoIngles("Rusted Sword")}`,
-  "zamazenta-crowned": () => `Llevando ${objetoIngles("Rusted Shield")}`,
-  "calyrex-ice": () => `${objetoIngles("Reins of Unity")} con Glastrier`,
-  "calyrex-shadow": () => `${objetoIngles("Reins of Unity")} con Spectrier`,
+  "zacian-crowned": () => t("Llevando {objeto}", { objeto: objetoIngles("Rusted Sword") }),
+  "zamazenta-crowned": () => t("Llevando {objeto}", { objeto: objetoIngles("Rusted Shield") }),
+  "calyrex-ice": () => t("{objeto} con {pokemon}", { objeto: objetoIngles("Reins of Unity"), pokemon: "Glastrier" }),
+  "calyrex-shadow": () => t("{objeto} con {pokemon}", { objeto: objetoIngles("Reins of Unity"), pokemon: "Spectrier" }),
   "tornadus-therian": () => objetoIngles("Reveal Glass"),
   "thundurus-therian": () => objetoIngles("Reveal Glass"),
   "landorus-therian": () => objetoIngles("Reveal Glass"),
   "enamorus-therian": () => objetoIngles("Reveal Glass"),
-  "meloetta-pirouette": () => `Usar ${ataqueIngles("Relic Song")} en combate`,
-  "keldeo-resolute": () => `Sabiendo ${ataqueIngles("Secret Sword")}`,
-  "palafin-hero": () => "Salir del combate y volver a entrar",
-  "darmanitan-zen": () => "En combate, con poca vida (Modo Daruma)",
-  "darmanitan-galar-zen": () => "En combate, con poca vida (Modo Daruma)",
+  "meloetta-pirouette": () => t("Usar {ataque} en combate", { ataque: ataqueIngles("Relic Song") }),
+  "keldeo-resolute": () => t("Sabiendo {ataque}", { ataque: ataqueIngles("Secret Sword") }),
+  "palafin-hero": () => t("Salir del combate y volver a entrar"),
+  "darmanitan-zen": () => t("En combate, con poca vida (Modo Daruma)"),
+  "darmanitan-galar-zen": () => t("En combate, con poca vida (Modo Daruma)"),
   "oricorio-pom-pom": () => objetoIngles("Yellow Nectar"),
   "oricorio-pau": () => objetoIngles("Pink Nectar"),
   "oricorio-sensu": () => objetoIngles("Purple Nectar"),
-  "ogerpon-wellspring-mask": () => `Llevando ${objetoIngles("Wellspring Mask")}`,
-  "ogerpon-hearthflame-mask": () => `Llevando ${objetoIngles("Hearthflame Mask")}`,
-  "ogerpon-cornerstone-mask": () => `Llevando ${objetoIngles("Cornerstone Mask")}`
+  "ogerpon-wellspring-mask": () => t("Llevando {objeto}", { objeto: objetoIngles("Wellspring Mask") }),
+  "ogerpon-hearthflame-mask": () => t("Llevando {objeto}", { objeto: objetoIngles("Hearthflame Mask") }),
+  "ogerpon-cornerstone-mask": () => t("Llevando {objeto}", { objeto: objetoIngles("Cornerstone Mask") })
 };
 
 const PREFIJOS_CAMBIO = {
@@ -211,6 +213,7 @@ const PREFIJOS_CAMBIO = {
   "castform-": "Según el tiempo, en combate",
   "cherrim-": "Con sol, en combate"
 };
+for (const clave of Object.keys(PREFIJOS_CAMBIO)) PREFIJOS_CAMBIO[clave] = t(PREFIJOS_CAMBIO[clave]);
 
 // Texto del cambio de forma, o null si no es un cambio de forma (sino una forma regional o
 // distinta sin más: esas salen con su propia línea)
@@ -218,13 +221,13 @@ function textoCambio(slug, lista) {
   if (CAMBIOS[slug]) return CAMBIOS[slug]();
   if (MEGA.test(slug)) {
     const piedra = piedraDe(slug, lista);
-    return piedra ? `Megaevolución con ${objeto(piedra)}` : "Megaevolución";
+    return piedra ? t("Megaevolución con {objeto}", { objeto: objeto(piedra) }) : t("Megaevolución");
   }
   for (const [prefijo, texto] of Object.entries(PREFIJOS_CAMBIO)) {
     if (slug.startsWith(prefijo)) return texto;
   }
   if (REGIONAL.test(slug) || /-(male|female)$/.test(slug)) return null;
-  return "Cambio de forma";
+  return t("Cambio de forma");
 }
 
 // ---------- Montar el árbol ----------
@@ -423,7 +426,7 @@ export async function abrirEvoluciones(boton, numero, clave = numero) {
   sumarContador("evoluciones"); // para los logros
   bocadillo = document.createElement("div");
   bocadillo.className = "bocadillo-evo";
-  bocadillo.innerHTML = `<p class="evo-aviso">Cargando...</p>`;
+  bocadillo.innerHTML = `<p class="evo-aviso">${t("Cargando...")}</p>`;
   document.body.appendChild(bocadillo);
   colocar();
 
@@ -435,11 +438,11 @@ export async function abrirEvoluciones(boton, numero, clave = numero) {
     html = `
       <div class="evo-arbol">
         ${raices.map((n) => `<div class="evo-linea">${plantillaNodo(n, clave)}</div>`).join("")}
-        ${evoluciona ? "" : `<p class="evo-aviso">No evoluciona.</p>`}
+        ${evoluciona ? "" : `<p class="evo-aviso">${t("No evoluciona.")}</p>`}
       </div>`;
   } catch (error) {
     console.error(error);
-    html = `<p class="evo-aviso">No se ha podido cargar. Revisa tu conexión.</p>`;
+    html = `<p class="evo-aviso">${t("No se ha podido cargar. Revisa tu conexión.")}</p>`;
   }
   if (bocadillo !== este) return; // mientras cargaba se ha cerrado o se ha abierto otro
   bocadillo.innerHTML = html;

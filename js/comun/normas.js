@@ -21,10 +21,11 @@
 //     { conjuntos: [{ id, nombre, conGenerales, normas: [{ id, nombre, texto }] }], quitados: [id] }
 
 import { leer, escribir } from "./almacen.js";
+import { t } from "./idioma.js";
 
 const CLAVE_NORMAS = "poketeams-normas-v2";
 export const ID_GENERALES = "generales";
-export const NOMBRE_GENERALES = "Normas generales";
+export const NOMBRE_GENERALES = t("Normas generales");
 
 export const NORMAS_GENERALES = [
   {
@@ -57,7 +58,7 @@ export const NORMAS_GENERALES = [
     nombre: "Sin comprar curas",
     texto: "No se pueden comprar objetos curativos."
   }
-];
+].map((norma) => ({ ...norma, nombre: t(norma.nombre), texto: t(norma.texto) }));
 
 const oyentes = new Set();
 
@@ -108,7 +109,7 @@ export function normasDeLocke(locke) {
   const normas = locke && locke.normas;
   if (!normas) return null;
   if (Array.isArray(normas)) {
-    return normas.length ? { id: "", nombre: "Normas del locke", conGenerales: false, lista: normas } : null;
+    return normas.length ? { id: "", nombre: t("Normas del locke"), conGenerales: false, lista: normas } : null;
   }
   return normas;
 }

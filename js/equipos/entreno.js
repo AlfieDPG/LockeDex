@@ -15,12 +15,13 @@ import { icono } from "../comun/iconos.js";
 import { imagenConRespaldo, urlsRetrato } from "../comun/imagenes.js";
 import { obtenerStats } from "../comun/pokemon.js";
 import { campoNumero } from "../comun/numero.js";
+import { t, nombre as nombreDe } from "../comun/idioma.js";
 
 export const MAX_EV = 252;
 export const MAX_EVS = 510;
 export const MAX_IV = 31;
 
-export const STATS = ["PS", "Ataque", "Defensa", "At. Esp.", "Def. Esp.", "Velocidad"];
+export const STATS = ["PS", "Ataque", "Defensa", "At. Esp.", "Def. Esp.", "Velocidad"].map((stat) => t(`stat|${stat}`));
 const STATS_SHOWDOWN = ["HP", "Atk", "Def", "SpA", "SpD", "Spe"];
 
 // [nombre en inglés (el de Showdown), en español, stat que sube, stat que baja] (índices de
@@ -33,7 +34,7 @@ export const NATURALEZAS = [
   ["mild", "Afable", 3, 2], ["quiet", "Mansa", 3, 5], ["bashful", "Tímida"], ["rash", "Alocada", 3, 4],
   ["calm", "Serena", 4, 1], ["gentle", "Amable", 4, 2], ["sassy", "Grosera", 4, 5], ["careful", "Cauta", 4, 3],
   ["quirky", "Rara"]
-].map(([id, es, sube, baja]) => ({ id, es, sube, baja }));
+].map(([id, es, sube, baja]) => ({ id, es, en: id.charAt(0).toUpperCase() + id.slice(1), sube, baja }));
 
 const NEUTRA = "serious";
 
@@ -75,7 +76,7 @@ export function statsFinales(poke, base = poke.stats) {
 export function textoEntreno(poke) {
   if (!poke.entreno) return "";
   const { nivel, naturaleza: id } = entrenoDe(poke);
-  return `Nv. ${nivel} · ${naturaleza(id).es}`;
+  return `${t("Nv. {nivel}", { nivel })} · ${nombreDe(naturaleza(id))}`;
 }
 
 // ---------- Showdown ----------
@@ -159,7 +160,7 @@ function iguales(valores) {
 export function opcionesNaturaleza(elegida, corta = false) {
   return NATURALEZAS.map((cada) => {
     const efecto = cada.sube && !corta ? ` (+${STATS[cada.sube]}, −${STATS[cada.baja]})` : "";
-    return `<option value="${cada.id}" ${cada.id === elegida ? "selected" : ""}>${cada.es}${efecto}</option>`;
+    return `<option value="${cada.id}" ${cada.id === elegida ? "selected" : ""}>${nombreDe(cada)}${efecto}</option>`;
   }).join("");
 }
 
@@ -176,9 +177,9 @@ function pintar(cuadro) {
       <div class="entreno-fila ${marca}" data-stat="${i}">
         <span class="entreno-stat">${nombre}${marca === "sube" ? " ▲" : marca === "baja" ? " ▼" : ""}</span>
         <span class="entreno-base">${poke.stats ? poke.stats[i] : "…"}</span>
-        <input class="entreno-ev-barra" type="range" min="0" max="${MAX_EV}" step="4" value="${entreno.evs[i]}" aria-label="EVs de ${nombre}">
-        ${campoNumero(`<input class="entreno-ev" type="number" min="0" max="${MAX_EV}" value="${entreno.evs[i]}" aria-label="EVs de ${nombre}">`)}
-        ${campoNumero(`<input class="entreno-iv" type="number" min="0" max="${MAX_IV}" value="${entreno.ivs[i]}" aria-label="IVs de ${nombre}">`)}
+        <input class="entreno-ev-barra" type="range" min="0" max="${MAX_EV}" step="4" value="${entreno.evs[i]}" aria-label="${t("EVs de {stat}", { stat: nombre })}">
+        ${campoNumero(`<input class="entreno-ev" type="number" min="0" max="${MAX_EV}" value="${entreno.evs[i]}" aria-label="${t("EVs de {stat}", { stat: nombre })}">`)}
+        ${campoNumero(`<input class="entreno-iv" type="number" min="0" max="${MAX_IV}" value="${entreno.ivs[i]}" aria-label="${t("IVs de {stat}", { stat: nombre })}">`)}
         <span class="entreno-barra"><i></i></span>
         <strong class="entreno-total">${finales[i] ?? "…"}</strong>
       </div>`;
@@ -189,13 +190,13 @@ function pintar(cuadro) {
     ? `
       <div class="entreno-cabecera">
         ${imagenConRespaldo(urlsRetrato(poke), `class="entreno-cara" alt=""`)}
-        <strong class="entreno-nombre">${escaparHTML(poke.mote || poke.es)}</strong>
-        <label class="entreno-campo">Nivel ${campoNumero(`<input class="entreno-nivel" type="number" min="1" max="100" value="${entreno.nivel}">`)}</label>
-        <label class="entreno-campo">Naturaleza <select class="entreno-naturaleza">${opcionesNaturaleza(nat.id)}</select></label>
+        <strong class="entreno-nombre">${escaparHTML(poke.mote || nombreDe(poke))}</strong>
+        <label class="entreno-campo">${t("Nivel")} ${campoNumero(`<input class="entreno-nivel" type="number" min="1" max="100" value="${entreno.nivel}">`)}</label>
+        <label class="entreno-campo">${t("Naturaleza")} <select class="entreno-naturaleza">${opcionesNaturaleza(nat.id)}</select></label>
         ${restantes}
         <div class="entreno-botones">
-          <button class="entreno-deshacer" title="Deshacer: dejarlo como estaba al abrir la ventana" aria-label="Deshacer">${icono("deshacer")}</button>
-          <button class="entreno-cerrar" title="Cerrar" aria-label="Cerrar">${icono("aspa")}</button>
+          <button class="entreno-deshacer" title="${t("Deshacer: dejarlo como estaba al abrir la ventana")}" aria-label="${t("Deshacer")}">${icono("deshacer")}</button>
+          <button class="entreno-cerrar" title="${t("Cerrar")}" aria-label="${t("Cerrar")}">${icono("aspa")}</button>
         </div>
       </div>`
     : "";
@@ -204,16 +205,16 @@ function pintar(cuadro) {
     ${cabecera}
     <div class="entreno-filas">
       <div class="entreno-fila entreno-titulos">
-        <span></span><span>Base</span>
-        <span class="entreno-titulo-evs">EVs <button class="entreno-azar" data-azar="evs" title="EVs al azar" aria-label="EVs al azar">${icono("mezclar")}</button></span>
-        <span>IVs <button class="entreno-azar" data-azar="ivs" title="IVs al azar" aria-label="IVs al azar">${icono("mezclar")}</button></span>
-        <span></span><span>Total</span>
+        <span></span><span>${t("Base")}</span>
+        <span class="entreno-titulo-evs">EVs <button class="entreno-azar" data-azar="evs" title="${t("EVs al azar")}" aria-label="${t("EVs al azar")}">${icono("mezclar")}</button></span>
+        <span>IVs <button class="entreno-azar" data-azar="ivs" title="${t("IVs al azar")}" aria-label="${t("IVs al azar")}">${icono("mezclar")}</button></span>
+        <span></span><span>${t("Total")}</span>
       </div>
       ${filas}
       <div class="entreno-fila entreno-todas">
-        <span class="entreno-stat">Todas</span><span></span><span></span>
-        ${campoNumero(`<input class="entreno-todos-ev" type="number" min="0" max="${Math.floor(MAX_EVS / 6)}" placeholder="—" aria-label="EVs de todas" title="Las seis a este valor">`)}
-        ${campoNumero(`<input class="entreno-todos-iv" type="number" min="0" max="${MAX_IV}" placeholder="—" aria-label="IVs de todas" title="Las seis a este valor">`)}
+        <span class="entreno-stat">${t("Todas")}</span><span></span><span></span>
+        ${campoNumero(`<input class="entreno-todos-ev" type="number" min="0" max="${Math.floor(MAX_EVS / 6)}" placeholder="—" aria-label="${t("EVs de todas")}" title="${t("Las seis a este valor")}">`)}
+        ${campoNumero(`<input class="entreno-todos-iv" type="number" min="0" max="${MAX_IV}" placeholder="—" aria-label="${t("IVs de todas")}" title="${t("Las seis a este valor")}">`)}
         ${cuadro.ventana ? "<span></span><span></span>" : `<span class="entreno-quedan">${restantes}</span>`}
       </div>
     </div>`;

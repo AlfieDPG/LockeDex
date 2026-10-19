@@ -7,25 +7,27 @@
 // Para añadir una columna basta con añadirla a COLUMNAS: la cabecera, las celdas y
 // la ordenación salen solas.
 
-import { cargarPokedex, RETRATOS, archivoHoja } from "./datos.js";
+import { cargarPokedex, RETRATOS, archivoHoja, nombreDeFila } from "./datos.js";
+import { cargarDatos } from "../comun/datos.js";
 import { imagenConRespaldo, urlsPMD } from "../comun/imagenes.js";
 import { coloresTipo, tiposEs, iconoTipo } from "../comun/tipos.js";
 import { quitarAcentos } from "../comun/utilidades.js";
 import { abrirEvoluciones, cerrarEvoluciones } from "./evoluciones.js";
+import { t, LOCALE, enIngles } from "../comun/idioma.js";
 
 // "valor" es lo que se usa para ordenar. La columna de la foto no lo tiene, así que no se ordena.
 const COLUMNAS = [
-  { clave: "numero", titulo: "Nº", clase: "col-numero", valor: (p) => p.numero },
+  { clave: "numero", titulo: t("Nº"), clase: "col-numero", valor: (p) => p.numero },
   { clave: "foto", titulo: "", clase: "col-foto" },
-  { clave: "nombre", titulo: "Pokémon", clase: "col-nombre", valor: (p) => p.nombre },
+  { clave: "nombre", titulo: "Pokémon", clase: "col-nombre", valor: (p) => p.visible },
   { clave: "tipos", titulo: "", clase: "col-tipos" },
-  { clave: "ps", titulo: "PS", clase: "col-dato", valor: (p) => p.bases[0] },
-  { clave: "ataque", titulo: "Ataque", clase: "col-dato", valor: (p) => p.bases[1] },
-  { clave: "defensa", titulo: "Defensa", clase: "col-dato", valor: (p) => p.bases[2] },
-  { clave: "ataque-especial", titulo: "At. Esp.", clase: "col-dato", valor: (p) => p.bases[3] },
-  { clave: "defensa-especial", titulo: "Def. Esp.", clase: "col-dato", valor: (p) => p.bases[4] },
-  { clave: "velocidad", titulo: "Velocidad", clase: "col-dato", valor: (p) => p.bases[5] },
-  { clave: "total", titulo: "Total", clase: "col-dato col-total", valor: (p) => p.total }
+  { clave: "ps", titulo: t("stat|PS"), clase: "col-dato", valor: (p) => p.bases[0] },
+  { clave: "ataque", titulo: t("stat|Ataque"), clase: "col-dato", valor: (p) => p.bases[1] },
+  { clave: "defensa", titulo: t("stat|Defensa"), clase: "col-dato", valor: (p) => p.bases[2] },
+  { clave: "ataque-especial", titulo: t("stat|At. Esp."), clase: "col-dato", valor: (p) => p.bases[3] },
+  { clave: "defensa-especial", titulo: t("stat|Def. Esp."), clase: "col-dato", valor: (p) => p.bases[4] },
+  { clave: "velocidad", titulo: t("stat|Velocidad"), clase: "col-dato", valor: (p) => p.bases[5] },
+  { clave: "total", titulo: t("Total"), clase: "col-dato col-total", valor: (p) => p.total }
 ];
 
 const vista = document.getElementById("vista-pokedex");
@@ -88,8 +90,8 @@ function filaPokemon(p) {
   return `
     <tr>
       <td class="col-numero">${numeroDex(p.numero)}</td>
-      <td class="col-foto"><button class="pokedex-evo" data-numero="${p.numero}" data-clave="${p.clave}" title="Línea evolutiva">${foto(p)}</button></td>
-      <td class="col-nombre">${p.nombre}</td>
+      <td class="col-foto"><button class="pokedex-evo" data-numero="${p.numero}" data-clave="${p.clave}" title="${t("Línea evolutiva")}">${foto(p)}</button></td>
+      <td class="col-nombre">${p.visible}</td>
       <td class="col-tipos">${p.tipos.map(chipTipo).join("")}</td>
       ${p.bases.map((base) => `<td class="col-dato">${base}</td>`).join("")}
       <td class="col-dato col-total">${p.total}</td>
@@ -101,11 +103,11 @@ function celdaCabecera(c) {
 
   const activa = c.clave === ordenActual;
   const flecha = activa ? (descendente ? "▼" : "▲") : "↕";
-  const sentido = activa && descendente ? "de mayor a menor" : "de menor a mayor";
+  const sentido = activa && descendente ? t("Ordenar de mayor a menor") : t("Ordenar de menor a mayor");
 
   return `
     <th class="${c.clase} ${activa ? "ordenada" : ""}">
-      <button data-orden="${c.clave}" title="Ordenar ${sentido}">
+      <button data-orden="${c.clave}" title="${sentido}">
         ${c.titulo}<span class="flecha">${flecha}</span>
       </button>
     </th>`;
@@ -127,7 +129,7 @@ function comparar(columna) {
     const valorA = columna.valor(a);
     const valorB = columna.valor(b);
     const diferencia =
-      typeof valorA === "string" ? valorA.localeCompare(valorB, "es") : valorA - valorB;
+      typeof valorA === "string" ? valorA.localeCompare(valorB, LOCALE) : valorA - valorB;
 
     // Los empates (dos Pokémon con el mismo ataque) se deshacen por el id de PokeAPI, que
     // deja cada especie seguida de sus formas aunque se esté ordenando al revés
@@ -166,20 +168,20 @@ let tipoElegido = "";
 const FILTROS = [
   {
     clave: "gen",
-    titulo: "Generación",
-    opciones: [["", "Todas"], ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((gen) => [String(gen), `${gen}ª`])],
+    titulo: t("Generación"),
+    opciones: [["", t("Todas")], ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((gen) => [String(gen), t("gen|{n}ª", { n: gen })])],
     pasa: (p, valor) => String(p.gen) === valor
   },
   {
     clave: "forma",
-    titulo: "Formas",
-    opciones: [["", "Todas"], ["normal", "Solo normales"], ["regional", "Regionales"], ["mega", "Megas"], ["otra", "Otras formas"]],
+    titulo: t("Formas"),
+    opciones: [["", t("Todas")], ["normal", t("Solo normales")], ["regional", t("Regionales")], ["mega", t("Megas")], ["otra", t("Otras formas")]],
     pasa: (p, valor) => claseDeForma(p) === valor
   },
   {
     clave: "clase",
-    titulo: "Clase",
-    opciones: [["", "Todos"], ["legendario", "Legendarios"], ["singular", "Singulares"], ["bebe", "Bebés"], ["comun", "Ni legendarios ni singulares"]],
+    titulo: t("Clase"),
+    opciones: [["", t("Todos")], ["legendario", t("Legendarios")], ["singular", t("Singulares")], ["bebe", t("Bebés")], ["comun", t("Ni legendarios ni singulares")]],
     pasa: (p, valor) => (valor === "comun" ? p.clase !== "legendario" && p.clase !== "singular" : p.clase === valor)
   }
 ];
@@ -221,8 +223,8 @@ function pintarFiltros() {
               .join("")}
           </div>
         </div>`
-    ).join("") + (activos ? `<button class="pokedex-filtros-quitar">Quitar filtros</button>` : "");
-  botonFiltros.innerHTML = `Filtros${activos ? ` <span class="pokedex-filtros-cuantos">${activos}</span>` : ""}`;
+    ).join("") + (activos ? `<button class="pokedex-filtros-quitar">${t("Quitar filtros")}</button>` : "");
+  botonFiltros.innerHTML = `${t("Filtros")}${activos ? ` <span class="pokedex-filtros-cuantos">${activos}</span>` : ""}`;
   botonFiltros.classList.toggle("con-filtros", activos > 0);
 }
 
@@ -237,9 +239,9 @@ function aplicarFiltros() {
   }
 
   cuentaEl.textContent =
-    visibles === pokemon.length ? `${visibles} Pokémon` : `${visibles} de ${pokemon.length}`;
+    visibles === pokemon.length ? `${visibles} Pokémon` : t("{n} de {total}", { n: visibles, total: pokemon.length });
   tabla.hidden = visibles === 0;
-  mostrarAviso(visibles === 0 ? "Ningún Pokémon coincide con la búsqueda." : "");
+  mostrarAviso(visibles === 0 ? t("Ningún Pokémon coincide con la búsqueda.") : "");
 }
 
 function prepararFiltros() {
@@ -290,17 +292,23 @@ function prepararFiltros() {
 }
 
 export async function iniciar() {
-  mostrarAviso("Cargando la Pokédex (solo tarda la primera vez)...");
+  mostrarAviso(t("Cargando la Pokédex (solo tarda la primera vez)..."));
 
   try {
     pokemon = await cargarPokedex();
+    // En inglés, los nombres de las especies (la tabla va en español)
+    if (enIngles) await cargarDatos();
   } catch (error) {
-    mostrarAviso("No he podido cargar la Pokédex. Revisa tu conexión y recarga la página.");
+    mostrarAviso(t("No he podido cargar la Pokédex. Revisa tu conexión y recarga la página."));
     throw error;
   }
 
   // Texto por el que se busca: nombre sin acentos y número, para poder buscar "25" o "pikachu"
-  for (const p of pokemon) p.busqueda = `${quitarAcentos(p.nombre)} ${p.numero}`;
+  // (y en inglés, también por el nombre en inglés)
+  for (const p of pokemon) {
+    p.visible = nombreDeFila(p);
+    p.busqueda = `${quitarAcentos(p.nombre)} ${p.visible === p.nombre ? "" : quitarAcentos(p.visible)} ${p.numero}`;
+  }
 
   // Medidas de las hojas de retratos, para que el CSS sepa dónde cae cada casilla
   tabla.style.setProperty("--hoja-columnas", RETRATOS.columnas);

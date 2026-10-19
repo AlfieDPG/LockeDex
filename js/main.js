@@ -1,14 +1,25 @@
+// Lo primero: el idioma (traduce lo que ya está escrito en la página antes de que se vea nada)
+import "./comun/idioma.js";
 import { activarRespaldoImagenes } from "./comun/imagenes.js";
 import { iniciarNavegacion, irA, vistaInicial } from "./navegacion.js";
 import { iniciarSesionUI } from "./sesion.js";
 import { sumarContador } from "./comun/contadores.js";
 import { usuarioActual } from "./comun/nube.js";
 import { perfilesDeAmigos } from "./comun/perfiles.js";
+import { iniciarAjustes } from "./comun/ajustes.js";
+import { icono } from "./comun/iconos.js";
 import "./comun/numero.js"; // las flechas de las casillas de número (en toda la web)
 
 activarRespaldoImagenes();
 iniciarNavegacion();
 irA(vistaInicial()); // la que hubiera al recargar, o Inicio si se entra de nuevas
+
+// Ajustes (la rueda de abajo del panel): el tema y el idioma
+document.querySelector(".boton-ajustes").innerHTML = icono("ajustes");
+for (const boton of document.querySelectorAll("#dialogo-ajustes [data-icono]")) {
+  boton.insertAdjacentHTML("afterbegin", icono(boton.dataset.icono));
+}
+iniciarAjustes();
 
 // Preguntas frecuentes: el «?» al lado de «Créditos y privacidad»
 const dialogoAyuda = document.querySelector("#dialogo-ayuda");

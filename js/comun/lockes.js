@@ -41,6 +41,7 @@ import { quitarConjuntosAjenos, normasDeLocke } from "./normas.js";
 import { hoyComoTexto } from "./utilidades.js";
 import { leer, escribir } from "./almacen.js";
 import { JUEGOS } from "./juegos.js";
+import { t } from "./idioma.js";
 
 // «usum» -> «alola» ("" si no es un juego de la web)
 function regionDe(idJuego) {
@@ -277,8 +278,8 @@ function escuchar(usuario) {
       console.error("No se han podido leer los lockes", error);
       fallo =
         error.code === "permission-denied"
-          ? "Firebase no deja leer los lockes. Falta publicar las reglas de Firestore."
-          : "No se han podido cargar los lockes.";
+          ? t("Firebase no deja leer los lockes. Falta publicar las reglas de Firestore.")
+          : t("No se han podido cargar los lockes.");
       avisar();
     }
   );
@@ -414,7 +415,7 @@ export function combatesDe(locke) {
 export function nombreCombate(locke, idCombate) {
   const posicion = combatesDe(locke).findIndex((combate) => combate.id === idCombate);
   const combate = combatesDe(locke)[posicion];
-  return (combate && combate.nombre) || `Combate ${posicion + 1}`;
+  return (combate && combate.nombre) || t("Combate {n}", { n: posicion + 1 });
 }
 
 // Victorias de alguien: con combates, los que ha ganado; sin ellos, las que se ha sumado
@@ -601,6 +602,7 @@ export async function apuntarMuerto(id, muerto, quitarVida) {
     id: nuevoIdMuerto(),
     especie: muerto.especie,
     nombre: muerto.nombre,
+    ...(muerto.en ? { en: muerto.en } : {}), // en inglés (ver nombreMuerto en js/versus/cementerio.js)
     mote: muerto.mote || "",
     ...formaDelMuerto(muerto),
     fecha: Date.now()
@@ -617,10 +619,11 @@ export async function apuntarMuerto(id, muerto, quitarVida) {
   await fn.updateDoc(ref, cambios);
 
   const { especie, nombre, mote } = nuevo;
+  const en = nuevo.en ? { en: nuevo.en } : {};
   const tipo = !restaVida ? "muerte" : vidas - 1 === ELIMINADO ? "eliminado" : "vida";
   await apuntarSuceso(id, tipo, {
     ...(restaVida ? { delta: -1 } : {}),
-    muerto: { especie, nombre, mote, ...formaDelMuerto(nuevo) }
+    muerto: { especie, nombre, ...en, mote, ...formaDelMuerto(nuevo) }
   });
 }
 

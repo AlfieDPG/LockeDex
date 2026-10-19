@@ -23,6 +23,7 @@ import { cuandoEsteSincronizado } from "./nube.js";
 import { actualizarPersonalizadoEnMisLockes } from "./lockes.js";
 import { LUGARES } from "../rutas/datos.js";
 import { retratoDeLaWeb } from "../levelcaps/retratos.js";
+import { t, LOCALE } from "./idioma.js";
 
 const CLAVE_RUTAS = "poketeams-rutas-propias-v1";
 const CLAVE_CAPS = "poketeams-levelcaps-propios-v1";
@@ -49,9 +50,9 @@ const texto = (valor, largo) => String(valor || "").trim().slice(0, largo);
 // El tipo de combate (para el color y los tramos de Alto Mando y Campeón) sale del título
 export function tipoDeCombate(etiqueta) {
   const minusculas = String(etiqueta || "").toLowerCase();
-  if (minusculas.includes("alto mando")) return "alto-mando";
-  if (minusculas.includes("campe")) return "campeon";
-  if (minusculas.includes("gimnasio") || minusculas.includes("líder") || minusculas.includes("lider")) return "gimnasio";
+  if (minusculas.includes("alto mando") || minusculas.includes("elite four")) return "alto-mando";
+  if (minusculas.includes("campe") || minusculas.includes("champion")) return "campeon";
+  if (["gimnasio", "líder", "lider", "gym", "leader"].some((palabra) => minusculas.includes(palabra))) return "gimnasio";
   return "historia";
 }
 
@@ -73,7 +74,7 @@ function limpiarCombate(combate) {
 function datosComunes(lista) {
   return {
     id: lista.id,
-    nombre: texto(lista.nombre, 40) || "Sin nombre",
+    nombre: texto(lista.nombre, 40) || t("Sin nombre"),
     actualizado: lista.actualizado || Date.now(),
     ...(lista.recibido ? { recibido: true } : {})
   };
@@ -289,7 +290,7 @@ export function lugaresDeLaWeb() {
         for (const lugar of lugares[clave] || []) vistos.add(lugar);
       }
     }
-    todosLosLugares = [...vistos].sort((uno, otro) => uno.localeCompare(otro, "es", { numeric: true }));
+    todosLosLugares = [...vistos].sort((uno, otro) => uno.localeCompare(otro, LOCALE, { numeric: true }));
   }
   return todosLosLugares;
 }

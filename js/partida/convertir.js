@@ -4,12 +4,13 @@
 // su especie, su forma (para el retrato de Mundo Misterioso), su nombre en español, su nivel
 // y el lugar donde se capturó.
 
-import { cargarPokedex } from "../pokedex/datos.js";
+import { cargarPokedex, nombreDeFila } from "../pokedex/datos.js";
 import { cargarDatos, datos } from "../comun/datos.js";
 import { formasDeTipoDe } from "../comun/formas.js";
 import { LUGARES_GEN6, LUGARES_GEN7, OBJETOS_EN, CRECIMIENTO } from "./datos-3ds.js";
 import { LUGARES_GEN4, LUGARES_GEN4_OTROS, LUGARES_GEN5, LUGARES_GEN5_OTROS } from "./datos-ds.js";
 import { LUGARES_GEN8, LUGARES_BDSP, LUGARES_BDSP_OTROS } from "./datos-switch.js";
+import { LUGARES_EN } from "./lugares-en.js";
 
 // Formas que importan (las que cambian el aspecto o los tipos), por el número que les da el
 // juego: [id de PokeAPI, nombre en Showdown]. Las que no están (Vivillon, Pikachu con gorra,
@@ -110,6 +111,15 @@ export async function prepararConversion() {
   return tablas;
 }
 
+// Un lugar (en español, como en datos-*.js) en inglés; si no se sabe, el mismo
+const GEN_DE = { dp: 4, platino: 4, hgss: 4, bw: 5, b2w2: 5, xy: 6, oras: 6, sm: 7, usum: 7, swsh: 8 };
+
+export function lugarEnIngles(nombre, juego) {
+  if (nombre === "Intercambio") return "Link Trade";
+  const tabla = LUGARES_EN[juego === "bdsp" ? "bdsp" : `gen${GEN_DE[juego] || 6}`] || {};
+  return tabla[nombre] || nombre;
+}
+
 function nombreLugar(gen, numero, juego) {
   if (juego === "bdsp") return numero === 65535 ? "" : LUGARES_BDSP[numero] || LUGARES_BDSP_OTROS[numero] || "";
   if (gen === 4) return LUGARES_GEN4[numero] || LUGARES_GEN4_OTROS[numero] || "";
@@ -126,6 +136,7 @@ function convertir(p, gen, conDetalle, juego) {
   const salida = {
     id: p.especie,
     es: especie.es,
+    en: especie.en,
     nombre: especie.es,
     mote: p.mote || "",
     genero: p.genero,
@@ -137,7 +148,7 @@ function convertir(p, gen, conDetalle, juego) {
   const forma = (FORMAS[p.especie] || {})[p.forma];
   const fila = forma && formas.get(forma[0]);
   if (fila) {
-    Object.assign(salida, { idForma: fila.clave, formaPMD: fila.forma, nombre: fila.nombre, showdown: forma[1] });
+    Object.assign(salida, { idForma: fila.clave, formaPMD: fila.forma, nombre: fila.nombre, nombreEn: nombreDeFila(fila, "en"), showdown: forma[1] });
   } else if (forma) {
     // Una forma que no está en la Pokédex de la web (Meowstic hembra): al menos su nombre
     Object.assign(salida, { idForma: forma[0], showdown: forma[1] });
@@ -151,6 +162,7 @@ function convertir(p, gen, conDetalle, juego) {
   const deHuevo = p.lugarHuevo && !(juego === "bdsp" && p.lugarHuevo === 65535);
   if (!p.huevo && !deHuevo && p.lugar && nombreLugar(gen, p.lugar, juego)) {
     salida.lugar = nombreLugar(gen, p.lugar, juego);
+    salida.lugarEn = lugarEnIngles(salida.lugar, juego);
     salida.lugarN = p.lugar;
   }
   if (p.origen) salida.origen = p.origen;

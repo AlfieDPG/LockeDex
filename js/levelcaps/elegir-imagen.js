@@ -8,6 +8,7 @@ import { escaparHTML, quitarAcentos } from "../comun/utilidades.js";
 import { icono } from "../comun/iconos.js";
 import { imagenReducida } from "../comun/personalizados.js";
 import { personajesDeLaWeb } from "./retratos.js";
+import { t } from "../comun/idioma.js";
 
 const dialogo = document.querySelector("#dialogo-imagen-combate");
 const personajes = dialogo.querySelector(".imagen-personajes");
@@ -32,7 +33,7 @@ function pintar() {
             </button>`
         )
         .join("")
-    : `<p class="imagen-ninguno">Ninguno.</p>`;
+    : `<p class="imagen-ninguno">${t("Ninguno.")}</p>`;
 }
 
 export function abrirElegirImagen(conImagen, listo) {
@@ -48,7 +49,7 @@ export function abrirElegirImagen(conImagen, listo) {
 
 function elegir(imagen, nombre = "") {
   if (alElegir && alElegir(imagen, nombre) === false) {
-    error.textContent = "No cabe: hay demasiadas imágenes subidas en estos level caps.";
+    error.textContent = t("No cabe: hay demasiadas imágenes subidas en estos level caps.");
     return;
   }
   dialogo.close();
@@ -74,7 +75,7 @@ archivo.addEventListener("change", async () => {
     elegir(await imagenReducida(elegido));
   } catch (fallo) {
     console.error(fallo);
-    error.textContent = "No se ha podido leer esa imagen.";
+    error.textContent = t("No se ha podido leer esa imagen.");
   }
 });
 

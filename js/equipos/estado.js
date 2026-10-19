@@ -1,5 +1,6 @@
 import { copiaProfunda } from "../comun/utilidades.js";
 import { leer, escribir } from "../comun/almacen.js";
+import { t } from "../comun/idioma.js";
 
 // NO cambiar estas claves: si se cambian, se pierden los equipos guardados
 const CLAVE_EQUIPO = "poketeams-equipo-v1";
@@ -116,13 +117,13 @@ function conLasCarasDe(pokemon, anteriores) {
 }
 
 function nombreParaGuardar() {
-  return estado.nombre.trim() || "Equipo sin nombre";
+  return estado.nombre.trim() || t("Equipo sin nombre");
 }
 
 // Las stats, descripciones y datos de combate se descargan solos al pasar el ratón:
 // no cuentan como un cambio del usuario
 // (la cara tampoco: se elige en «Mis equipos» y no cambia el equipo)
-const DATOS_AUTOMATICOS = new Set(["stats", "descripcion", "fuente", "potencia", "precision", "categoria", "cara"]);
+const DATOS_AUTOMATICOS = new Set(["stats", "descripcion", "descripcionEn", "fuente", "potencia", "precision", "categoria", "cara"]);
 
 function sinStats(clave, valor) {
   return DATOS_AUTOMATICOS.has(clave) ? undefined : valor;

@@ -42,10 +42,10 @@
   justify-content: center;
   gap: 0.45rem;
   padding: 0.75rem;
-  border: 1px dashed rgba(255, 255, 255, 0.25);
+  border: 1px dashed rgba(var(--t-tinte), 0.25);
   border-radius: 0.7rem;
   background: transparent;
-  color: #f2f2f2;
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.95rem;
   font-weight: bold;
@@ -69,7 +69,7 @@
 .locke {
   border-left: 0.35rem solid var(--color-locke, #3498db);
   border-radius: 0.7rem;
-  background: #2c2e3e;
+  background: var(--t-panel);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   overflow: hidden;
 }
@@ -83,7 +83,7 @@
   align-items: center;
   gap: 0.7rem;
   padding: 0.7rem 0.95rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(var(--t-oscurecer), 0.2);
 }
 
 .locke-tipo {
@@ -109,7 +109,7 @@
   gap: 0.3rem;
   font-size: 0.85rem;
   font-weight: bold;
-  color: #f1c40f;
+  color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
 }
 
 .locke-resultado .icono {
@@ -133,8 +133,8 @@
   padding: 0;
   border: none;
   border-radius: 0.35rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   cursor: pointer;
 }
 
@@ -145,8 +145,8 @@
 
 .locke-editar:hover,
 .locke-quitar-lista:hover {
-  background: #4a4e68; /* neutro: el rojo es el de borrar */
-  color: #fff;
+  background: var(--t-control-2); /* neutro: el rojo es el de borrar */
+  color: var(--t-texto-fuerte);
 }
 
 .locke-acciones .locke-borrar:hover {
@@ -186,7 +186,7 @@
 
 .locke-dentro-uno.pendiente {
   background: transparent;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(var(--t-tinte), 0.2);
   font-weight: normal;
 }
 
@@ -206,14 +206,14 @@ button.locke-anadir {
   justify-content: center;
   min-width: 2.2rem;
   border: none;
-  color: #f2f2f2;
+  color: var(--t-texto);
   font-family: inherit;
   cursor: pointer;
 }
 
 button.locke-anadir:hover {
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+  background: rgba(var(--t-tinte), 0.08);
+  box-shadow: inset 0 0 0 1px rgba(var(--t-tinte), 0.45);
 }
 
 button.locke-anadir .icono {
@@ -244,8 +244,8 @@ button.locke-anadir .icono {
 }
 
 #dialogo-elegir-amigos .elegir-cancelar {
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
 }
 
 .locke-quitar,
@@ -259,7 +259,7 @@ button.locke-anadir .icono {
   border: none;
   border-radius: 0.25rem;
   background: transparent;
-  color: rgba(242, 242, 242, 0.6);
+  color: rgba(var(--t-texto-rgb), 0.6);
   cursor: pointer;
 }
 
@@ -280,8 +280,8 @@ button.locke-anadir .icono {
 #dialogo-nuevo-locke input:disabled,
 #dialogo-nuevo-locke select:disabled,
 #dialogo-nuevo-locke textarea:disabled {
-  background: #252735;
-  color: rgba(242, 242, 242, 0.75);
+  background: var(--t-fondo-2);
+  color: rgba(var(--t-texto-rgb), 0.75);
   opacity: 1;
   cursor: not-allowed;
 }
@@ -317,8 +317,8 @@ button.locke-anadir .icono {
   padding: 0.3rem 0.65rem;
   border: none;
   border-radius: 0.4rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.78rem;
   font-weight: bold;
@@ -364,18 +364,18 @@ button.locke-anadir .icono {
   gap: 0.45rem;
   padding: 0.85rem 0.7rem;
   border-radius: 0.55rem;
-  background: #252735;
+  background: var(--t-fondo-2);
 }
 
 .locke-jugador.ganador {
-  background-color: #2f3142; /* solo el color: el dibujo de su fondo, si tiene, se queda */
+  background-color: var(--t-panel-2); /* solo el color: el dibujo de su fondo, si tiene, se queda */
   box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.5);
 }
 
 /* Invitado que todavía no ha entrado */
 .locke-jugador.pendiente {
   opacity: 0.6;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(var(--t-tinte), 0.12);
 }
 
 /* Foto, nombre y su marca (Sin contestar, Eliminado, la corona): ocupa el alto que sobre y se
@@ -395,7 +395,7 @@ button.locke-anadir .icono {
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: rgba(242, 242, 242, 0.6);
+  color: rgba(var(--t-texto-rgb), 0.6);
 }
 
 .locke-cara {
@@ -404,7 +404,7 @@ button.locke-anadir .icono {
   height: 4.2rem;
   border-radius: 50%;
   border: 0.18rem solid var(--color-locke, #c0392b);
-  background: #1e1f2b;
+  background: var(--t-fondo);
   overflow: hidden;
 }
 
@@ -422,7 +422,7 @@ button.locke-anadir .icono {
 }
 
 .locke-corona {
-  color: #f1c40f;
+  color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
 }
 
 .locke-corona .icono {
@@ -471,7 +471,7 @@ button.locke-anadir .icono {
 }
 
 .locke-jugador.eliminado .locke-quien {
-  color: rgba(242, 242, 242, 0.55);
+  color: rgba(var(--t-texto-rgb), 0.55);
   text-decoration: line-through;
   text-decoration-color: rgba(231, 76, 60, 0.8);
   text-decoration-thickness: 2px;
@@ -540,7 +540,7 @@ button.locke-anadir .icono {
   gap: 0.3rem;
   padding: 0.5rem 0.3rem;
   border-radius: 0.45rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(var(--t-oscurecer), 0.2);
 }
 
 .locke-etiqueta {
@@ -560,7 +560,7 @@ button.locke-anadir .icono {
 }
 
 .locke-cifra.victorias .locke-etiqueta {
-  color: #f1c40f;
+  color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
 }
 
 .locke-cifra.vidas .locke-etiqueta {
@@ -584,13 +584,13 @@ button.locke-anadir .icono {
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   cursor: pointer;
 }
 
 .locke-numero button:hover:not(:disabled) {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .locke-numero button:disabled {
@@ -629,8 +629,8 @@ button.locke-anadir .icono {
   padding: 0.35rem 0.5rem;
   border: none;
   border-radius: 0.45rem;
-  background: rgba(0, 0, 0, 0.2);
-  color: rgba(242, 242, 242, 0.5);
+  background: rgba(var(--t-oscurecer), 0.2);
+  color: rgba(var(--t-texto-rgb), 0.5);
   font-family: inherit;
   font-size: 0.72rem;
   font-weight: bold;
@@ -648,19 +648,19 @@ button.locke-rom {
 }
 
 button.locke-rom:hover {
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
 }
 
 .locke-rom.pasada {
   background: rgba(46, 204, 113, 0.15);
   box-shadow: inset 0 0 0 1px rgba(46, 204, 113, 0.5);
-  color: #2ecc71;
+  color: color-mix(in srgb, #2ecc71 var(--t-vivo), black);
 }
 
 button.locke-rom.pasada:hover {
   background: rgba(46, 204, 113, 0.25);
-  color: #2ecc71;
+  color: color-mix(in srgb, #2ecc71 var(--t-vivo), black);
 }
 
 /* ---------- Combates del locke ---------- */
@@ -679,10 +679,10 @@ button.locke-rom.pasada:hover {
   gap: 0.3rem;
   min-width: 9.5rem;
   padding: 0.45rem 0.65rem;
-  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border: 1px dashed rgba(var(--t-tinte), 0.18);
   border-radius: 0.5rem;
-  background: #252735;
-  color: #f2f2f2;
+  background: var(--t-fondo-2);
+  color: var(--t-texto);
   font-family: inherit;
   text-align: left;
   cursor: pointer;
@@ -742,7 +742,7 @@ button.locke-rom.pasada:hover {
   width: 1.5rem;
   height: 1.5rem;
   border-radius: 50%;
-  background: #1e1f2b;
+  background: var(--t-fondo);
   object-fit: cover;
   font-size: 0.75rem;
   font-weight: bold;
@@ -751,7 +751,7 @@ button.locke-rom.pasada:hover {
 .combate-marcador {
   padding: 0.05rem 0.4rem;
   border-radius: 0.3rem;
-  background: #3a3d52;
+  background: var(--t-control);
   font-size: 0.78rem;
 }
 
@@ -786,8 +786,8 @@ button.locke-rom.pasada:hover {
   padding: 0.45rem 0.7rem;
   border: 2px solid transparent;
   border-radius: 0.5rem;
-  background: #252735;
-  color: #f2f2f2;
+  background: var(--t-fondo-2);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.9rem;
   font-weight: bold;
@@ -797,14 +797,14 @@ button.locke-rom.pasada:hover {
 .combate-opcion:hover,
 .combate-marcador-opcion:hover,
 .terminar-opcion:hover {
-  background: #32354a;
+  background: var(--t-panel-3);
 }
 
 .combate-opcion.elegido,
 .combate-marcador-opcion.elegido,
 .terminar-opcion.elegido {
   border-color: #f1c40f;
-  background: #34364a;
+  background: var(--t-panel-4);
 }
 
 .combate-opcion .combate-opcion-foto,
@@ -818,9 +818,9 @@ button.locke-rom.pasada:hover {
   margin: 0 0 0.8rem;
   padding: 0.6rem 0.8rem;
   border-radius: 0.5rem;
-  background: #252735;
+  background: var(--t-fondo-2);
   box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.45);
-  color: #f1c40f;
+  color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
   font-weight: bold;
 }
 
@@ -850,7 +850,7 @@ button.locke-rom.pasada:hover {
 }
 
 .terminar-dato.bien {
-  color: #2ecc71;
+  color: color-mix(in srgb, #2ecc71 var(--t-vivo), black);
   opacity: 1;
 }
 
@@ -863,7 +863,7 @@ button.locke-rom.pasada:hover {
   width: auto;
   gap: 0.3rem;
   padding: 0 0.6rem;
-  color: #f1c40f;
+  color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: bold;
@@ -875,7 +875,7 @@ button.locke-rom.pasada:hover {
 }
 
 .locke-resultado.sin-ganador {
-  color: rgba(242, 242, 242, 0.6);
+  color: rgba(var(--t-texto-rgb), 0.6);
 }
 
 /* ---------- Salón de la fama: equipo final y MVP ---------- */
@@ -906,7 +906,7 @@ button.locke-rom.pasada:hover {
   padding: 0;
   border: 2px solid transparent;
   border-radius: 0.4rem;
-  background: #2c2e3e;
+  background: var(--t-panel);
   font: inherit;
   color: inherit;
 }
@@ -962,8 +962,8 @@ button.salon-cara:hover {
   padding: 0.3rem 0.5rem;
   border: none;
   border-radius: 0.4rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.75rem;
   font-weight: bold;
@@ -972,12 +972,12 @@ button.salon-cara:hover {
 
 .locke-salon-poner {
   width: 100%;
-  color: #f1c40f;
+  color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
 }
 
 .locke-salon-poner:hover,
 .locke-salon-cambiar:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .locke-salon-poner .icono,
@@ -1109,13 +1109,13 @@ button.salon-cara:hover {
   gap: 0.4rem;
   padding: 0.45rem 0.7rem;
   border-radius: 0.45rem;
-  background: #252735;
+  background: var(--t-fondo-2);
   font-size: 0.78rem;
   cursor: pointer;
 }
 
 .campos-locke .campo-casilla:hover {
-  background: #32354a;
+  background: var(--t-panel-3);
 }
 
 .campos-locke .campo-casilla input {
@@ -1169,13 +1169,13 @@ button.salon-cara:hover {
   gap: 0.4rem;
   padding: 0.45rem 0.7rem;
   border-radius: 0.45rem;
-  background: #252735;
+  background: var(--t-fondo-2);
   font-size: 0.9rem;
   cursor: pointer;
 }
 
 .locke-amigo:hover {
-  background: #32354a;
+  background: var(--t-panel-3);
 }
 
 .locke-amigo input {
@@ -1227,8 +1227,8 @@ button.salon-cara:hover {
   padding: 0.45rem 0.7rem;
   border: none;
   border-radius: 0.45rem;
-  background: #363949;
-  color: #f2f2f2;
+  background: var(--t-panel-5);
+  color: var(--t-texto);
   font-size: 0.9rem;
   white-space: nowrap;
   cursor: pointer;
@@ -1283,8 +1283,8 @@ button.salon-cara:hover {
 }
 
 #locke-cancelar {
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
 }
 
 /* ---------- Cementerio ---------- */
@@ -1308,8 +1308,8 @@ button.salon-cara:hover {
 
 .cementerio-cerrar,
 .actividad-cerrar {
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
 }
 
 /* Una columna por jugador, una al lado de otra; si no caben, bajan */
@@ -1324,7 +1324,7 @@ button.salon-cara:hover {
 .cementerio-jugador {
   padding: 0.75rem;
   border-radius: 0.7rem;
-  background: #252735;
+  background: var(--t-fondo-2);
 }
 
 /* La tuya, con el borde dorado de lo tuyo en Versus */
@@ -1348,7 +1348,7 @@ button.salon-cara:hover {
   height: 1.8rem;
   overflow: hidden;
   border-radius: 50%;
-  background: #3a3d52;
+  background: var(--t-control);
   font-weight: bold;
 }
 
@@ -1397,8 +1397,8 @@ button.salon-cara:hover {
   padding: 0.65rem 0.35rem 0.5rem;
   border: none;
   border-radius: 2.7rem 2.7rem 0.45rem 0.45rem;
-  background: linear-gradient(#3d4054, #2f3142);
-  color: #f2f2f2;
+  background: linear-gradient(#3d4054, var(--t-panel-2));
+  color: var(--t-texto);
   font-family: inherit;
   text-align: center;
 }
@@ -1450,7 +1450,7 @@ button.salon-cara:hover {
 /* La «+» para apuntar uno: una lápida vacía con borde de puntos */
 .tumba-nueva {
   justify-content: center;
-  border: 1px dashed rgba(255, 255, 255, 0.3);
+  border: 1px dashed rgba(var(--t-tinte), 0.3);
   background: transparent;
   cursor: pointer;
 }
@@ -1473,8 +1473,8 @@ button.salon-cara:hover {
   padding: 0.2rem;
   border: none;
   border-radius: 0.3rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   cursor: pointer;
 }
 
@@ -1501,8 +1501,8 @@ button.salon-cara:hover {
   padding: 0.05rem 0.25rem;
   border: 1px solid transparent;
   border-radius: 1rem;
-  background: rgba(0, 0, 0, 0.3);
-  color: #f2f2f2;
+  background: rgba(var(--t-oscurecer), 0.3);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.75rem;
   line-height: 1.3;
@@ -1522,7 +1522,7 @@ button.salon-cara:hover {
 .reaccion:hover,
 .reaccion-abrir:hover,
 .reaccion-opcion:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .reaccion-abrir .icono {
@@ -1543,7 +1543,7 @@ button.salon-cara:hover {
   gap: 0.15rem;
   padding: 0.25rem;
   border-radius: 1rem;
-  background: #1e1f2b;
+  background: var(--t-fondo);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   transform: translateX(-50%);
 }
@@ -1618,7 +1618,7 @@ button.salon-cara:hover {
   padding: 0.5rem 0.7rem;
   border-left: 3px solid var(--color-suceso);
   border-radius: 0.5rem;
-  background: #252735;
+  background: var(--t-fondo-2);
   font-size: 0.9rem;
 }
 
@@ -1652,8 +1652,8 @@ button.salon-cara:hover {
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
 }
 
 .suceso-icono .icono {
@@ -1731,7 +1731,7 @@ button.salon-cara:hover {
   gap: 0.5rem;
   padding: 0.45rem 0.6rem;
   border-radius: 0.5rem;
-  background: #252735;
+  background: var(--t-fondo-2);
 }
 
 .combate-equipo.mio {
@@ -1801,12 +1801,12 @@ button.salon-cara:hover {
   padding: 0.25rem;
   border: none;
   border-radius: 0.45rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(var(--t-oscurecer), 0.2);
   cursor: pointer;
 }
 
 .locke-partida-abrir:hover {
-  background: #3a3d52;
+  background: var(--t-control);
 }
 
 .locke-partida-abrir .cara-equipo img {
@@ -1824,8 +1824,8 @@ button.salon-cara:hover {
   padding: 0.35rem 0.5rem;
   border: none;
   border-radius: 0.45rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.75rem;
   font-weight: bold;
@@ -1840,7 +1840,7 @@ button.salon-cara:hover {
 .locke-partida-vincular:hover,
 .locke-partida-reanudar:hover,
 .locke-partida-muertos:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .locke-partida-reanudar {
@@ -1911,7 +1911,7 @@ button.salon-cara:hover {
 
 .partida-candado {
   display: inline-flex;
-  color: #aab0c8;
+  color: var(--t-gris-2);
 }
 
 .partida-pokemon {
@@ -1927,7 +1927,7 @@ button.salon-cara:hover {
   gap: 0.1rem;
   padding: 0.35rem 0.2rem;
   border-radius: 0.45rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(var(--t-oscurecer), 0.2);
   font-size: 0.72rem;
   text-align: center;
 }
@@ -1968,7 +1968,7 @@ button.salon-cara:hover {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(var(--t-tinte), 0.06);
   image-rendering: pixelated;
 }
 
@@ -1979,7 +1979,6 @@ button.salon-cara:hover {
 }
 
 /* Meter equipo, copiar a Mis equipos e interruptor de caja de muertos, en la cabecera de cada bloque */
-.partida-caramelos,
 .partida-meter,
 .partida-copiar,
 .partida-marcar-muertos {
@@ -1990,25 +1989,22 @@ button.salon-cara:hover {
   padding: 0.3rem 0.6rem;
   border: none;
   border-radius: 0.4rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.72rem;
   font-weight: bold;
   cursor: pointer;
 }
 
-.partida-caramelos ~ .partida-meter,
-.partida-caramelos ~ .partida-copiar,
 .partida-meter + .partida-copiar {
   margin-left: 0;
 }
 
-.partida-caramelos:hover,
 .partida-meter:hover,
 .partida-copiar:hover,
 .partida-marcar-muertos:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .partida-copiar:disabled {
@@ -2016,7 +2012,6 @@ button.salon-cara:hover {
   cursor: progress;
 }
 
-.partida-caramelos .icono,
 .partida-meter .icono,
 .partida-copiar .icono,
 .partida-marcar-muertos .icono {
@@ -2026,8 +2021,8 @@ button.salon-cara:hover {
 
 .partida-marcar-muertos {
   background: transparent;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
-  color: rgba(242, 242, 242, 0.5);
+  box-shadow: inset 0 0 0 1px rgba(var(--t-tinte), 0.15);
+  color: rgba(var(--t-texto-rgb), 0.5);
 }
 
 .partida-marcar-muertos.activa {
@@ -2079,8 +2074,8 @@ button.salon-cara:hover {
   padding: 0 0.75rem;
   border: none;
   border-radius: 0.45rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: bold;
@@ -2098,7 +2093,7 @@ button.salon-cara:hover {
 }
 
 .partida-acciones button:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .partida-desvincular {
@@ -2116,7 +2111,7 @@ button.salon-cara:hover {
 /* Cambios sin guardar: se guardan al cerrar (la ✕, en verde) o se descartan */
 .partida-pendientes {
   font-size: 0.78rem;
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 .partida-descartar {
@@ -2153,8 +2148,8 @@ button.salon-cara:hover {
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: bold;
@@ -2177,7 +2172,7 @@ button.salon-cara:hover {
 .ayuda-partida h3 {
   margin: 0.9rem 0 0.25rem;
   font-size: 0.85rem;
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 .ayuda-partida h3:first-child {
@@ -2223,7 +2218,7 @@ button.salon-cara:hover {
   overflow-y: auto;
   padding: 0.9rem;
   border-radius: 0.6rem;
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(var(--t-oscurecer), 0.18);
 }
 
 /* El panel ocupa todo el alto y sus botones van pegados abajo del todo (al bajar, se quedan) */
@@ -2244,7 +2239,7 @@ button.salon-cara:hover {
   bottom: 0;
   margin: auto -0.9rem 0;
   padding: 0.7rem 0.9rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(var(--t-tinte), 0.06);
   background: #252736;
 }
 
@@ -2275,8 +2270,8 @@ button.partida-hueco {
   justify-content: center;
   min-height: 4.6rem;
   background: transparent;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
-  color: rgba(242, 242, 242, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(var(--t-tinte), 0.15);
+  color: rgba(var(--t-texto-rgb), 0.45);
 }
 
 button.partida-hueco .icono {
@@ -2290,7 +2285,7 @@ button.partida-hueco .icono {
   gap: 0.25rem;
   padding: 0.2rem;
   border-radius: 0.55rem;
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(var(--t-oscurecer), 0.25);
 }
 
 .partida-pestana {
@@ -2298,7 +2293,7 @@ button.partida-hueco .icono {
   border: none;
   border-radius: 0.4rem;
   background: transparent;
-  color: rgba(242, 242, 242, 0.6);
+  color: rgba(var(--t-texto-rgb), 0.6);
   font-family: inherit;
   font-size: 1rem;
   font-weight: bold;
@@ -2317,7 +2312,7 @@ button.partida-hueco .icono {
 }
 
 .partida-pestana:hover {
-  color: #f2f2f2;
+  color: var(--t-texto);
 }
 
 /* Cada pestaña con su color, suave: azul las cajas, verde la bolsa (un tinte arriba de la
@@ -2334,7 +2329,7 @@ button.partida-hueco .icono {
 
 .partida-pestana.activa {
   background: rgba(var(--color-pestana), 0.28);
-  color: #f2f2f2;
+  color: var(--t-texto);
 }
 
 #dialogo-partida > h2 > .icono {
@@ -2362,8 +2357,8 @@ button.partida-hueco .icono {
   padding: 0.4rem 0.75rem;
   border: none;
   border-radius: 1rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: bold;
@@ -2380,7 +2375,7 @@ button.partida-hueco .icono {
 }
 
 .bolsa-bolsillo:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .bolsa-bolsillo.activo {
@@ -2404,7 +2399,7 @@ button.partida-hueco .icono {
   border-radius: 0.4rem;
   background: transparent;
   box-shadow: inset 0 0 0 1px rgba(var(--color-pestana), 0.5);
-  color: #f2f2f2;
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: bold;
@@ -2433,7 +2428,7 @@ button.partida-hueco .icono {
   min-height: 2.4rem;
   padding: 0.2rem 0.4rem 0.2rem 0.5rem;
   border-radius: 0.45rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(var(--t-oscurecer), 0.2);
 }
 
 .bolsa-icono {
@@ -2467,10 +2462,10 @@ button.partida-hueco .icono {
   width: 100%;
   box-sizing: border-box;
   padding: 0.3rem 0.45rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(var(--t-tinte), 0.12);
   border-radius: 0.35rem;
-  background: #1e1f2b;
-  color: #f2f2f2;
+  background: var(--t-fondo);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.85rem;
 }
@@ -2490,8 +2485,8 @@ button.partida-hueco .icono {
   padding: 0;
   border: none;
   border-radius: 0.3rem;
-  background: rgba(0, 0, 0, 0.25);
-  color: #f2f2f2;
+  background: rgba(var(--t-oscurecer), 0.25);
+  color: var(--t-texto);
   cursor: pointer;
 }
 
@@ -2545,7 +2540,7 @@ button.partida-ficha.arrastrando {
   width: 5.5rem;
   height: 5.5rem;
   border-radius: 0.7rem;
-  background: #1e1f2b;
+  background: var(--t-fondo);
   image-rendering: pixelated;
 }
 
@@ -2561,8 +2556,8 @@ button.partida-ficha.arrastrando {
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-size: 0.95rem;
   cursor: pointer;
 }
@@ -2634,10 +2629,10 @@ button.partida-ficha.arrastrando {
   width: 100%;
   box-sizing: border-box;
   padding: 0.45rem 0.55rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(var(--t-tinte), 0.12);
   border-radius: 0.4rem;
-  background: #1e1f2b;
-  color: #f2f2f2;
+  background: var(--t-fondo);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.9rem;
   font-weight: normal;
@@ -2676,8 +2671,8 @@ button.partida-ficha.arrastrando {
   padding: 0;
   border: none;
   border-radius: 0.4rem;
-  background: #3a3d52;
-  color: rgba(242, 242, 242, 0.6);
+  background: var(--t-control);
+  color: rgba(var(--t-texto-rgb), 0.6);
   cursor: pointer;
 }
 
@@ -2687,7 +2682,7 @@ button.partida-ficha.arrastrando {
 }
 
 .editor-huevo:hover {
-  color: #f2f2f2;
+  color: var(--t-texto);
 }
 
 .editor-huevo.activo {
@@ -2727,7 +2722,7 @@ button.partida-ficha.arrastrando {
   padding: 0.15rem 0.45rem;
   border-radius: 0.35rem;
   background: rgba(var(--color-vista), 0.18);
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
   font-size: 0.72rem;
   font-weight: bold;
 }
@@ -2751,7 +2746,7 @@ button.partida-ficha.arrastrando {
   gap: 0.45rem 0.8rem;
   margin-top: 0.9rem;
   padding: 0.7rem 0 0.9rem;
-  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+  border-top: 1px dashed rgba(var(--t-tinte), 0.12);
 }
 
 .editor-dato {
@@ -2777,10 +2772,10 @@ button.partida-ficha.arrastrando {
   width: 100%;
   box-sizing: border-box;
   padding: 0.4rem 0.55rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(var(--t-tinte), 0.12);
   border-radius: 0.4rem;
-  background: #1e1f2b;
-  color: #f2f2f2;
+  background: var(--t-fondo);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.88rem;
 }
@@ -2877,7 +2872,7 @@ button.partida-ficha.arrastrando {
   align-self: flex-start;
   padding: 0.35rem 0.4rem 0.35rem 0.6rem;
   border-radius: 0.45rem;
-  background: #3a3d52;
+  background: var(--t-control);
   font-weight: bold;
 }
 
@@ -2898,15 +2893,15 @@ button.partida-ficha.arrastrando {
   padding: 0;
   border: none;
   border-radius: 0.3rem;
-  background: rgba(0, 0, 0, 0.25);
-  color: #f2f2f2;
+  background: rgba(var(--t-oscurecer), 0.25);
+  color: var(--t-texto);
   cursor: pointer;
 }
 
 .editor-objeto-quitar:hover,
 .editor-habilidad-quitar:hover,
 .editor-ataque-quitar:hover {
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(var(--t-oscurecer), 0.45);
 }
 
 .editor-objeto-quitar .icono,
@@ -2968,8 +2963,8 @@ button.partida-ficha.arrastrando {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
 }
 
 .editor-borrar .icono,
@@ -2979,7 +2974,7 @@ button.partida-ficha.arrastrando {
 }
 
 .editor-clonar:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .editor-borrar {
@@ -3008,12 +3003,12 @@ button.partida-ficha.arrastrando {
 }
 
 .editor-cancelar {
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
 }
 
 .editor-cancelar:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .editor-guardar {
@@ -3058,7 +3053,7 @@ button.partida-ficha.arrastrando {
   gap: 0.6rem;
   padding: 0.5rem 0.6rem;
   border-radius: 0.45rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(var(--t-oscurecer), 0.2);
 }
 
 .meter-equipo strong {
@@ -3074,8 +3069,8 @@ button.partida-ficha.arrastrando {
   padding: 0.3rem;
   border: none;
   border-radius: 0.3rem;
-  background: rgba(0, 0, 0, 0.25);
-  color: #f2f2f2;
+  background: rgba(var(--t-oscurecer), 0.25);
+  color: var(--t-texto);
   cursor: pointer;
 }
 
@@ -3107,7 +3102,7 @@ button.partida-ficha.arrastrando {
   gap: 0.6rem;
   padding: 0.45rem 0.6rem;
   border-radius: 0.45rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(var(--t-oscurecer), 0.2);
 }
 
 .copias-restaurar {
@@ -3149,25 +3144,25 @@ button.partida-ficha.arrastrando {
    sombrita y un reborde fino que las separa */
 
 .locke-jugador :is(.locke-cifra, .locke-rom, .locke-partida-abrir, .locke-salon-poner) {
-  background: #1e1f2b;
+  background: var(--t-fondo);
 }
 
 .locke-jugador :is(.locke-cifra, .locke-rom:not(.pasada), .locke-partida-abrir, .locke-salon-poner, .locke-partida-vincular, .locke-partida-reanudar, .locke-partida-ayuda) {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(var(--t-tinte), 0.08);
 }
 
 .locke-jugador .locke-rom.pasada {
-  background: color-mix(in srgb, #2ecc71 15%, #1e1f2b);
+  background: color-mix(in srgb, #2ecc71 15%, var(--t-fondo));
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(46, 204, 113, 0.5);
 }
 
 .locke-jugador .locke-partida-muertos {
-  background: color-mix(in srgb, #e74c3c 20%, #1e1f2b);
+  background: color-mix(in srgb, #e74c3c 20%, var(--t-fondo));
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(231, 76, 60, 0.45);
 }
 
 .locke-jugador :is(button.locke-rom, .locke-partida-abrir, .locke-salon-poner):hover {
-  background: #3a3d52;
+  background: var(--t-control);
 }
 /* ---------- Sombritas de la tarjeta de un locke ---------- */
 
@@ -3190,7 +3185,7 @@ button.partida-ficha.arrastrando {
 }
 
 .locke-jugador.pendiente {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(var(--t-tinte), 0.12);
 }
 
 .locke-jugador.eliminado,

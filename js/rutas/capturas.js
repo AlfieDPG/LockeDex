@@ -11,7 +11,8 @@ import { escaparHTML } from "../comun/utilidades.js";
 import { icono } from "../comun/iconos.js";
 import { cargarDatos, datos } from "../comun/datos.js";
 import { activarAutocompletado, iconoPokemon } from "../comun/autocompletado.js";
-import { obtenerVariedades } from "../comun/formas.js";
+import { obtenerVariedades, etiquetaForma } from "../comun/formas.js";
+import { t, enIngles, nombre as nombreDe } from "../comun/idioma.js";
 import { elegirForma, datosDeForma } from "../comun/elegir-forma.js";
 import { imagenConRespaldo, urlsRetrato } from "../comun/imagenes.js";
 
@@ -49,9 +50,15 @@ function retrato(captura, clase) {
 }
 
 // Lo que va dentro del botón de un lugar marcado: su captura, o una «+» para apuntarla
+// La especie (con su forma) en el idioma de la web: «nombre» va en español y «en», en inglés
+// (las apuntadas antes de haber inglés, solo en español)
+function especieDe(captura) {
+  return (enIngles && captura.en) || captura.nombre;
+}
+
 export function plantillaCaptura(idJuego, clave) {
   const captura = capturaDe(idJuego, clave);
-  const titulo = captura ? (captura.mote ? `${captura.mote} (${captura.nombre})` : captura.nombre) : "Apuntar captura";
+  const titulo = captura ? (captura.mote ? `${captura.mote} (${especieDe(captura)})` : especieDe(captura)) : t("Apuntar captura");
   return `<span class="ruta-captura ${captura ? "con" : ""}" title="${escaparHTML(titulo)}">${
     captura ? retrato(captura, "ruta-captura-cara") : icono("mas")
   }</span>`;
@@ -64,13 +71,14 @@ export function abrirCaptura(idJuego, clave, lugar) {
     ? {
         id: captura.especie,
         es: captura.nombre,
-        texto: captura.nombre,
+        en: captura.en || "",
+        texto: especieDe(captura),
         forma: { idForma: captura.idForma, formaPMD: captura.formaPMD, imagenForma: captura.imagenForma }
       }
     : null;
 
   dialogo.querySelector(".captura-titulo").textContent = lugar;
-  dialogo.querySelector(".captura-pokemon").value = captura ? captura.nombre : "";
+  dialogo.querySelector(".captura-pokemon").value = captura ? especieDe(captura) : "";
   dialogo.querySelector(".captura-mote").value = captura ? captura.mote || "" : "";
   dialogo.querySelector(".captura-error").textContent = "";
   dialogo.querySelector(".captura-quitar").hidden = !captura;
@@ -84,8 +92,8 @@ export function abrirCaptura(idJuego, clave, lugar) {
 // Elegida la especie: si tiene varias formas, se pregunta cuál (cancelar = la normal)
 async function elegirEspecie(pokemon) {
   const campo = dialogo.querySelector(".captura-pokemon");
-  elegido = { id: pokemon.id, es: pokemon.es, texto: pokemon.es, forma: {} };
-  campo.value = pokemon.es;
+  elegido = { id: pokemon.id, es: pokemon.es, en: pokemon.en, texto: nombreDe(pokemon), forma: {} };
+  campo.value = elegido.texto;
 
   let info = { especie: "", lista: [] };
   try {
@@ -98,7 +106,9 @@ async function elegirEspecie(pokemon) {
     try {
       const forma = slug ? await datosDeForma(info, slug) : {};
       if (forma.etiqueta) {
-        elegido = { ...elegido, texto: `${pokemon.es} (${forma.etiqueta})`, forma };
+        const es = `${pokemon.es} (${etiquetaForma(slug, info.especie, "es")})`;
+        const en = `${pokemon.en} (${etiquetaForma(slug, info.especie, "en")})`;
+        elegido = { ...elegido, es, en, texto: `${nombreDe(pokemon)} (${forma.etiqueta})`, forma };
         campo.value = elegido.texto;
       }
     } catch (error) {
@@ -143,12 +153,13 @@ async function guardar() {
   if (texto && (!elegido || elegido.texto !== texto)) autocompletado.elegirPrimera();
   if (eligiendo) await eligiendo;
   if (!elegido) {
-    error.textContent = "Elige un Pokémon de la lista.";
+    error.textContent = t("Elige un Pokémon de la lista.");
     return;
   }
 
   // Solo lo que haya: nada de «undefined» (se sube a tu cuenta)
-  const captura = { especie: elegido.id, nombre: elegido.texto, mote: dialogo.querySelector(".captura-mote").value.trim() };
+  const captura = { especie: elegido.id, nombre: elegido.es, mote: dialogo.querySelector(".captura-mote").value.trim() };
+  if (elegido.en) captura.en = elegido.en;
   for (const campo of ["idForma", "formaPMD", "imagenForma"]) {
     const valor = (elegido.forma || {})[campo];
     if (valor !== undefined && valor !== null) captura[campo] = valor;

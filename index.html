@@ -17,6 +17,15 @@
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js">
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js">
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js">
+  <!-- El tema (claro u oscuro) antes de pintar nada, para que no parpadee (ver js/comun/ajustes.js) -->
+  <script>
+    try {
+      const tema = (JSON.parse(localStorage.getItem("poketeams-ajustes-v1")) || {}).tema;
+      if (tema === "claro" || (!tema && matchMedia("(prefers-color-scheme: light)").matches)) {
+        document.documentElement.dataset.tema = "claro";
+      }
+    } catch (error) {}
+  </script>
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/equipos.css">
@@ -77,7 +86,10 @@
 
       <div class="pie-lateral">
         <a class="enlace-legal" href="legal.html" target="_blank" rel="noopener">Créditos y privacidad</a>
-        <button class="boton-ayuda" title="Preguntas frecuentes" aria-label="Preguntas frecuentes">?</button>
+        <div class="pie-botones">
+          <button class="boton-ajustes" title="Ajustes" aria-label="Ajustes"></button>
+          <button class="boton-ayuda" title="Preguntas frecuentes" aria-label="Preguntas frecuentes">?</button>
+        </div>
       </div>
     </aside>
 
@@ -239,7 +251,7 @@
 
   <dialog id="dialogo-importar">
     <h2>Importar equipo</h2>
-    <p>Un equipo reemplaza al actual. Varios (copia de seguridad de Showdown, con «=== Nombre ===») se añaden a «Mis equipos».</p>
+    <p data-t>Un equipo reemplaza al actual. Varios (copia de seguridad de Showdown, con «=== Nombre ===») se añaden a «Mis equipos».</p>
     <textarea id="texto-paste" rows="12" placeholder="Pikachu @ Light Ball&#10;Ability: Static&#10;Level: 50&#10;EVs: 4 HP / 252 SpA / 252 Spe&#10;Timid Nature&#10;IVs: 0 Atk&#10;- Thunderbolt&#10;- Surf&#10;- Grass Knot&#10;- Volt Switch"></textarea>
     <div class="dialogo-botones">
       <button id="importar-cancelar">Cancelar</button>
@@ -296,7 +308,7 @@
       </svg>
       Entrar con Google
     </button>
-    <p class="sesion-legal">Al entrar aceptas la <a href="legal.html#privacidad" target="_blank" rel="noopener">política de privacidad</a>.</p>
+    <p class="sesion-legal" data-t>Al entrar aceptas la <a href="legal.html#privacidad" target="_blank" rel="noopener">política de privacidad</a>.</p>
   </dialog>
 
   <dialog id="dialogo-crear-cuenta" class="dialogo-sesion">
@@ -320,7 +332,7 @@
         <button type="submit" class="boton-verde crear-ok">Crear cuenta</button>
       </div>
     </form>
-    <p class="sesion-legal">Al crear una cuenta aceptas la <a href="legal.html#privacidad" target="_blank" rel="noopener">política de privacidad</a>.</p>
+    <p class="sesion-legal" data-t>Al crear una cuenta aceptas la <a href="legal.html#privacidad" target="_blank" rel="noopener">política de privacidad</a>.</p>
   </dialog>
 
   <!-- Sale sola mientras la cuenta no tenga nombre de usuario, y no se puede cerrar -->
@@ -687,8 +699,8 @@
       <h3>Vincular</h3>
       <p>En X / Y, Rubí Omega / Zafiro Alfa, Sol / Luna y Ultrasol / Ultraluna eliges el archivo «main» de la partida del emulador (Citra o Lime3DS). En Diamante / Perla, Platino, HeartGold / SoulSilver, Negro / Blanco y Negro 2 / Blanco 2, el archivo de guardado (.dsv de DeSmuME o .sav). En Espada / Escudo, el archivo «main» de la partida, y en Diamante Brillante / Perla Reluciente, el «SaveData.bin» (de Eden, Ryujinx o yuzu, o los que saca JKSV de la consola). La web lo vuelve a leer cada vez que guardas en el juego. Solo en Chrome o Edge de ordenador; en otros navegadores se lee a mano.</p>
       <h3>No me deja elegir el archivo</h3>
-      <p>Chrome y Edge no dejan elegir nada de dentro de las carpetas del sistema, como <b>AppData</b>, y muchos emuladores guardan ahí las partidas. Como la web tiene que leer la partida de verdad (no una copia), hay que decirle al emulador que la guarde en una carpeta normal, como Documentos:</p>
-      <p><b>Citra, Lime3DS o Azahar:</b> Configurar → Almacenamiento → cambia la carpeta de la tarjeta SD.<br><b>Eden, yuzu o Sudachi:</b> Emulación → Configurar → Sistema de archivos → cambia la carpeta de la NAND.<br>Antes de cambiarla, copia lo que había en la carpeta de antes a la nueva, o el emulador no verá tus partidas.</p>
+      <p data-t>Chrome y Edge no dejan elegir nada de dentro de las carpetas del sistema, como <b>AppData</b>, y muchos emuladores guardan ahí las partidas. Como la web tiene que leer la partida de verdad (no una copia), hay que decirle al emulador que la guarde en una carpeta normal, como Documentos:</p>
+      <p data-t><b>Citra, Lime3DS o Azahar:</b> Configurar → Almacenamiento → cambia la carpeta de la tarjeta SD.<br><b>Eden, yuzu o Sudachi:</b> Emulación → Configurar → Sistema de archivos → cambia la carpeta de la NAND.<br>Antes de cambiarla, copia lo que había en la carpeta de antes a la nueva, o el emulador no verá tus partidas.</p>
       <h3>Cajas</h3>
       <p>Pulsa tu equipo en tu bloque para ver el equipo y las cajas. Las capturas se marcan solas en «Rutas».</p>
       <h3>Cajas de muertos</h3>
@@ -713,29 +725,29 @@
       <p>Tu juego no sale nunca de tu ordenador: la web lo lee, lo randomiza aquí mismo y te lo da para descargar. Necesitas tu propia copia del juego.</p>
 
       <h3>Nintendo DS</h3>
-      <p>Pulsa «Elegir ROM» y elige el archivo <b>.nds</b>. Te descarga otro .nds, con «(random)» en el nombre: ábrelo en tu emulador (DeSmuME, melonDS...) en lugar del de siempre.</p>
+      <p data-t>Pulsa «Elegir ROM» y elige el archivo <b>.nds</b>. Te descarga otro .nds, con «(random)» en el nombre: ábrelo en tu emulador (DeSmuME, melonDS...) en lugar del de siempre.</p>
 
       <h3>Nintendo 3DS</h3>
-      <p>Pulsa «Elegir ROM» y elige el archivo <b>.3ds</b>. Tiene que estar <b>descifrado</b>: si la web dice que está cifrado, descífralo antes (en la consola, con GodMode9). Te descarga otro .3ds, con «(random)» en el nombre: ábrelo en tu emulador (Citra, Lime3DS, Azahar...).</p>
+      <p data-t>Pulsa «Elegir ROM» y elige el archivo <b>.3ds</b>. Tiene que estar <b>descifrado</b>: si la web dice que está cifrado, descífralo antes (en la consola, con GodMode9). Te descarga otro .3ds, con «(random)» en el nombre: ábrelo en tu emulador (Citra, Lime3DS, Azahar...).</p>
 
       <h3>Nintendo Switch</h3>
       <p>Aquí no se elige el juego (el .nsp o el .xci van cifrados), sino sus archivos ya sacados, el «RomFS». Se saca una sola vez desde el emulador, con las actualizaciones que tengas puestas:</p>
       <ol>
-        <li><b>Eden, yuzu o Sudachi:</b> clic derecho sobre el juego → «Volcar RomFS» (si pregunta, el volcado completo). Al acabar se abre la carpeta donde lo ha dejado.</li>
-        <li><b>Ryujinx:</b> clic derecho sobre el juego → «Extraer datos» → «RomFS», y elige dónde dejarlo.</li>
-        <li>Si te lo ha dejado dentro de AppData (lo normal en Eden y yuzu), <b>copia la carpeta «romfs» a Documentos</b> o al Escritorio (lee «No me deja elegir el archivo», abajo).</li>
+        <li data-t><b>Eden, yuzu o Sudachi:</b> clic derecho sobre el juego → «Volcar RomFS» (si pregunta, el volcado completo). Al acabar se abre la carpeta donde lo ha dejado.</li>
+        <li data-t><b>Ryujinx:</b> clic derecho sobre el juego → «Extraer datos» → «RomFS», y elige dónde dejarlo.</li>
+        <li data-t>Si te lo ha dejado dentro de AppData (lo normal en Eden y yuzu), <b>copia la carpeta «romfs» a Documentos</b> o al Escritorio (lee «No me deja elegir el archivo», abajo).</li>
         <li>En la web, pulsa «Elegir carpeta» y elige esa carpeta «romfs».</li>
       </ol>
       <p>Te descarga un .zip con los archivos cambiados, como un mod. Descomprímelo en la carpeta de mods del juego:</p>
       <ol>
-        <li><b>Eden, yuzu o Sudachi:</b> clic derecho sobre el juego → «Abrir ubicación de los mods» y descomprime ahí el .zip (queda una carpeta «LockeDex» con «romfs» dentro).</li>
-        <li><b>Ryujinx:</b> clic derecho sobre el juego → «Abrir carpeta de mods» y descomprime ahí el .zip.</li>
-        <li><b>Consola con Atmosphère:</b> copia la carpeta «romfs» de dentro del .zip a <code>atmosphere/contents/</code> + el número del juego (Espada: 0100ABF008968000, Escudo: 01008DB008C2C000, Diamante Brillante: 0100000011D90000, Perla Reluciente: 010018E011D92000). Si el .zip trae también una carpeta «exefs» (las iniciales de Diamante Brillante y Perla Reluciente), copia los .ips de dentro a <code>atmosphere/exefs_patches/LockeDex/</code>.</li>
+        <li data-t><b>Eden, yuzu o Sudachi:</b> clic derecho sobre el juego → «Abrir ubicación de los mods» y descomprime ahí el .zip (queda una carpeta «LockeDex» con «romfs» dentro).</li>
+        <li data-t><b>Ryujinx:</b> clic derecho sobre el juego → «Abrir carpeta de mods» y descomprime ahí el .zip.</li>
+        <li data-t><b>Consola con Atmosphère:</b> copia la carpeta «romfs» de dentro del .zip a <code>atmosphere/contents/</code> + el número del juego (Espada: 0100ABF008968000, Escudo: 01008DB008C2C000, Diamante Brillante: 0100000011D90000, Perla Reluciente: 010018E011D92000). Si el .zip trae también una carpeta «exefs» (las iniciales de Diamante Brillante y Perla Reluciente), copia los .ips de dentro a <code>atmosphere/exefs_patches/LockeDex/</code>.</li>
       </ol>
       <p>Para volver al juego normal, quita (o desactiva en el emulador) esa carpeta de mods.</p>
 
       <h3>No me deja elegir el archivo</h3>
-      <p>Chrome y Edge no dejan elegir nada de dentro de las carpetas del sistema, como <b>AppData</b> (que es donde los emuladores guardan muchas cosas). No es un fallo de la web: es una protección del navegador. Copia lo que quieras elegir a una carpeta normal, como Documentos o el Escritorio, y elígelo desde ahí.</p>
+      <p data-t>Chrome y Edge no dejan elegir nada de dentro de las carpetas del sistema, como <b>AppData</b> (que es donde los emuladores guardan muchas cosas). No es un fallo de la web: es una protección del navegador. Copia lo que quieras elegir a una carpeta normal, como Documentos o el Escritorio, y elígelo desde ahí.</p>
 
       <h3>¿Y en un locke?</h3>
       <p>En un locke con randomizer, pulsa «Randomizar mi ROM» en el locke: las normas son las del locke y no se pueden cambiar. A cada jugador le sale un juego distinto que sigue las mismas normas, y si vuelves a randomizar en este navegador te sale el mismo que la primera vez.</p>
@@ -928,6 +940,28 @@
     </div>
     <div class="dialogo-botones">
       <button class="ayuda-cerrar">Cerrar</button>
+    </div>
+  </dialog>
+
+  <dialog id="dialogo-ajustes" class="dialogo-sesion">
+    <h2>Ajustes</h2>
+    <div class="ajustes-fila">
+      <span class="ajustes-nombre">Tema</span>
+      <div class="ajustes-opciones" role="radiogroup" aria-label="Tema">
+        <button data-tema="oscuro" role="radio" data-icono="luna">Oscuro</button>
+        <button data-tema="claro" role="radio" data-icono="sol">Claro</button>
+      </div>
+    </div>
+    <div class="ajustes-fila">
+      <span class="ajustes-nombre">Idioma</span>
+      <!-- Cada idioma, escrito en su idioma: no se traduce -->
+      <div class="ajustes-opciones" role="radiogroup" aria-label="Idioma" data-no-traducir>
+        <button data-idioma="es" role="radio" lang="es">Español</button>
+        <button data-idioma="en" role="radio" lang="en">English</button>
+      </div>
+    </div>
+    <div class="dialogo-botones">
+      <button class="ajustes-cerrar">Cerrar</button>
     </div>
   </dialog>
 

@@ -63,6 +63,7 @@ function lugaresDelEvento(texto) {
 
 function captura(p) {
   const salida = { especie: p.id, nombre: p.nombre, mote: p.mote || "" };
+  if (p.nombreEn || p.en) salida.en = p.nombreEn || p.en; // en inglés (ver js/rutas/capturas.js)
   for (const campo of ["idForma", "formaPMD", "imagenForma"]) {
     if (p[campo] !== undefined && p[campo] !== null) salida[campo] = p[campo];
   }

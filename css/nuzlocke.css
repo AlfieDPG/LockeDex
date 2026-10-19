@@ -6,7 +6,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
-  border-bottom: 2px solid #2c2e3e;
+  border-bottom: 2px solid var(--t-panel);
   padding-bottom: 0.45rem;
 }
 
@@ -15,14 +15,14 @@
   border: none;
   border-radius: 0.45rem;
   background: transparent;
-  color: #f2f2f2;
+  color: var(--t-texto);
   font-weight: bold;
   font-size: 0.95rem;
   cursor: pointer;
 }
 
 .selector-regiones button:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--t-tinte), 0.08);
 }
 
 .selector-regiones button.activa {
@@ -95,7 +95,7 @@
   border: 2px solid rgb(var(--color-vista));
   border-radius: 1rem;
   background: transparent;
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
   font-weight: bold;
   font-size: 0.85rem;
   cursor: pointer;
@@ -149,15 +149,15 @@
   padding: 0.45rem 0.85rem;
   border: none;
   border-radius: 0.45rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-weight: bold;
   cursor: pointer;
 }
 
 .juego-editar:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .juego-editar:not([hidden]) ~ .boton-reiniciar {
@@ -200,10 +200,10 @@
 .rutas-ed-grupo input {
   min-width: 0;
   padding: 0.4rem 0.55rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(var(--t-tinte), 0.12);
   border-radius: 0.4rem;
-  background: #1e1f2b;
-  color: #f2f2f2;
+  background: var(--t-fondo);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.88rem;
 }
@@ -243,8 +243,8 @@
   padding: 0.45rem 0.8rem;
   border: none;
   border-radius: 0.45rem;
-  background: #2c2e3e;
-  color: #f2f2f2;
+  background: var(--t-panel);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: bold;
@@ -263,13 +263,13 @@
 
 .caps-ed-anadir:hover,
 .rutas-ed-anadir-apartado:hover {
-  background: #3a3d52;
+  background: var(--t-control);
 }
 
 .caps-ed-anadir {
   width: 100%;
   justify-content: center;
-  border: 2px dashed rgba(255, 255, 255, 0.15);
+  border: 2px dashed rgba(var(--t-tinte), 0.15);
   background: transparent;
 }
 
@@ -294,10 +294,10 @@
   width: 2.6rem;
   height: 2.6rem;
   padding: 0;
-  border: 1px dashed rgba(255, 255, 255, 0.25);
+  border: 1px dashed rgba(var(--t-tinte), 0.25);
   border-radius: 0.4rem;
   background: transparent;
-  color: rgba(242, 242, 242, 0.5);
+  color: rgba(var(--t-texto-rgb), 0.5);
   cursor: pointer;
 }
 
@@ -307,7 +307,7 @@
 
 .cap-ed-imagen:hover {
   border-color: rgb(var(--color-vista));
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 .cap-ed-imagen img {
@@ -380,13 +380,13 @@
   border: none;
   border-radius: 0.35rem;
   background: transparent;
-  color: rgba(242, 242, 242, 0.6);
+  color: rgba(var(--t-texto-rgb), 0.6);
   cursor: pointer;
 }
 
 .cap-ed-acciones button:hover:not(:disabled) {
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
 }
 
 .cap-ed-acciones .cap-ed-quitar:hover,
@@ -423,7 +423,7 @@
   gap: 0.3rem;
   padding: 0.25rem 0.25rem 0.25rem 0.6rem;
   border-radius: 0.45rem;
-  background: #2c2e3e;
+  background: var(--t-panel);
   font-size: 0.88rem;
   font-weight: bold;
 }
@@ -505,8 +505,8 @@
   padding: 0.4rem 0.3rem;
   border: none;
   border-radius: 0.45rem;
-  background: #252735;
-  color: #f2f2f2;
+  background: var(--t-fondo-2);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.75rem;
   font-weight: bold;
@@ -514,7 +514,7 @@
 }
 
 .imagen-personaje:hover {
-  background: #32354a;
+  background: var(--t-panel-3);
   box-shadow: inset 0 0 0 2px rgb(var(--color-vista));
 }
 
@@ -628,8 +628,8 @@
   padding: 0.55rem 0.6rem;
   border: 2px solid transparent;
   border-radius: 0.45rem;
-  background: #2c2e3e;
-  color: #f2f2f2;
+  background: var(--t-panel);
+  color: var(--t-texto);
   font-size: 0.88rem;
   font-weight: bold;
   text-align: left;
@@ -637,14 +637,14 @@
 }
 
 .ruta:hover {
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(var(--t-tinte), 0.25);
 }
 
 /* Lugar ya usado: tachado y en verde */
 .ruta.usada {
   background: #1f5136;
   border-color: #27ae60;
-  color: #b9f0cf;
+  color: color-mix(in srgb, #b9f0cf var(--t-vivo), black);
   text-decoration: line-through;
 }
 
@@ -668,8 +668,8 @@
   height: 1.7rem;
   border: 2px solid #27ae60;
   border-radius: 50%;
-  background: #1e1f2b;
-  color: #b9f0cf;
+  background: var(--t-fondo);
+  color: color-mix(in srgb, #b9f0cf var(--t-vivo), black);
   overflow: hidden;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   transition: transform 0.15s;
@@ -742,21 +742,21 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: #2c2e3e;
-  color: #f2f2f2;
+  background: var(--t-panel);
+  color: var(--t-texto);
   font-weight: bold;
   font-size: 1rem;
   cursor: pointer;
 }
 
 .multiplicador button:hover {
-  background: #3a3d52;
+  background: var(--t-control);
 }
 
 .multiplicador-valor {
   min-width: 3rem;
   text-align: center;
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 /* Con el multiplicador a su izquierda, «Desmarcar todo» ya no necesita empujarse a la derecha */
@@ -767,7 +767,7 @@
 
 .caps-nivel-grande {
   font-size: 1.8rem;
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 .caps-lista {
@@ -787,7 +787,7 @@
   padding: 0.5rem 0.85rem;
   border-left: 0.3rem solid rgb(var(--color-vista));
   border-radius: 0.45rem;
-  background: #2c2e3e;
+  background: var(--t-panel);
 }
 
 .cap label {
@@ -924,7 +924,7 @@
 
 /* La del locke, del color dorado de Versus (de ahí viene) */
 .normas-pestanas .pestana-locke {
-  color: #f1c40f;
+  color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
 }
 
 .normas-pestanas .pestana-locke.activa {
@@ -941,7 +941,7 @@
 }
 
 .pestana-cerrar:hover {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(var(--t-oscurecer), 0.2);
   opacity: 1;
 }
 
@@ -987,8 +987,8 @@
   padding: 0.4rem 0.75rem;
   border: none;
   border-radius: 0.45rem;
-  background: #2c2e3e;
-  color: #f2f2f2;
+  background: var(--t-panel);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.82rem;
   font-weight: bold;
@@ -996,7 +996,7 @@
 }
 
 .conjunto-barra button:hover {
-  background: #3a3d52;
+  background: var(--t-control);
 }
 
 .conjunto-barra .conjunto-borrar:hover {
@@ -1056,8 +1056,8 @@
   padding: 0.35rem 0.7rem;
   border: none;
   border-radius: 0.45rem;
-  background: #2c2e3e;
-  color: #f2f2f2;
+  background: var(--t-panel);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.82rem;
   font-weight: bold;
@@ -1117,13 +1117,13 @@
   padding: 0.35rem;
   border: none;
   border-radius: 0.4rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   cursor: pointer;
 }
 
 .norma-acciones button:hover {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .norma-acciones .norma-borrar:hover {
@@ -1168,7 +1168,7 @@
   padding: 0.6rem 0.85rem;
   border-left: 0.3rem solid var(--color-apartado);
   border-radius: 0.45rem;
-  background: #2c2e3e;
+  background: var(--t-panel);
 }
 
 .normas-grupo li p {

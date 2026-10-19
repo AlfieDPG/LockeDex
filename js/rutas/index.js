@@ -6,7 +6,7 @@
 // la X y se añaden escribiéndolos (con los de la web como sugerencia) o copiando de golpe
 // los de un juego de la web.
 
-import { LUGARES, lugaresDelJuego } from "./datos.js";
+import { LUGARES, lugaresDelJuego, nombreDeLugar } from "./datos.js";
 import { crearSelectorJuego, CLAVE_HIERBA_RUTAS } from "../comun/selector-juego.js";
 import { leer, escribir } from "../comun/almacen.js";
 import { quitarAcentos, escaparHTML } from "../comun/utilidades.js";
@@ -19,6 +19,7 @@ import {
 import { apuntarEnLockesDelJuego } from "../comun/lockes.js";
 import { plantillaCaptura, abrirCaptura, iniciarCapturas, quitarCaptura, quitarCapturasDelJuego } from "./capturas.js";
 import { confirmar, avisar } from "../comun/ventanas.js";
+import { t } from "../comun/idioma.js";
 
 // NO cambiar estas claves: si se cambian, se pierden las rutas marcadas
 const CLAVE_MARCADAS = "poketeams-rutas-v2"; // { idJuego: ["rutas:Ruta 1", ...] }
@@ -69,7 +70,7 @@ function guardar() {
 
 function pintarProgreso() {
   const total = apartadosDelJuego().reduce((suma, a) => suma + lugares[a.clave].length, 0);
-  progreso.textContent = `Usadas: ${usadas.size} / ${total}`;
+  progreso.textContent = t("Usadas: {n} / {total}", { n: usadas.size, total });
 }
 
 function botonLugar(apartado, texto) {
@@ -79,15 +80,17 @@ function botonLugar(apartado, texto) {
   // Eventos: "Lugar: detalle" -> lugar en negrita y detalle debajo. En los personalizados,
   // cualquier lugar escrito así (al copiar uno de la web, los eventos vienen así).
   // Todo escapado: los personalizados los escribe la gente.
-  const corte = apartado === "eventos" || juego.propio ? texto.indexOf(": ") : -1;
+  // (Se enseña en el idioma de la web; la clave y lo guardado, en español)
+  const visible = nombreDeLugar(texto);
+  const corte = apartado === "eventos" || juego.propio ? visible.indexOf(": ") : -1;
   const evento = apartado === "eventos" || corte > 0;
   const contenido = corte > 0
-    ? `<span class="ruta-lugar">${escaparHTML(texto.slice(0, corte))}</span><span class="ruta-detalle">${escaparHTML(texto.slice(corte + 2))}</span>`
-    : `<span class="ruta-lugar">${escaparHTML(texto)}</span>`;
+    ? `<span class="ruta-lugar">${escaparHTML(visible.slice(0, corte))}</span><span class="ruta-detalle">${escaparHTML(visible.slice(corte + 2))}</span>`
+    : `<span class="ruta-lugar">${escaparHTML(visible)}</span>`;
 
   // Marcado: qué cogiste ahí (solo lo ves tú, ver ./capturas.js)
   return `<button class="ruta ${evento ? "evento" : ""} ${usada ? "usada" : ""}" aria-pressed="${usada}"
-    data-clave="${escaparHTML(clave)}" data-buscar="${escaparHTML(quitarAcentos(texto))}">${contenido}${
+    data-clave="${escaparHTML(clave)}" data-buscar="${escaparHTML(quitarAcentos(visible === texto ? texto : `${texto} ${visible}`))}">${contenido}${
       usada ? plantillaCaptura(juego.id, clave) : ""
     }</button>`;
 }
@@ -108,7 +111,7 @@ function pintarLista() {
   }
 
   if (!apartadosDelJuego().length) {
-    lista.innerHTML = `<p class="rutas-vacio">Sin lugares.</p>`;
+    lista.innerHTML = `<p class="rutas-vacio">${t("Sin lugares.")}</p>`;
     pintarProgreso();
     return;
   }
@@ -117,7 +120,7 @@ function pintarLista() {
     .map(
       (a) => `
         <section class="rutas-grupo ${a.clave}">
-          <h3>${escaparHTML(a.titulo)}</h3>
+          <h3>${escaparHTML(t(a.titulo))}</h3>
           <div class="rutas-botones ${a.clave}">${lugares[a.clave].map((texto) => botonLugar(a.clave, texto)).join("")}</div>
         </section>`
     )
@@ -176,37 +179,37 @@ function pintarEditor() {
 
   lista.innerHTML = `
     <div class="rutas-editor-cabecera">
-      <input class="rutas-ed-nombre" maxlength="40" placeholder="Nombre" value="${escaparHTML(juego.nombre)}">
+      <input class="rutas-ed-nombre" maxlength="40" placeholder="${t("Nombre")}" value="${escaparHTML(juego.nombre)}">
       <select class="rutas-ed-copiar" ${caben ? "" : "disabled"}>
-        <option value="">Copiar lugares de...</option>
+        <option value="">${t("Copiar lugares de...")}</option>
         ${JUEGOS.filter((cada) => LUGARES[cada.id]).map((cada) => `<option value="${cada.id}">${escaparHTML(cada.nombre)}</option>`).join("")}
       </select>
-      <button class="rutas-ed-borrar">${icono("papelera")} Borrar</button>
+      <button class="rutas-ed-borrar">${icono("papelera")} ${t("Borrar")}</button>
     </div>
     ${secciones
       .map(
         (seccion, indice) => `
           <section class="rutas-grupo rutas-ed-grupo" data-seccion="${indice}">
             <h3>
-              <input class="rutas-ed-apartado" maxlength="40" placeholder="Apartado" value="${escaparHTML(seccion.titulo)}">
-              <button class="rutas-ed-quitar-apartado" title="Quitar apartado">${icono("aspa")}</button>
+              <input class="rutas-ed-apartado" maxlength="40" placeholder="${t("Apartado")}" value="${escaparHTML(seccion.titulo)}">
+              <button class="rutas-ed-quitar-apartado" title="${t("Quitar apartado")}">${icono("aspa")}</button>
             </h3>
             <div class="rutas-botones">
               ${seccion.lugares
                 .map(
                   (lugar, posicion) => `
                     <span class="ruta-ed" data-lugar="${posicion}">
-                      <span>${escaparHTML(lugar)}</span>
-                      <button class="ruta-ed-quitar" title="Quitar">${icono("aspa")}</button>
+                      <span>${escaparHTML(nombreDeLugar(lugar))}</span>
+                      <button class="ruta-ed-quitar" title="${t("Quitar")}">${icono("aspa")}</button>
                     </span>`
                 )
                 .join("")}
-              ${caben ? `<span class="ruta-ed-nuevo-caja"><input class="ruta-ed-nuevo" maxlength="80" placeholder="Añadir lugar..." autocomplete="off"></span>` : ""}
+              ${caben ? `<span class="ruta-ed-nuevo-caja"><input class="ruta-ed-nuevo" maxlength="80" placeholder="${t("Añadir lugar...")}" autocomplete="off"></span>` : ""}
             </div>
           </section>`
       )
       .join("")}
-    <button class="rutas-ed-anadir-apartado">${icono("mas")} Añadir apartado</button>`;
+    <button class="rutas-ed-anadir-apartado">${icono("mas")} ${t("Añadir apartado")}</button>`;
 
   // Sugerencias al escribir un lugar: los de todos los juegos de la web (con la misma lista
   // que el resto de buscadores)
@@ -221,7 +224,12 @@ function pintarEditor() {
 let sugeridos = null;
 
 function lugaresSugeridos() {
-  if (!sugeridos) sugeridos = lugaresDeLaWeb().map((lugar) => ({ es: lugar, en: lugar, buscar: quitarAcentos(lugar) }));
+  if (!sugeridos) {
+    sugeridos = lugaresDeLaWeb().map((lugar) => {
+      const en = nombreDeLugar(lugar);
+      return { es: lugar, en, buscar: quitarAcentos(`${lugar} ${en}`) };
+    });
+  }
   return sugeridos;
 }
 
@@ -298,7 +306,7 @@ function activarEditor() {
     if (!boton) return;
 
     if (boton.classList.contains("rutas-ed-borrar")) {
-      if (!(await confirmar(`¿Borrar «${juego.nombre}»?`))) return;
+      if (!(await confirmar(t("¿Borrar «{nombre}»?", { nombre: juego.nombre })))) return;
       delete marcadas[juego.id];
       escribir(CLAVE_MARCADAS, marcadas);
       rutasPropias.borrar(juego.id);
@@ -317,7 +325,7 @@ function activarEditor() {
 
     if (boton.classList.contains("rutas-ed-quitar-apartado")) {
       const seccion = juego.secciones[indice];
-      if (seccion.lugares.length && !(await confirmar(`¿Quitar «${seccion.titulo || "este apartado"}» y sus ${seccion.lugares.length} lugares?`))) return;
+      if (seccion.lugares.length && !(await confirmar(t("¿Quitar «{nombre}» y sus {n} lugares?", { nombre: seccion.titulo || t("este apartado"), n: seccion.lugares.length })))) return;
       cambiarSecciones((secciones) => secciones.splice(indice, 1));
     } else if (boton.classList.contains("ruta-ed-quitar")) {
       const posicion = Number(boton.closest(".ruta-ed").dataset.lugar);
@@ -337,7 +345,7 @@ export function iniciar() {
 
     // La captura de un lugar marcado: se apunta, no se desmarca
     if (e.target.closest(".ruta-captura")) {
-      abrirCaptura(juego.id, clave, nombreDelLugar(clave));
+      abrirCaptura(juego.id, clave, nombreDeLugar(nombreDelLugar(clave)));
       return;
     }
 
@@ -367,7 +375,7 @@ export function iniciar() {
 
   vista.querySelector(".rutas-reiniciar").addEventListener("click", async () => {
     if (usadas.size === 0) return;
-    if (!(await confirmar(`¿Desmarcar todos los lugares de ${juego.nombre}?`))) return;
+    if (!(await confirmar(t("¿Desmarcar todos los lugares de {juego}?", { juego: juego.nombre })))) return;
     usadas.clear();
     quitarCapturasDelJuego(juego.id);
     guardar();
@@ -383,12 +391,12 @@ export function iniciar() {
   selectorJuego = crearSelectorJuego(selector, CLAVE_JUEGO, elegirJuego, {
     almacen: rutasPropias,
     alNuevo() {
-      const nueva = rutasPropias.crear("Nuevo juego");
+      const nueva = rutasPropias.crear(t("Nuevo juego"));
       if (!nueva) {
-        avisar("Has llegado al máximo de listas personalizadas.");
+        avisar(t("Has llegado al máximo de listas personalizadas."));
         return;
       }
-      rutasPropias.guardar({ ...nueva, secciones: [{ titulo: "Rutas", lugares: [] }] });
+      rutasPropias.guardar({ ...nueva, secciones: [{ titulo: t("Rutas"), lugares: [] }] });
       abrirEditando = true;
       selectorJuego.elegirPorId(nueva.id);
       const nombre = lista.querySelector(".rutas-ed-nombre");
@@ -401,7 +409,7 @@ let selectorJuego = null;
 
 function pintarBotonEditar() {
   editar.hidden = !juego || !juego.propio;
-  editar.textContent = editando ? "Listo" : "Editar";
+  editar.textContent = editando ? t("Listo") : t("Editar");
   editar.classList.toggle("activo", editando);
 }
 

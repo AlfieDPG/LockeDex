@@ -137,23 +137,3 @@ export function escribirMochila(original, mochila) {
   leerPartida3DS(nuevo);
   return nuevo;
 }
-
-// Cuántos hay de ese objeto (en el bolsillo que sea)
-export function cantidadEnMochila(bytes, objeto) {
-  const mochila = leerMochila(bytes);
-  for (const lista of Object.values(mochila)) {
-    const suyo = lista.find((e) => e.objeto === objeto);
-    if (suyo) return suyo.cantidad;
-  }
-  return 0;
-}
-
-// Deja «cantidad» de ese objeto en ese bolsillo: si no estaba, al final; con 0, fuera
-export function ponerEnMochila(original, objeto, cantidad, bolsillo) {
-  const mochila = leerMochila(original);
-  const lista = mochila[bolsillo];
-  const suyo = lista.find((e) => e.objeto === objeto);
-  if (suyo) suyo.cantidad = cantidad;
-  else if (cantidad > 0) lista.push({ objeto, cantidad });
-  return escribirMochila(original, mochila);
-}

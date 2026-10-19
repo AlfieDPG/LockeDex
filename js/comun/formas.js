@@ -1,5 +1,6 @@
 import { pedirJSON, URL_API } from "./api.js";
-import { tiposEs } from "./tipos.js";
+import { tiposEs, TIPOS_ES, TIPOS_EN } from "./tipos.js";
+import { t, enIngles } from "./idioma.js";
 
 // ---------- Formas de tipo: Arceus (tablas) y Silvally (memorias) ----------
 //
@@ -111,25 +112,72 @@ const NOMBRES_FORMA = {
   "cornerstone": "Cimiento", "teal": "Turquesa", "black": "Negro", "white": "Blanco"
 };
 
+// En inglés casi todas salen solas del nombre de PokeAPI ("alola" -> "Alola"); estas no
+const NOMBRES_VARIEDAD_EN = {
+  "necrozma-dusk": "Dusk Mane", "necrozma-dawn": "Dawn Wings",
+  "calyrex-ice": "Ice Rider", "calyrex-shadow": "Shadow Rider",
+  "pikachu-starter": "Partner", "eevee-starter": "Partner",
+  "minior-red": "Core", "tatsugiri-curly-mega": "Mega", "meowstic-male-mega": "Mega"
+};
+
+const NOMBRES_FORMA_EN = {
+  "standard": "Normal", "zero": "Normal", "ordinary": "Normal", "average": "Normal",
+  "10": "10%", "50": "50%", "paldea-combat-breed": "Paldea (Combat Breed)",
+  "paldea-blaze-breed": "Paldea (Blaze Breed)", "paldea-aqua-breed": "Paldea (Aqua Breed)"
+};
+
+// La etiqueta en español de una forma («Alola», «Plumaje Azul», «Fuego») en inglés. Para lo
+// que solo se guardó en español (la tabla de la Pokédex, datos/pokedex.json). Si no se sabe,
+// la misma.
+let etiquetasEn = null;
+
+function inglesDeSufijo(sufijo) {
+  return NOMBRES_FORMA_EN[sufijo] || sufijo.split("-").map((t) => t.charAt(0).toUpperCase() + t.slice(1)).join(" ");
+}
+
+export function etiquetaEnIngles(etiqueta) {
+  if (!etiquetasEn) {
+    etiquetasEn = new Map();
+    for (const [sufijo, es] of Object.entries(NOMBRES_FORMA)) etiquetasEn.set(es, inglesDeSufijo(sufijo));
+    for (const [slug, es] of Object.entries(NOMBRES_VARIEDAD)) {
+      etiquetasEn.set(es, NOMBRES_VARIEDAD_EN[slug] || inglesDeSufijo(slug.split("-").slice(1).join("-")));
+    }
+    for (const tipo of Object.keys(TIPOS_ES)) etiquetasEn.set(TIPOS_ES[tipo], TIPOS_EN[tipo]);
+  }
+  if (etiquetasEn.has(etiqueta)) return etiquetasEn.get(etiqueta);
+  return etiqueta.split(" ").map((trozo) => etiquetasEn.get(trozo) || trozo).join(" ");
+}
+
+// «Raticate (Alola)» (como en la Pokédex) en inglés, con el nombre inglés de la especie
+export function nombreConFormaEnIngles(nombreEs, especieEn) {
+  const partes = /^(.*?) \((.+)\)$/.exec(nombreEs);
+  if (!partes) return especieEn || nombreEs;
+  return `${especieEn || partes[1]} (${etiquetaEnIngles(partes[2])})`;
+}
+
 // Texto de cada opción del selector de forma: «Forma Alola», «Tipo Fuego»...
 export function nombreOpcionForma(slug, especie) {
   const deTipo = formaDeTipo(slug);
-  if (deTipo) return `Tipo ${tiposEs[deTipo.tipo]}`;
-  if (tieneFormasDeTipo(especie) && slug === especie) return "Tipo Normal";
-  return "Forma " + etiquetaForma(slug, especie);
+  if (deTipo) return t("Tipo {tipo}", { tipo: tiposEs[deTipo.tipo] });
+  if (tieneFormasDeTipo(especie) && slug === especie) return t("Tipo {tipo}", { tipo: tiposEs.normal });
+  return t("Forma {forma}", { forma: etiquetaForma(slug, especie) });
 }
 
-// "persian-alola" + "persian" -> "Alola"
-export function etiquetaForma(slug, especie) {
+// "persian-alola" + "persian" -> "Alola". En el idioma de la web; con idioma "es", siempre
+// en español (lo que se guarda en el equipo, ver pokemon.js).
+export function etiquetaForma(slug, especie, idioma = enIngles ? "en" : "es") {
+  const ingles = idioma === "en";
   const deTipo = formaDeTipo(slug);
-  if (deTipo) return tiposEs[deTipo.tipo];
+  if (deTipo) return (ingles ? TIPOS_EN : TIPOS_ES)[deTipo.tipo];
 
+  const variedad = ingles ? NOMBRES_VARIEDAD_EN : NOMBRES_VARIEDAD;
+  const forma = ingles ? NOMBRES_FORMA_EN : NOMBRES_FORMA;
   const sufijo = especie && slug.startsWith(especie + "-") ? slug.slice(especie.length + 1) : "";
   if (!sufijo) return "Normal";
-  if (NOMBRES_VARIEDAD[slug]) return NOMBRES_VARIEDAD[slug];
-  if (NOMBRES_FORMA[sufijo]) return NOMBRES_FORMA[sufijo];
+  if (variedad[slug]) return variedad[slug];
+  if (forma[sufijo]) return forma[sufijo];
 
-  let tokens = sufijo.split("-").map((t) => NOMBRES_FORMA[t] || t.charAt(0).toUpperCase() + t.slice(1));
+  let tokens = sufijo.split("-").map((t) => forma[t] || t.charAt(0).toUpperCase() + t.slice(1));
   if (tokens.length > 1) tokens = tokens.filter((t) => t !== "Normal");
   return tokens.join(" ");
 }

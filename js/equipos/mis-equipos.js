@@ -14,6 +14,7 @@ import { pasteDelEquipo, pasteDeTodos, copiarAlPortapapeles } from "./exportar.j
 import { sumarContador } from "../comun/contadores.js";
 import { irA } from "../navegacion.js";
 import { confirmar } from "../comun/ventanas.js";
+import { t, nombre, LOCALE } from "../comun/idioma.js";
 
 const lista = document.getElementById("lista-equipos");
 
@@ -24,7 +25,7 @@ const boton = document.getElementById("cambiar-vista");
 
 function aplicarVista(enLista) {
   lista.classList.toggle("modo-lista", enLista);
-  boton.textContent = enLista ? "Ver en tarjetas" : "Ver en lista";
+  boton.textContent = enLista ? t("Ver en tarjetas") : t("Ver en lista");
 }
 
 boton.addEventListener("click", () => {
@@ -45,10 +46,10 @@ botonTodos.addEventListener("click", async () => {
     sumarContador("exportar");
     sumarContador("exportar-todos");
   }
-  botonTodos.textContent = copiado ? "Copiados ✔" : "No se pudo copiar";
+  botonTodos.textContent = copiado ? t("Copiados ✔") : t("No se pudo copiar");
   botonTodos.disabled = true;
   setTimeout(() => {
-    botonTodos.textContent = "Exportar todos";
+    botonTodos.textContent = t("Exportar todos");
     botonTodos.disabled = false;
   }, 1500);
 });
@@ -56,8 +57,8 @@ botonTodos.addEventListener("click", async () => {
 async function abrirEquipo(guardado) {
   if (hayCambiosSinGuardar()) {
     const seguro = await confirmar(
-      "Tienes cambios sin guardar en el equipo actual. ¿Abrir otro equipo y descartarlos?",
-      { aceptar: "Descartar y abrir", peligro: true }
+      t("Tienes cambios sin guardar en el equipo actual. ¿Abrir otro equipo y descartarlos?"),
+      { aceptar: t("Descartar y abrir"), peligro: true }
     );
     if (!seguro) return;
   }
@@ -67,7 +68,7 @@ async function abrirEquipo(guardado) {
 }
 
 async function borrarEquipo(guardado) {
-  if (!(await confirmar(`¿Borrar el equipo «${guardado.nombre}»?`))) return;
+  if (!(await confirmar(t("¿Borrar el equipo «{nombre}»?", { nombre: guardado.nombre })))) return;
 
   escribirGuardados(leerGuardados().filter((g) => g.id !== guardado.id));
 
@@ -84,11 +85,11 @@ async function exportarEquipo(guardado, boton) {
   if (copiado) sumarContador("exportar");
 
   boton.innerHTML = icono(copiado ? "visto" : "aspa");
-  boton.title = copiado ? "Copiado al portapapeles" : "No se pudo copiar";
+  boton.title = copiado ? t("Copiado al portapapeles") : t("No se pudo copiar");
   boton.disabled = true;
   setTimeout(() => {
     boton.innerHTML = icono("copiar");
-    boton.title = "Copiar el equipo como paste";
+    boton.title = t("Copiar el equipo como paste");
     boton.disabled = false;
   }, 1500);
 }
@@ -157,8 +158,8 @@ async function cambiarDeCara(img, p, idEquipo) {
 function nuevoGrupo() {
   const grupos = leerGrupos();
   const nombres = new Set(grupos.map((g) => g.nombre));
-  let nombre = "Grupo nuevo";
-  for (let i = 2; nombres.has(nombre); i++) nombre = `Grupo nuevo ${i}`;
+  let nombre = t("Grupo nuevo");
+  for (let i = 2; nombres.has(nombre); i++) nombre = `${t("Grupo nuevo")} ${i}`;
   const grupo = grupoConNombre(nombre);
   renderMisEquipos();
   const titulo = lista.querySelector(`.grupo-equipos[data-grupo="${grupo.id}"] .grupo-nombre`);
@@ -205,7 +206,7 @@ function renombrarGrupo(titulo, id) {
 async function borrarGrupo(id) {
   const grupo = leerGrupos().find((g) => g.id === id);
   if (!grupo) return;
-  if (!(await confirmar(`¿Borrar el grupo «${grupo.nombre}»?\n\nSus equipos no se borran: pasan a estar sueltos.`))) return;
+  if (!(await confirmar(`${t("¿Borrar el grupo «{nombre}»?", { nombre: grupo.nombre })}\n\n${t("Sus equipos no se borran: pasan a estar sueltos.")}`))) return;
   escribirGuardados(
     leerGuardados().map((g) => {
       if (g.grupo !== id) return g;
@@ -257,8 +258,8 @@ function abrirMenuGrupos(boton, guardado) {
       )
       .join("")}
     <button data-grupo="" class="${guardado.grupo && grupos.some((g) => g.id === guardado.grupo) ? "" : "actual"}">
-      ${icono("aspa")} <span>Sin grupo</span></button>
-    <button data-grupo="__nuevo">${icono("carpetaMas")} <span>Grupo nuevo</span></button>`;
+      ${icono("aspa")} <span>${t("Sin grupo")}</span></button>
+    <button data-grupo="__nuevo">${icono("carpetaMas")} <span>${t("Grupo nuevo")}</span></button>`;
   document.body.appendChild(menuGrupos);
 
   const r = boton.getBoundingClientRect();
@@ -273,8 +274,8 @@ function abrirMenuGrupos(boton, guardado) {
     let grupo = opcion.dataset.grupo;
     if (grupo === "__nuevo") {
       const nombres = new Set(leerGrupos().map((g) => g.nombre));
-      let nombre = "Grupo nuevo";
-      for (let i = 2; nombres.has(nombre); i++) nombre = `Grupo nuevo ${i}`;
+      let nombre = t("Grupo nuevo");
+      for (let i = 2; nombres.has(nombre); i++) nombre = `${t("Grupo nuevo")} ${i}`;
       grupo = grupoConNombre(nombre).id;
     }
     escribirGuardados(
@@ -330,7 +331,7 @@ activarArrastre(lista, {
 // ---------- Pintar ----------
 
 function crearTarjeta(guardado) {
-  const fecha = new Date(guardado.actualizado).toLocaleDateString("es-ES");
+  const fecha = new Date(guardado.actualizado).toLocaleDateString(LOCALE);
 
   // Retrato de Mundo Misterioso; si no existe, render HOME; si no, el icono antiguo.
   // Pulsando en él va cambiando de cara (ver cambiarDeCara).
@@ -340,7 +341,7 @@ function crearTarjeta(guardado) {
       const cara = p.cara && p.cara !== "Normal" ? p.cara : "";
       return imagenConRespaldo(
         [...(cara ? urlsPMDEmocion(p, cara) : []), ...urlsRetrato(p)],
-        `alt="${p.es}" title="${p.es}${textoForma(p) ? " (" + textoForma(p) + ")" : ""} · pulsa para cambiarle la cara"
+        `alt="${escaparHTML(nombre(p))}" title="${escaparHTML(nombre(p))}${textoForma(p) ? " (" + escaparHTML(textoForma(p)) + ")" : ""} · ${t("pulsa para cambiarle la cara")}"
          data-posicion="${posicion}" ${cara ? `data-emocion="${cara}"` : ""} loading="lazy" decoding="async" draggable="false"`
       );
     })
@@ -354,19 +355,19 @@ function crearTarjeta(guardado) {
     <div class="equipo-cabecera">
       <div>
         <h3></h3>
-        <span class="fecha">Guardado el ${fecha}</span>
+        <span class="fecha">${t("Guardado el {fecha}", { fecha })}</span>
       </div>
       <div class="equipo-botones">
-        <button class="mover" title="Mover a un grupo" aria-label="Mover a un grupo">${icono("carpeta")}</button>
-        <button class="exportar" title="Copiar el equipo como paste" aria-label="Exportar">${icono("copiar")}</button>
-        <button class="borrar" title="Borrar el equipo" aria-label="Borrar">${icono("papelera")}</button>
+        <button class="mover" title="${t("Mover a un grupo")}" aria-label="${t("Mover a un grupo")}">${icono("carpeta")}</button>
+        <button class="exportar" title="${t("Copiar el equipo como paste")}" aria-label="${t("Exportar")}">${icono("copiar")}</button>
+        <button class="borrar" title="${t("Borrar el equipo")}" aria-label="${t("Borrar")}">${icono("papelera")}</button>
       </div>
     </div>
     <div class="equipo-miniaturas">${miniaturas}</div>
   `;
 
   tarjeta.querySelector("h3").textContent = guardado.nombre;
-  tarjeta.title = "Pulsa para abrir este equipo";
+  tarjeta.title = t("Pulsa para abrir este equipo");
 
   // Se abre pulsando en la tarjeta, menos si el clic ha sido en uno de sus botones o en
   // un Pokémon (que cambia de cara)
@@ -412,22 +413,22 @@ function crearSeccion(grupo, equipos, hayGrupos) {
 
   if (grupo) {
     seccion.innerHTML = `
-      <header class="grupo-cabecera" title="Pulsa para ${grupo.plegado ? "desplegar" : "plegar"}">
+      <header class="grupo-cabecera" title="${grupo.plegado ? t("Pulsa para desplegar") : t("Pulsa para plegar")}">
         <span class="grupo-flecha">${icono("abajo")}</span>
         <span class="grupo-icono">${icono("carpeta")}</span>
-        <h2 class="grupo-nombre" title="Cambiar el nombre"></h2>
+        <h2 class="grupo-nombre" title="${t("Cambiar el nombre")}"></h2>
         <span class="grupo-cuenta">${equipos.length}</span>
         <span class="grupo-caras">${caras}</span>
         <span class="grupo-botones">
-          <button class="grupo-exportar" title="Copiar los equipos del grupo" aria-label="Exportar el grupo" ${equipos.length ? "" : "disabled"}>${icono("copiar")}</button>
-          <button class="grupo-borrar" title="Borrar el grupo (sus equipos no)" aria-label="Borrar el grupo">${icono("papelera")}</button>
+          <button class="grupo-exportar" title="${t("Copiar los equipos del grupo")}" aria-label="${t("Exportar el grupo")}" ${equipos.length ? "" : "disabled"}>${icono("copiar")}</button>
+          <button class="grupo-borrar" title="${t("Borrar el grupo (sus equipos no)")}" aria-label="${t("Borrar el grupo")}">${icono("papelera")}</button>
         </span>
       </header>
       <div class="equipos-zona" data-grupo="${escaparHTML(grupo.id)}"></div>`;
     seccion.querySelector(".grupo-nombre").textContent = grupo.nombre;
   } else {
     seccion.innerHTML = `
-      ${hayGrupos ? `<header class="grupo-cabecera sin-grupo"><h2 class="grupo-nombre">Sin grupo</h2><span class="grupo-cuenta">${equipos.length}</span></header>` : ""}
+      ${hayGrupos ? `<header class="grupo-cabecera sin-grupo"><h2 class="grupo-nombre">${t("Sin grupo")}</h2><span class="grupo-cuenta">${equipos.length}</span></header>` : ""}
       <div class="equipos-zona" data-grupo=""></div>`;
   }
 
@@ -460,7 +461,7 @@ export function renderMisEquipos() {
 
   if (guardados.length === 0 && grupos.length === 0) {
     lista.innerHTML =
-      "<p>Todavía no has guardado ningún equipo. Crea uno y pulsa «Guardar equipo».</p>";
+      `<p>${t("Todavía no has guardado ningún equipo. Crea uno y pulsa «Guardar equipo».")}</p>`;
     return;
   }
 

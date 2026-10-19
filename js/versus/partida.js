@@ -19,6 +19,7 @@ import { confirmar, avisar as avisarVentana } from "../comun/ventanas.js";
 import { usuarioActual } from "../comun/nube.js";
 import { caraDePokemon, carasDeEquipo } from "../comun/elegir-equipo.js";
 import { cargarDatos } from "../comun/datos.js";
+import { sumarContador } from "../comun/contadores.js";
 import { lockePorId, muertosDe, apuntarMuerto, estaEliminado, apuntarSuceso } from "../comun/lockes.js";
 import {
   sePuedeVigilar, cargarVinculos, vincular, reanudar, desvincular, leerUnaVez, estadoVinculo,
@@ -38,6 +39,7 @@ import {
   sePuedeLeer, partidaDe, procesarArchivo, olvidarPartida, cajasMuertosDe, alternarCajaMuertos, muertosSinApuntar,
   marcarMuertosVistos
 } from "../partida/partidas.js";
+import { t, LOCALE, enIngles } from "../comun/idioma.js";
 
 let repintar = () => {};
 let avisar = () => {};
@@ -53,8 +55,13 @@ function misMuertos(locke) {
   return muertosDe(locke, usuarioActual().uid);
 }
 
+// Especie (con su forma) en el idioma de la web; las leídas antes de haber inglés, en español
+function especieDe(p) {
+  return (enIngles && (p.nombreEn || p.en)) || p.nombre;
+}
+
 function nombreDe(p) {
-  return p.mote && p.mote !== p.es ? `${p.mote} (${p.nombre})` : p.nombre;
+  return p.mote && p.mote !== p.es ? `${p.mote} (${especieDe(p)})` : especieDe(p);
 }
 
 // ---------- En tu bloque ----------
@@ -67,22 +74,22 @@ export function plantillaPartida(locke) {
 
   let accion = "";
   if (estado === "leyendo") {
-    accion = `<button class="locke-partida-vincular" disabled>${icono("enlace")} Leyendo...</button>`;
+    accion = `<button class="locke-partida-vincular" disabled>${icono("enlace")} ${t("Leyendo...")}</button>`;
   } else if (estado === "pausado") {
-    accion = `<button class="locke-partida-reanudar" title="Volver a leer la partida">${icono("reanudar")} Reanudar</button>`;
+    accion = `<button class="locke-partida-reanudar" title="${t("Volver a leer la partida")}">${icono("reanudar")} ${t("Reanudar")}</button>`;
   } else if (!partida) {
     // Con la partida ya leída, volver a vincular está en la ventana, junto a «Desvincular»
     accion = sePuedeVigilar
-      ? `<button class="locke-partida-vincular">${icono("enlace")} Vincular partida</button>`
-      : `<button class="locke-partida-vincular">${icono("subir")} Leer partida</button>`;
+      ? `<button class="locke-partida-vincular">${icono("enlace")} ${t("Vincular partida")}</button>`
+      : `<button class="locke-partida-vincular">${icono("subir")} ${t("Leer partida")}</button>`;
   }
 
   return `
     <div class="locke-partida">
-      ${partida ? `<button class="locke-partida-abrir" title="Ver cajas">${carasDeEquipo({ nombre: "Equipo de la partida", pokemon: partida.equipo })}</button>` : ""}
-      ${pendientes ? `<button class="locke-partida-muertos" title="Muertos por apuntar">${icono("calavera")} ${pendientes}</button>` : ""}
+      ${partida ? `<button class="locke-partida-abrir" title="${t("Ver cajas")}">${carasDeEquipo({ nombre: t("Equipo de la partida"), pokemon: partida.equipo })}</button>` : ""}
+      ${pendientes ? `<button class="locke-partida-muertos" title="${t("Muertos por apuntar")}">${icono("calavera")} ${pendientes}</button>` : ""}
       ${accion}
-      <button class="locke-partida-ayuda" title="Cómo funciona">?</button>
+      <button class="locke-partida-ayuda" title="${t("Cómo funciona")}">?</button>
     </div>`;
 }
 
@@ -91,7 +98,7 @@ export function accionPartida(boton, id) {
   const fallo = (error) => {
     if (error && error.name === "AbortError") return; // ha cerrado el selector sin elegir
     console.error(error);
-    avisar("No se ha podido abrir la partida.");
+    avisar(t("No se ha podido abrir la partida."));
   };
   if (boton.classList.contains("locke-partida-vincular")) {
     // Lo que hace falta para leerla, ya mientras se elige el archivo
@@ -133,7 +140,7 @@ async function alLeer(id, bytes, archivo) {
       return false;
     }
     intentos.delete(id);
-    avisar(resultado.error);
+    avisar(t(resultado.error));
     // Recién vinculado con el archivo equivocado: fuera, para poder elegir otro
     if (!partidaDe(id)) await desvincular(id);
     return true;
@@ -158,20 +165,20 @@ function editable(locke) {
 
 // sitio: "e2" (tercero del equipo) o "c4-17" (caja 5, hueco 18); con él, se puede pulsar
 function ficha(p, sitio = "") {
-  const titulo = [nombreDe(p), p.lugar].filter(Boolean).join(" · ");
+  const titulo = [nombreDe(p), (enIngles && p.lugarEn) || p.lugar].filter(Boolean).join(" · ");
   const etiqueta = sitio ? "button" : "span";
   return `
     <${etiqueta} class="partida-ficha" title="${escaparHTML(titulo)}" ${sitio ? `data-sitio="${sitio}" data-llave="${p.llave}" draggable="true"` : ""}>
       ${caraDePokemon(p, "partida-cara")}
-      ${p.huevo ? `<span class="partida-huevo" title="Huevo">${icono("huevo")}</span>` : ""}
-      <span class="partida-ficha-nombre">${escaparHTML(p.huevo ? p.es : p.mote || p.es)}</span>
-      <small>${p.huevo ? "Huevo" : `Nv. ${p.nivel}`}</small>
+      ${p.huevo ? `<span class="partida-huevo" title="${t("Huevo")}">${icono("huevo")}</span>` : ""}
+      <span class="partida-ficha-nombre">${escaparHTML(p.huevo ? especieDe(p) : p.mote || especieDe(p))}</span>
+      <small>${p.huevo ? t("Huevo") : t("Nv. {nivel}", { nivel: p.nivel })}</small>
     </${etiqueta}>`;
 }
 
 // Un hueco libre: para crear uno nuevo o para soltar ahí uno arrastrado
 function fichaVacia(sitio) {
-  return `<button class="partida-ficha partida-hueco" data-sitio="${sitio}" data-llave="0" title="Nuevo Pokémon (o suelta aquí uno arrastrado)">${icono("mas")}</button>`;
+  return `<button class="partida-ficha partida-hueco" data-sitio="${sitio}" data-llave="0" title="${t("Nuevo Pokémon (o suelta aquí uno arrastrado)")}">${icono("mas")}</button>`;
 }
 
 function primerHueco(caja) {
@@ -204,36 +211,36 @@ function pintarPartida() {
   const conSitio = editable(locke);
   if (!conSitio) pestana = "cajas";
   dialogo.classList.toggle("en-bolsa", pestana === "bolsa");
-  const cuando = new Date(partida.actualizada).toLocaleString("es-ES", {
+  const cuando = new Date(partida.actualizada).toLocaleString(LOCALE, {
     day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
   });
   // Editando, dos pestañas: las cajas y la bolsa
   const titulo = conSitio
-    ? `<span class="partida-pestanas">${[["cajas", "Cajas", "caja"], ["bolsa", "Bolsa", "mochila"]]
+    ? `<span class="partida-pestanas">${[["cajas", t("Cajas"), "caja"], ["bolsa", t("Bolsa"), "mochila"]]
         .map(([id, texto, dibujo]) => `<button class="partida-pestana ${pestana === id ? "activa" : ""}" data-pestana="${id}">${icono(dibujo)} ${texto}</button>`)
         .join("")}</span>`
-    : `${icono("caja")} Cajas`;
+    : `${icono("caja")} ${t("Cajas")}`;
   dialogo.querySelector(".partida-titulo").innerHTML =
     `${titulo} <small>${[partida.entrenador, partida.version, cuando].filter(Boolean).map(escaparHTML).join(" · ")}</small>
-     <button class="partida-ayuda" title="Cómo funciona">?</button>`;
+     <button class="partida-ayuda" title="${t("Cómo funciona")}">?</button>`;
   const botonVincular = dialogo.querySelector(".partida-vincular");
   botonVincular.innerHTML = icono(sePuedeVigilar ? "enlace" : "subir");
-  botonVincular.title = sePuedeVigilar ? "Volver a vincular (elegir otra vez el archivo)" : "Volver a leer";
+  botonVincular.title = sePuedeVigilar ? t("Volver a vincular (elegir otra vez el archivo)") : t("Volver a leer");
 
   // Cambios sin guardar: se guardan al cerrar (o se descartan)
   const pendientes = cuantosCambios(idAbierto);
   dialogo.classList.toggle("con-cambios", pendientes > 0);
   dialogo.querySelector(".partida-pendientes").textContent = pendientes
-    ? `${pendientes} ${pendientes === 1 ? "cambio" : "cambios"} sin guardar: se guardan al cerrar (con el juego cerrado)`
+    ? t(pendientes === 1 ? "{n} cambio sin guardar: se guardan al cerrar (con el juego cerrado)" : "{n} cambios sin guardar: se guardan al cerrar (con el juego cerrado)", { n: pendientes })
     : "";
-  dialogo.querySelector(".partida-cerrar").title = pendientes ? "Guardar y cerrar" : "Cerrar";
+  dialogo.querySelector(".partida-cerrar").title = pendientes ? t("Guardar y cerrar") : t("Cerrar");
 
   dialogo.querySelector(".partida-copias").hidden = !conSitio || pendientes > 0;
 
   if (pestana === "bolsa") {
     return pintarBolsa(dialogo.querySelector(".partida-cuerpo"), idAbierto).catch((error) => {
       console.error(error);
-      dialogo.querySelector(".partida-cuerpo").innerHTML = `<p>${escaparHTML(error.message || "No se ha podido leer la bolsa.")}</p>`;
+      dialogo.querySelector(".partida-cuerpo").innerHTML = `<p>${escaparHTML(t(error.message || "No se ha podido leer la bolsa."))}</p>`;
     });
   }
 
@@ -253,10 +260,10 @@ function pintarPartida() {
       return `
         <section class="partida-caja ${muertos ? "de-muertos" : ""} ${bloqueada ? "bloqueada" : ""}">
           <h3>
-            ${bloqueada ? `<span class="partida-candado" title="Bloqueada en el juego">${icono("candado")}</span>` : ""}
+            ${bloqueada ? `<span class="partida-candado" title="${t("Bloqueada en el juego")}">${icono("candado")}</span>` : ""}
             ${escaparHTML(caja.nombre)} <small>${caja.pokemon.length}</small>
             <button class="partida-marcar-muertos ${muertos ? "activa" : ""}" data-caja="${i}" aria-pressed="${muertos}"
-                    title="${muertos ? "Ya no es caja de muertos" : "Marcar como caja de muertos"}">${icono("calavera")} Muertos</button>
+                    title="${muertos ? t("Ya no es caja de muertos") : t("Marcar como caja de muertos")}">${icono("calavera")} ${t("Muertos")}</button>
           </h3>
           <div class="partida-pokemon">
             ${caja.pokemon.map((p) => ficha(p, conSitio ? `c${i}-${p.hueco}` : "")).join("")}
@@ -269,9 +276,9 @@ function pintarPartida() {
   dialogo.querySelector(".partida-cuerpo").innerHTML = `
     <section class="partida-caja partida-equipo">
       <h3>
-        Equipo
-        ${conSitio ? `<button class="partida-meter">${icono("importar")} Meter equipo</button>` : ""}
-        <button class="partida-copiar">${icono("copiar")} Copiar a Mis equipos</button>
+        ${t("Equipo")}
+        ${conSitio ? `<button class="partida-meter">${icono("importar")} ${t("Meter equipo")}</button>` : ""}
+        <button class="partida-copiar">${icono("copiar")} ${t("Copiar a Mis equipos")}</button>
       </h3>
       <div class="partida-pokemon">
         ${partida.equipo.map((p, i) => ficha(p, conSitio ? `e${i}` : "")).join("")}
@@ -321,7 +328,7 @@ async function moverA(desde, hasta) {
     });
   } catch (error) {
     console.error(error);
-    avisarVentana(error.message || "No se ha podido mover.");
+    avisarVentana(t(error.message || "No se ha podido mover."));
   }
 }
 
@@ -378,7 +385,7 @@ async function cerrarPartida() {
       pintarPartida();
       if (error && error.name === "AbortError") return;
       console.error(error);
-      avisarVentana(error.message || "No se ha podido guardar.");
+      avisarVentana(t(error.message || "No se ha podido guardar."));
       return;
     }
     boton.disabled = false;
@@ -401,12 +408,13 @@ async function copiarEquipo() {
     ]);
     await prepararConversion();
     const { problemas } = await anadirEquipoDesdePaste(pasteDeEquipo(partida.equipo), locke.nombre);
+    sumarContador("copiar-partida"); // para los logros
     avisarVentana(problemas.length
-      ? `Copiado a «Mis equipos», pero algunas cosas no se han podido reconocer:\n\n• ${problemas.join("\n• ")}`
-      : "Copiado a «Mis equipos» ✔");
+      ? `${t("Copiado a «Mis equipos», pero algunas cosas no se han podido reconocer:")}\n\n• ${problemas.join("\n• ")}`
+      : t("Copiado a «Mis equipos» ✔"));
   } catch (error) {
     console.error(error);
-    avisarVentana("No se ha podido copiar el equipo.");
+    avisarVentana(t("No se ha podido copiar el equipo."));
   } finally {
     boton.disabled = false;
   }
@@ -418,7 +426,7 @@ async function copiarEquipo() {
 // también se apunta en la actividad del locke.
 
 function fechaCopia(cuando) {
-  return new Date(cuando).toLocaleString("es-ES", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  return new Date(cuando).toLocaleString(LOCALE, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 async function abrirCopias(id) {
@@ -430,28 +438,28 @@ async function abrirCopias(id) {
           (copia) => `
             <div class="copias-fila">
               <span>${escaparHTML(fechaCopia(copia.cuando))}</span>
-              <button class="boton-gris copias-restaurar" data-clave="${copia.clave}" data-cuando="${copia.cuando}">${icono("deshacer")} Volver a esta</button>
+              <button class="boton-gris copias-restaurar" data-clave="${copia.clave}" data-cuando="${copia.cuando}">${icono("deshacer")} ${t("Volver a esta")}</button>
             </div>`
         )
         .join("")
-    : `<p class="copias-vacio">Todavía no has editado esta partida.</p>`;
+    : `<p class="copias-vacio">${t("Todavía no has editado esta partida.")}</p>`;
   dialogoCopias.showModal();
 }
 
 async function restaurar(boton) {
   const id = dialogoCopias.dataset.id;
   const fecha = fechaCopia(Number(boton.dataset.cuando));
-  if (!(await confirmar(`¿Volver a como estaba el ${fecha}?\n\nCierra antes el juego en el emulador.`, { aceptar: "Volver a esta" }))) return;
+  if (!(await confirmar(`${t("¿Volver a como estaba el {fecha}?", { fecha })}\n\n${t("Cierra antes el juego en el emulador.")}`, { aceptar: t("Volver a esta") }))) return;
   boton.disabled = true;
   try {
     await restaurarCopia(id, Number(boton.dataset.clave));
     dialogoCopias.close();
-    await apuntarSuceso(id, "edicion", { detalle: `vuelta a como estaba el ${fecha}` });
+    await apuntarSuceso(id, "edicion", { detalle: t("vuelta a como estaba el {fecha}", { fecha }) });
   } catch (error) {
     boton.disabled = false;
     if (error && error.name === "AbortError") return;
     console.error(error);
-    avisarVentana(error.message || "No se ha podido.");
+    avisarVentana(t(error.message || "No se ha podido."));
   }
 }
 
@@ -494,7 +502,7 @@ async function apuntarPropuestos() {
   for (const p of marcados) {
     await apuntarMuerto(
       id,
-      { especie: p.id, nombre: p.nombre, mote: p.mote, idForma: p.idForma, formaPMD: p.formaPMD, imagenForma: p.imagenForma },
+      { especie: p.id, nombre: p.nombre, en: p.nombreEn || p.en || "", mote: p.mote, idForma: p.idForma, formaPMD: p.formaPMD, imagenForma: p.imagenForma },
       quitarVida
     );
   }
@@ -525,7 +533,7 @@ export function iniciarPartida(alRepintar, alAvisar) {
     idAbierto = null;
   });
   dialogo.querySelector(".partida-descartar").addEventListener("click", async () => {
-    if (!(await confirmar("¿Descartar los cambios sin guardar?"))) return;
+    if (!(await confirmar(t("¿Descartar los cambios sin guardar?")))) return;
     descartarCambios();
   });
   dialogo.querySelector(".partida-titulo").addEventListener("click", (e) => {
@@ -552,8 +560,8 @@ export function iniciarPartida(alRepintar, alAvisar) {
     if (idAbierto && hayCambios(idAbierto)) e.preventDefault();
   });
   dialogo.querySelector(".partida-desvincular").addEventListener("click", async () => {
-    const aviso = hayCambios(idAbierto) ? "\n\nLos cambios sin guardar se pierden." : "";
-    if (!(await confirmar(`¿Desvincular la partida de este locke?\n\nLo apuntado en el cementerio y en «Rutas» se queda.${aviso}`))) return;
+    const aviso = hayCambios(idAbierto) ? `\n\n${t("Los cambios sin guardar se pierden.")}` : "";
+    if (!(await confirmar(`${t("¿Desvincular la partida de este locke?")}\n\n${t("Lo apuntado en el cementerio y en «Rutas» se queda.")}${aviso}`))) return;
     const id = idAbierto;
     dialogo.close();
     olvidarPartida(id);
@@ -563,7 +571,7 @@ export function iniciarPartida(alRepintar, alAvisar) {
   dialogo.querySelector(".partida-vincular").addEventListener("click", async () => {
     const id = idAbierto;
     if (hayCambios(id)) {
-      if (!(await confirmar("Los cambios sin guardar se pierden. ¿Seguir?", { aceptar: "Seguir", peligro: true }))) return;
+      if (!(await confirmar(t("Los cambios sin guardar se pierden. ¿Seguir?"), { aceptar: t("Seguir"), peligro: true }))) return;
       descartarCambios();
     }
     if (!sePuedeVigilar) {
@@ -573,7 +581,7 @@ export function iniciarPartida(alRepintar, alAvisar) {
     vincular(id).catch((error) => {
       if (error && error.name === "AbortError") return;
       console.error(error);
-      avisar("No se ha podido abrir la partida.");
+      avisar(t("No se ha podido abrir la partida."));
     });
   });
   dialogo.querySelector(".partida-cuerpo").addEventListener("click", (e) => {
@@ -601,7 +609,7 @@ export function iniciarPartida(alRepintar, alAvisar) {
   dialogo.querySelector(".partida-copias").addEventListener("click", () => {
     abrirCopias(idAbierto).catch((error) => {
       console.error(error);
-      avisar("No se han podido leer las copias de la partida.");
+      avisar(t("No se han podido leer las copias de la partida."));
     });
   });
   dialogoCopias.querySelector(".copias-cerrar").addEventListener("click", () => dialogoCopias.close());
@@ -614,7 +622,7 @@ export function iniciarPartida(alRepintar, alAvisar) {
     e.preventDefault();
     apuntarPropuestos().catch((error) => {
       console.error(error);
-      avisar("No se ha podido apuntar en el cementerio.");
+      avisar(t("No se ha podido apuntar en el cementerio."));
     });
   });
   dialogoMuertos.querySelector(".partida-muertos-descartar").addEventListener("click", () => {

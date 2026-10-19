@@ -57,11 +57,6 @@ export function estadoVinculo(idLocke) {
   return vinculo.permiso === "granted" ? "vigilando" : "pausado";
 }
 
-export function nombreArchivo(idLocke) {
-  const vinculo = vinculos.get(idLocke);
-  return vinculo ? vinculo.archivo.name : "";
-}
-
 // Al arrancar: los archivos que ya estaban vinculados en este navegador
 export async function cargarVinculos(leer, cambiarEstado) {
   alLeer = leer;
@@ -159,15 +154,6 @@ export async function leerArchivo(idLocke) {
   const vinculo = vinculos.get(idLocke);
   if (!vinculo || vinculo.permiso !== "granted") throw new Error("La partida no está vinculada.");
   return new Uint8Array(await (await vinculo.archivo.getFile()).arrayBuffer());
-}
-
-// Sin la API: la partida editada se descarga y se pone a mano en lugar de la otra
-export function descargarPartida(bytes, nombre = "main") {
-  const enlace = document.createElement("a");
-  enlace.href = URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" }));
-  enlace.download = nombre;
-  enlace.click();
-  setTimeout(() => URL.revokeObjectURL(enlace.href), 10000);
 }
 
 // ---------- Copias de seguridad ----------

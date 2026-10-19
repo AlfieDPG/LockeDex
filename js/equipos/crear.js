@@ -11,18 +11,19 @@ import { sumarContador } from "../comun/contadores.js";
 import {
   pokemonDesdeAPI, pedirVariedad, cambiarForma, variedadActual,
   ataqueDesdeAPI, obtenerStats, obtenerDatosCombate, descripcionHabilidad, descripcionObjeto, textoForma,
-  datosDeGenero, generosPosibles, generoDe, ICONO_GENERO, NOMBRE_GENERO
+  datosDeGenero, generosPosibles, generoDe, ICONO_GENERO, NOMBRE_GENERO, CAMPO_DESCRIPCION, descripcionAtaque
 } from "../comun/pokemon.js";
 import { activarTooltips, actualizarTooltip, ocultarTooltip, escaparHTML } from "../comun/tooltip.js";
 import { activarAutocompletado, iconoPokemon, iconoObjeto } from "../comun/autocompletado.js";
 import { pasteDelEquipo, copiarAlPortapapeles } from "./exportar.js";
-import { iniciarEntreno, abrirEntreno, textoEntreno } from "./entreno.js";
+import { iniciarEntreno, abrirEntreno, textoEntreno, STATS } from "./entreno.js";
 import { icono } from "../comun/iconos.js";
 import { activarArrastre } from "../comun/arrastrar.js";
 import {
   imagenConRespaldo, urlArte, urlsArte, urlsIconoObjeto, cambiarImagen, precargarEnReposo
 } from "../comun/imagenes.js";
 import { confirmar } from "../comun/ventanas.js";
+import { t, nombre, enIngles } from "../comun/idioma.js";
 
 const resultado = document.getElementById("resultado");
 const dialogoDebilidades = document.getElementById("dialogo-debilidades");
@@ -60,11 +61,11 @@ async function agregarPokemon(entrada) {
   campoBuscar.value = "";
 
   if (estado.equipo.length >= MAX_EQUIPO) {
-    mostrarAviso("El equipo ya tiene 6 Pokémon.");
+    mostrarAviso(t("El equipo ya tiene 6 Pokémon."));
     return;
   }
 
-  mostrarAviso("Añadiendo...");
+  mostrarAviso(t("Añadiendo..."));
 
   try {
     let variedad = null;
@@ -81,7 +82,7 @@ async function agregarPokemon(entrada) {
       mostrarAviso("");
       variedad = await elegirForma(entrada, info);
       if (!variedad) return;
-      mostrarAviso("Añadiendo...");
+      mostrarAviso(t("Añadiendo..."));
     }
 
     const p = variedad ? await pedirVariedad(variedad) : await pedirJSON(`${URL_API}pokemon/${entrada.id}`);
@@ -91,7 +92,7 @@ async function agregarPokemon(entrada) {
     mostrarAviso("");
     renderCrear();
   } catch (error) {
-    mostrarAviso("No he podido cargar ese Pokémon.");
+    mostrarAviso(t("No he podido cargar ese Pokémon."));
   }
 }
 
@@ -104,7 +105,7 @@ const pokemonDe = new WeakMap(); // tarjeta -> su Pokémon (para las fichas al p
 export function renderCrear() {
   ocultarTooltip();
   if (campoNombre.value !== estado.nombre) campoNombre.value = estado.nombre;
-  contadorEl.textContent = `Equipo: ${estado.equipo.length}/${MAX_EQUIPO}`;
+  contadorEl.textContent = t("Equipo: {n}/{max}", { n: estado.equipo.length, max: MAX_EQUIPO });
   // Las tarjetas del equipo y, detrás, un hueco vacío por cada sitio que quede libre
   const tarjetas = estado.equipo.map((poke) => crearTarjeta(poke));
   for (let i = estado.equipo.length; i < MAX_EQUIPO; i++) tarjetas.push(crearHueco());
@@ -128,7 +129,7 @@ function refrescarTarjeta(poke) {
 
 // El botón de estadísticas de la tarjeta dice el nivel y la naturaleza («Nv. 50 · Firme»)
 function textoBotonEntreno(poke) {
-  return `${icono("actividad")} ${escaparHTML(textoEntreno(poke) || "Estadísticas")}`;
+  return `${icono("actividad")} ${escaparHTML(textoEntreno(poke) || t("Estadísticas"))}`;
 }
 
 // ---------- Puntos débiles del equipo ----------
@@ -144,7 +145,7 @@ function filaDebilidad({ tipo, debiles, aguantan }, miembros) {
     <li class="debilidad ${gravedad}" style="--color-tipo:${coloresTipo[tipo]}">
       ${iconoTipo(tipo)}
       <span class="debilidad-tipo">${tiposEs[tipo]}</span>
-      <span class="debilidad-cuenta">${debiles} de ${miembros} débiles · ${aguantan} lo aguantan</span>
+      <span class="debilidad-cuenta">${t("{debiles} de {miembros} débiles · {aguantan} lo aguantan", { debiles, miembros, aguantan })}</span>
       <span class="debilidad-barra"><i style="width:${(debiles / miembros) * 100}%"></i></span>
     </li>`;
 }
@@ -153,7 +154,7 @@ function pintarDebilidades() {
   const equipo = estado.equipo.filter((p) => p.tipos && p.tipos.length);
 
   if (equipo.length === 0) {
-    debilidadesEl.innerHTML = `<p class="debilidades-vacio">Añade Pokémon al equipo para ver sus puntos débiles.</p>`;
+    debilidadesEl.innerHTML = `<p class="debilidades-vacio">${t("Añade Pokémon al equipo para ver sus puntos débiles.")}</p>`;
     return;
   }
 
@@ -170,9 +171,9 @@ function pintarDebilidades() {
     ${
       problemas.length
         ? `<ul class="lista-debilidades">${problemas.map((r) => filaDebilidad(r, equipo.length)).join("")}</ul>`
-        : `<p class="debilidades-bien">Ningún tipo le hace daño de más a dos o más miembros del equipo.</p>`
+        : `<p class="debilidades-bien">${t("Ningún tipo le hace daño de más a dos o más miembros del equipo.")}</p>`
     }
-    ${sinAguante.length ? `<p class="debilidades-sin-aguante"><strong>Nadie aguanta:</strong> ${sinAguante.join(" · ")}</p>` : ""}
+    ${sinAguante.length ? `<p class="debilidades-sin-aguante"><strong>${t("Nadie aguanta:")}</strong> ${sinAguante.join(" · ")}</p>` : ""}
   `;
 }
 
@@ -180,7 +181,7 @@ function pintarDebilidades() {
 // línea, que se dibuja siempre aunque esté vacía, para que la tarjeta no cambie de alto.
 function detalleNombre(poke) {
   const partes = [];
-  if (poke.mote) partes.push(escaparHTML(poke.es));
+  if (poke.mote) partes.push(escaparHTML(nombre(poke)));
   if (textoForma(poke)) partes.push(`(${textoForma(poke)})`);
   return partes.join(" ");
 }
@@ -190,8 +191,8 @@ function crearHueco() {
   const hueco = document.createElement("button");
   hueco.type = "button";
   hueco.className = "tarjeta tarjeta-vacia";
-  hueco.title = "Añadir un Pokémon al equipo";
-  hueco.setAttribute("aria-label", "Añadir un Pokémon al equipo");
+  hueco.title = t("Añadir un Pokémon al equipo");
+  hueco.setAttribute("aria-label", t("Añadir un Pokémon al equipo"));
   hueco.innerHTML = `<span class="mas">+</span>`;
 
   hueco.addEventListener("click", () => {
@@ -244,22 +245,22 @@ function crearTarjeta(poke) {
     .join("");
 
   // draggable="false": si no, al arrastrar desde el dibujo se lleva la imagen y no la tarjeta
-  const arte = imagenConRespaldo(urlsArte(poke), `class="arte" alt="${poke.es}" draggable="false"`);
+  const arte = imagenConRespaldo(urlsArte(poke), `class="arte" alt="${escaparHTML(nombre(poke))}" draggable="false"`);
 
   tarjeta.innerHTML = `
     <button class="btn-shiny ${poke.shiny ? "activo" : ""}" title="Shiny">${poke.shiny ? "★" : "☆"}</button>
     ${plantillaGenero(poke)}
     <div class="tarjeta-izq">
       ${arte}
-      <h2 class="nombre-editable" title="${poke.mote ? "Cambiar mote" : "Poner mote"}">${escaparHTML(poke.mote || poke.es)}</h2>
+      <h2 class="nombre-editable" title="${poke.mote ? t("Cambiar mote") : t("Poner mote")}">${escaparHTML(poke.mote || nombre(poke))}</h2>
       <div class="forma-nombre">
         <span class="forma-texto">${detalleNombre(poke)}</span>
-        <select class="selector-forma" title="Cambiar de forma" hidden></select>
+        <select class="selector-forma" title="${t("Cambiar de forma")}" hidden></select>
       </div>
       <div class="chips">${chipsTipos}</div>
       <div class="tarjeta-botones">
-        <button class="abrir-entreno" title="Nivel, naturaleza, EVs e IVs">${textoBotonEntreno(poke)}</button>
-        <button class="quitar-pokemon">Quitar</button>
+        <button class="abrir-entreno" title="${t("Nivel, naturaleza, EVs e IVs")}">${textoBotonEntreno(poke)}</button>
+        <button class="quitar-pokemon">${t("Quitar")}</button>
       </div>
     </div>
     <div class="tarjeta-der">
@@ -317,7 +318,7 @@ function crearTarjeta(poke) {
 
   pintarCasilla(
     tarjeta.querySelector(".casilla-habilidad"),
-    poke.habilidad, "Habilidad", "Habilidad", datos.habilidades, "habilidad",
+    poke.habilidad, t("Habilidad"), t("Habilidad"), datos.habilidades, "habilidad",
     (nuevo) => {
       poke.habilidad = nuevo;
       guardarEquipo();
@@ -327,7 +328,7 @@ function crearTarjeta(poke) {
 
   pintarCasilla(
     tarjeta.querySelector(".casilla-objeto"),
-    poke.objeto, "Objeto", "Objeto", datos.objetos, "objeto",
+    poke.objeto, t("Objeto"), t("Objeto"), datos.objetos, "objeto",
     (nuevo) => {
       poke.objeto = nuevo;
       guardarEquipo();
@@ -357,8 +358,8 @@ function plantillaGenero(poke) {
   const genero = generoDe(poke);
   const fijo = posibles.length === 1;
   const titulo = fijo
-    ? `Siempre ${NOMBRE_GENERO[genero].toLowerCase()}`
-    : genero ? `${NOMBRE_GENERO[genero]} (pulsa para cambiar)` : "Género sin elegir (pulsa para elegir)";
+    ? t("Siempre {genero}", { genero: NOMBRE_GENERO[genero].toLowerCase() })
+    : genero ? t("{genero} (pulsa para cambiar)", { genero: NOMBRE_GENERO[genero] }) : t("Género sin elegir (pulsa para elegir)");
   return `<button class="btn-genero ${genero ? `genero-${genero}` : ""} ${fijo ? "fijo" : ""}" title="${titulo}"
             aria-label="${titulo}">${genero ? icono(ICONO_GENERO[genero]) : "⚥︎"}</button>`;
 }
@@ -373,7 +374,7 @@ const LARGO_MOTE = 18; // lo que deja Showdown
 function editarMote(titulo, poke) {
   if (titulo.querySelector("input")) return;
   titulo.innerHTML = `<input class="mote-campo" type="text" maxlength="${LARGO_MOTE}" autocomplete="off"
-    placeholder="${escaparHTML(poke.es)}" value="${escaparHTML(poke.mote || "")}">`;
+    placeholder="${escaparHTML(nombre(poke))}" value="${escaparHTML(poke.mote || "")}">`;
   const campo = titulo.querySelector("input");
   campo.focus();
   campo.select();
@@ -431,7 +432,7 @@ async function prepararSelectorForma(tarjeta, poke) {
     .join("");
 
   // El desplegable ya dice la forma: el texto se queda solo con la especie si hay mote
-  tarjeta.querySelector(".forma-texto").innerHTML = poke.mote ? escaparHTML(poke.es) : "";
+  tarjeta.querySelector(".forma-texto").innerHTML = poke.mote ? escaparHTML(nombre(poke)) : "";
   selector.hidden = false;
 
   selector.addEventListener("change", async () => {
@@ -449,7 +450,7 @@ async function prepararSelectorForma(tarjeta, poke) {
     } catch (error) {
       selector.value = actual;
       selector.disabled = false;
-      mostrarAviso("No he podido cambiar la forma.");
+      mostrarAviso(t("No he podido cambiar la forma."));
     }
   });
 }
@@ -466,15 +467,15 @@ function pintarCasilla(casilla, valor, placeholder, etiqueta, lista, clase, alCa
     casilla.innerHTML = `
       <div class="ataque ${clase}">
         ${icono}
-        <span class="ataque-nombre">${valor.es}</span>
+        <span class="ataque-nombre">${escaparHTML(nombre(valor))}</span>
         <span class="ataque-tipo">${etiqueta}</span>
-        <button class="quitar" title="Cambiar">✕</button>
+        <button class="quitar" title="${t("Cambiar")}">✕</button>
       </div>
     `;
     casilla.querySelector(".quitar").addEventListener("click", () => alCambiar(null));
     // Pulsando la tarjeta se escribe otro encima, sin quitarlo antes
     alPulsarCambiar(casilla.querySelector(".ataque"), () => {
-      const campo = campoCasilla(casilla, valor.es, lista, clase, alCambiar);
+      const campo = campoCasilla(casilla, nombre(valor), lista, clase, alCambiar);
       alSalirSinElegir(campo, () => pintarCasilla(casilla, valor, placeholder, etiqueta, lista, clase, alCambiar));
     });
   } else {
@@ -520,7 +521,7 @@ function pintarAtaque(hueco, poke, i) {
   const ataque = poke.ataques[i];
 
   if (!ataque) {
-    campoAtaque(hueco, poke, i, `Ataque ${i + 1}`);
+    campoAtaque(hueco, poke, i, t("Ataque {n}", { n: i + 1 }));
     return;
   }
 
@@ -528,13 +529,13 @@ function pintarAtaque(hueco, poke, i) {
   hueco.innerHTML = `
     <div class="ataque" style="background:${coloresTipo[ataque.tipo]}" data-indice="${i}">
       ${iconoTipo(ataque.tipo)}
-      <span class="ataque-nombre">${ataque.es}</span>
+      <span class="ataque-nombre">${escaparHTML(nombre(ataque))}</span>
       <span class="pp">
         <button class="menos">−</button>
         <span class="pp-valor">${ataque.pp}/${ataque.ppMax}</span>
         <button class="mas">+</button>
       </span>
-      <button class="quitar" title="Cambiar ataque">✕</button>
+      <button class="quitar" title="${t("Cambiar ataque")}">✕</button>
     </div>
   `;
 
@@ -559,7 +560,7 @@ function pintarAtaque(hueco, poke, i) {
   });
 
   alPulsarCambiar(hueco.querySelector(".ataque"), () => {
-    const campo = campoAtaque(hueco, poke, i, ataque.es);
+    const campo = campoAtaque(hueco, poke, i, nombre(ataque));
     alSalirSinElegir(campo, () => pintarAtaque(hueco, poke, i));
   });
 }
@@ -575,15 +576,13 @@ function campoAtaque(hueco, poke, i, placeholder) {
       refrescarTarjeta(poke);
     } catch (error) {
       campo.value = "";
-      campo.placeholder = "No se pudo cargar, prueba otra vez";
+      campo.placeholder = t("No se pudo cargar, prueba otra vez");
     }
   });
   return campo;
 }
 
 // ---------- Fichas al pasar el ratón (stats base y descripción de ataques) ----------
-
-const NOMBRES_STATS = ["PS", "Ataque", "Defensa", "At. Esp.", "Def. Esp.", "Velocidad"];
 
 // Rojo (bajo) -> amarillo -> verde (alto). «bueno» es el valor a partir del cual ya es verde del todo.
 function colorStat(valor, malo, bueno) {
@@ -603,9 +602,9 @@ function filaStat(nombre, valor, maximo, malo, bueno, clase = "") {
 
 function fichaStats(poke) {
   const forma = textoForma(poke);
-  const titulo = `${escaparHTML(poke.es)}${forma ? ` <small>(${escaparHTML(forma)})</small>` : ""}`;
+  const titulo = `${escaparHTML(nombre(poke))}${forma ? ` <small>(${escaparHTML(forma)})</small>` : ""}`;
   if (!poke.stats) {
-    return `<div class="ficha ficha-stats"><div class="ficha-titulo">${titulo}</div><p>Cargando stats...</p></div>`;
+    return `<div class="ficha ficha-stats"><div class="ficha-titulo">${titulo}</div><p>${t("Cargando stats...")}</p></div>`;
   }
 
   const total = poke.stats.reduce((suma, v) => suma + v, 0);
@@ -615,8 +614,8 @@ function fichaStats(poke) {
   return `
     <div class="ficha ficha-stats">
       <div class="ficha-titulo">${titulo}</div>
-      ${poke.stats.map((v, i) => filaStat(NOMBRES_STATS[i], v, 180, 30, 130)).join("")}
-      ${filaStat("Total", total, 720, 250, 600, "stat-total")}
+      ${poke.stats.map((v, i) => filaStat(STATS[i], v, 180, 30, 130)).join("")}
+      ${filaStat(t("Total"), total, 720, 250, 600, "stat-total")}
       ${bloqueTipos(tipos)}
     </div>`;
 }
@@ -646,9 +645,9 @@ function bloqueTipos(tipos) {
 
   return `
     <div class="ficha-tipos">
-      ${fila("Débil", debiles, "debil")}
-      ${fila("Resiste", resisten, "resiste")}
-      ${fila("Inmune", inmunes, "inmune")}
+      ${fila(t("Débil"), debiles, "debil")}
+      ${fila(t("Resiste"), resisten, "resiste")}
+      ${fila(t("Inmune"), inmunes, "inmune")}
     </div>`;
 }
 
@@ -657,18 +656,18 @@ function fichaAtaque(ataque) {
     <div class="ficha ficha-ataque" style="background:${coloresTipo[ataque.tipo]}">
       <div class="ficha-titulo">
         ${iconoTipo(ataque.tipo)}
-        <span>${escaparHTML(ataque.es)}</span>
+        <span>${escaparHTML(nombre(ataque))}</span>
         <span class="ficha-tipo">${tiposEs[ataque.tipo]}</span>
       </div>
-      <p>${escaparHTML(ataque.descripcion || "Sin descripción.")}</p>
+      <p>${escaparHTML((ataque[CAMPO_DESCRIPCION] ?? ataque.descripcion) || t("Sin descripción."))}</p>
       ${
         ataque.categoria
           ? `<div class="ficha-datos">
-              <span>${ataque.categoria}</span>
-              <span>Potencia: ${ataque.potencia || "—"}</span>
-              <span>Precisión: ${ataque.precision ? ataque.precision + "%" : "—"}</span>
+              <span>${t(ataque.categoria)}</span>
+              <span>${t("Potencia")}: ${ataque.potencia || "—"}</span>
+              <span>${t("Precisión")}: ${ataque.precision ? ataque.precision + "%" : "—"}</span>
             </div>`
-          : `<div class="ficha-datos"><span>Cargando potencia y precisión...</span></div>`
+          : `<div class="ficha-datos"><span>${t("Cargando potencia y precisión...")}</span></div>`
       }
     </div>`;
 }
@@ -677,8 +676,8 @@ function fichaAtaque(ataque) {
 function fichaTexto(etiqueta, valor, icono = "") {
   return `
     <div class="ficha ficha-texto">
-      <div class="ficha-titulo">${icono}<span>${escaparHTML(valor.es)}</span><span class="ficha-tipo">${etiqueta}</span></div>
-      <p>${valor.descripcion === undefined ? "Cargando descripción..." : escaparHTML(valor.descripcion || "Sin descripción.")}</p>
+      <div class="ficha-titulo">${icono}<span>${escaparHTML(nombre(valor))}</span><span class="ficha-tipo">${etiqueta}</span></div>
+      <p>${valor[CAMPO_DESCRIPCION] === undefined ? t("Cargando descripción...") : escaparHTML(valor[CAMPO_DESCRIPCION] || t("Sin descripción."))}</p>
     </div>`;
 }
 
@@ -703,26 +702,31 @@ function contenidoFicha(elemento) {
     if (!ataque.categoria) {
       completarFicha(elemento, obtenerDatosCombate(ataque), (datos) => Object.assign(ataque, datos), () => fichaAtaque(ataque));
     }
+    // Los guardados antes de tener la descripción en inglés
+    if (ataque[CAMPO_DESCRIPCION] === undefined) {
+      completarFicha(elemento, descripcionAtaque(ataque.id), (texto) => (ataque[CAMPO_DESCRIPCION] = texto), () => fichaAtaque(ataque));
+    }
     return fichaAtaque(ataque);
   }
 
   if (elemento.matches(".ataque.habilidad")) {
     const h = poke.habilidad;
-    if (h.descripcion === undefined) {
-      completarFicha(elemento, descripcionHabilidad(h.id), (texto) => (h.descripcion = texto), () => fichaTexto("Habilidad", h));
+    if (h[CAMPO_DESCRIPCION] === undefined) {
+      completarFicha(elemento, descripcionHabilidad(h.id), (texto) => (h[CAMPO_DESCRIPCION] = texto), () => fichaTexto(t("Habilidad"), h));
     }
-    return fichaTexto("Habilidad", h);
+    return fichaTexto(t("Habilidad"), h);
   }
 
   if (elemento.matches(".ataque.objeto")) {
     const o = poke.objeto;
     const icono = imagenConRespaldo(urlsIconoObjeto(o.en), `class="ficha-icono" alt="" data-quitar-si-falla`);
-    // fuente 2: descripciones de WikiDex (las guardadas antes podían estar en inglés)
-    if (o.descripcion === undefined || o.fuente !== 2) {
-      const aplicar = (texto) => Object.assign(o, { descripcion: texto, fuente: 2 });
-      completarFicha(elemento, descripcionObjeto(o), aplicar, () => fichaTexto("Objeto", o, icono));
+    // fuente 2: descripciones de WikiDex (las guardadas antes podían estar en inglés). En
+    // inglés van en otro campo y no hay WikiDex
+    if (o[CAMPO_DESCRIPCION] === undefined || (!enIngles && o.fuente !== 2)) {
+      const aplicar = (texto) => Object.assign(o, { [CAMPO_DESCRIPCION]: texto }, enIngles ? {} : { fuente: 2 });
+      completarFicha(elemento, descripcionObjeto(o), aplicar, () => fichaTexto(t("Objeto"), o, icono));
     }
-    return fichaTexto("Objeto", o, icono);
+    return fichaTexto(t("Objeto"), o, icono);
   }
 
   // Foto: si es un Pokémon añadido antes de guardar las stats, se descargan ahora y se guardan
@@ -733,7 +737,7 @@ function contenidoFicha(elemento) {
         guardarEquipo();
         actualizarTooltip(elemento, fichaStats(poke));
       })
-      .catch(() => actualizarTooltip(elemento, `<div class="ficha ficha-stats"><p>No se han podido cargar las stats.</p></div>`));
+      .catch(() => actualizarTooltip(elemento, `<div class="ficha ficha-stats"><p>${t("No se han podido cargar las stats.")}</p></div>`));
   }
   return fichaStats(poke);
 }
@@ -760,9 +764,9 @@ export function iniciarCrear() {
     if (boton) boton.innerHTML = textoBotonEntreno(poke);
   });
 
-  ponerIcono("exportar-equipo", "copiar", "Exportar: copiar el equipo como paste");
-  ponerIcono("guardar", "guardar", "Guardar equipo");
-  ponerIcono("vaciar", "papelera", "Vaciar equipo");
+  ponerIcono("exportar-equipo", "copiar", t("Exportar: copiar el equipo como paste"));
+  ponerIcono("guardar", "guardar", t("Guardar equipo"));
+  ponerIcono("vaciar", "papelera", t("Vaciar equipo"));
 
   campoNombre.addEventListener("input", () => {
     estado.nombre = campoNombre.value;
@@ -780,27 +784,27 @@ export function iniciarCrear() {
 
   document.getElementById("exportar-equipo").addEventListener("click", async () => {
     if (estado.equipo.length === 0) {
-      mostrarAviso("No hay nada que exportar.");
+      mostrarAviso(t("No hay nada que exportar."));
       return;
     }
     const copiado = await copiarAlPortapapeles(pasteDelEquipo(estado.equipo));
     if (copiado) sumarContador("exportar");
-    mostrarAviso(copiado ? "Equipo copiado al portapapeles ✔" : "No he podido copiarlo.");
+    mostrarAviso(copiado ? t("Equipo copiado al portapapeles ✔") : t("No he podido copiarlo."));
   });
 
   document.getElementById("guardar").addEventListener("click", () => {
     if (estado.equipo.length === 0) {
-      mostrarAviso("Añade al menos un Pokémon antes de guardar.");
+      mostrarAviso(t("Añade al menos un Pokémon antes de guardar."));
       return;
     }
-    mostrarAviso(guardarEnMisEquipos() ? "Equipo guardado ✔" : "No se ha podido guardar en el navegador.");
+    mostrarAviso(guardarEnMisEquipos() ? t("Equipo guardado ✔") : t("No se ha podido guardar en el navegador."));
   });
 
   document.getElementById("vaciar").addEventListener("click", async () => {
     if (estado.equipo.length === 0) return;
     // Solo se pregunta si se perdería algo (cambios sin guardar en «Mis equipos»)
     if (hayCambiosSinGuardar()) {
-      const seguro = await confirmar("Tienes cambios sin guardar en este equipo. ¿Vaciarlo de todas formas?", { aceptar: "Vaciar", peligro: true });
+      const seguro = await confirmar(t("Tienes cambios sin guardar en este equipo. ¿Vaciarlo de todas formas?"), { aceptar: t("Vaciar"), peligro: true });
       if (!seguro) return;
     }
 

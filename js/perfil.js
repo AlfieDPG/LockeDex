@@ -43,6 +43,7 @@ import {
   FONDOS, FONDOS_METAL, FONDOS_TIPO, FONDOS_EEVEE, fondoDe, logrosDe, desbloqueado, requisito, requisitoCorto,
   claseFondo, estiloFondo
 } from "./comun/fondos.js";
+import { t, LOCALE, nombre as nombreDe } from "./comun/idioma.js";
 
 const MAX_DESTACADOS = 3;    // los equipos que se pueden destacar (cada uno es una copia dentro del perfil)
 const VER_AMIGOS = 5;
@@ -72,18 +73,18 @@ function plantillaFoto(perfil, clase) {
 
 function caraDe(p) {
   const cara = p.cara && p.cara !== "Normal" ? p.cara : "";
-  const titulo = p.mote ? `${p.mote} (${p.es})` : p.es;
+  const titulo = p.mote ? `${p.mote} (${nombreDe(p)})` : nombreDe(p);
   return imagenConRespaldo(
     [...(cara ? urlsPMDEmocion(p, cara) : []), ...urlsRetrato(p)],
-    `alt="${escaparHTML(p.es || "")}" title="${escaparHTML(titulo || "")}" loading="lazy"`
+    `alt="${escaparHTML(nombreDe(p))}" title="${escaparHTML(titulo || "")}" loading="lazy"`
   );
 }
 
 // ordenar: en la ventana de todos los destacados, el dueño los sube y los baja
 function plantillaEquipo(equipo, indice, mio, ordenar = false, total = 0) {
   const mover = ordenar
-    ? `<button class="perfil-subir-equipo" data-indice="${indice}" title="Subir" ${indice === 0 ? "disabled" : ""}>${icono("arriba")}</button>
-       <button class="perfil-bajar-equipo" data-indice="${indice}" title="Bajar" ${indice === total - 1 ? "disabled" : ""}>${icono("abajo")}</button>`
+    ? `<button class="perfil-subir-equipo" data-indice="${indice}" title="${t("Subir")}" ${indice === 0 ? "disabled" : ""}>${icono("arriba")}</button>
+       <button class="perfil-bajar-equipo" data-indice="${indice}" title="${t("Bajar")}" ${indice === total - 1 ? "disabled" : ""}>${icono("abajo")}</button>`
     : "";
   return `
     <article class="perfil-equipo">
@@ -91,8 +92,8 @@ function plantillaEquipo(equipo, indice, mio, ordenar = false, total = 0) {
         <strong>${escaparHTML(equipo.nombre)}</strong>
         <div class="perfil-equipo-botones">
           ${mover}
-          <button class="perfil-copiar" data-indice="${indice}" title="Copiar como paste">${icono("copiar")}</button>
-          ${mio ? `<button class="perfil-quitar-equipo" data-indice="${indice}" title="Dejar de destacar">${icono("aspa")}</button>` : ""}
+          <button class="perfil-copiar" data-indice="${indice}" title="${t("Copiar como paste")}">${icono("copiar")}</button>
+          ${mio ? `<button class="perfil-quitar-equipo" data-indice="${indice}" title="${t("Dejar de destacar")}">${icono("aspa")}</button>` : ""}
         </div>
       </header>
       <div class="perfil-equipo-caras">${(equipo.pokemon || []).map(caraDe).join("")}</div>
@@ -105,14 +106,14 @@ function plantillaNombre(perfil, mio) {
     return `
       <form class="perfil-nombre-fila perfil-nombre-form">
         <input class="perfil-nombre-campo" type="text" maxlength="20" autocomplete="off" value="${escaparHTML(perfil.mote || "")}">
-        <button type="submit" class="perfil-nombre-ok" title="Guardar">${icono("visto")}</button>
-        <button type="button" class="perfil-nombre-cancelar" title="Cancelar">${icono("aspa")}</button>
+        <button type="submit" class="perfil-nombre-ok" title="${t("Guardar")}">${icono("visto")}</button>
+        <button type="button" class="perfil-nombre-cancelar" title="${t("Cancelar")}">${icono("aspa")}</button>
       </form>`;
   }
   return `
     <div class="perfil-nombre-fila">
       <h2 class="perfil-nombre">${escaparHTML(perfil.nombre)}</h2>
-      ${mio ? `<button class="perfil-editar-nombre" title="Cambiar nombre">${icono("lapiz")}</button>` : ""}
+      ${mio ? `<button class="perfil-editar-nombre" title="${t("Cambiar nombre")}">${icono("lapiz")}</button>` : ""}
     </div>`;
 }
 
@@ -126,8 +127,8 @@ function tituloDe(perfil) {
 function plantillaTitulo(perfil, mio) {
   const logro = tituloDe(perfil);
   if (mio) {
-    return `<button class="perfil-titulo ${logro ? `nivel-${logro.nivel}` : "sin-titulo"}" title="Cambiar título" ${editandoNombre ? "disabled" : ""}>
-              ${escaparHTML(logro ? logro.nombre : "Elegir título")}
+    return `<button class="perfil-titulo ${logro ? `nivel-${logro.nivel}` : "sin-titulo"}" title="${t("Cambiar título")}" ${editandoNombre ? "disabled" : ""}>
+              ${escaparHTML(logro ? logro.nombre : t("Elegir título"))}
             </button>`;
   }
   return logro ? `<span class="perfil-titulo nivel-${logro.nivel}">${escaparHTML(logro.nombre)}</span>` : "";
@@ -148,7 +149,7 @@ function pintarTitulos() {
             </button>`
         )
         .join("")
-    : `<p class="perfil-vacio">Todavía no tienes logros.</p>`;
+    : `<p class="perfil-vacio">${t("Todavía no tienes logros.")}</p>`;
   dialogoTitulo.querySelector(".titulo-quitar").hidden = !tituloDe(perfil);
 }
 
@@ -161,14 +162,14 @@ async function ponerTitulo(id) {
 // que llevas y otros que ya tienes) y un «+» que abre una ventana con todos: los de metal, los
 // 18 de tipo y los de Eevee, los que aún no tienes con un candado y lo que piden.
 const VER_FONDOS = 3;
-const SIN_FONDO = { id: "", nombre: "Sin fondo" };
+const SIN_FONDO = { id: "", nombre: t("Sin fondo") };
 const dialogoFondos = document.querySelector("#dialogo-fondos");
 
 function muestraFondo(fondo, perfil) {
   const libre = !fondo.id || desbloqueado(fondo, perfil);
   // A los de metal les sirve saber cuántos logros llevas; a los demás, no
   const metal = FONDOS_METAL.includes(fondo);
-  const pide = `${requisito(fondo)}${metal ? ` (tienes ${logrosDe(perfil)} logros)` : ""}`;
+  const pide = `${requisito(fondo)}${metal ? ` ${t("(tienes {n} logros)", { n: logrosDe(perfil) })}` : ""}`;
   const corto = libre ? "" : requisitoCorto(fondo);
   return `
     <button class="perfil-fondo ${claseFondo(fondo.id)} ${fondo.id === fondoDe(perfil) ? "elegido" : ""}"
@@ -190,10 +191,10 @@ function plantillaFondos(perfil) {
   const quedan = todos.length - pocos.length;
   return `
     <section class="perfil-apartado">
-      <h3>Fondo de tu tarjeta</h3>
+      <h3>${t("Fondo de tu tarjeta")}</h3>
       <div class="perfil-fondos">
         ${pocos.map((fondo) => muestraFondo(fondo, perfil)).join("")}
-        <button class="perfil-fondo perfil-fondos-mas" title="Ver todos los fondos">${icono("mas")}<small>${quedan} más</small></button>
+        <button class="perfil-fondo perfil-fondos-mas" title="${t("Ver todos los fondos")}">${icono("mas")}<small>${t("{n} más", { n: quedan })}</small></button>
       </div>
     </section>`;
 }
@@ -210,9 +211,9 @@ function pintarFondos() {
       </section>`;
   };
   dialogoFondos.querySelector(".fondos-lista").innerHTML =
-    apartado("Básicos", [SIN_FONDO, ...FONDOS_METAL]) +
+    apartado(t("Básicos"), [SIN_FONDO, ...FONDOS_METAL]) +
     apartado("Eevee", FONDOS_EEVEE, "perfil-fondos-eevee") +
-    apartado("Tipos", FONDOS_TIPO, "perfil-fondos-tipo");
+    apartado(t("Tipos"), FONDOS_TIPO, "perfil-fondos-tipo");
 }
 
 // Lockes jugados juntos en total (los de Versus, en marcha o terminados, y los apuntados a
@@ -223,7 +224,7 @@ function lockesJuntos(amigo) {
 }
 
 function textoLockes(cuantos) {
-  return `${cuantos} ${cuantos === 1 ? "locke" : "lockes"}`;
+  return t(cuantos === 1 ? "{n} locke" : "{n} lockes", { n: cuantos });
 }
 
 // Los VER_AMIGOS con los que más has jugado (a igualdad, los conectados y por nombre)
@@ -241,14 +242,14 @@ function plantillaAmigos() {
       (uno, otro) =>
         (juntos.get(otro.uid) || 0) - (juntos.get(uno.uid) || 0) ||
         Number(estaConectado(otro.uid)) - Number(estaConectado(uno.uid)) ||
-        uno.nombre.localeCompare(otro.nombre, "es")
+        uno.nombre.localeCompare(otro.nombre, LOCALE)
     );
 
   return `
     <section class="perfil-apartado">
       <h3>
-        Amigos
-        ${todos.length > VER_AMIGOS ? `<button class="perfil-ver-amigos">Ver todos (${todos.length})</button>` : ""}
+        ${t("Amigos")}
+        ${todos.length > VER_AMIGOS ? `<button class="perfil-ver-amigos">${t("Ver todos ({n})", { n: todos.length })}</button>` : ""}
       </h3>
       ${todos.length
         ? `<div class="perfil-amigos">${todos
@@ -263,7 +264,7 @@ function plantillaAmigos() {
                 </button>`
             )
             .join("")}</div>`
-        : `<p class="perfil-vacio">Todavía ninguno.</p>`}
+        : `<p class="perfil-vacio">${t("Todavía ninguno.")}</p>`}
     </section>`;
 }
 
@@ -278,7 +279,7 @@ function plantillaFondosDe(perfil) {
   const suyos = FONDOS.filter((fondo) => desbloqueado(fondo, perfil));
   return `
     <section class="perfil-apartado">
-      <h3>Fondos <small class="perfil-cuenta">${suyos.length}/${FONDOS.length}</small></h3>
+      <h3>${t("Fondos")} <small class="perfil-cuenta">${suyos.length}/${FONDOS.length}</small></h3>
       ${suyos.length
         ? `<div class="perfil-fondos perfil-fondos-suyos">${suyos
             .map(
@@ -289,7 +290,7 @@ function plantillaFondosDe(perfil) {
                 </span>`
             )
             .join("")}</div>`
-        : `<p class="perfil-vacio">Ninguno todavía.</p>`}
+        : `<p class="perfil-vacio">${t("Ninguno todavía.")}</p>`}
     </section>`;
 }
 
@@ -315,15 +316,15 @@ function plantillaAmigosDe(perfil) {
   const yo = (usuarioActual() || {}).uid;
   const lista = (llegados || [])
     .slice()
-    .sort((uno, otro) => Number(otro.uid === yo) - Number(uno.uid === yo) || uno.nombre.localeCompare(otro.nombre, "es"));
+    .sort((uno, otro) => Number(otro.uid === yo) - Number(uno.uid === yo) || uno.nombre.localeCompare(otro.nombre, LOCALE));
 
   return `
     <section class="perfil-apartado">
-      <h3>Amigos <small class="perfil-cuenta">${uids.length}</small></h3>
+      <h3>${t("Amigos")} <small class="perfil-cuenta">${uids.length}</small></h3>
       ${!uids.length
-        ? `<p class="perfil-vacio">Todavía ninguno.</p>`
+        ? `<p class="perfil-vacio">${t("Todavía ninguno.")}</p>`
         : !llegados
-          ? `<p class="perfil-vacio">Cargando...</p>`
+          ? `<p class="perfil-vacio">${t("Cargando...")}</p>`
           : `<div class="perfil-amigos">${lista
               .slice(0, VER_AMIGOS * 2)
               .map((amigo) => {
@@ -333,7 +334,7 @@ function plantillaAmigosDe(perfil) {
                 return `
                   <${etiqueta} class="perfil-amigo ${abrible ? "" : "ajeno"}" data-uid="${escaparHTML(amigo.uid)}" title="${escaparHTML(amigo.nombre)}">
                     ${plantillaFoto(amigo, "perfil-amigo-foto")}
-                    <span class="perfil-amigo-nombre">${escaparHTML(amigo.uid === yo ? "Tú" : amigo.nombre)}</span>
+                    <span class="perfil-amigo-nombre">${escaparHTML(amigo.uid === yo ? t("Tú") : amigo.nombre)}</span>
                   </${etiqueta}>`;
               })
               .join("")}</div>`}
@@ -356,8 +357,8 @@ function plantillaPalmares(perfil, mio = true) {
   return `
     <section class="perfil-apartado">
       <h3>
-        Lockes ganados
-        ${mio ? `<button class="perfil-palmares">${icono("lapiz")} Gestionar</button>` : ""}
+        ${t("Lockes ganados")}
+        ${mio ? `<button class="perfil-palmares">${icono("lapiz")} ${t("Gestionar")}</button>` : ""}
       </h3>
       ${ganados.length
         ? `<div class="perfil-ganados">
@@ -366,13 +367,13 @@ function plantillaPalmares(perfil, mio = true) {
               .map(
                 (ganado) => `
                   <span class="perfil-ganado" style="--color-locke: ${color(ganado)}" title="${escaparHTML((ganado.tipo || {}).nombre || "")}">
-                    ${icono("corona")} ${escaparHTML(ganado.nombre || "Locke")}
+                    ${icono("corona")} ${escaparHTML(ganado.nombre || t("Locke"))}
                   </span>`
               )
               .join("")}
             ${ganados.length > VER_GANADOS ? `<span class="perfil-ganado mas">+${ganados.length - VER_GANADOS}</span>` : ""}
           </div>`
-        : `<p class="perfil-vacio">Ninguno todavía.</p>`}
+        : `<p class="perfil-vacio">${t("Ninguno todavía.")}</p>`}
     </section>`;
 }
 
@@ -408,8 +409,8 @@ function plantillaSalon(perfil) {
   return `
     <section class="perfil-apartado">
       <h3>
-        Salón de la fama
-        ${salon.length > VER_SALON ? `<button class="perfil-ver-salon">${salonEntero ? "Ver menos" : `Ver todos (${salon.length})`}</button>` : ""}
+        ${t("Salón de la fama")}
+        ${salon.length > VER_SALON ? `<button class="perfil-ver-salon">${salonEntero ? t("Ver menos") : t("Ver todos ({n})", { n: salon.length })}</button>` : ""}
       </h3>
       <div class="perfil-equipos">
         ${visibles
@@ -417,7 +418,7 @@ function plantillaSalon(perfil) {
             (entrada) => `
               <article class="perfil-equipo perfil-salon ${entrada.gano ? "gano" : ""}">
                 <header>
-                  <strong>${entrada.gano ? icono("corona") : ""}${escaparHTML(entrada.locke || "Locke")}</strong>
+                  <strong>${entrada.gano ? icono("corona") : ""}${escaparHTML(entrada.locke || t("Locke"))}</strong>
                   ${entrada.fechaFin ? `<small>${escaparHTML(fechaLarga(entrada.fechaFin))}</small>` : ""}
                 </header>
                 <div class="perfil-equipo-caras">
@@ -444,7 +445,7 @@ function plantillaLogrosDe(perfil) {
 
   const ficha = (logro, hecho) => {
     const cuando = hecho
-      ? ` · ${new Date(tengo[logro.id]).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" })}`
+      ? ` · ${new Date(tengo[logro.id]).toLocaleDateString(LOCALE, { day: "numeric", month: "short", year: "numeric" })}`
       : "";
     return `
       <div class="perfil-logro ${hecho ? "conseguido" : ""}" title="${escaparHTML(logro.descripcion + cuando)}">
@@ -457,9 +458,9 @@ function plantillaLogrosDe(perfil) {
     <section class="perfil-apartado">
       ${conseguidos.length
         ? `<div class="perfil-logros">${conseguidos.map((logro) => ficha(logro, true)).join("")}</div>`
-        : `<p class="perfil-vacio">Todavía ninguno.</p>`}
+        : `<p class="perfil-vacio">${t("Todavía ninguno.")}</p>`}
       ${faltan.length
-        ? `<h3 class="perfil-logros-faltan">Por conseguir <small>${faltan.length}</small></h3>
+        ? `<h3 class="perfil-logros-faltan">${t("Por conseguir")} <small>${faltan.length}</small></h3>
            <div class="perfil-logros">${faltan.map((logro) => ficha(logro, false)).join("")}</div>`
         : ""}
     </section>`;
@@ -487,10 +488,10 @@ function pintar() {
   // Con un error al cambiar el nombre, sale en el hueco de las cifras (así no se mueve nada)
   const cifras = mio && editandoNombre && errorNombre
     ? `<span class="perfil-error">${escaparHTML(errorNombre)}</span>`
-    : `<span><strong>${ganados}</strong> ${ganados === 1 ? "locke ganado" : "lockes ganados"}</span>
+    : `<span><strong>${ganados}</strong> ${ganados === 1 ? t("locke ganado") : t("lockes ganados")}</span>
        ${mio
-         ? `<span><strong>${amigos}</strong> ${amigos === 1 ? "amigo" : "amigos"}</span>`
-         : `<span><strong>${juntos}</strong> ${juntos === 1 ? "locke" : "lockes"} juntos</span>`}`;
+         ? `<span><strong>${amigos}</strong> ${amigos === 1 ? t("amigo") : t("amigos")}</span>`
+         : `<span><strong>${juntos}</strong> ${juntos === 1 ? t("locke juntos") : t("lockes juntos")}</span>`}`;
 
   const logros = Object.keys(perfil.logros || {}).filter((id) => LOGROS.some((logro) => logro.id === id)).length;
 
@@ -499,19 +500,19 @@ function pintar() {
   const cabeza = `
     <header class="perfil-cabeza ${fondo ? `con-fondo ${claseFondo(fondo)}` : ""}" style="${estiloFondo(fondo)}">
       ${mio
-        ? `<button class="perfil-avatar" title="Cambiar foto">${plantillaFoto(perfil, "perfil-foto")}<span class="perfil-avatar-lapiz">${icono("lapiz")}</span></button>`
+        ? `<button class="perfil-avatar" title="${t("Cambiar foto")}">${plantillaFoto(perfil, "perfil-foto")}<span class="perfil-avatar-lapiz">${icono("lapiz")}</span></button>`
         : `<div class="perfil-avatar">${plantillaFoto(perfil, "perfil-foto")}</div>`}
       <div class="perfil-datos">
         ${plantillaNombre(perfil, mio)}
         ${plantillaTitulo(perfil, mio)}
         <div class="perfil-cifras">${cifras}</div>
-        ${mio ? "" : `<button class="perfil-retar">${icono("espadas")} Retar a un locke</button>`}
+        ${mio ? "" : `<button class="perfil-retar">${icono("espadas")} ${t("Retar a un locke")}</button>`}
       </div>
     </header>
 
     <div class="perfil-pestanas">
-      <button data-pestana="perfil" class="${pestana === "perfil" ? "activa" : ""}">${icono("persona")} Perfil</button>
-      <button data-pestana="logros" class="${pestana === "logros" ? "activa" : ""}">${icono("trofeo")} Logros <small>${logros}/${LOGROS.length}</small></button>
+      <button data-pestana="perfil" class="${pestana === "perfil" ? "activa" : ""}">${icono("persona")} ${t("Perfil")}</button>
+      <button data-pestana="logros" class="${pestana === "logros" ? "activa" : ""}">${icono("trofeo")} ${t("Logros")} <small>${logros}/${LOGROS.length}</small></button>
     </div>`;
 
   // Hasta MAX_DESTACADOS. Si alguien tiene más de antes, se ven los primeros; en «Ordenar»
@@ -519,16 +520,16 @@ function pintar() {
   const destacados = `
     <section class="perfil-apartado">
       <h3>
-        Equipos destacados
-        ${mio && escaparate.length < MAX_DESTACADOS ? `<button class="perfil-destacar">${icono("mas")} Destacar</button>` : ""}
+        ${t("Equipos destacados")}
+        ${mio && escaparate.length < MAX_DESTACADOS ? `<button class="perfil-destacar">${icono("mas")} ${t("Destacar")}</button>` : ""}
       </h3>
       ${escaparate.length
         ? `<div class="perfil-equipos">${escaparate
             .slice(0, MAX_DESTACADOS)
             .map((equipo, indice) => plantillaEquipo(equipo, indice, mio))
             .join("")}</div>`
-        : `<p class="perfil-vacio">Ninguno todavía.</p>`}
-      ${mio && escaparate.length > 1 ? `<button class="perfil-ver-equipos">Ordenar</button>` : ""}
+        : `<p class="perfil-vacio">${t("Ninguno todavía.")}</p>`}
+      ${mio && escaparate.length > 1 ? `<button class="perfil-ver-equipos">${t("Ordenar")}</button>` : ""}
     </section>`;
 
   // En ancho, en dos columnas: los equipos a un lado y lo demás al otro
@@ -563,7 +564,7 @@ function pintarDestacados() {
 
   dialogoDestacados.querySelector(".destacados-lista").innerHTML = escaparate.length
     ? escaparate.map((equipo, indice) => plantillaEquipo(equipo, indice, mio, mio, escaparate.length)).join("")
-    : `<p class="perfil-vacio">Ninguno todavía.</p>`;
+    : `<p class="perfil-vacio">${t("Ninguno todavía.")}</p>`;
   dialogoDestacados.querySelector(".destacados-anadir").hidden = !mio || escaparate.length >= MAX_DESTACADOS;
 }
 
@@ -614,7 +615,7 @@ function copiaDeEquipo(equipo) {
   return JSON.parse(
     JSON.stringify({
       id: equipo.id,
-      nombre: equipo.nombre || "Equipo",
+      nombre: equipo.nombre || t("Equipo"),
       pokemon: equipo.pokemon.map((p) => ({ ...pokemonParaCopia(p), cara: p.cara || "" })),
       paste: pasteDelEquipo(equipo.pokemon)
     })
@@ -629,13 +630,13 @@ function pintarEscaparate() {
         .map(
           (equipo) => `
             <button class="escaparate-equipo ${destacados.has(equipo.id) ? "destacado" : ""}" data-id="${escaparHTML(equipo.id)}">
-              <strong>${escaparHTML(equipo.nombre || "Equipo")}</strong>
+              <strong>${escaparHTML(equipo.nombre || t("Equipo"))}</strong>
               <span class="perfil-equipo-caras">${equipo.pokemon.map(caraDe).join("")}</span>
               ${destacados.has(equipo.id) ? icono("visto") : ""}
             </button>`
         )
         .join("")
-    : `<p class="perfil-vacio">No tienes equipos guardados.</p>`;
+    : `<p class="perfil-vacio">${t("No tienes equipos guardados.")}</p>`;
 }
 
 // Pulsar un equipo lo destaca; si ya lo estaba, lo quita
@@ -715,8 +716,8 @@ function pintarMuestra() {
 
 // Elegida la especie: si tiene varias formas, se pregunta cuál (cancelar = la normal)
 async function elegirAvatar(pokemon) {
-  avatarElegido = { id: pokemon.id, es: pokemon.es, forma: {} };
-  campoAvatar.value = pokemon.es;
+  avatarElegido = { id: pokemon.id, es: pokemon.es, en: pokemon.en, forma: {} };
+  campoAvatar.value = nombreDe(pokemon);
   pintarMuestra();
 
   let info = { especie: "", lista: [] };
@@ -732,7 +733,7 @@ async function elegirAvatar(pokemon) {
     const forma = slug ? await datosDeForma(info, slug) : {};
     if (forma.etiqueta) {
       avatarElegido = { ...avatarElegido, forma };
-      campoAvatar.value = `${pokemon.es} (${forma.etiqueta})`;
+      campoAvatar.value = `${nombreDe(pokemon)} (${forma.etiqueta})`;
       pintarMuestra();
     }
   } catch (error) {
@@ -798,7 +799,7 @@ async function subirFoto(archivo) {
     pintarMuestra();
   } catch (e) {
     console.error(e);
-    error.textContent = "Esa imagen no se puede usar. Prueba con otra.";
+    error.textContent = t("Esa imagen no se puede usar. Prueba con otra.");
   }
 }
 
@@ -807,7 +808,7 @@ async function subirFoto(archivo) {
 async function guardarAvatar() {
   if (eligiendoAvatar) await eligiendoAvatar;
   if (!avatarElegido) {
-    dialogoAvatar.querySelector(".avatar-error").textContent = "Elige un Pokémon de la lista o sube una foto.";
+    dialogoAvatar.querySelector(".avatar-error").textContent = t("Elige un Pokémon de la lista o sube una foto.");
     return;
   }
   if (avatarElegido.subida) {
@@ -838,7 +839,7 @@ async function quitarAvatar() {
 
 function siFalla(error) {
   console.error(error);
-  errorNombre = "No se ha podido guardar. Inténtalo otra vez.";
+  errorNombre = t("No se ha podido guardar. Inténtalo otra vez.");
   pintar();
 }
 
@@ -961,7 +962,7 @@ dialogoAvatar.querySelector(".avatar-formulario").addEventListener("submit", (e)
   if (!avatarElegido && campoAvatar.value.trim()) autocompletadoAvatar.elegirPrimera();
   guardarAvatar().catch((error) => {
     console.error(error);
-    dialogoAvatar.querySelector(".avatar-error").textContent = "No se ha podido guardar.";
+    dialogoAvatar.querySelector(".avatar-error").textContent = t("No se ha podido guardar.");
   });
 });
 dialogoAvatar.querySelector(".avatar-cancelar").addEventListener("click", () => dialogoAvatar.close());

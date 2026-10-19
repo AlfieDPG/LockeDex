@@ -222,11 +222,6 @@ function descifrarBloque(w, entrada) {
   return s;
 }
 
-// Para comprobar que el AES está bien (vector de FIPS-197)
-export function aesPrueba(clave, bloque) {
-  return cifrarBloque(expandirClave(clave), bloque);
-}
-
 // ---------- El cifrado de la firma ----------
 //
 // Sobre los 0x60 bytes de la firma, en trozos de 16: CBC hacia delante, un XOR con una subclave
@@ -333,15 +328,6 @@ export function cerrarFirma(claro) {
 // La tabla de checksums que se firma: [inicio, largo]
 export function zonaTabla(bytes, usum) {
   return [bytes.length - 0x200, usum ? 0x150 : 0x140];
-}
-
-// ¿La firma de la partida es válida y es la de su tabla?
-export function firmaValida(bytes, posicion, usum) {
-  const claro = abrirFirma(bytes.subarray(posicion, posicion + LARGO_FIRMA));
-  if (!claro) return false;
-  const [inicio, largo] = zonaTabla(bytes, usum);
-  const resumen = sha256(bytes.subarray(inicio, inicio + largo));
-  return resumen.every((b, i) => b === claro[i]);
 }
 
 // Firma otra vez la partida (con la tabla de checksums ya puesta al día). Lo que iba en claro

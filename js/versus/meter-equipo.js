@@ -12,6 +12,7 @@ import { poner, huecoLibre, llaveDe } from "../partida/huecos.js";
 import { partidaDe } from "../partida/partidas.js";
 import { prepararDatos, nombreEspecie, nombreHuevo, editableDeEquipo, cambiarHuecos } from "./editor-comun.js";
 import { confirmar } from "../comun/ventanas.js";
+import { t } from "../comun/idioma.js";
 
 let dialogo = null;
 let idLocke = null;
@@ -22,8 +23,8 @@ function pintarElegido() {
   sitio.innerHTML = elegido
     ? `<div class="meter-equipo">
          ${carasDeEquipo(elegido)}
-         <strong>${escaparHTML(elegido.nombre || "Equipo")}</strong>
-         <button type="button" class="meter-quitar" title="Quitar">${icono("aspa")}</button>
+         <strong>${escaparHTML(elegido.nombre || t("Equipo"))}</strong>
+         <button type="button" class="meter-quitar" title="${t("Quitar")}">${icono("aspa")}</button>
        </div>`
     : "";
   dialogo.querySelector(".meter-paste").hidden = Boolean(elegido);
@@ -42,10 +43,10 @@ export function abrirMeter(id) {
 async function leerEquipo() {
   if (elegido) return { nombre: elegido.nombre, pokemon: elegido.pokemon.filter(Boolean), problemas: [] };
   const texto = dialogo.querySelector(".meter-paste").value.trim();
-  if (!texto) throw new Error("Pega un equipo o elige uno de «Mis equipos».");
+  if (!texto) throw new Error(t("Pega un equipo o elige uno de «Mis equipos»."));
   const { pokemonDePaste } = await import("../equipos/importar.js");
   const leido = await pokemonDePaste(texto);
-  if (!leido.pokemon.length) throw new Error("No se ha reconocido ningún Pokémon.");
+  if (!leido.pokemon.length) throw new Error(t("No se ha reconocido ningún Pokémon."));
   return leido;
 }
 
@@ -64,13 +65,13 @@ async function meter() {
       problemas.push(fallo.message);
     }
   }
-  if (!listos.length) throw new Error(problemas.join(" ") || "No hay nada que meter.");
-  if (problemas.length && !(await confirmar(`Algunas cosas no van en este juego:\n\n• ${problemas.join("\n• ")}\n\n¿Meterlo igual?`, { aceptar: "Meterlo igual" }))) return;
+  if (!listos.length) throw new Error(problemas.join(" ") || t("No hay nada que meter."));
+  if (problemas.length && !(await confirmar(`${t("Algunas cosas no van en este juego:")}\n\n• ${problemas.join("\n• ")}\n\n${t("¿Meterlo igual?")}`, { aceptar: t("Meterlo igual") }))) return;
 
   const alEquipo = dialogo.querySelector('input[name="meter-destino"]:checked').value === "equipo";
   // En la actividad, sin especies ni motes (los demás no tienen por qué saber cuáles)
   const nombres = `${listos.length} Pokémon`;
-  const cual = equipo.nombre ? ` (equipo «${equipo.nombre}»)` : "";
+  const cual = equipo.nombre ? ` (${t("equipo «{nombre}»", { nombre: equipo.nombre })})` : "";
   await cambiarHuecos(idLocke, (h) => {
     const entrenador = h.formato.entrenadorDe(h.bytes);
     const crudos = listos.map(({ editable, base, generoRatio }) =>
@@ -80,7 +81,7 @@ async function meter() {
     );
     const aLasCajas = (crudo) => {
       const libre = huecoLibre(h);
-      if (!libre) throw new Error("No cabe en las cajas.");
+      if (!libre) throw new Error(t("No cabe en las cajas."));
       poner(h, libre, crudo);
     };
     if (alEquipo) {
@@ -93,7 +94,7 @@ async function meter() {
     } else crudos.forEach(aLasCajas);
     const llaves = crudos.map(llaveDe);
     return { metidos: llaves, creados: llaves };
-  }, `metidos ${alEquipo ? "al equipo" : "en las cajas"}${cual}: ${nombres}`);
+  }, `${alEquipo ? t("metidos al equipo") : t("metidos en las cajas")}${cual}: ${nombres}`);
 
   dialogo.close();
 }
@@ -119,16 +120,16 @@ export function iniciarMeter() {
 
   ok.addEventListener("click", () => {
     ok.disabled = true;
-    ok.textContent = "Metiendo...";
+    ok.textContent = t("Metiendo...");
     error.textContent = "";
     meter()
       .catch((fallo) => {
         console.error(fallo);
-        error.textContent = fallo && fallo.name === "AbortError" ? "" : fallo.message || "No se ha podido meter.";
+        error.textContent = fallo && fallo.name === "AbortError" ? "" : t(fallo.message || "No se ha podido meter.");
       })
       .finally(() => {
         ok.disabled = false;
-        ok.textContent = "Meter";
+        ok.textContent = t("Meter");
       });
   });
 }

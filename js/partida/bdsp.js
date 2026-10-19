@@ -294,11 +294,6 @@ export function bolsilloBDSP(objeto) {
   return BOLSILLO_DE.get(objeto) || null;
 }
 
-export function equipableBDSP(objeto) {
-  const bolsillo = BOLSILLO_DE.get(objeto);
-  return Boolean(bolsillo) && bolsillo !== "clave" && !NO_EQUIPABLES.has(objeto);
-}
-
 export function bolsillosBDSP() {
   return BOLSILLOS_BDSP;
 }

@@ -58,12 +58,6 @@ export function bolsilloSwSh(objeto) {
   return BOLSILLO_DE.get(objeto) || null;
 }
 
-// Los que se pueden llevar equipados (todos menos los objetos clave)
-export function equipableSwSh(objeto) {
-  const bolsillo = BOLSILLO_DE.get(objeto);
-  return Boolean(bolsillo) && bolsillo !== "clave";
-}
-
 export function bolsillosSwitch() {
   return BOLSILLOS_SWSH;
 }

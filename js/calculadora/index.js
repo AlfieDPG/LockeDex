@@ -29,6 +29,9 @@ import {
 } from "../equipos/entreno.js";
 import { cargarAtaques } from "./ataques.js";
 import { calcularDanio, resumenKO, efectoObjeto, textoHabilidad, velocidad, statEnCombate, habilidadAnulada } from "./danio.js";
+import { t, LOCALE, enIngles, nombre } from "../comun/idioma.js";
+import { etiquetaEnIngles } from "../comun/formas.js";
+import { nombreDeFila } from "../pokedex/datos.js";
 
 const vista = document.getElementById("vista-calculadora");
 const columnas = {
@@ -40,9 +43,9 @@ const centro = vista.querySelector(".calc-centro");
 const HUECOS = 4;
 
 // Sin ninguno marcado, no hay clima
-const CLIMAS = [["sol", "☀️ Sol"], ["lluvia", "🌧️ Lluvia"], ["arena", "🏜️ Arena"], ["nieve", "❄️ Nieve"]];
+const CLIMAS = [["sol", `☀️ ${t("Sol")}`], ["lluvia", `🌧️ ${t("Lluvia")}`], ["arena", `🏜️ ${t("Arena")}`], ["nieve", `❄️ ${t("Nieve")}`]];
 
-const ESTADOS = [["quemado", "🔥 Quemado"], ["paralizado", "⚡ Paralizado"]];
+const ESTADOS = [["quemado", `🔥 ${t("Quemado")}`], ["paralizado", `⚡ ${t("Paralizado")}`]];
 
 // { id, idForma, formaPMD, es, mote, tipos, stats (base), entreno, objeto y habilidad
 //   ({ id, es, en } o null), habilidades (las que puede tener, de PokeAPI), estado ("" |
@@ -83,7 +86,7 @@ function plantillaGenero(c) {
   const genero = generoDe(c);
   const fijo = posibles.length === 1;
   return `<button class="calc-genero ${genero ? `genero-${genero}` : ""}" ${fijo ? "disabled" : ""}
-            title="${genero ? NOMBRE_GENERO[genero] : "Género sin elegir"}">${genero ? icono(ICONO_GENERO[genero]) : "⚥︎"}</button>`;
+            title="${genero ? NOMBRE_GENERO[genero] : t("Género sin elegir")}">${genero ? icono(ICONO_GENERO[genero]) : "⚥︎"}</button>`;
 }
 
 // Las habilidades que puede tener (para elegirlas de un toque); sin ninguna puesta, la primera.
@@ -125,15 +128,16 @@ function formaNormal(numero) {
 function nombreDeForma(fila) {
   if (fila.normal) return "Normal";
   const dentro = fila.nombre.match(/\((.*)\)$/);
-  return dentro ? dentro[1] : fila.nombre;
+  if (!dentro) return nombreDeFila(fila);
+  return enIngles ? etiquetaEnIngles(dentro[1]) : dentro[1];
 }
 
 function opcionesDeForma(c) {
   const opciones = (formasPorNumero.get(c.id) || []).map((fila) => ({ valor: `f:${fila.clave}`, texto: nombreDeForma(fila) }));
   const deTipo = formasDeTipoDe(c.id);
   if (deTipo.length) {
-    if (opciones[0]) opciones[0].texto = "Tipo Normal";
-    opciones.push(...deTipo.map((forma) => ({ valor: `t:${forma.tipo}`, texto: `Tipo ${tiposEs[forma.tipo]}` })));
+    if (opciones[0]) opciones[0].texto = t("Tipo {tipo}", { tipo: tiposEs.normal });
+    opciones.push(...deTipo.map((forma) => ({ valor: `t:${forma.tipo}`, texto: t("Tipo {tipo}", { tipo: tiposEs[forma.tipo] }) })));
   }
   return opciones;
 }
@@ -177,14 +181,14 @@ function plantillaForma(c) {
   if (opciones.length < 2) return "";
   const actual = formaActual(c, opciones);
   return `
-    <select class="calc-forma" aria-label="Forma">
+    <select class="calc-forma" aria-label="${t("Forma")}">
       ${opciones.map((opcion) => `<option value="${escaparHTML(opcion.valor)}" ${opcion.valor === actual ? "selected" : ""}>${escaparHTML(opcion.texto)}</option>`).join("")}
     </select>`;
 }
 
 // Un ataque con lo que necesita la fórmula (si no está, es de estado o de potencia variable)
 function conDatos(a) {
-  return { id: a.id, es: a.es, tipo: a.tipo, categoria: a.categoria || "", ...(ataquesConDatos.get(a.id) || {}) };
+  return { id: a.id, es: a.es, en: a.en, tipo: a.tipo, categoria: a.categoria || "", ...(ataquesConDatos.get(a.id) || {}) };
 }
 
 // Una fila de la Pokédex (cualquier Pokémon, con o sin forma)
@@ -196,6 +200,7 @@ function desdePokedex(fila) {
     formaPMD: fila.forma || 0,
     forma: `f:${fila.clave}`,
     es: (formaNormal(fila.numero) || fila).nombre,
+    en: nombreDeFila(formaNormal(fila.numero) || fila, "en"),
     tipos: fila.tipos,
     stats: fila.bases
   });
@@ -210,6 +215,7 @@ function desdeEquipo(poke) {
     imagenForma: poke.imagenForma,
     forma: poke.imagenForma ? `t:${poke.imagenForma.split("-")[1]}` : `f:${poke.idForma || poke.id}`,
     es: poke.es,
+    en: poke.en,
     mote: poke.mote || "",
     genero: generoDe(poke),
     formaSlug: poke.formaSlug,
@@ -250,7 +256,7 @@ function paraCalcular(c) {
 }
 
 function nombreDe(c) {
-  return c.mote || c.es;
+  return c.mote || nombre(c);
 }
 
 function ataqueElegido() {
@@ -261,9 +267,9 @@ function ataqueElegido() {
 function equiposDisponibles() {
   const actual = leer("poketeams-equipo-v1", []) || [];
   const lista = [];
-  if (actual.length) lista.push({ clave: "actual", nombre: "Equipo que estás creando", pokemon: actual });
+  if (actual.length) lista.push({ clave: "actual", nombre: t("Equipo que estás creando"), pokemon: actual });
   for (const equipo of leerGuardados()) {
-    if ((equipo.pokemon || []).length) lista.push({ clave: equipo.id, nombre: equipo.nombre || "Equipo", pokemon: equipo.pokemon });
+    if ((equipo.pokemon || []).length) lista.push({ clave: equipo.id, nombre: equipo.nombre || t("Equipo"), pokemon: equipo.pokemon });
   }
   return lista;
 }
@@ -289,23 +295,23 @@ function plantillaEtapa(c, i) {
   const etapa = c.etapas[i];
   return `
     <span class="calc-etapa ${etapa > 0 ? "sube" : etapa < 0 ? "baja" : ""}">
-      <button class="calc-etapa-menos" data-stat="${i}" ${etapa <= -6 ? "disabled" : ""} aria-label="Bajar ${STATS[i]}">${icono("menos")}</button>
+      <button class="calc-etapa-menos" data-stat="${i}" ${etapa <= -6 ? "disabled" : ""} aria-label="${t("Bajar {stat}", { stat: STATS[i] })}">${icono("menos")}</button>
       <span class="calc-etapa-valor">${etapa > 0 ? `+${etapa}` : etapa}</span>
-      <button class="calc-etapa-mas" data-stat="${i}" ${etapa >= 6 ? "disabled" : ""} aria-label="Subir ${STATS[i]}">${icono("mas")}</button>
+      <button class="calc-etapa-mas" data-stat="${i}" ${etapa >= 6 ? "disabled" : ""} aria-label="${t("Subir {stat}", { stat: STATS[i] })}">${icono("mas")}</button>
     </span>`;
 }
 
 function plantillaObjeto(c) {
   if (!c.objeto) {
-    return `<div class="calc-buscar"><input class="calc-objeto-campo" type="search" placeholder="Objeto..." autocomplete="off"></div>`;
+    return `<div class="calc-buscar"><input class="calc-objeto-campo" type="search" placeholder="${t("Objeto...")}" autocomplete="off"></div>`;
   }
   const efecto = efectoObjeto(c.objeto, c.id);
   return `
     <div class="calc-objeto">
       ${imagenConRespaldo(urlsIconoObjeto(c.objeto.en), `class="calc-objeto-icono" alt="" data-quitar-si-falla`)}
-      <span class="calc-objeto-nombre">${escaparHTML(c.objeto.es)}</span>
+      <span class="calc-objeto-nombre">${escaparHTML(nombre(c.objeto))}</span>
       ${efecto ? `<span class="calc-objeto-efecto">${efecto.texto}</span>` : ""}
-      <button class="calc-objeto-quitar" title="Quitar">${icono("aspa")}</button>
+      <button class="calc-objeto-quitar" title="${t("Quitar")}">${icono("aspa")}</button>
     </div>`;
 }
 
@@ -313,7 +319,7 @@ function pintarLado(lado) {
   const c = lados[lado];
   const ficha = columnas[lado].querySelector(".calc-ficha");
   if (!c) {
-    ficha.innerHTML = `<p class="calc-vacio">${lado === "atacante" ? "¿Quién ataca?" : "¿Quién recibe el golpe?"}</p>`;
+    ficha.innerHTML = `<p class="calc-vacio">${lado === "atacante" ? t("¿Quién ataca?") : t("¿Quién recibe el golpe?")}</p>`;
     return;
   }
 
@@ -338,51 +344,51 @@ function pintarLado(lado) {
           ${plantillaGenero(c)}
           ${plantillaForma(c)}
         </div>
-        ${c.mote ? `<small>${escaparHTML(c.es)}</small>` : ""}
+        ${c.mote ? `<small>${escaparHTML(nombre(c))}</small>` : ""}
         <div class="calc-tipos">${chipsTipos(c.tipos)}</div>
       </div>
     </div>
     <div class="calc-entreno-fila">
-      <label class="calc-entreno-campo">Nv.
-        <input class="calc-nivel" type="text" inputmode="numeric" maxlength="3" value="${entreno.nivel}" aria-label="Nivel">
+      <label class="calc-entreno-campo">${t("Nv.")}
+        <input class="calc-nivel" type="text" inputmode="numeric" maxlength="3" value="${entreno.nivel}" aria-label="${t("Nivel")}">
       </label>
-      <select class="calc-naturaleza" aria-label="Naturaleza" title="${escaparHTML(nat.es)}">${opcionesNaturaleza(entreno.naturaleza)}</select>
-      <span class="calc-evs-usados ${usados >= MAX_EVS ? "lleno" : ""}" title="EVs repartidos">${usados}/${MAX_EVS}</span>
+      <select class="calc-naturaleza" aria-label="${t("Naturaleza")}" title="${escaparHTML(nombre(nat))}">${opcionesNaturaleza(entreno.naturaleza)}</select>
+      <span class="calc-evs-usados ${usados >= MAX_EVS ? "lleno" : ""}" title="${t("EVs repartidos")}">${usados}/${MAX_EVS}</span>
     </div>
     <div class="calc-stats">
       <div class="calc-stat calc-stat-cabecera">
-        <span></span><span></span><span></span><span>EV</span><span>IV</span><span>Etapa</span>
+        <span></span><span></span><span></span><span>EV</span><span>IV</span><span>${t("Etapa")}</span>
       </div>
-      ${STATS.map((nombre, i) => {
+      ${STATS.map((nombreStat, i) => {
         // Como está en combate: su etapa, el objeto, la habilidad (si se cumple lo que pide),
         // el clima y la parálisis. Pasando el ratón, de dónde sale.
         let valor = finales[i] ?? null;
         let cambios = [];
         if (valor !== null && i) ({ valor, cambios } = statEnCombate(paraCalcular(c), i, campo, { sinHabilidad: anulada }));
         const cambio = valor === null || valor === finales[i] ? "" : valor > finales[i] ? "sube" : "baja";
-        const etapa = i && c.etapas[i] ? [`Etapa ${c.etapas[i] > 0 ? "+" : ""}${c.etapas[i]}`] : [];
-        const explicacion = cambio ? `Sin cambios: ${finales[i]}\n${[...etapa, ...cambios].join("\n")}` : "";
+        const etapa = i && c.etapas[i] ? [`${t("Etapa")} ${c.etapas[i] > 0 ? "+" : ""}${c.etapas[i]}`] : [];
+        const explicacion = cambio ? `${t("Sin cambios: {n}", { n: finales[i] })}\n${[...etapa, ...cambios].join("\n")}` : "";
         return `
           <div class="calc-stat ${importantes.includes(i) ? "importa" : ""} ${cambio}">
-            <span class="calc-stat-nombre">${nombre}</span>
+            <span class="calc-stat-nombre">${nombreStat}</span>
             <span class="calc-stat-barra"><i style="width:${Math.min(100, ((valor || 0) / 450) * 100)}%"></i></span>
             <strong class="calc-stat-valor" ${explicacion ? `title="${escaparHTML(explicacion)}"` : ""}>${valor ?? "…"}</strong>
-            <input class="calc-ev" data-stat="${i}" type="text" inputmode="numeric" maxlength="3" value="${entreno.evs[i]}" aria-label="EVs de ${nombre}">
-            <input class="calc-iv" data-stat="${i}" type="text" inputmode="numeric" maxlength="2" value="${entreno.ivs[i]}" aria-label="IVs de ${nombre}">
+            <input class="calc-ev" data-stat="${i}" type="text" inputmode="numeric" maxlength="3" value="${entreno.evs[i]}" aria-label="${t("EVs de {stat}", { stat: nombreStat })}">
+            <input class="calc-iv" data-stat="${i}" type="text" inputmode="numeric" maxlength="2" value="${entreno.ivs[i]}" aria-label="${t("IVs de {stat}", { stat: nombreStat })}">
             ${plantillaEtapa(c, i)}
           </div>`;
       }).join("")}
     </div>
     <div class="calc-opciones">
       ${plantillaHabilidad(c)}
-      <span class="calc-opciones-titulo">Objeto</span>
+      <span class="calc-opciones-titulo">${t("Objeto")}</span>
       ${plantillaObjeto(c)}
-      <span class="calc-opciones-titulo">Estado</span>
+      <span class="calc-opciones-titulo">${t("Estado")}</span>
       <div class="calc-chips">
         ${ESTADOS.map(([id, texto]) => `<button class="calc-chip ${c.estado === id ? "activa" : ""}" data-estado="${id}">${texto}</button>`).join("")}
       </div>
-      <span class="calc-opciones-titulo">PS ahora <strong class="calc-ps-valor">${c.psActual}%</strong></span>
-      <input class="calc-ps" type="range" min="1" max="100" value="${c.psActual}" aria-label="PS que le quedan">
+      <span class="calc-opciones-titulo">${t("PS ahora")} <strong class="calc-ps-valor">${c.psActual}%</strong></span>
+      <input class="calc-ps" type="range" min="1" max="100" value="${c.psActual}" aria-label="${t("PS que le quedan")}">
     </div>`;
 
   const campoObjeto = ficha.querySelector(".calc-objeto-campo");
@@ -420,28 +426,28 @@ function plantillaHabilidad(c) {
   const lista = c.habilidad && !posibles.some((h) => h.id === c.habilidad.id) ? [...posibles, c.habilidad] : posibles;
   const efecto = textoHabilidad(c.habilidad);
   return `
-    <span class="calc-opciones-titulo">Habilidad ${efecto ? `<span class="calc-efecto">${efecto}</span>` : ""}</span>
+    <span class="calc-opciones-titulo">${t("Habilidad")} ${efecto ? `<span class="calc-efecto">${efecto}</span>` : ""}</span>
     <div class="calc-chips">
-      ${lista.map((h) => `<button class="calc-chip ${c.habilidad && c.habilidad.id === h.id ? "activa" : ""}" data-habilidad="${h.id}">${escaparHTML(h.es)}</button>`).join("")}
+      ${lista.map((h) => `<button class="calc-chip ${c.habilidad && c.habilidad.id === h.id ? "activa" : ""}" data-habilidad="${h.id}">${escaparHTML(nombre(h))}</button>`).join("")}
       ${buscandoHabilidad === c
-        ? `<span class="calc-buscar calc-habilidad-buscar"><input class="calc-habilidad-campo" type="search" placeholder="Habilidad..." autocomplete="off"></span>`
-        : `<button class="calc-chip calc-otra">${icono("mas")} Otra</button>`}
+        ? `<span class="calc-buscar calc-habilidad-buscar"><input class="calc-habilidad-campo" type="search" placeholder="${t("Habilidad...")}" autocomplete="off"></span>`
+        : `<button class="calc-chip calc-otra">${icono("mas")} ${t("Otra")}</button>`}
     </div>`;
 }
 
 // ---------- Pintar: el centro ----------
 
 function textoEfectividad(efectividad) {
-  if (efectividad === 0) return "No le afecta";
-  if (efectividad >= 4) return "Súper eficaz ×4";
-  if (efectividad >= 2) return "Súper eficaz ×2";
-  if (efectividad <= 0.25) return "Muy poco eficaz ×¼";
-  if (efectividad < 1) return "Poco eficaz ×½";
-  return "Neutro";
+  if (efectividad === 0) return t("No le afecta");
+  if (efectividad >= 4) return t("Súper eficaz ×4");
+  if (efectividad >= 2) return t("Súper eficaz ×2");
+  if (efectividad <= 0.25) return t("Muy poco eficaz ×¼");
+  if (efectividad < 1) return t("Poco eficaz ×½");
+  return t("Neutro");
 }
 
 function porcentaje(valor) {
-  return valor.toLocaleString("es-ES", { maximumFractionDigits: 1 });
+  return valor.toLocaleString(LOCALE, { maximumFractionDigits: 1 });
 }
 
 // Lo que hace un ataque: tiradas, % y PS (null si falta algo)
@@ -463,16 +469,16 @@ function resultadoDe(ataque) {
 }
 
 function textoDatosAtaque(a) {
-  if (!a.potencia) return a.categoria === "Estado" ? "Estado" : "Potencia variable";
-  const prioridad = a.prioridad ? ` · Prioridad ${a.prioridad > 0 ? "+" : ""}${a.prioridad}` : "";
-  return `${a.clase === "fisico" ? "Físico" : "Especial"} · ${a.potencia}${prioridad}`;
+  if (!a.potencia) return a.categoria === "Estado" ? t("Estado") : t("Potencia variable");
+  const prioridad = a.prioridad ? ` · ${t("Prioridad")} ${a.prioridad > 0 ? "+" : ""}${a.prioridad}` : "";
+  return `${a.clase === "fisico" ? t("Físico") : t("Especial")} · ${a.potencia}${prioridad}`;
 }
 
 function plantillaHueco(a, i) {
   if (!a) {
     return `
       <div class="calc-hueco vacio calc-buscar">
-        <input class="calc-hueco-campo" data-hueco="${i}" type="search" placeholder="Ataque ${i + 1}" autocomplete="off"
+        <input class="calc-hueco-campo" data-hueco="${i}" type="search" placeholder="${t("Ataque {n}", { n: i + 1 })}" autocomplete="off"
                ${lados.atacante ? "" : "disabled"}>
       </div>`;
   }
@@ -480,38 +486,38 @@ function plantillaHueco(a, i) {
   const dano = r ? (r.efectividad === 0 ? "—" : `${porcentaje(r.minPct)}–${porcentaje(r.maxPct)}%`) : "";
   return `
     <div class="calc-hueco">
-      <button class="calc-ataque ${i === elegido ? "elegido" : ""}" data-hueco="${i}" style="--color:${coloresTipo[a.tipo] || "#3a3d52"}"
+      <button class="calc-ataque ${i === elegido ? "elegido" : ""}" data-hueco="${i}" style="--color:${coloresTipo[a.tipo] || "var(--t-control)"}"
               ${a.potencia ? "" : "disabled"}>
-        <span class="calc-ataque-nombre">${iconoTipo(a.tipo)} ${escaparHTML(a.es)}</span>
+        <span class="calc-ataque-nombre">${iconoTipo(a.tipo)} ${escaparHTML(nombre(a))}</span>
         <span class="calc-ataque-datos">${textoDatosAtaque(a)}</span>
         <span class="calc-ataque-dano">${dano}</span>
       </button>
-      <button class="calc-hueco-quitar" data-hueco="${i}" title="Cambiar">${icono("aspa")}</button>
+      <button class="calc-hueco-quitar" data-hueco="${i}" title="${t("Cambiar")}">${icono("aspa")}</button>
     </div>`;
 }
 
 function veredicto(r) {
-  if (r.efectividad === 0) return { clase: "nada", texto: "No le afecta" };
+  if (r.efectividad === 0) return { clase: "nada", texto: t("No le afecta") };
   const banda = lados.defensor.psActual === 100 && efectoObjeto(lados.defensor.objeto, lados.defensor.id)?.banda;
   const ko = resumenKO(r.tiradas, r.ps, banda);
-  const salva = ko.banda ? " (le salva la Banda Focus)" : "";
-  if (!ko.golpes) return { clase: "lejos", texto: `Necesita más de 4 golpes${salva}` };
-  const golpes = ko.golpes === 1 ? "de un golpe" : `en ${ko.golpes} golpes`;
-  if (ko.seguro) return { clase: ko.golpes === 1 ? "ko" : "seguro", texto: `KO ${golpes}${salva}` };
-  return { clase: "posible", texto: `Puede caer ${golpes} (${porcentaje(ko.probabilidad * 100)}%)${salva}` };
+  const salva = ko.banda ? ` ${t("(le salva la Banda Focus)")}` : "";
+  if (!ko.golpes) return { clase: "lejos", texto: `${t("Necesita más de 4 golpes")}${salva}` };
+  const golpes = ko.golpes === 1 ? t("de un golpe") : t("en {n} golpes", { n: ko.golpes });
+  if (ko.seguro) return { clase: ko.golpes === 1 ? "ko" : "seguro", texto: `${t("KO {golpes}", { golpes })}${salva}` };
+  return { clase: "posible", texto: `${t("Puede caer {golpes} ({n}%)", { golpes, n: porcentaje(ko.probabilidad * 100) })}${salva}` };
 }
 
 // Quién ataca antes: por la prioridad del ataque o, si no tiene, por la velocidad
 function quienAntes(ataque) {
   const atacante = lados.atacante;
   const defensor = lados.defensor;
-  if (ataque.prioridad > 0) return { clase: "antes", texto: `Ataca antes ${nombreDe(atacante)} (prioridad +${ataque.prioridad})` };
-  if (ataque.prioridad < 0) return { clase: "despues", texto: `Ataca después ${nombreDe(atacante)} (prioridad ${ataque.prioridad})` };
+  if (ataque.prioridad > 0) return { clase: "antes", texto: t("Ataca antes {nombre} (prioridad +{n})", { nombre: nombreDe(atacante), n: ataque.prioridad }) };
+  if (ataque.prioridad < 0) return { clase: "despues", texto: t("Ataca después {nombre} (prioridad {n})", { nombre: nombreDe(atacante), n: ataque.prioridad }) };
   const va = velocidad(paraCalcular(atacante), campo);
   const vd = velocidad(paraCalcular(defensor), campo);
-  if (va > vd) return { clase: "antes", texto: `Ataca antes ${nombreDe(atacante)} (Vel. ${va} contra ${vd})` };
-  if (va < vd) return { clase: "despues", texto: `Ataca antes ${nombreDe(defensor)} (Vel. ${vd} contra ${va})` };
-  return { clase: "empate", texto: `Empate de velocidad (${va}): 50% cada uno` };
+  if (va > vd) return { clase: "antes", texto: t("Ataca antes {nombre} (Vel. {a} contra {b})", { nombre: nombreDe(atacante), a: va, b: vd }) };
+  if (va < vd) return { clase: "despues", texto: t("Ataca antes {nombre} (Vel. {a} contra {b})", { nombre: nombreDe(defensor), a: vd, b: va }) };
+  return { clase: "empate", texto: t("Empate de velocidad ({n}): 50% cada uno", { n: va }) };
 }
 
 // Para los logros: cada cálculo distinto (otro atacante, otro defensor u otro ataque) cuenta
@@ -540,9 +546,9 @@ function pintarCentro() {
   }
 
   centro.querySelector(".calc-campo").innerHTML = `
-    <button class="calc-chip ${campo.critico ? "activa" : ""}" data-campo="critico">${icono("rayo")} Crítico</button>
-    <button class="calc-chip ${campo.reflejo ? "activa" : ""}" data-campo="reflejo" title="Ataques físicos ×½">${icono("escudo")} Reflejo</button>
-    <button class="calc-chip ${campo.luz ? "activa" : ""}" data-campo="luz" title="Ataques especiales ×½">${icono("escudo")} Pantalla de luz</button>
+    <button class="calc-chip ${campo.critico ? "activa" : ""}" data-campo="critico">${icono("rayo")} ${t("Crítico")}</button>
+    <button class="calc-chip ${campo.reflejo ? "activa" : ""}" data-campo="reflejo" title="${t("Ataques físicos ×½")}">${icono("escudo")} ${t("Reflejo")}</button>
+    <button class="calc-chip ${campo.luz ? "activa" : ""}" data-campo="luz" title="${t("Ataques especiales ×½")}">${icono("escudo")} ${t("Pantalla de luz")}</button>
     <span class="calc-separador"></span>
     <span class="calc-climas">
       ${CLIMAS.map(([id, texto]) => `<button class="calc-chip ${campo.clima === id ? "activa" : ""}" data-clima="${id}">${texto}</button>`).join("")}
@@ -552,7 +558,7 @@ function pintarCentro() {
   const ataque = ataqueElegido();
   const r = resultadoDe(ataque);
   if (!r) {
-    caja.innerHTML = `<p class="calc-vacio">${!atacante || !lados.defensor ? "Elige los dos Pokémon" : "Elige un ataque"} y aquí sale el daño.</p>`;
+    caja.innerHTML = `<p class="calc-vacio">${!atacante || !lados.defensor ? t("Elige los dos Pokémon y aquí sale el daño.") : t("Elige un ataque y aquí sale el daño.")}</p>`;
     caja.className = "calc-resultado vacio";
     return;
   }
@@ -569,8 +575,8 @@ function pintarCentro() {
   caja.className = `calc-resultado ${v.clase}`;
   caja.innerHTML = `
     <div class="calc-porcentaje">${r.efectividad === 0 ? "0%" : `${porcentaje(r.minPct)} – ${porcentaje(r.maxPct)}%`}</div>
-    <div class="calc-ps-texto">${r.min} – ${r.max} PS de ${r.psMax}${actual < 100 ? ` (le quedan ${r.ps})` : ""}</div>
-    <div class="calc-barra" title="Vida de ${escaparHTML(nombreDe(lados.defensor))}">
+    <div class="calc-ps-texto">${t("{min} – {max} PS de {total}", { min: r.min, max: r.max, total: r.psMax })}${actual < 100 ? ` ${t("(le quedan {n})", { n: r.ps })}` : ""}</div>
+    <div class="calc-barra" title="${t("Vida de {nombre}", { nombre: escaparHTML(nombreDe(lados.defensor)) })}">
       <i class="perdida" style="width:${100 - actual}%"></i>
       <i class="pierde" style="width:${actual - quedaComoMucho}%"></i>
       <i class="quiza" style="width:${quedaComoMucho - quedaSeguro}%"></i>
@@ -580,8 +586,8 @@ function pintarCentro() {
     <div class="calc-etiquetas">
       <span class="calc-etiqueta calc-velocidad ${antes.clase}">${icono("rayo")} ${escaparHTML(antes.texto)}</span>
       <span class="calc-etiqueta">${textoEfectividad(r.efectividad)}</span>
-      ${r.stab ? `<span class="calc-etiqueta">STAB ×1,5</span>` : ""}
-      ${campo.critico ? `<span class="calc-etiqueta">Crítico ×1,5</span>` : ""}
+      ${r.stab ? `<span class="calc-etiqueta">${t("STAB ×1,5")}</span>` : ""}
+      ${campo.critico ? `<span class="calc-etiqueta">${t("Crítico ×1,5")}</span>` : ""}
       ${r.extras.map((texto) => `<span class="calc-etiqueta">${escaparHTML(texto)}</span>`).join("")}
     </div>`;
 }
@@ -625,8 +631,8 @@ function pintarEquipos() {
                   (p, i) => `
                     <button type="button" class="calc-equipo-poke" data-valor="${escaparHTML(equipo.clave)}|${i}">
                       ${iconoPokemon(p)}
-                      <span>${escaparHTML(p.mote || p.es)}</span>
-                      ${p.mote ? `<small>${escaparHTML(p.es)}</small>` : ""}
+                      <span>${escaparHTML(p.mote || nombre(p))}</span>
+                      ${p.mote ? `<small>${escaparHTML(nombre(p))}</small>` : ""}
                     </button>`
                 )
                 .join("")}
@@ -710,12 +716,12 @@ function elegirDePokedex(lado, entrada) {
 function prepararColumna(lado) {
   const columna = columnas[lado];
   columna.innerHTML = `
-    <div class="calc-rol">${icono(lado === "atacante" ? "espadas" : "escudo")} ${lado === "atacante" ? "Atacante" : "Defensor"}</div>
+    <div class="calc-rol">${icono(lado === "atacante" ? "espadas" : "escudo")} ${lado === "atacante" ? t("Atacante") : t("Defensor")}</div>
     <div class="calc-elegir">
-      <div class="calc-buscar"><input class="calc-buscar-campo" type="search" placeholder="Buscar Pokémon..." autocomplete="off"></div>
+      <div class="calc-buscar"><input class="calc-buscar-campo" type="search" placeholder="${t("Buscar Pokémon...")}" autocomplete="off"></div>
       <div class="calc-equipos">
         <button type="button" class="calc-equipos-boton" aria-expanded="false">
-          <span>De mis equipos…</span>${icono("abajo")}
+          <span>${t("De mis equipos…")}</span>${icono("abajo")}
         </button>
         <div class="calc-equipos-panel"></div>
       </div>
@@ -830,10 +836,13 @@ function repintarSinPerderLaCasilla(columna, campo) {
 }
 
 export async function iniciar() {
-  centro.innerHTML = `<p class="calc-vacio">Cargando...</p>`;
+  centro.innerHTML = `<p class="calc-vacio">${t("Cargando...")}</p>`;
   const [pokedex, conDatosCargados] = await Promise.all([cargarPokedex(), cargarAtaques(), cargarDatos()]);
   ataquesConDatos = conDatosCargados;
-  listaPokemon = pokedex.map((fila) => ({ es: fila.nombre, en: fila.nombre, buscar: quitarAcentos(`${fila.nombre} ${fila.numero}`), fila }));
+  listaPokemon = pokedex.map((fila) => {
+    const en = nombreDeFila(fila, "en");
+    return { es: fila.nombre, en, buscar: quitarAcentos(`${fila.nombre} ${en} ${fila.numero}`), fila };
+  });
   listaAtaques = datos.ataques.filter((a) => ataquesConDatos.has(a.id));
   formasPorNumero = new Map();
   for (const fila of pokedex) {
@@ -848,7 +857,7 @@ export async function iniciar() {
     <div class="calc-ataques"></div>
     <div class="calc-campo"></div>
     <div class="calc-resultado"></div>
-    <button class="calc-intercambiar" title="Que ataque el otro">${icono("intercambiar")} Intercambiar</button>`;
+    <button class="calc-intercambiar" title="${t("Que ataque el otro")}">${icono("intercambiar")} ${t("Intercambiar")}</button>`;
 
   centro.addEventListener("click", (e) => {
     const boton = e.target.closest("button");

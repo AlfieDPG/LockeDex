@@ -9,6 +9,7 @@ import { usuarioActual, alCambiarSesion, hayNube } from "../comun/nube.js";
 import { alCambiarMiPerfil } from "../comun/perfiles.js";
 import { LOGROS, CATEGORIAS, NIVELES, progreso, insignia, LOGROS_PARA_PLATA, LOGROS_PARA_ORO } from "../comun/logros.js";
 import { FONDOS, claseFondo, estiloFondo } from "../comun/fondos.js";
+import { t, LOCALE } from "../comun/idioma.js";
 
 const vista = document.getElementById("vista-logros");
 const cabecera = vista.querySelector(".logros-cabecera");
@@ -16,16 +17,16 @@ const filtro = vista.querySelector(".logros-filtro");
 const lista = vista.querySelector(".logros-lista");
 
 const FILTROS = [
-  { id: "todos", nombre: "Todos" },
-  { id: "conseguidos", nombre: "Conseguidos" },
-  { id: "pendientes", nombre: "Por conseguir" }
+  { id: "todos", nombre: t("Todos") },
+  { id: "conseguidos", nombre: t("Conseguidos") },
+  { id: "pendientes", nombre: t("Por conseguir") }
 ];
 let filtroActual = "todos";
 let filas = [];
 let vuelta = 0; // para quedarse solo con el último cálculo si se piden varios seguidos
 
 function fecha(cuando) {
-  return new Date(cuando).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+  return new Date(cuando).toLocaleDateString(LOCALE, { day: "numeric", month: "long", year: "numeric" });
 }
 
 function plantillaLogro({ logro, valor, meta, conseguido }) {
@@ -42,7 +43,7 @@ function plantillaLogro({ logro, valor, meta, conseguido }) {
   const fondo = FONDOS.find((cada) => cada.id === logro.fondo);
   const premio = fondo
     ? `<span class="logro-premio ${claseFondo(fondo.id)}" style="${estiloFondo(fondo.id)}"
-             title="Da el fondo «${escaparHTML(fondo.nombre)}» para tu tarjeta">Fondo</span>`
+             title="${t("Da el fondo «{nombre}» para tu tarjeta", { nombre: escaparHTML(fondo.nombre) })}">${t("Fondo")}</span>`
     : "";
 
   return `
@@ -78,7 +79,7 @@ function pintar() {
     <div class="logros-total">
       <strong>${conseguidos} <small>/ ${LOGROS.length}</small></strong>
       <div class="logro-barra grande"><span style="width:${Math.round((conseguidos / LOGROS.length) * 100)}%"></span></div>
-      ${conSesion ? "" : `<span class="logros-aviso">${hayNube() ? "Inicia sesión para ir consiguiendo logros." : ""}</span>`}
+      ${conSesion ? "" : `<span class="logros-aviso">${hayNube() ? t("Inicia sesión para ir consiguiendo logros.") : ""}</span>`}
     </div>
     <div class="logros-niveles">
       ${Object.entries(NIVELES)
@@ -107,7 +108,7 @@ function pintar() {
       </section>`;
   }).join("");
 
-  lista.innerHTML = grupos || `<p class="logros-vacio">${filtroActual === "conseguidos" ? "Todavía ninguno." : "¡Los tienes todos!"}</p>`;
+  lista.innerHTML = grupos || `<p class="logros-vacio">${filtroActual === "conseguidos" ? t("Todavía ninguno.") : t("¡Los tienes todos!")}</p>`;
 }
 
 async function calcular() {

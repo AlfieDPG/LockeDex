@@ -13,6 +13,7 @@
 
 import { escaparHTML } from "./comun/utilidades.js";
 import { icono } from "./comun/iconos.js";
+import { t } from "./comun/idioma.js";
 import {
   iniciarNube, alCambiarSesion, entrar, salir, hayNube, usuarioActual,
   entrarConUsuario, crearCuentaDeUsuario, nombreDeUsuario,
@@ -55,7 +56,7 @@ function pintarNombre() {
   if (!usuario) return;
   const perfil = miPerfil();
   nombre.textContent =
-    (perfil && perfil.nombre) || nombreDeUsuario(usuario) || usuario.displayName || usuario.email || "Tu cuenta";
+    (perfil && perfil.nombre) || nombreDeUsuario(usuario) || usuario.displayName || usuario.email || t("Tu cuenta");
 
   const url = (perfil && perfil.foto) || usuario.photoURL || "";
   foto.hidden = !url;
@@ -68,13 +69,13 @@ function pintar(usuario) {
 
   if (usuario) {
     pintarNombre();
-    boton.textContent = "Cerrar sesión";
+    boton.textContent = t("Cerrar sesión");
     aviso.textContent = "";
     if (dialogoEntrar.open) dialogoEntrar.close();
     if (dialogoCrear.open) dialogoCrear.close();
   } else {
-    boton.textContent = "Iniciar sesión";
-    aviso.textContent = "Inicia sesión para que todo se guarde en tu cuenta.";
+    boton.textContent = t("Iniciar sesión");
+    aviso.textContent = t("Inicia sesión para que todo se guarde en tu cuenta.");
     if (dialogoMote.open) dialogoMote.close();
   }
 }
@@ -84,18 +85,18 @@ function pintar(usuario) {
 function textoDeError(error) {
   const codigo = (error && error.code) || "";
   if (codigo === "auth/operation-not-allowed") {
-    return "Las cuentas con usuario aún no están activadas en Firebase (Authentication → Sign-in method → Correo electrónico/contraseña).";
+    return t("Las cuentas con usuario aún no están activadas en Firebase (Authentication → Sign-in method → Correo electrónico/contraseña).");
   }
   if (codigo === "auth/invalid-credential" || codigo === "auth/wrong-password" || codigo === "auth/user-not-found") {
-    return "Usuario o contraseña incorrectos.";
+    return t("Usuario o contraseña incorrectos.");
   }
-  if (codigo === "auth/email-already-in-use") return "Ese usuario ya existe.";
-  if (codigo === "auth/weak-password") return "La contraseña tiene que tener al menos 6 caracteres.";
-  if (codigo === "auth/too-many-requests") return "Demasiados intentos. Espera un poco.";
+  if (codigo === "auth/email-already-in-use") return t("Ese usuario ya existe.");
+  if (codigo === "auth/weak-password") return t("La contraseña tiene que tener al menos 6 caracteres.");
+  if (codigo === "auth/too-many-requests") return t("Demasiados intentos. Espera un poco.");
   if (codigo === "auth/popup-closed-by-user" || codigo === "auth/cancelled-popup-request") return "";
-  if (codigo === "auth/user-mismatch") return "Esa no es la cuenta de Google con la que estás dentro.";
-  if (codigo === "auth/missing-password") return "Escribe tu contraseña.";
-  return "No se ha podido. Inténtalo otra vez.";
+  if (codigo === "auth/user-mismatch") return t("Esa no es la cuenta de Google con la que estás dentro.");
+  if (codigo === "auth/missing-password") return t("Escribe tu contraseña.");
+  return t("No se ha podido. Inténtalo otra vez.");
 }
 
 // Apaga los botones de la ventana mientras dura la tarea y pone el error si falla
@@ -116,17 +117,17 @@ async function conBotonesApagados(dialogo, tarea) {
 // ---------- Lista de cuentas ----------
 
 function plantillaCuenta(cuenta) {
-  const nombreCuenta = escaparHTML(cuenta.nombre || "Cuenta");
+  const nombreCuenta = escaparHTML(cuenta.nombre || t("Cuenta"));
   const cara = cuenta.foto
     ? `<img src="${escaparHTML(cuenta.foto)}" alt="" referrerpolicy="no-referrer">`
     : `<span class="cuenta-inicial">${escaparHTML((cuenta.nombre || "?")[0].toUpperCase())}</span>`;
 
   if (cuenta.activa) {
-    return `<div class="cuenta activa">${cara}<span class="cuenta-nombre">${nombreCuenta}</span><small>Abierta</small></div>`;
+    return `<div class="cuenta activa">${cara}<span class="cuenta-nombre">${nombreCuenta}</span><small>${t("Abierta")}</small></div>`;
   }
   return `
-    <button class="cuenta" data-app="${escaparHTML(cuenta.app)}" title="Cambiar a esta cuenta">
-      ${cara}<span class="cuenta-nombre">${nombreCuenta}</span><small>Cambiar</small>
+    <button class="cuenta" data-app="${escaparHTML(cuenta.app)}" title="${t("Cambiar a esta cuenta")}">
+      ${cara}<span class="cuenta-nombre">${nombreCuenta}</span><small>${t("cuenta|Cambiar")}</small>
     </button>`;
 }
 
@@ -149,7 +150,7 @@ function abrirEntrar() {
   const caja = dialogoEntrar.querySelector(".cuentas-recordadas");
   caja.hidden = !otras.length;
   caja.innerHTML = otras.length
-    ? `<span class="etiqueta-cuentas">Volver a una cuenta</span>${otras.map(plantillaCuenta).join("")}`
+    ? `<span class="etiqueta-cuentas">${t("Volver a una cuenta")}</span>${otras.map(plantillaCuenta).join("")}`
     : "";
 
   if (!dialogoEntrar.open) dialogoEntrar.showModal();
@@ -161,7 +162,7 @@ function entrarConElFormulario() {
     const usuario = dialogoEntrar.querySelector(".entrar-nombre").value.trim();
     const clave = dialogoEntrar.querySelector(".entrar-clave").value;
     if (!usuario || !clave) {
-      error.textContent = "Escribe tu usuario y tu contraseña.";
+      error.textContent = t("Escribe tu usuario y tu contraseña.");
       return;
     }
     await entrarConUsuario(usuario, clave);
@@ -194,19 +195,19 @@ function crearCuenta() {
     const repetida = dialogoCrear.querySelector(".crear-repetir").value;
 
     if (!FORMATO_MOTE.test(usuario)) {
-      error.textContent = `Usuario no válido. ${EXPLICACION_MOTE}`;
+      error.textContent = `${t("Usuario no válido.")} ${EXPLICACION_MOTE}`;
       return;
     }
     if (clave.length < 6) {
-      error.textContent = "La contraseña tiene que tener al menos 6 caracteres.";
+      error.textContent = t("La contraseña tiene que tener al menos 6 caracteres.");
       return;
     }
     if (clave !== repetida) {
-      error.textContent = "Las contraseñas no coinciden.";
+      error.textContent = t("Las contraseñas no coinciden.");
       return;
     }
     if (await dueñoDelMote(usuario)) {
-      error.textContent = `«${usuario}» ya lo tiene otra persona.`;
+      error.textContent = t("«{nombre}» ya lo tiene otra persona.", { nombre: usuario });
       return;
     }
 
@@ -251,7 +252,7 @@ function revisarMote() {
 
 function guardarMoteObligatorio() {
   return conBotonesApagados(dialogoMote, async (error) => {
-    error.textContent = "Comprobando...";
+    error.textContent = t("Comprobando...");
     error.textContent = await cambiarMote(dialogoMote.querySelector(".mote-nombre").value);
     // Si ha ido bien, se cierra sola al llegar el perfil con el mote (revisarMote)
   });
@@ -263,8 +264,8 @@ function guardarMoteObligatorio() {
 // y «Añadir otra cuenta». Se cierra al pulsar fuera o con Escape.
 
 function abrirMenuCuentas() {
-  menuCuentas.querySelector(".menu-mi-perfil").innerHTML = `${icono("persona")} Mi perfil`;
-  menuCuentas.querySelector(".menu-anadir").innerHTML = `${icono("mas")} Añadir otra cuenta`;
+  menuCuentas.querySelector(".menu-mi-perfil").innerHTML = `${icono("persona")} ${t("Mi perfil")}`;
+  menuCuentas.querySelector(".menu-anadir").innerHTML = `${icono("mas")} ${t("Añadir otra cuenta")}`;
   menuCuentas.querySelector(".cuentas-lista").innerHTML = cuentasRecordadas().map(plantillaCuenta).join("");
   menuCuentas.hidden = false;
 }
@@ -299,12 +300,12 @@ function borrarCuenta() {
   return conBotonesApagados(dialogoBorrar, async (error) => {
     const clave = dialogoBorrar.querySelector(".borrar-clave").value;
     if (nombreDeUsuario(usuarioActual()) && !clave) {
-      error.textContent = "Escribe tu contraseña.";
+      error.textContent = t("Escribe tu contraseña.");
       return;
     }
     await confirmarIdentidad(clave);
 
-    error.textContent = "Borrando...";
+    error.textContent = t("Borrando...");
     await borrarMiPresencia();
     await salirDeTodosMisLockes();
     await borrarMisAmistades();
@@ -323,7 +324,7 @@ export async function iniciarSesionUI() {
   alCambiarSesion(pintar);
 
   boton.addEventListener("click", async () => {
-    if (boton.textContent !== "Cerrar sesión") {
+    if (!usuarioActual()) {
       abrirEntrar();
       return;
     }
@@ -331,7 +332,7 @@ export async function iniciarSesionUI() {
     try {
       await salir();
     } catch (error) {
-      aviso.textContent = "No se ha podido completar. Inténtalo otra vez.";
+      aviso.textContent = t("No se ha podido completar. Inténtalo otra vez.");
       console.error(error);
     }
     boton.disabled = false;

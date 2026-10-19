@@ -5,7 +5,7 @@
 // la misma lista pasa a tener casillas: título, nombre, lugar, nivel e imagen (un personaje
 // de la web o una subida), y botones para moverlos, quitarlos y añadir más.
 
-import { COMBATES } from "./datos.js";
+import { COMBATES, textoDeCombate } from "./datos.js";
 import { retratoDeLaWeb } from "./retratos.js";
 import { abrirElegirImagen } from "./elegir-imagen.js";
 import { crearSelectorJuego, CLAVE_MULTIPLICADOR_CAPS } from "../comun/selector-juego.js";
@@ -17,6 +17,7 @@ import { campoNumero } from "../comun/numero.js";
 import { capsPropios, tipoDeCombate, MAX_COMBATES } from "../comun/personalizados.js";
 import { apuntarEnLockesDelJuego } from "../comun/lockes.js";
 import { confirmar, avisar } from "../comun/ventanas.js";
+import { t } from "../comun/idioma.js";
 
 function retrato(c) {
   const url = juego.propio ? c.imagen : retratoDeLaWeb(juego.id, c.nombre);
@@ -71,8 +72,8 @@ function textoNivel(c) {
 
 function tituloNivel(c) {
   const partes = [];
-  if (multiplicador !== 1) partes.push(`Nivel original: ${c.nivel}`);
-  if (c.aprox) partes.push("Nivel aproximado, sin verificar del todo");
+  if (multiplicador !== 1) partes.push(t("Nivel original: {nivel}", { nivel: c.nivel }));
+  if (c.aprox) partes.push(t("Nivel aproximado, sin verificar del todo"));
   return partes.length ? `title="${partes.join(". ")}"` : "";
 }
 
@@ -101,13 +102,13 @@ function pintarResumen() {
     return;
   }
   if (!siguiente) {
-    resumen.innerHTML = "¡Has superado todos los combates de este juego!";
+    resumen.innerHTML = t("¡Has superado todos los combates de este juego!");
     return;
   }
   resumen.innerHTML = `
-    <span>Tu level cap ahora:</span>
+    <span>${t("Tu level cap ahora:")}</span>
     <strong class="caps-nivel-grande">${textoNivel(siguiente)}</strong>
-    <span>antes de ${escaparHTML([siguiente.etiqueta.toLowerCase(), siguiente.nombre].filter(Boolean).join(" · "))}</span>
+    <span>${t("antes de {combate}", { combate: escaparHTML([textoDeCombate(siguiente.etiqueta).toLowerCase(), textoDeCombate(siguiente.nombre)].filter(Boolean).join(" · ")) })}</span>
   `;
 }
 
@@ -120,16 +121,16 @@ function filaCombate(c) {
       <label>
         <input type="checkbox" data-clave="${escaparHTML(clave)}" ${hecho ? "checked" : ""}>
         ${retrato(c)}
-        <span class="cap-etiqueta">${escaparHTML(c.etiqueta)}</span>
-        <span class="cap-nombre">${escaparHTML(c.nombre)}</span>
-        ${c.lugar ? `<span class="cap-lugar">${escaparHTML(c.lugar)}</span>` : ""}
+        <span class="cap-etiqueta">${escaparHTML(textoDeCombate(c.etiqueta))}</span>
+        <span class="cap-nombre">${escaparHTML(textoDeCombate(c.nombre))}</span>
+        ${c.lugar ? `<span class="cap-lugar">${escaparHTML(textoDeCombate(c.lugar))}</span>` : ""}
       </label>
-      <span class="cap-nivel" ${tituloNivel(c)}>Nv. ${textoNivel(c)}</span>
+      <span class="cap-nivel" ${tituloNivel(c)}>${t("Nv. {nivel}", { nivel: textoNivel(c) })}</span>
     </li>`;
 }
 
 // Tramos que llevan su propio título dentro de la lista, al llegar el primer combate de ese tipo
-const TRAMOS = { "alto-mando": "Alto Mando", campeon: "Campeón" };
+const TRAMOS = { "alto-mando": t("Alto Mando"), campeon: t("Campeón") };
 
 function pintarLista() {
   if (juego.propio && editando) {
@@ -139,7 +140,7 @@ function pintarLista() {
   }
 
   if (!combates.length) {
-    lista.innerHTML = `<li class="caps-vacio">Sin combates.</li>`;
+    lista.innerHTML = `<li class="caps-vacio">${t("Sin combates.")}</li>`;
     pintarResumen();
     return;
   }
@@ -158,7 +159,7 @@ function pintarLista() {
 
   const secciones = [...new Set(combates.filter((c) => c.seccion).map((c) => c.seccion))];
   for (const seccion of secciones) {
-    html += `<li class="caps-seccion"><h3>${escaparHTML(seccion)}</h3></li>`;
+    html += `<li class="caps-seccion"><h3>${escaparHTML(textoDeCombate(seccion))}</h3></li>`;
     html += combates.filter((c) => c.seccion === seccion).map(filaCombate).join("");
   }
 
@@ -176,20 +177,20 @@ function filaEditor(c, indice, total) {
   const imagen = c.imagen ? `<img src="${valor(c.imagen)}" alt="">` : icono("imagen");
   return `
     <li class="cap cap-editable ${valor(c.tipo)}" data-indice="${indice}">
-      <button class="cap-ed-imagen ${c.imagen ? "con-imagen" : ""}" title="Imagen">${imagen}</button>
+      <button class="cap-ed-imagen ${c.imagen ? "con-imagen" : ""}" title="${t("Imagen")}">${imagen}</button>
       <div class="cap-ed-campos">
-        <input class="cap-ed-etiqueta" data-campo="etiqueta" maxlength="40" placeholder="Gimnasio 1" value="${valor(c.etiqueta)}">
-        <input class="cap-ed-nombre" data-campo="nombre" maxlength="40" placeholder="Nombre" value="${valor(c.nombre)}">
-        <input class="cap-ed-lugar" data-campo="lugar" maxlength="40" placeholder="Ciudad" value="${valor(c.lugar)}">
+        <input class="cap-ed-etiqueta" data-campo="etiqueta" maxlength="40" placeholder="${t("Gimnasio 1")}" value="${valor(c.etiqueta)}">
+        <input class="cap-ed-nombre" data-campo="nombre" maxlength="40" placeholder="${t("Nombre")}" value="${valor(c.nombre)}">
+        <input class="cap-ed-lugar" data-campo="lugar" maxlength="40" placeholder="${t("Ciudad")}" value="${valor(c.lugar)}">
       </div>
       <label class="cap-ed-nivel">
-        <span>Nv.</span>
+        <span>${t("Nv.")}</span>
         ${campoNumero(`<input data-campo="nivel" type="number" min="1" max="100" value="${c.nivel}">`)}
       </label>
       <div class="cap-ed-acciones">
-        <button class="cap-ed-subir" title="Subir" ${indice === 0 ? "disabled" : ""}>${icono("arriba")}</button>
-        <button class="cap-ed-bajar" title="Bajar" ${indice === total - 1 ? "disabled" : ""}>${icono("abajo")}</button>
-        <button class="cap-ed-quitar" title="Quitar">${icono("aspa")}</button>
+        <button class="cap-ed-subir" title="${t("Subir")}" ${indice === 0 ? "disabled" : ""}>${icono("arriba")}</button>
+        <button class="cap-ed-bajar" title="${t("Bajar")}" ${indice === total - 1 ? "disabled" : ""}>${icono("abajo")}</button>
+        <button class="cap-ed-quitar" title="${t("Quitar")}">${icono("aspa")}</button>
       </div>
     </li>`;
 }
@@ -198,11 +199,11 @@ function pintarEditor() {
   const todos = juego.combates || [];
   lista.innerHTML = `
     <li class="caps-editor-cabecera">
-      <input class="caps-ed-nombre" maxlength="40" placeholder="Nombre" value="${escaparHTML(juego.nombre)}">
-      <button class="caps-ed-borrar">${icono("papelera")} Borrar</button>
+      <input class="caps-ed-nombre" maxlength="40" placeholder="${t("Nombre")}" value="${escaparHTML(juego.nombre)}">
+      <button class="caps-ed-borrar">${icono("papelera")} ${t("Borrar")}</button>
     </li>
     ${todos.map((c, indice) => filaEditor(c, indice, todos.length)).join("")}
-    ${todos.length < MAX_COMBATES ? `<li><button class="caps-ed-anadir">${icono("mas")} Añadir combate</button></li>` : ""}`;
+    ${todos.length < MAX_COMBATES ? `<li><button class="caps-ed-anadir">${icono("mas")} ${t("Añadir combate")}</button></li>` : ""}`;
 }
 
 // Devuelve false si no se ha podido (no cabe)
@@ -290,7 +291,7 @@ function activarEditor() {
       return;
     }
     if (boton.classList.contains("caps-ed-borrar")) {
-      if (!(await confirmar(`¿Borrar «${juego.nombre}»?`))) return;
+      if (!(await confirmar(t("¿Borrar «{nombre}»?", { nombre: juego.nombre })))) return;
       delete guardados[juego.id];
       delete multiplicadores[juego.id];
       escribir(CLAVE_SUPERADOS, guardados);
@@ -340,7 +341,7 @@ export function iniciar() {
 
   vista.querySelector(".caps-reiniciar").addEventListener("click", async () => {
     if (superados.size === 0) return;
-    if (!(await confirmar(`¿Desmarcar todos los combates de ${juego.nombre}?`))) return;
+    if (!(await confirmar(t("¿Desmarcar todos los combates de {juego}?", { juego: juego.nombre })))) return;
     superados.clear();
     guardados[juego.id] = [];
     escribir(CLAVE_SUPERADOS, guardados);
@@ -359,9 +360,9 @@ export function iniciar() {
   selectorJuego = crearSelectorJuego(selector, CLAVE_JUEGO, elegirJuego, {
     almacen: capsPropios,
     alNuevo() {
-      const nueva = capsPropios.crear("Nuevo juego");
+      const nueva = capsPropios.crear(t("Nuevo juego"));
       if (!nueva) {
-        avisar("Has llegado al máximo de listas personalizadas.");
+        avisar(t("Has llegado al máximo de listas personalizadas."));
         return;
       }
       abrirEditando = true;
@@ -383,7 +384,7 @@ function visibles() {
 
 function pintarBotonEditar() {
   editar.hidden = !juego || !juego.propio;
-  editar.textContent = editando ? "Listo" : "Editar";
+  editar.textContent = editando ? t("Listo") : t("Editar");
   editar.classList.toggle("activo", editando);
 }
 

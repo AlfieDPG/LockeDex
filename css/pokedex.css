@@ -34,8 +34,8 @@
   padding: 0.5rem 0.6rem;
   border: none;
   border-radius: 0.45rem;
-  background: #2c2e3e;
-  color: #f2f2f2;
+  background: var(--t-panel);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.9rem;
   font-weight: bold;
@@ -56,8 +56,8 @@
   padding: 0.5rem 0.85rem;
   border: none;
   border-radius: 0.45rem;
-  background: #2c2e3e;
-  color: #f2f2f2;
+  background: var(--t-panel);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.9rem;
   font-weight: bold;
@@ -66,7 +66,7 @@
 
 .pokedex-filtros-boton:hover,
 .pokedex-filtros-boton.abierto {
-  background: #3a3d52;
+  background: var(--t-control);
 }
 
 .pokedex-filtros-boton.con-filtros {
@@ -93,7 +93,7 @@
   margin-top: 0.7rem;
   padding: 0.8rem 0.95rem;
   border-radius: 0.6rem;
-  background: #252735;
+  background: var(--t-fondo-2);
 }
 
 .pokedex-filtro {
@@ -121,8 +121,8 @@
   padding: 0.3rem 0.6rem;
   border: none;
   border-radius: 0.4rem;
-  background: #2c2e3e;
-  color: #f2f2f2;
+  background: var(--t-panel);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: bold;
@@ -131,7 +131,7 @@
 
 .pokedex-filtro-opciones button:hover,
 .pokedex-filtros-quitar:hover {
-  background: #3a3d52;
+  background: var(--t-control);
 }
 
 .pokedex-filtro-opciones button.activa {
@@ -142,7 +142,7 @@
 .pokedex-filtros-quitar {
   align-self: flex-end;
   margin-left: auto;
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 /* Centrada y de ancho fijo. «table-layout: fixed» es lo que hace que las columnas midan
@@ -168,7 +168,7 @@
   top: 0;
   z-index: 1;
   padding: 0;
-  background: #171822;
+  background: var(--t-hundido);
   border-bottom: 2px solid rgb(var(--color-vista));
 }
 
@@ -181,7 +181,7 @@
   padding: 0.6rem 0.5rem;
   border: none;
   background: transparent;
-  color: #f2f2f2;
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.88rem;
   font-weight: bold;
@@ -190,7 +190,7 @@
 }
 
 .tabla-pokedex thead button:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--t-tinte), 0.08);
 }
 
 .tabla-pokedex thead .col-nombre button {
@@ -204,11 +204,11 @@
 }
 
 .tabla-pokedex th.ordenada {
-  background: #171822;
+  background: var(--t-hundido);
 }
 
 .tabla-pokedex th.ordenada button {
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 .tabla-pokedex th.ordenada .flecha {
@@ -219,11 +219,11 @@
 
 .tabla-pokedex td {
   padding: 0.25rem 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(var(--t-tinte), 0.06);
 }
 
 .tabla-pokedex tbody tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(var(--t-tinte), 0.03);
 }
 
 .tabla-pokedex tbody tr:hover {
@@ -299,7 +299,7 @@ td.col-numero {
 
 .col-total {
   font-weight: bold;
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 /* ---------- Línea evolutiva (js/pokedex/evoluciones.js) ---------- */
@@ -335,9 +335,9 @@ td.col-numero {
   max-width: min(46rem, calc(100vw - 16px));
   padding: 0.75rem 0.9rem;
   border-radius: 0.7rem;
-  background: #2c2e3e;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  color: #f2f2f2;
+  background: var(--t-panel);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(var(--t-tinte), 0.08);
+  color: var(--t-texto);
   font-size: 0.85rem;
 }
 
@@ -349,15 +349,15 @@ td.col-numero {
   left: calc(var(--flecha) - 0.45rem);
   width: 0.9rem;
   height: 0.9rem;
-  background: #2c2e3e;
-  box-shadow: -1px -1px 0 rgba(255, 255, 255, 0.08);
+  background: var(--t-panel);
+  box-shadow: -1px -1px 0 rgba(var(--t-tinte), 0.08);
   transform: rotate(45deg);
 }
 
 .bocadillo-evo.encima::before {
   top: auto;
   bottom: -0.45rem;
-  box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 1px 1px 0 rgba(var(--t-tinte), 0.08);
 }
 
 .evo-arbol {
@@ -371,7 +371,7 @@ td.col-numero {
 /* Cada forma regional con su propia línea, separada de la anterior */
 .evo-linea + .evo-linea {
   padding-top: 0.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(var(--t-tinte), 0.08);
 }
 
 .evo-pokemon small {
@@ -427,7 +427,7 @@ td.col-numero {
 .evo-pokemon.actual {
   background: rgba(var(--color-vista), 0.14);
   box-shadow: inset 0 0 0 1px rgba(var(--color-vista), 0.6);
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 .evo-cara {
@@ -455,7 +455,7 @@ td.col-numero {
 .evo-flecha {
   font-size: 1.1rem;
   line-height: 1;
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
 }
 
 .evo-aviso {

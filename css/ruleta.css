@@ -60,19 +60,19 @@
 
 .ruleta-borde {
   fill: none;
-  stroke: #1e1f2b;
+  stroke: var(--t-fondo);
   stroke-width: 3;
 }
 
 .ruleta-vacia {
-  fill: #2c2e3e;
-  stroke: #3a3d52;
+  fill: var(--t-panel);
+  stroke: var(--t-control);
   stroke-width: 2;
   stroke-dasharray: 6 5;
 }
 
 .ruleta-vacia-texto {
-  fill: rgba(242, 242, 242, 0.45);
+  fill: rgba(var(--t-texto-rgb), 0.45);
   font-size: 10px;
 }
 
@@ -100,7 +100,7 @@
   width: 2.8rem;
   height: 3.2rem;
   transform: translateX(-50%);
-  background: #f2f2f2;
+  background: var(--t-texto);
   clip-path: polygon(0 0, 100% 0, 50% 100%);
   filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6));
 }
@@ -114,7 +114,7 @@
   width: 22%;
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
-  border: 0.3rem solid #1e1f2b;
+  border: 0.3rem solid var(--t-fondo);
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #ff6f5e, #c0392b 65%);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
@@ -150,7 +150,7 @@
   width: min(36rem, 100%);
   padding: 0.9rem 1rem;
   border-radius: 0.7rem;
-  background: #2c2e3e;
+  background: var(--t-panel);
   box-shadow: inset 0 0 0 2px rgba(var(--color-vista), 0.55);
   text-align: center;
   animation: ruleta-sale 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3);
@@ -170,7 +170,7 @@
 
 .ruleta-resultado-texto {
   font-size: 1.6rem;
-  color: rgb(var(--color-vista));
+  color: color-mix(in srgb, rgb(var(--color-vista)) var(--t-vivo), black);
   overflow-wrap: anywhere;
 }
 
@@ -190,8 +190,8 @@
   padding: 0.45rem 0.8rem;
   border: none;
   border-radius: 0.45rem;
-  background: #3a3d52;
-  color: #f2f2f2;
+  background: var(--t-control);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: bold;
@@ -200,7 +200,7 @@
 
 .ruleta-resultado-botones button:hover,
 .ruleta-acciones button:hover:not(:disabled) {
-  background: #4a4e68;
+  background: var(--t-control-2);
 }
 
 .ruleta-resultado-botones .ruleta-quitar-ganadora:hover,
@@ -239,10 +239,10 @@
 .ruleta-panel input {
   min-width: 0;
   padding: 0.45rem 0.6rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(var(--t-tinte), 0.12);
   border-radius: 0.45rem;
-  background: #1e1f2b;
-  color: #f2f2f2;
+  background: var(--t-fondo);
+  color: var(--t-texto);
   font-family: inherit;
   font-size: 0.92rem;
 }
@@ -268,12 +268,12 @@
   border: none;
   border-radius: 0.4rem;
   background: transparent;
-  color: rgba(242, 242, 242, 0.6);
+  color: rgba(var(--t-texto-rgb), 0.6);
   cursor: pointer;
 }
 
 .ruleta-borrar {
-  background: #2c2e3e;
+  background: var(--t-panel);
 }
 
 .ruleta-borrar:hover:not(:disabled),
@@ -313,7 +313,7 @@
   width: 1.1rem;
   height: 1.1rem;
   border-radius: 50%;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 2px rgba(var(--t-tinte), 0.12);
   cursor: pointer;
   transition: box-shadow 0.15s, transform 0.15s;
 }
