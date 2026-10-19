@@ -1,4 +1,4 @@
-// ---------- 3DS o DS: las mismas funciones para las dos ----------
+// ---------- 3DS, DS o Switch: las mismas funciones para todas ----------
 //
 // El editor (js/versus/editor*.js, partida.js, bolsa.js...) no sabe de qué consola es la
 // partida: pide aquí las piezas con formatoDe(bytes) y usa siempre los mismos nombres.
@@ -16,9 +16,19 @@ import { mapaDS, leerPartidaDS, entrenadorDS } from "./nds.js";
 import { JUEGOS_EDITABLES_DS, sePuedeEditarDS, leerHuecoDS, huecoVacioDS, editarHuecosDS, cuantosEquipoDS } from "./escribirds.js";
 import { pokemonDS } from "./pokemonds.js";
 import { bolsillosDS, leerMochilaDS, escribirMochilaDS } from "./mochilads.js";
+import { abrirSwSh, leerPartidaSwSh, entrenadorSwSh, cajasAbiertasSwSh, CAJAS as CAJAS_SWSH } from "./switch.js";
+import {
+  JUEGOS_EDITABLES_SWITCH, sePuedeEditarSwitch, leerHuecoSwitch, huecoVacioSwitch, editarHuecosSwitch, cuantosEquipoSwitch
+} from "./escribirswitch.js";
+import { pokemonGen8, LUGARES_SWSH, LUGARES_BDSP } from "./pokemonswitch.js";
+import { bolsillosSwitch, leerMochilaSwitch, escribirMochilaSwitch } from "./mochilaswitch.js";
+import {
+  CAJAS_BDSP, esPartidaBDSP, leerPartidaBDSP, entrenadorBDSP, cajasAbiertasBDSP, sePuedeEditarBDSP, leerHuecoBDSP, huecoVacioBDSP,
+  editarHuecosBDSP, cuantosEquipoBDSP, bolsillosBDSP, leerMochilaBDSP, escribirMochilaBDSP
+} from "./bdsp.js";
 
 // Los juegos en los que se puede editar la partida (ids de js/comun/juegos.js)
-export const EDITABLES = [...JUEGOS_EDITABLES, ...JUEGOS_EDITABLES_DS];
+export const EDITABLES = [...JUEGOS_EDITABLES, ...JUEGOS_EDITABLES_DS, ...JUEGOS_EDITABLES_SWITCH, "bdsp"];
 
 export const CARAMELO_RARO = 50;
 
@@ -30,6 +40,10 @@ const POKEMON_3DS = {
   maxMote: 12,
   maxEntrenador: 12
 };
+
+// Espada / Escudo y Perla Reluciente guardan igual a los Pokémon (salvo dos lugares especiales)
+const POKEMON_SWSH = { ...pokemonGen8(LUGARES_SWSH), lugarIntercambio: 30001, maxMote: 12, maxEntrenador: 12 };
+const POKEMON_BDSP = { ...pokemonGen8(LUGARES_BDSP), lugarIntercambio: 30001, maxMote: 12, maxEntrenador: 12 };
 
 const deDS = new Map(); // id -> pokemonDS(juego), ya montado
 
@@ -50,6 +64,40 @@ export function formatoDe(bytes) {
       entrenadorDe,
       pokemon: POKEMON_3DS,
       mochila: { bolsillosDe, leerMochila, escribirMochila }
+    };
+  }
+  if (abrirSwSh(bytes)) {
+    return {
+      id: "swsh",
+      gen: 8,
+      cajas: CAJAS_SWSH,
+      cajasAbiertas: cajasAbiertasSwSh,
+      leer: leerPartidaSwSh,
+      sePuedeEditar: sePuedeEditarSwitch,
+      leerHueco: leerHuecoSwitch,
+      huecoVacio: huecoVacioSwitch,
+      editarHuecos: editarHuecosSwitch,
+      cuantosEquipo: cuantosEquipoSwitch,
+      entrenadorDe: entrenadorSwSh,
+      pokemon: POKEMON_SWSH,
+      mochila: { bolsillosDe: bolsillosSwitch, leerMochila: leerMochilaSwitch, escribirMochila: escribirMochilaSwitch }
+    };
+  }
+  if (esPartidaBDSP(bytes)) {
+    return {
+      id: "bdsp",
+      gen: 8,
+      cajas: CAJAS_BDSP,
+      cajasAbiertas: cajasAbiertasBDSP,
+      leer: leerPartidaBDSP,
+      sePuedeEditar: sePuedeEditarBDSP,
+      leerHueco: leerHuecoBDSP,
+      huecoVacio: huecoVacioBDSP,
+      editarHuecos: editarHuecosBDSP,
+      cuantosEquipo: cuantosEquipoBDSP,
+      entrenadorDe: entrenadorBDSP,
+      pokemon: POKEMON_BDSP,
+      mochila: { bolsillosDe: bolsillosBDSP, leerMochila: leerMochilaBDSP, escribirMochila: escribirMochilaBDSP }
     };
   }
   const mapa = mapaDS(bytes);

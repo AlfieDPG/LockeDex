@@ -18,7 +18,7 @@ const APARTADOS = ["rutas", "ciudades", "postgame", "eventos"];
 const EDICIONES = {
   dp: ["Diamante", "Perla"], platino: ["Platino"], hgss: ["HeartGold", "SoulSilver"], bw: ["Negro", "Blanco"],
   b2w2: ["Negro 2", "Blanco 2"], xy: ["X", "Y"], oras: ["Rubí Omega", "Zafiro Alfa"], sm: ["Sol", "Luna"], usum: ["Ultrasol", "Ultraluna"],
-  swsh: ["Espada", "Escudo"]
+  swsh: ["Espada", "Escudo"], bdsp: ["Diamante Brillante", "Perla Reluciente"]
 };
 
 // Lugares que en «Rutas» van partidos en zonas o se llaman distinto. Por el número del lugar
@@ -50,7 +50,9 @@ const POR_NOMBRE = {
   "Laboratorio P+P": "Laboratorio P2",
   "Estancia Orientación": "Cámara Orientación",
   "Bosque Blanco": "Bosque Blanco (solo Edición Blanca)",
-  "Villa Horroris": "Quinta Horroris"
+  "Villa Horroris": "Quinta Horroris",
+  // Perla Reluciente (la Torre Perdida no tiene lugar propio: lo de dentro sale como Ruta 209)
+  "Mina Ruinamaníaco (Mina del Ruinamaníaco)": "Mina Ruinamaníaco"
 };
 
 // «Villa Raíz / Ruta 101: Pokémon inicial» -> ["Villa Raíz", "Ruta 101"]

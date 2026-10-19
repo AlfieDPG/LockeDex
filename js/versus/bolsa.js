@@ -16,22 +16,26 @@ import { avisar } from "../comun/ventanas.js";
 
 const NOMBRES = {
   objetos: "Objetos", medicinas: "Medicinas", balls: "Balls", mt: "MT y MO", bayas: "Bayas", cartas: "Cartas", combate: "Combate",
-  cristales: "Cristales Z", roto: "Rotoprodigios", clave: "Objetos clave"
+  cristales: "Cristales Z", roto: "Rotoprodigios", tesoros: "Tesoros", ingredientes: "Ingredientes", clave: "Objetos clave"
 };
 const ICONOS = {
   objetos: "objeto", medicinas: "pocion", balls: "pokeball", mt: "disco", bayas: "baya", cartas: "etiqueta", combate: "espadas",
-  cristales: "rayo", roto: "estrella", clave: "llave"
+  cristales: "rayo", roto: "estrella", tesoros: "corona", ingredientes: "caramelo", clave: "llave"
 };
+// En los de Switch ya no hay MO: en Espada / Escudo son MT y DT; en Perla Reluciente, solo MT
+const NOMBRES_DE = { swsh: { mt: "MT y DT" }, bdsp: { mt: "MT" } };
 
 let elegido = "objetos"; // el bolsillo que se ve
 
 function fila(e, bolsillo, juego) {
+  // En algunos bolsillos cada objeto tiene su máximo (Espada / Escudo: las MT, una; los DT, 999)
+  const maximo = bolsillo.maximoDe ? bolsillo.maximoDe(e.objeto) : bolsillo.maximo;
   return `
     <div class="bolsa-fila" data-objeto="${e.objeto}">
       <span class="bolsa-icono">${urlsIconoDe(e.objeto, juego).length ? imagenConRespaldo(urlsIconoDe(e.objeto, juego), `alt="" loading="lazy" data-quitar-si-falla`) : ""}</span>
       <span class="bolsa-nombre">${escaparHTML(nombreObjeto(e.objeto, juego))}</span>
-      ${bolsillo.maximo > 1
-        ? campoNumero(`<input class="bolsa-cantidad" type="number" min="0" max="${bolsillo.maximo}" value="${e.cantidad}" aria-label="Cantidad">`)
+      ${maximo > 1
+        ? campoNumero(`<input class="bolsa-cantidad" type="number" min="0" max="${maximo}" value="${e.cantidad}" aria-label="Cantidad">`)
         : ""}
       <button class="bolsa-quitar" title="Quitar">${icono("aspa")}</button>
     </div>`;
@@ -53,7 +57,7 @@ export async function pintarBolsa(contenedor, idLocke) {
     <div class="bolsa" data-juego="${juego}">
       <div class="bolsa-bolsillos">
         ${bolsillos
-          .map((b) => `<button class="bolsa-bolsillo ${b.id === elegido ? "activo" : ""}" data-bolsillo="${b.id}">${icono(ICONOS[b.id])} ${NOMBRES[b.id]} <small>${mochila[b.id].length}</small></button>`)
+          .map((b) => `<button class="bolsa-bolsillo ${b.id === elegido ? "activo" : ""}" data-bolsillo="${b.id}">${icono(ICONOS[b.id])} ${(NOMBRES_DE[juego] || {})[b.id] || NOMBRES[b.id]} <small>${mochila[b.id].length}</small></button>`)
           .join("")}
         <button class="bolsa-caramelos" title="Llevar 999 Caramelos Raros">${icono("caramelo")} Caramelos raros</button>
       </div>
@@ -98,15 +102,17 @@ function cambiar(idLocke, hacer, contenedor) {
   });
 }
 
-// Atajo: 999 Caramelos Raros, sin preguntar (van en las medicinas, que pasan a verse)
+// Atajo: 999 Caramelos Raros, sin preguntar (van en su bolsillo, que pasa a verse: las medicinas
+// o, en los de Switch, los objetos)
 const CARAMELOS = 999;
 
-function caramelos(contenedor, idLocke) {
-  elegido = "medicinas";
+async function caramelos(contenedor, idLocke) {
+  const juego = formatoDeSeguro(await partidaDeTrabajo(idLocke)).id;
+  elegido = LIMITES[juego].gen === 8 ? bolsilloDe(CARAMELO_RARO, juego) : "medicinas";
   cambiar(idLocke, (m) => {
-    const suyo = m.medicinas.find((e) => e.objeto === CARAMELO_RARO);
+    const suyo = m[elegido].find((e) => e.objeto === CARAMELO_RARO);
     if (suyo) suyo.cantidad = CARAMELOS;
-    else m.medicinas.push({ objeto: CARAMELO_RARO, cantidad: CARAMELOS });
+    else m[elegido].push({ objeto: CARAMELO_RARO, cantidad: CARAMELOS });
   }, contenedor);
 }
 
@@ -121,7 +127,7 @@ export function activarBolsa(contenedor, idDe) {
       return;
     }
     if (e.target.closest(".bolsa-caramelos")) {
-      caramelos(contenedor, idDe());
+      caramelos(contenedor, idDe()).catch((error) => console.error(error));
       return;
     }
     const quitar = e.target.closest(".bolsa-quitar");

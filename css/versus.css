@@ -2188,6 +2188,20 @@ button.salon-cara:hover {
   margin: 0 0 0.4rem;
 }
 
+.ayuda-partida ol {
+  margin: 0 0 0.5rem;
+  padding-left: 1.3rem;
+}
+
+.ayuda-partida li {
+  margin-bottom: 0.25rem;
+}
+
+.ayuda-partida code {
+  font-size: 0.85em;
+  word-break: break-all;
+}
+
 /* Editor a la derecha de las cajas (pantallas anchas, js/versus/editor.js) */
 .partida-lado {
   display: none;

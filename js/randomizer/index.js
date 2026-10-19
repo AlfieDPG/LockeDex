@@ -23,7 +23,7 @@ import {
 
 // La última especie de cada juego (para elegir las iniciales a mano). Sin ROM ni locke, la del
 // más nuevo: al randomizar, la que no exista en el juego sale al azar (randomizar.js)
-const ULTIMA_ESPECIE = { dp: 493, platino: 493, hgss: 493, bw: 649, b2w2: 649, xy: 721, oras: 721, sm: 802, usum: 807 };
+const ULTIMA_ESPECIE = { dp: 493, platino: 493, hgss: 493, bw: 649, b2w2: 649, xy: 721, oras: 721, sm: 802, usum: 807, bdsp: 493, swsh: 898 };
 const ULTIMA_DE_TODAS = Math.max(...Object.values(ULTIMA_ESPECIE));
 
 const CLAVE_SEMILLAS = "poketeams-randomizer-semillas-v1";
@@ -38,11 +38,14 @@ const TRES_DS = ["xy", "oras", "sm", "usum"];
 // Juego de js/comun/juegos.js por el código de producto de un .3ds («CTR-P-EK2A»)
 const JUEGO_DE_CODIGO_3DS = { EK: "xy", EC: "oras", BN: "sm", A2: "usum" };
 // La generación de cada juego (las actualizaciones de datos son a las siguientes)
-const GENERACION_DE = { dp: 4, platino: 4, hgss: 4, bw: 5, b2w2: 5, xy: 6, oras: 6, sm: 7, usum: 7 };
+const GENERACION_DE = { dp: 4, platino: 4, hgss: 4, bw: 5, b2w2: 5, xy: 6, oras: 6, sm: 7, usum: 7, bdsp: 8, swsh: 8 };
+// Los de Switch (se elige su carpeta «romfs» y sale un .zip, un mod)
+const SWITCH = ["swsh", "bdsp"];
 // Lo que no tiene cada juego (no sale en su pestaña): no tienen tutores de ataques Negro y Blanco, Diamante y Perla,
 // X e Y, y Sol y Luna
 const SIN_PESTANAS = {};
-const SIN_APARTADOS = { bw: ["tutores"], dp: ["tutores"], xy: ["tutores"], oras: [], sm: ["tutores"], usum: [] };
+// En Diamante Brillante y Perla Reluciente, las iniciales van en el programa y los intercambios en los scripts
+const SIN_APARTADOS = { bw: ["tutores"], dp: ["tutores"], xy: ["tutores"], oras: [], sm: ["tutores"], usum: [], bdsp: ["tutores", "iniciales", "intercambios"] };
 
 const PARECIDA_ALEATORIO = [["no", "Sin cambios"], ["parecida", "Fuerza parecida"], ["cualquiera", "Aleatorio"]];
 // A quién: se marcan sueltos, ninguno es nadie
@@ -51,7 +54,7 @@ const COMPAT = [["no", "Sin cambios"], ["aleatoria", "Aleatorio"], ["total", "To
 const ALEATORIO = [["no", "Sin cambios"], ["azar", "Aleatorio"]];
 const SI_NO = [[false, "Sin cambios"], [true, "Aleatorio"]];
 // Solo Sol, Luna, Ultrasol y Ultraluna tienen tótems
-const SIN_TOTEMS = ["dp", "platino", "hgss", "bw", "b2w2", "xy", "oras"];
+const SIN_TOTEMS = ["dp", "platino", "hgss", "bw", "b2w2", "xy", "oras", ...SWITCH];
 // Las generaciones a las que se puede actualizar (las de después del juego)
 const GENERACIONES = (juego) => [
   [0, "Sin cambios"], ...[5, 6, 7, 8, 9].filter((g) => g > (GENERACION_DE[juego] || 5)).map((g) => [g, `${g}.ª generación`])
@@ -132,22 +135,23 @@ const PESTANAS = [
       {
         id: "mt", titulo: "MT", icono: "disco",
         campos: [
-          { k: "ataques", tipo: "opciones", opciones: SI_NO, ayuda: "Qué ataque enseña cada MT (las MO no se tocan)" },
+          // En Espada y Escudo, qué enseña cada MT va en el programa del juego (no se puede cambiar)
+          { k: "ataques", tipo: "opciones", opciones: SI_NO, ayuda: "Qué ataque enseña cada MT (las MO no se tocan)", no: ["swsh"] },
           {
             k: "compat", tipo: "opciones", texto: "Quién las aprende", opciones: COMPAT, abre: (r) => r.mt.compat === "aleatoria",
-            ayuda: "Aleatorio: cada Pokémon, cada MT, cara o cruz",
+            ayuda: "Aleatorio: cada Pokémon, cada MT, cara o cruz (en Espada y Escudo, también los DT)",
             hijos: [
               { k: "deSuTipo", tipo: "casilla", texto: "Más fácil si son de su tipo" },
               { k: "tipo", tipo: "barra", texto: "Las de su tipo", min: 50, max: 100, paso: 5, formato: (v) => `${v} %`, si: (r) => r.mt.deSuTipo, ayuda: "Probabilidad de aprender las de sus tipos (las demás, 50 %)" }
             ]
           },
-          { k: "mo", tipo: "casilla", texto: "Todos aprenden las MO", si: (r) => r.mt.compat !== "total" }
+          { k: "mo", tipo: "casilla", texto: "Todos aprenden las MO", si: (r) => r.mt.compat !== "total", no: SWITCH }
         ]
       },
       {
         id: "tutores", titulo: "Tutores de ataques", icono: "persona",
         campos: [
-          { k: "ataques", tipo: "opciones", opciones: SI_NO, ayuda: "Qué ataque enseña cada tutor" },
+          { k: "ataques", tipo: "opciones", opciones: SI_NO, ayuda: "Qué ataque enseña cada tutor", no: ["swsh"] },
           {
             k: "compat", tipo: "opciones", texto: "Quién los aprende", opciones: COMPAT, abre: (r) => r.tutores.compat === "aleatoria",
             ayuda: "Aleatorio: cada Pokémon, cada tutor, cara o cruz",
@@ -249,7 +253,7 @@ const PESTANAS = [
           { k: "nivel", texto: "Multiplicador de niveles", ...MULTIPLICADOR },
           { k: "objetos", tipo: "casilla", texto: "Objetos de los Pokémon salvajes aleatorios" },
           {
-            k: "pueblos", tipo: "casilla", texto: "Hierba en los pueblos", no: ["sm", "usum"],
+            k: "pueblos", tipo: "casilla", texto: "Hierba en los pueblos", no: ["sm", "usum", ...SWITCH],
             ayuda: "Un trozo de hierba alta en cada pueblo y ciudad que no tiene, con los Pokémon de la ruta por la que se llega. No se ve: solo al pisarla"
           }
         ]
@@ -262,7 +266,8 @@ const PESTANAS = [
       {
         id: "objetos", titulo: "Objetos del suelo", icono: "objeto", ayuda: "Los que recoges por el camino y los escondidos. Donde había una MT sale otra MT; los objetos de la historia no se tocan",
         campos: [
-          { k: "suelo", tipo: "opciones", opciones: SI_NO },
+          // En Espada y Escudo van por otra tabla que todavía no se sabe leer
+          { k: "suelo", tipo: "opciones", opciones: SI_NO, no: ["swsh"] },
           { k: "sinMalos", tipo: "casilla", texto: "Banear objetos inútiles", ayuda: "Ni en el suelo, ni en las tiendas, ni equipados: nada de cartas, pañuelos ni cosas que no sirvan en la aventura" }
         ]
       },
@@ -287,8 +292,8 @@ const PESTANAS = [
       {
         id: "varios", titulo: "Varios", icono: "pokedex",
         campos: [
-          { k: "pokedex", tipo: "casilla", texto: "Pokédex Nacional desde el principio", ayuda: "Al darte la Pokédex, también la nacional", no: [...GEN4, "sm", "usum"] },
-          { k: "texto", tipo: "casilla", texto: "Texto instantáneo", no: GEN4 }
+          { k: "pokedex", tipo: "casilla", texto: "Pokédex Nacional desde el principio", ayuda: "Al darte la Pokédex, también la nacional", no: [...GEN4, "sm", "usum", ...SWITCH] },
+          { k: "texto", tipo: "casilla", texto: "Texto instantáneo", no: [...GEN4, ...SWITCH] }
         ]
       }
     ]
@@ -352,7 +357,7 @@ function elegirNormas(valor) {
       mias = completarReglas(n.reglas);
     }
   } else mias = misReglas() || completarReglas();
-  if (rom) elegirRom(rom.archivo);
+  if (rom) revisarRom();
   else pintar();
 }
 
@@ -384,7 +389,7 @@ async function accionNormas(que) {
     idLocke = null;
     guardada = null;
     escribir(CLAVE, { reglas: mias });
-    if (rom) elegirRom(rom.archivo);
+    if (rom) revisarRom();
     else pintar();
   }
 }
@@ -475,7 +480,8 @@ function tarjetaCambiada(a, reglas) {
 // cabecera, al lado del título, y lo que cuelga de ella, justo debajo. Los demás, una fila cada uno.
 function plantillaApartado(a, reglas, bloqueado) {
   const [primero, ...resto] = a.campos;
-  const principal = primero.tipo === "opciones" && !primero.texto ? primero : null;
+  // (si el juego no la tiene, no hay principal: sale como fila, y la fila no se pinta)
+  const principal = primero.tipo === "opciones" && !primero.texto && !(primero.no && rom && primero.no.includes(rom.juego)) ? primero : null;
   const filas = (principal ? resto : a.campos).map((c) => plantillaFila(a, c, reglas, bloqueado)).join("");
   return `
     <section class="random-tarjeta ${tarjetaCambiada(a, reglas) ? "encendida" : ""}">
@@ -504,18 +510,26 @@ function pintar() {
     ${plantillaNormas()}
     <div class="random-barra">
       <button class="random-elegir">${icono("subir")} ${rom ? "Otra ROM" : "Elegir ROM"}</button>
+      <button class="random-elegir-carpeta" title="Los de Switch: la carpeta «romfs» sacada desde el emulador">${icono("carpeta")} Elegir carpeta</button>
+      <button class="random-ayuda" title="Qué elegir en cada consola y qué hacer con lo que sale" aria-label="Ayuda">?</button>
       <span class="random-rom ${rom && rom.error ? "con-error" : ""}">${rom ? escaparHTML(rom.error || `${rom.nombre} · ${rom.archivo.name}`) : ""}</span>
       <button class="random-vaciar" ${!idLocke && hayAlgo(reglas) ? "" : "disabled"}>${icono("deshacer")} Borrar todo</button>
       <button class="random-ir" ${rom && !rom.error && !trabajando && hayAlgo(reglas) ? "" : "disabled"} title="${hayAlgo(reglas) ? "" : "Cambia algo primero"}">${icono("mezclar")} ${trabajando ? "Randomizando..." : "Randomizar"}</button>
     </div>
     <span class="random-estado"></span>
     <div class="random-tarjetas">${actual.apartados.filter((a) => !((rom && SIN_APARTADOS[rom.juego]) || []).includes(a.id)).map((a) => plantillaApartado(a, reglas, bloqueado)).join("")}</div>
-    <input class="random-archivo" type="file" accept=".nds,.3ds" hidden>`;
+    <input class="random-archivo" type="file" accept=".nds,.3ds" hidden>
+    <input class="random-carpeta" type="file" webkitdirectory hidden>`;
 }
 // ---------- ROM ----------
 
 async function elegirRom(archivo) {
   rom = { archivo, nombre: "", juego: "", error: "" };
+  if (/\.(nsp|xci|nsz|xcz)$/i.test(archivo.name)) {
+    rom.error = "Los juegos de Switch van cifrados: hay que sacar su carpeta «romfs» desde el emulador y elegirla con «Elegir carpeta» (mira el «?»).";
+    pintar();
+    return;
+  }
   try {
     // La cabecera basta para saber qué juego es
     const cabecera = new Uint8Array(await archivo.slice(0, 0x200).arrayBuffer());
@@ -535,7 +549,7 @@ async function elegirRom(archivo) {
       juego = JUEGO_DE_CODIGO[codigo.slice(0, 3)];
     }
     if (!juego) {
-      rom.error = "Este juego todavía no se puede randomizar (de momento, los de DS y los de 3DS).";
+      rom.error = "Este juego todavía no se puede randomizar (de momento, los de DS, los de 3DS y los de Switch).";
     } else {
       rom.juego = juego;
       rom.nombre = (JUEGOS.find((j) => j.id === juego) || {}).nombre || juego;
@@ -548,6 +562,48 @@ async function elegirRom(archivo) {
   } catch (error) {
     console.error(error);
     rom.error = "No se ha podido leer el archivo.";
+  }
+  pintar();
+}
+
+// La ROM ya elegida, otra vez (han cambiado las normas o el locke: puede no valer para este)
+function revisarRom() {
+  if (rom && rom.carpeta) elegirCarpeta(rom.archivos);
+  else if (rom) elegirRom(rom.archivo);
+}
+
+// Los de Switch: la carpeta «romfs» sacada desde el emulador (ver el «?»). archivos: los File del
+// <input webkitdirectory>, con su ruta dentro de la carpeta elegida (webkitRelativePath)
+const ROMFS = {
+  swsh: "bin/pml/personal/personal_total.bin",
+  bdsp: "Data/StreamingAssets/AssetAssistant/Pml/personal_masterdatas"
+};
+// Los que ya se saben randomizar
+const ROMFS_LISTOS = ["swsh", "bdsp"];
+
+function elegirCarpeta(archivos) {
+  const nombreCarpeta = (archivos[0].webkitRelativePath || "").split("/")[0] || "romfs";
+  rom = { archivos, archivo: { name: nombreCarpeta }, carpeta: true, nombre: "", juego: "", error: "" };
+  // La ruta de cada uno dentro del romfs (se haya elegido la carpeta «romfs» o la de encima)
+  const rutas = new Map();
+  for (const a of archivos) {
+    const partes = a.webkitRelativePath.split("/").slice(1);
+    const romfs = partes.indexOf("romfs");
+    rutas.set((romfs >= 0 ? partes.slice(romfs + 1) : partes).join("/"), a);
+  }
+  rom.rutas = rutas;
+  const juego = Object.keys(ROMFS).find((id) => rutas.has(ROMFS[id]));
+  if (!juego) {
+    rom.error = "Esa carpeta no es el «romfs» de un juego que se sepa randomizar (mira el «?»).";
+  } else {
+    rom.juego = juego;
+    rom.nombre = (JUEGOS.find((j) => j.id === juego) || {}).nombre || juego;
+    if (!ROMFS_LISTOS.includes(juego)) rom.error = "Todavía no se puede randomizar este juego.";
+    const locke = idLocke ? lockePorId(idLocke) : null;
+    if (locke && locke.juego && locke.juego !== juego) {
+      const delLocke = (JUEGOS.find((j) => j.id === locke.juego) || {}).nombre || locke.juego;
+      rom.error = `Esa carpeta es de ${rom.nombre} y el locke, de ${delLocke}.`;
+    }
   }
   pintar();
 }
@@ -589,6 +645,15 @@ async function randomizar() {
       nombre = rom.archivo.name.replace(/(\.3ds)?$/i, " (random).3ds");
       const piezas = nuevo.partes.map((x) => (x.rango ? rom.archivo.slice(x.rango.desde, x.rango.desde + x.rango.tam) : x));
       bytes = new Blob(piezas, { type: "application/octet-stream" });
+    } else if (rom.carpeta) {
+      // Switch: de la carpeta «romfs» se leen solo los archivos que hacen falta; sale un .zip con los cambiados (un mod)
+      const { SesionSwitch } = await import("./rom-switch.js");
+      const motor = await import(rom.juego === "bdsp" ? "./juego-bdsp.js" : "./juego-swsh.js");
+      const sesion = new SesionSwitch(rom.rutas, rom.juego, rom.nombre);
+      await motor.prepararRom(sesion);
+      await modulos.randomizar.randomizarROM(sesion, reglasActuales(), semillaPara());
+      bytes = sesion.zip();
+      nombre = `${rom.nombre.replace(/\s*\/\s*/g, " y ")} (random).zip`;
     } else {
       bytes = new Uint8Array(await rom.archivo.arrayBuffer());
       await modulos.randomizar.randomizarROM(bytes, reglasActuales(), semillaPara());
@@ -649,6 +714,8 @@ export function iniciar() {
       pintar();
     } else if (boton.dataset.campo) cambiar(boton.dataset.apartado, boton.dataset.campo, JSON.parse(boton.dataset.valor));
     else if (boton.classList.contains("random-elegir")) vista.querySelector(".random-archivo").click();
+    else if (boton.classList.contains("random-elegir-carpeta")) vista.querySelector(".random-carpeta").click();
+    else if (boton.classList.contains("random-ayuda")) document.querySelector("#dialogo-ayuda-rom").showModal();
     else if (boton.classList.contains("random-ir")) randomizar();
     else if (boton.dataset.normas) accionNormas(boton.dataset.normas);
     else if (boton.classList.contains("random-vaciar")) vaciarNormas();
@@ -656,6 +723,7 @@ export function iniciar() {
 
   vista.addEventListener("change", (e) => {
     if (e.target.matches(".random-archivo") && e.target.files[0]) elegirRom(e.target.files[0]);
+    else if (e.target.matches(".random-carpeta") && e.target.files.length) elegirCarpeta([...e.target.files]);
     else if (e.target.matches(".random-normas-elegir")) elegirNormas(e.target.value);
     else if (e.target.matches("select[data-indice]")) {
       const { apartado, campo, indice } = e.target.dataset;
@@ -675,6 +743,9 @@ export function iniciar() {
     if (campo && salida) salida.textContent = campo.formato(Number(e.target.value));
   });
 
+  const ayuda = document.querySelector("#dialogo-ayuda-rom");
+  ayuda.querySelector(".ayuda-rom-cerrar").addEventListener("click", () => ayuda.close());
+
   // Los nombres de los Pokémon, para elegir las iniciales a mano
   cargarDatos().then(() => vista.isConnected && pintar()).catch(() => {});
 }
@@ -687,6 +758,6 @@ export function mostrar() {
 export function usarLocke(id) {
   idLocke = id;
   guardada = null;
-  if (rom) elegirRom(rom.archivo);
+  revisarRom();
 }
 

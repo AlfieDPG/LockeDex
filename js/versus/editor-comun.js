@@ -19,6 +19,9 @@ import { marcarMetidos, marcarCreados, esCreado } from "../partida/partidas.js";
 import { FORMAS, convertirPartida } from "../partida/convertir.js";
 import { OBJETOS_EN, LUGARES_GEN6, LUGARES_GEN7 } from "../partida/datos-3ds.js";
 import { LUGARES_GEN4, LUGARES_GEN4_OTROS, LUGARES_GEN5, LUGARES_GEN5_OTROS } from "../partida/datos-ds.js";
+import { LUGARES_GEN8, LUGARES_BDSP, LUGARES_BDSP_OTROS } from "../partida/datos-switch.js";
+import { bolsilloSwSh } from "../partida/mochilaswitch.js";
+import { bolsilloBDSP } from "../partida/bdsp.js";
 import { cargarDatosEditor, GRUPOS } from "../partida/datos-editor.js";
 
 // Cada juego que se edita: su generación y lo último que existe en él (números de especie,
@@ -32,15 +35,24 @@ export const LIMITES = {
   xy: { gen: 6, especies: 721, objetos: 717, ataques: 617, habilidades: 188, balls: 25 },
   oras: { gen: 6, especies: 721, objetos: 775, ataques: 621, habilidades: 191, balls: 25 },
   sm: { gen: 7, especies: 802, objetos: 920, ataques: 719, habilidades: 232, balls: 26 },
-  usum: { gen: 7, especies: 807, objetos: 959, ataques: 728, habilidades: 233, balls: 26 }
+  usum: { gen: 7, especies: 807, objetos: 959, ataques: 728, habilidades: 233, balls: 26 },
+  // Con los dos DLC. No están todas las especies hasta la 898: las que hay, en datos/partida-3ds.json
+  // (disponibles). Los objetos, solo los que tienen bolsillo (partida/mochilaswitch.js)
+  swsh: { gen: 8, especies: 898, objetos: 1607, ataques: 826, habilidades: 267, balls: 26 },
+  // Las 493 de Sinnoh, con los ataques y habilidades de gen 8. Los objetos, como en Espada / Escudo:
+  // solo los que tienen bolsillo (partida/bdsp.js)
+  bdsp: { gen: 8, especies: 493, objetos: 1822, ataques: 826, habilidades: 267, balls: 26 }
 };
+
+// Los dos de Switch numeran los lugares y guardan la bolsa cada uno a su manera
+const BOLSILLO_SWITCH = { swsh: bolsilloSwSh, bdsp: bolsilloBDSP };
 
 function genDe(juego) {
   return (LIMITES[juego] || {}).gen || 6;
 }
 
 // Los lugares especiales «intercambio» de cada generación (los creados en la web)
-const INTERCAMBIO = { 4: 2002, 5: 30003, 6: 30001, 7: 30001 };
+const INTERCAMBIO = { 4: 2002, 5: 30003, 6: 30001, 7: 30001, 8: 30001 };
 
 // Hasta gen 6 no se pueden elegir las formas de Alola ni las de gen 7
 const ULTIMA_FORMA_GEN6 = 10090;
@@ -96,8 +108,10 @@ export function objetosDe(juego) {
   if (!listas.has(clave)) {
     const vistos = new Set();
     const lista = [];
+    // En Espada / Escudo no están todos los de antes (los cristales Z, por ejemplo)
+    const existe = BOLSILLO_SWITCH[juego] ? (id) => Boolean(BOLSILLO_SWITCH[juego](id)) : () => true;
     OBJETOS_EN.slice(0, LIMITES[juego].objetos + 1).forEach((en, id) => {
-      if (!id || !en || vistos.has(en)) return;
+      if (!id || !en || vistos.has(en) || !existe(id)) return;
       vistos.add(en);
       const es = (buscarPorNombreIngles(datos.objetos, en) || {}).es || en;
       lista.push({ id, es, en, buscar: quitarAcentos(`${es} ${en}`) });
@@ -109,8 +123,19 @@ export function objetosDe(juego) {
 
 export function hastaLimite(nombre, juego) {
   const clave = `${nombre}-${juego}`;
-  if (!listas.has(clave)) listas.set(clave, datos[nombre].filter((entrada) => entrada.id <= LIMITES[juego][nombre === "pokemon" ? "especies" : nombre]));
+  if (!listas.has(clave)) {
+    // Las especies que hay en el juego, si no están todas (Espada / Escudo)
+    const disponibles = nombre === "pokemon" && delEditor && delEditor.disponibles && delEditor.disponibles[juego];
+    const hay = disponibles ? new Set(disponibles) : null;
+    listas.set(clave, datos[nombre].filter((entrada) => entrada.id <= LIMITES[juego][nombre === "pokemon" ? "especies" : nombre] && (!hay || hay.has(entrada.id))));
+  }
   return listas.get(clave);
+}
+
+// ¿Está esa especie en el juego?
+export function especieEnJuego(especie, juego) {
+  const disponibles = delEditor && delEditor.disponibles && delEditor.disponibles[juego];
+  return especie <= LIMITES[juego].especies && (!disponibles || disponibles.includes(especie));
 }
 
 export function objeto(id, juego) {
@@ -130,6 +155,7 @@ export function ataque(id) {
 // Los juegos de origen que puede llevar un Pokémon (número en el juego), con la generación
 // en que salieron
 export const VERSIONES = [
+  [48, "Diamante Brillante", 8], [49, "Perla Reluciente", 8], [44, "Espada", 8], [45, "Escudo", 8], [42, "Let's Go, Pikachu!", 8], [43, "Let's Go, Eevee!", 8], [34, "Pokémon GO", 8],
   [30, "Sol", 7], [31, "Luna", 7], [32, "Ultrasol", 7], [33, "Ultraluna", 7],
   [35, "Rojo (Consola Virtual)", 7], [36, "Verde (Consola Virtual)", 7], [37, "Azul (Consola Virtual)", 7],
   [38, "Amarillo (Consola Virtual)", 7], [39, "Oro (Consola Virtual)", 7], [40, "Plata (Consola Virtual)", 7],
@@ -155,14 +181,14 @@ export function lugaresDe(juego) {
   const clave = `lugares-${juego}`;
   if (!listas.has(clave)) {
     const gen = genDe(juego);
-    const tabla = { 4: LUGARES_GEN4, 5: LUGARES_GEN5, 6: LUGARES_GEN6, 7: LUGARES_GEN7 }[gen];
+    const tabla = juego === "bdsp" ? LUGARES_BDSP : { 4: LUGARES_GEN4, 5: LUGARES_GEN5, 6: LUGARES_GEN6, 7: LUGARES_GEN7, 8: LUGARES_GEN8 }[gen];
     const hasta = (LIMITES[juego] || {}).lugares ?? Infinity;
     const vistos = new Set();
     const lista = [];
     tabla.forEach((es, i) => {
       if (!es || vistos.has(es) || !i || i > hasta) return;
       vistos.add(es);
-      lista.push({ id: gen >= 6 ? i * 2 : i, es, en: "", buscar: quitarAcentos(es) });
+      lista.push({ id: gen === 6 || gen === 7 ? i * 2 : i, es, en: "", buscar: quitarAcentos(es) });
     });
     lista.push({ id: INTERCAMBIO[gen], es: "Intercambio", en: "", buscar: "intercambio" });
     listas.set(clave, lista);
@@ -176,6 +202,8 @@ export function nombreLugar(numero, creado = false, juego = "xy") {
   if (gen === 4) return LUGARES_GEN4[numero] || LUGARES_GEN4_OTROS[numero] || (numero ? `Lugar ${numero}` : "");
   if (gen === 5) return LUGARES_GEN5[numero] || LUGARES_GEN5_OTROS[numero] || (numero ? `Lugar ${numero}` : "");
   if (numero === INTERCAMBIO[6] || numero === 30002) return "Intercambio";
+  if (juego === "bdsp") return LUGARES_BDSP[numero] || LUGARES_BDSP_OTROS[numero] || (numero && numero !== 65535 ? `Lugar ${numero}` : "");
+  if (gen === 8) return LUGARES_GEN8[numero] || (numero ? `Lugar ${numero}` : "");
   const tabla = gen === 7 ? LUGARES_GEN7 : LUGARES_GEN6;
   return (numero % 2 === 0 && tabla[numero / 2]) || (numero ? `Lugar ${numero}` : "");
 }
@@ -199,6 +227,7 @@ const BOLSILLO_EN_GEN6 = { 216: "clave", 504: "medicinas" };
 
 export function bolsilloDe(objetoId, juego = "xy") {
   const gen = genDe(juego);
+  if (BOLSILLO_SWITCH[juego]) return BOLSILLO_SWITCH[juego](objetoId) || "objetos";
   const dePokeAPI = ((delEditor && delEditor.bolsillos) || {})[objetoId];
   if (gen === 7 && /ium Z$/.test(OBJETOS_EN[objetoId] || "")) return "cristales";
   if (gen === 7 && /^Roto /.test(OBJETOS_EN[objetoId] || "")) return "roto";
@@ -291,6 +320,8 @@ export function formasDe(especie, juego) {
   for (const [numero, [idForma, showdown]] of Object.entries(FORMAS[especie] || {})) {
     if (juego && genDe(juego) < 7 && idForma > ULTIMA_FORMA_GEN6) continue;
     if (juego && genDe(juego) < 8 && esFormaGen8(idForma)) continue;
+    // Perla Reluciente no tiene formas regionales (ni las de Alola ni las de Galar)
+    if (juego === "bdsp" && idForma > ULTIMA_FORMA_GEN6) continue;
     const fila = filasPokedex.get(idForma);
     lista.push({ forma: Number(numero), texto: fila ? nombreDeForma(fila) : showdown, idForma, formaPMD: fila ? fila.forma : 0 });
   }
@@ -385,7 +416,7 @@ export async function editableDeEquipo(p, juego) {
   const problemas = [];
   const limites = LIMITES[juego];
   const quien = p.mote || p.es;
-  if (p.id > limites.especies) throw new Error(`${p.es} no está en este juego.`);
+  if (!especieEnJuego(p.id, juego)) throw new Error(`${p.es} no está en este juego.`);
 
   const formas = formasDe(p.id, juego);
   const suya = formas.find((f) => (p.imagenForma ? f.imagenForma === p.imagenForma : f.idForma && f.idForma === p.idForma));
@@ -428,7 +459,7 @@ export async function editableDeEquipo(p, juego) {
       especie: p.id,
       forma,
       genero,
-      mote: String(p.mote || "").slice(0, genDe(juego) === 6 ? 12 : 10),
+      mote: String(p.mote || "").slice(0, genDe(juego) >= 6 ? 12 : 10),
       shiny: Boolean(p.shiny),
       objeto: idObjeto,
       habilidad: hab.id,

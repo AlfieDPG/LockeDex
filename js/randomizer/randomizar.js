@@ -13,8 +13,9 @@ import { tiposEs } from "../comun/tipos.js";
 import { ULTIMA_ESPECIE, ULTIMO_ATAQUE, ULTIMA_HABILIDAD, EVO, TIPOS } from "./juego-gen5.js";
 import { esGen4 } from "./juego-gen4-ident.js";
 
-// El módulo de cada generación (los dos exportan lo mismo): se carga el que toca
+// El módulo de cada generación (todos exportan lo mismo): se carga el que toca
 async function cargarMotor(rom) {
+  if (rom.esSwitch) return rom.juego === "bdsp" ? import("./juego-bdsp.js") : import("./juego-swsh.js");
   if (rom.es3DS) return import("./juego-3ds.js");
   return esGen4(rom) ? import("./juego-gen4.js") : import("./juego-gen5.js");
 }
@@ -246,15 +247,16 @@ const METODOS_AMISTAD = new Set([EVO.amistad, EVO.amistadDia, EVO.amistadNoche])
 // Los que en un locke no se pueden (o casi): intercambio, belleza (en gen 5 no hay concursos),
 // saber un ataque, otro en el equipo, un lugar (25-27), juego al revés (Inkay), afecto (Sylveon),
 // un tipo en el equipo (Pancham), lluvia (Sliggo), solo de día o de noche (Tyrunt, Amaura,
-// Fomantis) y una cumbre (Crabrawler)
+// Fomantis), una cumbre (Crabrawler) y, en 8.ª, golpes críticos (Farfetch’d de Galar), perder PS
+// (Yamask de Galar) y dar vueltas (Milcery)
 const METODOS_COMPLEJOS = new Set([
-  EVO.intercambio, EVO.intercambioEspecial, EVO.belleza, EVO.ataque, EVO.otroEnEquipo, 25, 26, 27, 28, 29, 30, 31, 32, 33, 39
+  EVO.intercambio, EVO.intercambioEspecial, EVO.belleza, EVO.ataque, EVO.otroEnEquipo, 25, 26, 27, 28, 29, 30, 31, 32, 33, 39, 43, 44, 45
 ]);
 // Con un objeto: piedras (también las de solo machos o solo hembras), llevarlo de día o de noche
 // e intercambio llevándolo
 const METODOS_OBJETO = new Set([EVO.piedra, EVO.piedraMacho, EVO.piedraHembra, EVO.objetoDia, EVO.objetoNoche, EVO.intercambioObjeto]);
 // Los que llevan un nivel en el dato
-const METODOS_NIVEL = new Set([4, 9, 10, 11, 12, 13, 14, 15, 23, 24, 28, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 41]);
+const METODOS_NIVEL = new Set([4, 9, 10, 11, 12, 13, 14, 15, 23, 24, 28, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 41, 46, 47]);
 const conGeneros = (e) => e.genero > 0 && e.genero < 254;
 
 // Facilitar evoluciones: la forma de siempre no se quita nunca, se le suma otra.
@@ -270,7 +272,7 @@ const conGeneros = (e) => e.genero > 0 && e.genero < 254;
 //   500 o más) y 36 la segunda de tres (45 si suma 600 o más).
 function randomizarEvoluciones(datos, reglas) {
   const { dificiles, objetos, niveles } = reglas.evoluciones;
-  const cabe = datos.perfil.gen >= 6 ? 8 : 7;
+  const cabe = datos.perfil.maxEvoluciones || (datos.perfil.gen >= 6 ? 8 : 7);
   const destino = (evo) => `${evo.especie}/${evo.forma || 0}`;
   // El suyo si ya lo llevaba (Pancham, Sliggo...); si no, el que tiene sentido por la fuerza del destino
   const nivelDe = (evo) => (METODOS_NIVEL.has(evo.metodo) && evo.dato > 0 && evo.dato <= 100 ? evo.dato : nivelParaEvolucion(datos.especies[evo.especie]));
@@ -776,7 +778,8 @@ function randomizarTiendas(datos, reglas, azar, objetos) {
   for (const t of datos.tiendas) {
     if (datos.perfil.tiendas.normales.includes(t.indice)) continue;
     const otraMT = sacoDeMT(azar, mts);
-    t.objetos = t.objetos.map((id) => (esMT.has(id) ? otraMT() : azar.elegir(lista)));
+    // (los huecos libres, 0, se quedan libres)
+    t.objetos = t.objetos.map((id) => (!id ? 0 : esMT.has(id) ? otraMT() : azar.elegir(lista)));
   }
 }
 
@@ -791,7 +794,9 @@ function venderSiempre(datos, azar, ids, primera) {
     const donde = concreta || azar.elegir(tiendas);
     const libres = donde.objetos.map((_, k) => k).filter((k) => !fijos.has(`${donde.indice}:${k}`) && !ids.includes(donde.objetos[k]));
     if (!libres.length) continue;
-    const k = azar.elegir(libres);
+    // Mejor en un hueco libre (0) que en el sitio de otro objeto
+    const vacios = libres.filter((k) => !donde.objetos[k]);
+    const k = azar.elegir(vacios.length ? vacios : libres);
     donde.objetos[k] = id;
     fijos.add(`${donde.indice}:${k}`);
   }
@@ -817,7 +822,7 @@ function equilibrarPrecios(datos, objetos) {
 export async function randomizarROM(bytes, reglasEntrada, semilla) {
   const reglas = completarReglas(reglasEntrada);
   // Una ROM de DS (los bytes) o un juego de 3DS ya preparado (ver ./rom-3ds.js)
-  const rom = bytes.es3DS ? bytes : new RomNDS(bytes);
+  const rom = bytes.es3DS || bytes.esSwitch ? bytes : new RomNDS(bytes);
   const M = await cargarMotor(rom);
   // La hierba de los pueblos, antes de leer nada (sus Pokémon son salvajes como los demás)
   // (en 3DS carga antes lo que le falta: puede tardar)
@@ -827,7 +832,7 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
   let datosObjetos = await cargarDatosRandomizer();
   // Un datos/randomizer.json viejo (de la caché) no trae estadísticas ni ataques: a PokeAPI
   if (!datosObjetos.statsAntes || !datosObjetos.ataquesAntes || !datosObjetos.objetosGen) datosObjetos = await montarDatosRandomizer();
-  const objetos = clasificarObjetos(datosObjetos, datos.perfil.ultimoObjeto, datos.perfil.gen);
+  const objetos = clasificarObjetos(datosObjetos, datos.perfil.ultimoObjeto, datos.perfil.objetosGen || datos.perfil.gen);
   // Los que no existen en este juego (en Diamante y Perla, los números 112 a 134)
   if (datos.perfil.objetosInexistentes) {
     const existe = (id) => !datos.perfil.objetosInexistentes(id);
@@ -862,7 +867,7 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
   hacer("tipos", r.tipos.modo !== "no", () => randomizarTipos(datos, reglas, azar("tipos")));
   hacer("habilidades", r.habilidades.modo !== "no", () => randomizarHabilidades(datos, reglas, azar("habilidades")));
   hacer("ataques", r.ataques.modo !== "no", () => randomizarAtaques(datos, reglas, azar("ataques")));
-  hacer("iniciales", r.iniciales.modo !== "no", () => randomizarIniciales(datos, reglas, azar("iniciales")));
+  hacer("iniciales", r.iniciales.modo !== "no" && datos.perfil.iniciales !== false, () => randomizarIniciales(datos, reglas, azar("iniciales")));
   hacer("estáticos", r.estaticos.modo !== "no", () => randomizarEstaticos(datos, reglas, azar("estaticos")));
   hacer("tótems", datos.totems && datos.totems.length && (r.estaticos.totems !== "no" || r.estaticos.aliados !== "no" || r.estaticos.aura === "azar"), () => randomizarTotems(datos, reglas, azar("totems")));
   hacer("intercambios", r.intercambios.modo !== "no" || r.intercambios.objetos || r.intercambios.ivs, () =>
@@ -891,14 +896,17 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
         return ataque.id;
       });
     };
-    if (r.mt.ataques) movimientos.mt = elegir("mt-ataques", movimientos.mt);
-    if (r.tutores.ataques && datos.perfil.tutores) {
+    // (en Espada y Escudo no se pueden cambiar: van en el programa)
+    const mtAtaques = r.mt.ataques && !datos.perfil.mtFijas;
+    const tutoresAtaques = r.tutores.ataques && datos.perfil.tutores && !datos.perfil.tutoresFijos;
+    if (mtAtaques) movimientos.mt = elegir("mt-ataques", movimientos.mt);
+    if (tutoresAtaques) {
       const fijos = datos.perfil.tutorInfo?.fijos || [];
       const nuevos = elegir("tutores-ataques", movimientos.tutor);
       movimientos.tutor = movimientos.tutor.map((v, k) => (fijos.includes(k) ? v : nuevos[k]));
     }
-    hacer("ataques de las MT", r.mt.ataques, () => {});
-    hacer("ataques de los tutores", r.tutores.ataques && datos.perfil.tutores, () => {});
+    hacer("ataques de las MT", mtAtaques, () => {});
+    hacer("ataques de los tutores", tutoresAtaques, () => {});
     // Qué ataque es cada MT y cada tutor (ya con los nuevos) para dar más compatibilidad a los de su tipo
     const mtDe = (i) => {
       const { tm, hm } = bitsMT(datos);
@@ -907,10 +915,10 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
     };
     hacer("MT", r.mt.compat !== "no", () => compatibilidad(datos, "mt", reglas, azar("mt"), mtDe));
     hacer("tutores", r.tutores.compat !== "no" && datos.perfil.tutores, () => compatibilidad(datos, "tutor", reglas, azar("tutores"), (k) => datos.ataques[movimientos.tutor[k]]));
-    if (r.mt.ataques || (r.tutores.ataques && datos.perfil.tutores)) M.escribirMovimientos(rom, movimientos, datos.ataques);
+    if (mtAtaques || tutoresAtaques) M.escribirMovimientos(rom, movimientos, datos.ataques);
   }
   hacer("MO para todos", r.mt.mo && !datos.perfil.sinMT, () => moParaTodos(datos));
-  hacer("objetos del suelo", r.objetos.suelo && !datos.perfil.sinObjetos, () => randomizarObjetosSuelo(datos, reglas, azar("suelo"), objetos));
+  hacer("objetos del suelo", r.objetos.suelo && !datos.perfil.sinObjetos && !datos.perfil.sinObjetosSuelo, () => randomizarObjetosSuelo(datos, reglas, azar("suelo"), objetos));
   hacer("tiendas", r.objetos.tiendas && !datos.perfil.sinObjetos, () => randomizarTiendas(datos, reglas, azar("tiendas"), objetos));
   hacer("piedras en las tiendas", r.objetos.piedras && !datos.perfil.sinObjetos, () => venderSiempre(datos, azar("piedras"), PIEDRAS_EVOLUTIVAS));
   hacer("precios", r.objetos.precios && !datos.perfil.sinObjetos, () => equilibrarPrecios(datos, objetos));
@@ -949,7 +957,7 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
   // El tipo de las iniciales, si cambian ellas o los tipos
   const textoIniciales = r.iniciales.modo !== "no" || r.tipos.modo !== "no";
   M.actualizarTextos(rom, {
-    mt: movimientos && r.mt.ataques ? movimientos.mt : null,
+    mt: movimientos && r.mt.ataques && !datos.perfil.mtFijas ? movimientos.mt : null,
     iniciales: textoIniciales ? Object.assign(datos.iniciales.map((id) => ({ tipo: tiposEs[datos.especies[id].tipos[0]] })), { antes: inicialesAntes, ahora: datos.iniciales }) : null,
     intercambios: cambiosIntercambio,
     entrenadores: nombresEntrenadores

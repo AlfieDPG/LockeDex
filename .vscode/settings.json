@@ -1,0 +1,9 @@
+{
+  // Live Server: en «localhost» (Firebase solo deja iniciar sesión desde ahí y desde los dominios
+  // autorizados en la consola, no desde 127.0.0.1)
+  "liveServer.settings.host": "localhost",
+  "liveServer.settings.port": 5500,
+  "liveServer.settings.root": "/",
+  // Que no recargue por cambios en los datos grandes ni en git
+  "liveServer.settings.ignoreFiles": [".vscode/**", ".git/**", "datos/**", "img/**", "docs/**"]
+}

@@ -685,7 +685,10 @@
     <h2>Tu partida en el locke</h2>
     <div class="ayuda-partida">
       <h3>Vincular</h3>
-      <p>En X / Y, Rubí Omega / Zafiro Alfa, Sol / Luna y Ultrasol / Ultraluna eliges el archivo «main» de la partida del emulador (Citra o Lime3DS). En Diamante / Perla, Platino, HeartGold / SoulSilver, Negro / Blanco y Negro 2 / Blanco 2, el archivo de guardado (.dsv de DeSmuME o .sav). En Espada / Escudo, el archivo «main» de la partida (de Eden, Ryujinx o yuzu, o el que saca JKSV de la consola). La web lo vuelve a leer cada vez que guardas en el juego. Solo en Chrome o Edge de ordenador; en otros navegadores se lee a mano.</p>
+      <p>En X / Y, Rubí Omega / Zafiro Alfa, Sol / Luna y Ultrasol / Ultraluna eliges el archivo «main» de la partida del emulador (Citra o Lime3DS). En Diamante / Perla, Platino, HeartGold / SoulSilver, Negro / Blanco y Negro 2 / Blanco 2, el archivo de guardado (.dsv de DeSmuME o .sav). En Espada / Escudo, el archivo «main» de la partida, y en Diamante Brillante / Perla Reluciente, el «SaveData.bin» (de Eden, Ryujinx o yuzu, o los que saca JKSV de la consola). La web lo vuelve a leer cada vez que guardas en el juego. Solo en Chrome o Edge de ordenador; en otros navegadores se lee a mano.</p>
+      <h3>No me deja elegir el archivo</h3>
+      <p>Chrome y Edge no dejan elegir nada de dentro de las carpetas del sistema, como <b>AppData</b>, y muchos emuladores guardan ahí las partidas. Como la web tiene que leer la partida de verdad (no una copia), hay que decirle al emulador que la guarde en una carpeta normal, como Documentos:</p>
+      <p><b>Citra, Lime3DS o Azahar:</b> Configurar → Almacenamiento → cambia la carpeta de la tarjeta SD.<br><b>Eden, yuzu o Sudachi:</b> Emulación → Configurar → Sistema de archivos → cambia la carpeta de la NAND.<br>Antes de cambiarla, copia lo que había en la carpeta de antes a la nueva, o el emulador no verá tus partidas.</p>
       <h3>Cajas</h3>
       <p>Pulsa tu equipo en tu bloque para ver el equipo y las cajas. Las capturas se marcan solas en «Rutas».</p>
       <h3>Cajas de muertos</h3>
@@ -700,6 +703,45 @@
     </div>
     <div class="dialogo-botones">
       <button class="boton-gris ayuda-partida-cerrar" autofocus>Cerrar</button>
+    </div>
+  </dialog>
+
+  <!-- Qué ROM elegir en el randomizer y qué hacer con lo que sale (botón «?» de js/randomizer/index.js) -->
+  <dialog id="dialogo-ayuda-rom" class="dialogo-sesion">
+    <h2>Cómo randomizar tu juego</h2>
+    <div class="ayuda-partida">
+      <p>Tu juego no sale nunca de tu ordenador: la web lo lee, lo randomiza aquí mismo y te lo da para descargar. Necesitas tu propia copia del juego.</p>
+
+      <h3>Nintendo DS</h3>
+      <p>Pulsa «Elegir ROM» y elige el archivo <b>.nds</b>. Te descarga otro .nds, con «(random)» en el nombre: ábrelo en tu emulador (DeSmuME, melonDS...) en lugar del de siempre.</p>
+
+      <h3>Nintendo 3DS</h3>
+      <p>Pulsa «Elegir ROM» y elige el archivo <b>.3ds</b>. Tiene que estar <b>descifrado</b>: si la web dice que está cifrado, descífralo antes (en la consola, con GodMode9). Te descarga otro .3ds, con «(random)» en el nombre: ábrelo en tu emulador (Citra, Lime3DS, Azahar...).</p>
+
+      <h3>Nintendo Switch</h3>
+      <p>Aquí no se elige el juego (el .nsp o el .xci van cifrados), sino sus archivos ya sacados, el «RomFS». Se saca una sola vez desde el emulador, con las actualizaciones que tengas puestas:</p>
+      <ol>
+        <li><b>Eden, yuzu o Sudachi:</b> clic derecho sobre el juego → «Volcar RomFS» (si pregunta, el volcado completo). Al acabar se abre la carpeta donde lo ha dejado.</li>
+        <li><b>Ryujinx:</b> clic derecho sobre el juego → «Extraer datos» → «RomFS», y elige dónde dejarlo.</li>
+        <li>Si te lo ha dejado dentro de AppData (lo normal en Eden y yuzu), <b>copia la carpeta «romfs» a Documentos</b> o al Escritorio (lee «No me deja elegir el archivo», abajo).</li>
+        <li>En la web, pulsa «Elegir carpeta» y elige esa carpeta «romfs».</li>
+      </ol>
+      <p>Te descarga un .zip con los archivos cambiados, como un mod. Descomprímelo en la carpeta de mods del juego:</p>
+      <ol>
+        <li><b>Eden, yuzu o Sudachi:</b> clic derecho sobre el juego → «Abrir ubicación de los mods» y descomprime ahí el .zip (queda una carpeta «LockeDex» con «romfs» dentro).</li>
+        <li><b>Ryujinx:</b> clic derecho sobre el juego → «Abrir carpeta de mods» y descomprime ahí el .zip.</li>
+        <li><b>Consola con Atmosphère:</b> copia la carpeta «romfs» de dentro del .zip a <code>atmosphere/contents/</code> + el número del juego (Espada: 0100ABF008968000, Escudo: 01008DB008C2C000, Diamante Brillante: 0100000011D90000, Perla Reluciente: 010018E011D92000).</li>
+      </ol>
+      <p>Para volver al juego normal, quita (o desactiva en el emulador) esa carpeta de mods.</p>
+
+      <h3>No me deja elegir el archivo</h3>
+      <p>Chrome y Edge no dejan elegir nada de dentro de las carpetas del sistema, como <b>AppData</b> (que es donde los emuladores guardan muchas cosas). No es un fallo de la web: es una protección del navegador. Copia lo que quieras elegir a una carpeta normal, como Documentos o el Escritorio, y elígelo desde ahí.</p>
+
+      <h3>¿Y en un locke?</h3>
+      <p>En un locke con randomizer, pulsa «Randomizar mi ROM» en el locke: las normas son las del locke y no se pueden cambiar. A cada jugador le sale un juego distinto que sigue las mismas normas, y si vuelves a randomizar en este navegador te sale el mismo que la primera vez.</p>
+    </div>
+    <div class="dialogo-botones">
+      <button class="boton-gris ayuda-rom-cerrar" autofocus>Cerrar</button>
     </div>
   </dialog>
 
@@ -825,7 +867,7 @@
       </details>
       <details>
         <summary>¿Qué es «Vincular partida»?</summary>
-        <p>En los lockes de Diamante / Perla, Platino, HeartGold / SoulSilver, Negro / Blanco, Negro 2 / Blanco 2, X / Y, Rubí Omega / Zafiro Alfa, Sol / Luna, Ultrasol / Ultraluna y Espada / Escudo puedes elegir el archivo de guardado del emulador (en DS, el .dsv de DeSmuME o el .sav; en 3DS, el archivo «main» de Citra o Lime3DS; en Switch, el «main» de Eden, Ryujinx o yuzu, o el que saca JKSV de la consola). La web lo vuelve a leer cada vez que guardas: en tu bloque sale tu equipo, al pulsarlo ves también las cajas, las capturas se marcan solas en «Rutas» y los que metes en las cajas que marques como de muertos te los propone para el cementerio. Al apuntar un combate, tu equipo de la partida sale el primero. Los demás no ven nada de tu partida. En todos menos en Espada / Escudo, pulsando un Pokémon de las cajas lo puedes editar (especie, nivel, naturaleza, objeto, habilidad, ataques, EVs, IVs...), borrar o clonar, y arrastrándolo lo mueves; en un hueco libre creas uno nuevo, con «Meter equipo» metes uno de «Mis equipos» o de Showdown y en la pestaña «Bolsa» cambias los objetos que llevas. Los cambios se guardan todos juntos al cerrar la ventana de las cajas: hazlo con el juego cerrado en el emulador. Cada edición sale en la actividad del locke, y con «Copias» vuelves a como estaba. Vigilar el archivo solo funciona en Chrome o Edge de ordenador; en otros navegadores se puede leer a mano. Si el navegador no te deja elegirlo porque está dentro de AppData, cambia en el emulador la carpeta de la tarjeta SD (Configurar → Almacenamiento) a una normal, como Documentos.</p>
+        <p>En los lockes de Diamante / Perla, Platino, HeartGold / SoulSilver, Negro / Blanco, Negro 2 / Blanco 2, X / Y, Rubí Omega / Zafiro Alfa, Sol / Luna, Ultrasol / Ultraluna, Espada / Escudo y Diamante Brillante / Perla Reluciente puedes elegir el archivo de guardado del emulador (en DS, el .dsv de DeSmuME o el .sav; en 3DS, el archivo «main» de Citra o Lime3DS; en Switch, el «main» de Espada / Escudo o el «SaveData.bin» de Perla Reluciente, de Eden, Ryujinx o yuzu, o los que saca JKSV de la consola). La web lo vuelve a leer cada vez que guardas: en tu bloque sale tu equipo, al pulsarlo ves también las cajas, las capturas se marcan solas en «Rutas» y los que metes en las cajas que marques como de muertos te los propone para el cementerio. Al apuntar un combate, tu equipo de la partida sale el primero. Los demás no ven nada de tu partida. Pulsando un Pokémon de las cajas lo puedes editar (especie, nivel, naturaleza, objeto, habilidad, ataques, EVs, IVs...), borrar o clonar, y arrastrándolo lo mueves; en un hueco libre creas uno nuevo, con «Meter equipo» metes uno de «Mis equipos» o de Showdown y en la pestaña «Bolsa» cambias los objetos que llevas. Los cambios se guardan todos juntos al cerrar la ventana de las cajas: hazlo con el juego cerrado en el emulador. Cada edición sale en la actividad del locke, y con «Copias» vuelves a como estaba. Vigilar el archivo solo funciona en Chrome o Edge de ordenador; en otros navegadores se puede leer a mano. Si el navegador no te deja elegirlo porque está dentro de AppData, cambia en el emulador la carpeta donde guarda las partidas a una normal, como Documentos (en Citra, Lime3DS o Azahar, Configurar → Almacenamiento → tarjeta SD; en Eden, yuzu o Sudachi, Emulación → Configurar → Sistema de archivos → NAND). Lo tienes explicado en el «?» de la partida, en tu bloque del locke.</p>
       </details>
       <details>
         <summary>¿Qué son las vidas? ¿Y la vida cero?</summary>
@@ -850,6 +892,10 @@
       <details>
         <summary>¿Para qué sirve la ruleta?</summary>
         <p>Para echar a suertes lo que queráis, por ejemplo la recompensa del que gana un combate. Escribe las opciones a la derecha (la ruleta cambia según escribes) y pulsa el centro para girarla. Puedes tener varias ruletas, cada una con su nombre.</p>
+      </details>
+      <details>
+        <summary>¿Cómo randomizo mi juego?</summary>
+        <p>En «Randomizer» eliges qué cambiar (Pokémon, ataques, entrenadores, salvajes, objetos...) y luego tu juego: el .nds en los de DS, el .3ds descifrado en los de 3DS y, en los de Switch, la carpeta «romfs» que sacas desde el emulador. La web lo randomiza en tu ordenador (el juego no se sube a ningún sitio) y te lo da para descargar. En el «?» al lado de «Elegir ROM» tienes cómo hacerlo en cada consola y qué hacer con lo que te descarga. En un locke con randomizer, pulsa «Randomizar mi ROM» en el locke: a cada uno le sale un juego distinto con las mismas normas.</p>
       </details>
       <details>
         <summary>¿Para qué sirve el multiplicador de los level caps?</summary>

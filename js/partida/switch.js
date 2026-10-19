@@ -1,7 +1,8 @@
 // ---------- Partidas de Switch (Espada / Escudo) ----------
 //
 // Lee el archivo «main» de la partida (el de la carpeta de guardado de Eden, Ryujinx, yuzu...
-// o el que saca JKSV de la consola). Aquí solo se lee.
+// o el que saca JKSV de la consola). Aquí solo se lee; escribir está en ./escribirswitch.js, que
+// usa estas mismas piezas.
 //
 // Va cifrado con un XOR fijo de 0x7F bytes que se repite (los 32 últimos bytes, un SHA-256, no).
 // Descifrado, son bloques seguidos, cada uno con su llave (u32) y su tipo, y cifrados además con
@@ -13,7 +14,7 @@ export const TAM_HUECO = 0x158;   // en el equipo y también en las cajas (con n
 export const POR_CAJA = 30;
 export const CAJAS = 32;
 
-const XOR = [
+export const XOR = [
   0xa0, 0x92, 0xd1, 0x06, 0x07, 0xdb, 0x32, 0xa1, 0xae, 0x01, 0xf5, 0xc5, 0x1e, 0x84, 0x4f, 0xe3,
   0x53, 0xca, 0x37, 0xf4, 0xa7, 0xb0, 0x4d, 0xa0, 0x18, 0xb7, 0xc2, 0x97, 0xda, 0x5f, 0x53, 0x2b,
   0x75, 0xfa, 0x48, 0x16, 0xf8, 0xd4, 0x8a, 0x6f, 0x61, 0x05, 0xf4, 0xe2, 0xfd, 0x04, 0xb5, 0xa3,
@@ -23,15 +24,16 @@ const XOR = [
   0x2a, 0x27, 0x69, 0x33, 0xf5, 0x63, 0x7b, 0x36, 0x3f, 0x26, 0x9b, 0xa3, 0xed, 0x7a, 0x53, 0x00,
   0xa4, 0x48, 0xb3, 0x50, 0x9e, 0x14, 0xa0, 0x52, 0xde, 0x7e, 0x10, 0x2b, 0x1b, 0x77, 0x6e
 ];
-const HASH = 0x20;
+export const HASH = 0x20;
 
 // Los bloques que se usan, por su llave
-const LLAVES = {
+export const LLAVES = {
   cajas: 0x0d66012c,
   equipo: 0x2985fe5d,
   entrenador: 0xf25c070e,
   nombresCajas: 0x19722c89,
-  abiertas: 0x71825204
+  abiertas: 0x71825204,
+  bolsa: 0x1177c2c4
 };
 
 // Tipos de bloque: 1-3 sin datos (los sí/no), 4 objeto (con su largo), 5 lista (cuántos y de
@@ -58,7 +60,7 @@ function avanzar(estado) {
 }
 
 // Los bytes del xorshift de un bloque, de uno en uno
-function xorshift(llave) {
+export function xorshift(llave) {
   let estado = llave >>> 0;
   let unos = 0;
   for (let n = estado; n; n &= n - 1) unos++;
@@ -76,8 +78,10 @@ function xorshift(llave) {
   };
 }
 
-// Map llave -> bytes (solo de los bloques de LLAVES; de los demás basta con saltarlos). Error
-// si el archivo no acaba justo donde acaba el último bloque.
+// Map llave -> { datos (descifrados), inicio (dónde empiezan en el archivo), cabecera (cuántos
+// bytes del xorshift van antes de los datos: los del tipo y el tamaño) }, solo de los bloques de
+// LLAVES (de los demás basta con saltarlos). Error si el archivo no acaba justo donde acaba el
+// último bloque.
 function bloques(bytes) {
   const largo = bytes.length - HASH;
   const datos = new Uint8Array(largo);
@@ -95,14 +99,17 @@ function bloques(bytes) {
     o += 4;
     const tipo = datos[o++] ^ siguiente();
     let tam;
+    let cabecera = 1;
     if (tipo >= 1 && tipo <= 3) tam = 0;
     else if (tipo === OBJETO) {
       tam = vista.getUint32(o, true) ^ numero();
       o += 4;
+      cabecera += 4;
     } else if (tipo === LISTA) {
       const cuantos = vista.getUint32(o, true) ^ numero();
       const sub = datos[o + 4] ^ siguiente();
       o += 5;
+      cabecera += 5;
       if (!TAMANOS[sub]) throw new Error("Tipo de lista desconocido.");
       tam = cuantos * TAMANOS[sub];
     } else if (TAMANOS[tipo]) tam = TAMANOS[tipo];
@@ -112,7 +119,7 @@ function bloques(bytes) {
     if (buscados.has(llave)) {
       const bloque = datos.slice(o, o + tam);
       for (let i = 0; i < tam; i++) bloque[i] ^= siguiente();
-      salida.set(llave, bloque);
+      salida.set(llave, { datos: bloque, inicio: o, cabecera });
     }
     o += tam;
   }
@@ -124,7 +131,7 @@ function tamanoPosible(bytes) {
   return bytes.length > 0x100000 && bytes.length < 0x400000;
 }
 
-// Descifrada y con lo que hace falta, o null
+// Descifrada y con lo que hace falta, o null. Lo de abrirSwSh, sin la caché.
 function abrir(bytes) {
   if (!tamanoPosible(bytes)) return null;
   let mapa;
@@ -136,51 +143,75 @@ function abrir(bytes) {
   const cajas = mapa.get(LLAVES.cajas);
   const equipo = mapa.get(LLAVES.equipo);
   const entrenador = mapa.get(LLAVES.entrenador);
-  if (!cajas || !equipo || !entrenador || cajas.length < CAJAS * POR_CAJA * TAM_HUECO || equipo.length <= 6 * TAM_HUECO) return null;
+  if (!cajas || !equipo || !entrenador || cajas.datos.length < CAJAS * POR_CAJA * TAM_HUECO || equipo.datos.length <= 6 * TAM_HUECO) return null;
   return mapa;
 }
 
+// Descifrar es pasar por todo el archivo (1,5 MB): se hace una vez por partida. Las partidas no
+// se cambian nunca en el sitio (el editor trabaja sobre copias), así que vale con el array.
+const abiertas = new WeakMap();
+
+// Map llave -> { datos, inicio, cabecera } (ver bloques), o null si no es una partida de
+// Espada / Escudo. No hay que cambiar los datos que devuelve: son los de la caché.
+export function abrirSwSh(bytes) {
+  if (!abiertas.has(bytes)) abiertas.set(bytes, abrir(bytes));
+  return abiertas.get(bytes);
+}
+
 export function esPartidaSwSh(bytes) {
-  return Boolean(abrir(bytes));
+  return Boolean(abrirSwSh(bytes));
 }
 
 // ---------- Pokémon ----------
 
-const ORDEN = [
+export const ORDEN = [
   [0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 1, 3], [0, 3, 1, 2], [0, 2, 3, 1], [0, 3, 2, 1],
   [1, 0, 2, 3], [1, 0, 3, 2], [2, 0, 1, 3], [3, 0, 1, 2], [2, 0, 3, 1], [3, 0, 2, 1],
   [1, 2, 0, 3], [1, 3, 0, 2], [2, 1, 0, 3], [3, 1, 0, 2], [2, 3, 0, 1], [3, 2, 0, 1],
   [1, 2, 3, 0], [1, 3, 2, 0], [2, 1, 3, 0], [3, 1, 2, 0], [2, 3, 1, 0], [3, 2, 1, 0]
 ];
-const TROZO = 0x50;
+export const TROZO = 0x50;
 
-// Como en 3DS, con trozos de 80 bytes: XOR con el generador lineal desde la llave (los datos
-// de equipo vuelven a empezar) y deshacer el barajado. null si está vacío o no cuadra.
-function descifrar(cifrado) {
-  const datos = new Uint8Array(cifrado);
-  const vista = new DataView(datos.buffer);
-  const llave = vista.getUint32(0, true);
-
+// XOR con el generador lineal desde la llave (los datos de equipo vuelven a empezar). Cifra y
+// descifra igual.
+export function xorPokemon(vista, llave) {
   let semilla = llave;
-  for (let i = 8; i < datos.length; i += 2) {
+  for (let i = 8; i < vista.byteLength; i += 2) {
     if (i === TAM_POKEMON) semilla = llave;
     semilla = (Math.imul(semilla, 0x41c64e6d) + 0x6073) >>> 0;
     vista.setUint16(i, vista.getUint16(i, true) ^ (semilla >>> 16), true);
   }
+}
+
+export function ordenDe(llave) {
+  return ORDEN[((llave >>> 13) & 31) % 24];
+}
+
+export function sumaPokemon(vista) {
+  let suma = 0;
+  for (let i = 8; i < TAM_POKEMON; i += 2) suma = (suma + vista.getUint16(i, true)) & 0xffff;
+  return suma;
+}
+
+// Como en 3DS, con trozos de 80 bytes: el XOR y deshacer el barajado. null si no cuadra la suma
+// (los huecos vacíos sí cuadran: van todos a ceros, especie 0 incluida).
+export function descifrar(cifrado) {
+  const datos = new Uint8Array(cifrado);
+  const vista = new DataView(datos.buffer);
+  const llave = vista.getUint32(0, true);
+  xorPokemon(vista, llave);
 
   const copia = datos.slice(8, 8 + TROZO * 4);
-  ORDEN[((llave >>> 13) & 31) % 24].forEach((origen, destino) =>
+  ordenDe(llave).forEach((origen, destino) =>
     datos.set(copia.subarray(origen * TROZO, (origen + 1) * TROZO), 8 + destino * TROZO)
   );
 
-  let suma = 0;
-  for (let i = 8; i < TAM_POKEMON; i += 2) suma = (suma + vista.getUint16(i, true)) & 0xffff;
-  if (suma !== vista.getUint16(6, true)) return null;
+  if (sumaPokemon(vista) !== vista.getUint16(6, true)) return null;
   return vista;
 }
 
 // Texto en UTF-16 terminado en 0
-function texto(vista, inicio, maximo) {
+export function texto(vista, inicio, maximo) {
   let salida = "";
   for (let i = 0; i < maximo && inicio + i * 2 + 1 < vista.byteLength; i++) {
     const c = vista.getUint16(inicio + i * 2, true);
@@ -190,7 +221,7 @@ function texto(vista, inicio, maximo) {
   return salida;
 }
 
-function interpretar(v, enEquipo) {
+export function interpretar(v, enEquipo) {
   const especie = v.getUint16(0x08, true);
   if (!especie) return null;
 
@@ -236,14 +267,20 @@ function leerPokemon(bloque, inicio, enEquipo) {
 
 // ---------- Partida ----------
 
+// Cuántas cajas hay abiertas (se van abriendo según se llenan)
+export function cajasAbiertasSwSh(bytes) {
+  const abiertas = abrirSwSh(bytes).get(LLAVES.abiertas);
+  return abiertas && abiertas.datos[0] ? Math.min(CAJAS, abiertas.datos[0]) : CAJAS;
+}
+
 export function leerPartidaSwSh(bytes) {
-  const mapa = abrir(bytes);
+  const mapa = abrirSwSh(bytes);
   if (!mapa) throw new Error("No parece una partida de Espada / Escudo.");
 
-  const ent = mapa.get(LLAVES.entrenador);
+  const ent = mapa.get(LLAVES.entrenador).datos;
   const vistaEnt = new DataView(ent.buffer);
 
-  const eq = mapa.get(LLAVES.equipo);
+  const eq = mapa.get(LLAVES.equipo).datos;
   const cuantos = Math.min(6, eq[6 * TAM_HUECO]);
   const equipo = [];
   for (let i = 0; i < cuantos; i++) {
@@ -251,8 +288,8 @@ export function leerPartidaSwSh(bytes) {
     if (p) equipo.push(p);
   }
 
-  const cj = mapa.get(LLAVES.cajas);
-  const nombres = mapa.get(LLAVES.nombresCajas);
+  const cj = mapa.get(LLAVES.cajas).datos;
+  const nombres = mapa.get(LLAVES.nombresCajas) && mapa.get(LLAVES.nombresCajas).datos;
   const vistaNombres = nombres && new DataView(nombres.buffer);
   const cajas = [];
   for (let c = 0; c < CAJAS; c++) {
@@ -264,14 +301,27 @@ export function leerPartidaSwSh(bytes) {
     cajas.push({ nombre: (vistaNombres && texto(vistaNombres, c * 0x22, 16)) || `Caja ${c + 1}`, pokemon });
   }
 
-  const abiertas = mapa.get(LLAVES.abiertas);
   return {
     juego: "swsh",
     version: VERSIONES[ent[0xa4]] || "",
     gen: 8,
     entrenador: texto(vistaEnt, 0xb0, 12),
-    abiertas: abiertas && abiertas[0] ? Math.min(CAJAS, abiertas[0]) : CAJAS,
+    abiertas: cajasAbiertasSwSh(bytes),
     equipo,
     cajas
+  };
+}
+
+// Lo del entrenador que hace falta para crear un Pokémon suyo (pokemonswitch.js, crearPokemon)
+export function entrenadorSwSh(bytes) {
+  const ent = abrirSwSh(bytes).get(LLAVES.entrenador).datos;
+  const v = new DataView(ent.buffer, ent.byteOffset, ent.byteLength);
+  return {
+    tid: v.getUint16(0xa0, true),
+    sid: v.getUint16(0xa2, true),
+    version: ent[0xa4],
+    genero: ent[0xa5],
+    idioma: ent[0xa7],
+    nombre: ent.slice(0xb0, 0xb0 + 0x1a)
   };
 }

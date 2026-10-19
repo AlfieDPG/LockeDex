@@ -13,6 +13,7 @@ import { pokemonParaCopia } from "../comun/pokemon.js";
 import { leerPartida3DS, esPartida3DS } from "./tresds.js";
 import { leerPartidaDS, esPartidaDS } from "./nds.js";
 import { leerPartidaSwSh, esPartidaSwSh } from "./switch.js";
+import { leerPartidaBDSP, esPartidaBDSP } from "./bdsp.js";
 import { convertirPartida } from "./convertir.js";
 import { marcarCapturas } from "./rutas.js";
 import { hierbaEnPueblos } from "../randomizer/reglas.js";
@@ -22,18 +23,19 @@ import { CLAVE_HIERBA_RUTAS } from "../comun/selector-juego.js";
 const CLAVE = "poketeams-partidas-v1";
 
 // Juegos que se saben leer (ids de js/comun/juegos.js)
-export const JUEGOS_LEIBLES = ["dp", "platino", "hgss", "bw", "b2w2", "xy", "oras", "sm", "usum", "swsh"];
+export const JUEGOS_LEIBLES = ["dp", "platino", "hgss", "bw", "b2w2", "xy", "oras", "sm", "usum", "swsh", "bdsp"];
 
 const NOMBRES = {
   dp: "Diamante / Perla", platino: "Platino", hgss: "HeartGold / SoulSilver", bw: "Negro / Blanco",
   b2w2: "Negro 2 / Blanco 2", xy: "X / Y", oras: "Rubí Omega / Zafiro Alfa", sm: "Sol / Luna", usum: "Ultrasol / Ultraluna",
-  swsh: "Espada / Escudo"
+  swsh: "Espada / Escudo", bdsp: "Diamante Brillante / Perla Reluciente"
 };
 
 // De qué consola es la partida (la que sepa leerla), o null
 function lectorDe(bytes) {
   if (esPartida3DS(bytes)) return leerPartida3DS;
   if (esPartidaSwSh(bytes)) return leerPartidaSwSh;
+  if (esPartidaBDSP(bytes)) return leerPartidaBDSP;
   if (esPartidaDS(bytes)) return leerPartidaDS;
   return null;
 }

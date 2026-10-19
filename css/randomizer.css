@@ -37,6 +37,7 @@
 }
 
 .random-elegir,
+.random-elegir-carpeta,
 .random-vaciar,
 .random-ir {
   display: inline-flex;
@@ -51,14 +52,40 @@
 }
 
 .random-elegir,
+.random-elegir-carpeta,
 .random-vaciar {
   background: #2c2e3e;
   color: #f2f2f2;
 }
 
 .random-elegir:hover,
+.random-elegir-carpeta:hover,
 .random-vaciar:hover:not(:disabled) {
   background: #363949;
+}
+
+/* «?»: qué elegir en cada consola (#dialogo-ayuda-rom), como el de la partida de los lockes */
+.random-ayuda {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #3a3d52;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.random-ayuda:hover {
+  background: rgb(var(--color-vista));
+  color: #1e1f2b;
 }
 
 /* «Borrar todo» y «Randomizar» juntos, a la derecha */

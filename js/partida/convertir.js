@@ -9,7 +9,7 @@ import { cargarDatos, datos } from "../comun/datos.js";
 import { formasDeTipoDe } from "../comun/formas.js";
 import { LUGARES_GEN6, LUGARES_GEN7, OBJETOS_EN, CRECIMIENTO } from "./datos-3ds.js";
 import { LUGARES_GEN4, LUGARES_GEN4_OTROS, LUGARES_GEN5, LUGARES_GEN5_OTROS } from "./datos-ds.js";
-import { LUGARES_GEN8 } from "./datos-switch.js";
+import { LUGARES_GEN8, LUGARES_BDSP, LUGARES_BDSP_OTROS } from "./datos-switch.js";
 
 // Formas que importan (las que cambian el aspecto o los tipos), por el número que les da el
 // juego: [id de PokeAPI, nombre en Showdown]. Las que no están (Vivillon, Pikachu con gorra,
@@ -110,7 +110,8 @@ export async function prepararConversion() {
   return tablas;
 }
 
-function nombreLugar(gen, numero) {
+function nombreLugar(gen, numero, juego) {
+  if (juego === "bdsp") return numero === 65535 ? "" : LUGARES_BDSP[numero] || LUGARES_BDSP_OTROS[numero] || "";
   if (gen === 4) return LUGARES_GEN4[numero] || LUGARES_GEN4_OTROS[numero] || "";
   if (gen === 5) return LUGARES_GEN5[numero] || LUGARES_GEN5_OTROS[numero] || "";
   if (numero === 30001 || numero === 30002) return "Intercambio";
@@ -119,7 +120,7 @@ function nombreLugar(gen, numero) {
 }
 
 // Un Pokémon de la partida tal y como se guarda (sin «undefined»: va a la nube)
-function convertir(p, gen, conDetalle) {
+function convertir(p, gen, conDetalle, juego) {
   const { formas, especies } = tablas;
   const especie = especies.get(p.especie) || { es: `#${p.especie}`, en: "" };
   const salida = {
@@ -146,8 +147,10 @@ function convertir(p, gen, conDetalle) {
   }
 
   // De dónde viene: los huevos, de donde se recibieron; los demás, de donde se capturaron
-  if (!p.huevo && !p.lugarHuevo && p.lugar && nombreLugar(gen, p.lugar)) {
-    salida.lugar = nombreLugar(gen, p.lugar);
+  // (en Perla Reluciente, «sin huevo» es 65535)
+  const deHuevo = p.lugarHuevo && !(juego === "bdsp" && p.lugarHuevo === 65535);
+  if (!p.huevo && !deHuevo && p.lugar && nombreLugar(gen, p.lugar, juego)) {
+    salida.lugar = nombreLugar(gen, p.lugar, juego);
     salida.lugarN = p.lugar;
   }
   if (p.origen) salida.origen = p.origen;
@@ -171,10 +174,10 @@ export async function convertirPartida(leida) {
     version: leida.version,
     entrenador: leida.entrenador,
     abiertas: leida.abiertas,
-    equipo: leida.equipo.map((p) => convertir(p, leida.gen, true)),
+    equipo: leida.equipo.map((p) => convertir(p, leida.gen, true, leida.juego)),
     cajas: leida.cajas.map((caja) => ({
       nombre: caja.nombre,
-      pokemon: caja.pokemon.map((p) => ({ ...convertir(p, leida.gen, false), hueco: p.hueco }))
+      pokemon: caja.pokemon.map((p) => ({ ...convertir(p, leida.gen, false, leida.juego), hueco: p.hueco }))
     }))
   };
 }
