@@ -56,6 +56,12 @@ const LIDERES = [175, 179, 240, 241, 242, 243, 244, 245, 676, 677, 678, 679, 680
 const GRUPOS = [[175], [179], [240], [241], [242], [243], [244], [245], [185], [186], [187], [188], [191]];
 // Los que no se tocan (los combates de la historia que no son de verdad: el tutorial de captura...)
 const NO_TOCAR = new Set([487, 488, 489, 490, 491, 492]);
+// El Bidoof del tutorial de captura (va en el programa, a nivel bajo): se queda como en el juego (estadísticas, tipos,
+// habilidades y los ataques hasta TUTORIAL_NIVEL). Si no, con un ataque como Rugido o una habilidad como Huida, el
+// combate acaba sin la captura y el juego deja sin controles en los combates siguientes
+const TUTORIAL = 399;
+const TUTORIAL_NIVEL = 5;
+const CAMPOS_TUTORIAL = ["basic_hp", "basic_atk", "basic_def", "basic_spatk", "basic_spdef", "basic_agi", "type1", "type2", "tokusei1", "tokusei2", "tokusei3"];
 // Las listas de salvajes de cada zona que llevan Pokémon (cada una, [{ monsNo, minlv?, maxlv? }])
 const LISTAS = ["ground_mons", "tairyo", "day", "night", "swayGrass", "gbaRuby", "gbaSapp", "gbaEme", "gbaFire", "gbaLeaf", "water_mons", "boro_mons", "ii_mons", "sugoi_mons"];
 // Huecos libres al final de las tiendas especiales (para añadir sin quitar nada)
@@ -315,6 +321,16 @@ export function escribirBW2(sesion, datos) {
       return [evo.metodo, dato, evo.especie, forma, conNivel ? evo.dato : evo.nivelOriginal || 0];
     });
     oboe.WazaOboe[e.id].ar = (datos.aprende[e.id] || []).flatMap(([ataque, nivel]) => [nivel, ataque]);
+    // El del tutorial de captura, como en el juego (los ataques de después, los nuevos)
+    if (e.id === TUTORIAL) {
+      const o = bd.personal.Personal[e.id];
+      for (const c of CAMPOS_TUTORIAL) p[c] = o[c];
+      const pares = (ar) => ar.flatMap((x, i) => (i % 2 ? [] : [[x, ar[i + 1]]]));
+      oboe.WazaOboe[e.id].ar = [
+        ...pares(bd.oboe.WazaOboe[e.id].ar).filter(([nivel]) => nivel <= TUTORIAL_NIVEL),
+        ...pares(oboe.WazaOboe[e.id].ar).filter(([nivel]) => nivel > TUTORIAL_NIVEL)
+      ].flat();
+    }
   }
   poner(b.personal, "PersonalTable", personal, bd.personal);
   poner(b.personal, "EvolveTable", evolucion, bd.evolucion);
