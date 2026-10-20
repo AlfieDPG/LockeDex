@@ -33,7 +33,8 @@ export const LLAVES = {
   entrenador: 0xf25c070e,
   nombresCajas: 0x19722c89,
   abiertas: 0x71825204,
-  bolsa: 0x1177c2c4
+  bolsa: 0x1177c2c4,
+  varios: 0x1b882b09 // las medallas (un bit cada una) en +0, el dinero...
 };
 
 // Tipos de bloque: 1-3 sin datos (los sí/no), 4 objeto (con su largo), 5 lista (cuántos y de
@@ -301,11 +302,13 @@ export function leerPartidaSwSh(bytes) {
     cajas.push({ nombre: (vistaNombres && texto(vistaNombres, c * 0x22, 16)) || `Caja ${c + 1}`, pokemon });
   }
 
+  const varios = mapa.get(LLAVES.varios);
   return {
     juego: "swsh",
     version: VERSIONES[ent[0xa4]] || "",
     gen: 8,
     entrenador: texto(vistaEnt, 0xb0, 12),
+    medallas: varios ? Array.from({ length: 8 }, (_, i) => Boolean((varios.datos[0] >> i) & 1)) : null,
     abiertas: cajasAbiertasSwSh(bytes),
     equipo,
     cajas

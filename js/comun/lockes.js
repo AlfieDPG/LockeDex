@@ -430,6 +430,13 @@ export function seHaPasadoLaRom(locke, uid) {
   return Boolean((locke.rom || {})[uid]);
 }
 
+// Las medallas de alguien: { tiene: [índices, en el orden de la partida], version } (ver
+// js/comun/medallas.js). La versión, para las que cambian con ella (Espada / Escudo).
+export function medallasDe(locke, uid) {
+  const m = (locke.medallas || {})[uid];
+  return { tiene: (m && m.tiene) || [], version: (m && m.version) || "" };
+}
+
 // { ganadores: [uid] } (uno, varios si empatan o ninguno)
 export function ganadorPropuesto(locke) {
   const pasados = (locke.jugadores || []).filter(
@@ -471,6 +478,19 @@ export async function guardarEquipoCombate(id, idCombate, equipo) {
   const { fn, ref } = referencia(id);
   await fn.updateDoc(ref, {
     [`equipos.${usuario.uid}.${idCombate}`]: equipo || fn.deleteField(),
+    actualizado: Date.now()
+  });
+}
+
+// Las tuyas, enteras (las de la partida o las marcadas a mano en la tarjeta)
+export async function cambiarMedallas(id, tiene, version = "") {
+  const locke = lockePorId(id);
+  const usuario = usuarioActual();
+  if (!locke || !usuario || locke.estado === "cerrado") return;
+
+  const { fn, ref } = referencia(id);
+  await fn.updateDoc(ref, {
+    [`medallas.${usuario.uid}`]: { tiene: [...new Set(tiene)].sort((a, b) => a - b), version },
     actualizado: Date.now()
   });
 }

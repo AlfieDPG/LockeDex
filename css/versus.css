@@ -598,6 +598,70 @@ button.locke-anadir .icono {
   cursor: default;
 }
 
+/* ---------- Medallas ---------- */
+
+/* Las del juego, en fila (HGSS: Johto arriba y Kanto abajo), apagadas hasta conseguirlas */
+
+.locke-medallas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 0.45rem 0.4rem;
+  border-radius: 0.45rem;
+  background: rgba(var(--t-oscurecer), 0.2);
+}
+
+.locke-medallas .locke-etiqueta {
+  color: color-mix(in srgb, #e67e22 var(--t-vivo), black);
+}
+
+.locke-medallas-lista {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 0.25rem;
+  width: 100%;
+  max-width: 17rem;
+}
+
+.locke-medalla {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+button.locke-medalla {
+  cursor: pointer;
+  border-radius: 0.3rem;
+}
+
+button.locke-medalla:hover {
+  background: var(--t-control);
+}
+
+.locke-medalla img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: grayscale(1) brightness(0.55);
+  opacity: 0.45;
+  transition: filter 0.2s, opacity 0.2s, transform 0.2s;
+}
+
+.locke-medalla.conseguida img {
+  filter: drop-shadow(0 0 0.2rem rgba(255, 220, 120, 0.45));
+  opacity: 1;
+}
+
+button.locke-medalla:hover img {
+  transform: scale(1.12);
+}
+
 .locke-numero .icono {
   width: 0.95rem;
   height: 0.95rem;

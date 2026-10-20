@@ -35,8 +35,10 @@ import {
 import {
   alCambiarLockes, misLockes, invitacionesALockes, estadoDe, fallaLosLockes, soyCreador,
   crearLocke, editarLocke, invitarALocke, quitarDeLocke, sePuedenCambiarVidas,
-  cambiarNumero, borrarLocke, lockePorId, estaEliminado, combatesDe, victoriasDe
+  cambiarNumero, borrarLocke, lockePorId, estaEliminado, combatesDe, victoriasDe, medallasDe, cambiarMedallas
 } from "../comun/lockes.js";
+import { medallasDelJuego, marcarGimnasios } from "../comun/medallas.js";
+import { partidaDe } from "../partida/partidas.js";
 import {
   iniciarCombates, plantillaCombates, plantillaRom, plantillaSalon, abrirCombate, abrirTerminar, abrirSalon,
   alternarRom
@@ -117,6 +119,44 @@ function plantillaCifras(locke, uid, editable) {
     </div>`;
 }
 
+// Las medallas del juego del locke, apagadas hasta que se consiguen. Se encienden solas con la
+// partida vinculada; en tu tarjeta, además, se pueden pulsar (si no la tienes vinculada)
+function versionDeMedallas(locke, uid) {
+  const { version } = medallasDe(locke, uid);
+  if (version || uid !== usuarioActual().uid) return version;
+  return (partidaDe(locke.id) || {}).version || "";
+}
+
+function plantillaMedallas(locke, uid, editable) {
+  const lista = medallasDelJuego(locke.juego, versionDeMedallas(locke, uid));
+  if (!lista.length) return "";
+  const tiene = new Set(medallasDe(locke, uid).tiene);
+  const etiqueta = editable ? "button" : "span";
+  const medallas = lista.map((m, i) => {
+    const conseguida = tiene.has(i);
+    const titulo = escaparHTML(conseguida ? m.nombre : t("{medalla} (sin conseguir)", { medalla: m.nombre }));
+    return `
+      <${etiqueta} class="locke-medalla ${conseguida ? "conseguida" : ""}" ${editable ? `type="button" data-medalla="${i}"` : ""}
+        title="${titulo}" aria-label="${titulo}"><img src="${escaparHTML(m.imagen)}" alt="" loading="lazy"></${etiqueta}>`;
+  });
+  return `
+    <div class="locke-medallas ${lista.length > 8 ? "dos-filas" : ""}">
+      <span class="locke-etiqueta">${icono("escudo")} ${t("Medallas")} · ${[...tiene].filter((i) => i < lista.length).length}/${lista.length}</span>
+      <div class="locke-medallas-lista">${medallas.join("")}</div>
+    </div>`;
+}
+
+// Pulsar una medalla de tu tarjeta: la consigues o la quitas, y su gimnasio en «Level caps» igual
+function alternarMedalla(locke, indice) {
+  const usuario = usuarioActual();
+  const tiene = new Set(medallasDe(locke, usuario.uid).tiene);
+  const conseguida = !tiene.has(indice);
+  if (conseguida) tiene.add(indice);
+  else tiene.delete(indice);
+  marcarGimnasios(locke.juego, [indice], conseguida);
+  return cambiarMedallas(locke.id, [...tiene], versionDeMedallas(locke, usuario.uid));
+}
+
 function plantillaJugador(locke, uid) {
   const usuario = usuarioActual();
   const nombre = escaparHTML((locke.nombres || {})[uid] || t("Jugador"));
@@ -142,6 +182,7 @@ function plantillaJugador(locke, uid) {
       </div>
 
       ${plantillaCifras(locke, uid, esMio && !cerrado)}
+      ${pendiente ? "" : plantillaMedallas(locke, uid, esMio && !cerrado)}
       ${esMio && !pendiente ? plantillaPartida(locke) : ""}
       ${pendiente ? "" : plantillaRom(locke, uid, esMio && !cerrado && !eliminado)}
       ${cerrado && !pendiente ? plantillaSalon(locke, uid, esMio) : ""}
@@ -901,6 +942,8 @@ export function iniciar() {
       abrirTerminar(id);
     } else if (boton.classList.contains("locke-combate")) {
       abrirCombate(id, boton.dataset.combate);
+    } else if (boton.classList.contains("locke-medalla")) {
+      tarea = alternarMedalla(locke, Number(boton.dataset.medalla));
     } else if (boton.classList.contains("locke-rom")) {
       alternarRom(id);
     } else if (boton.classList.contains("locke-salon-poner") || boton.classList.contains("locke-salon-cambiar")) {

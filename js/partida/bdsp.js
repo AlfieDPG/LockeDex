@@ -171,11 +171,14 @@ export function leerPartidaBDSP(bytes) {
     cajas.push({ nombre: texto(v, NOMBRES + c * 0x22, 16) || `Caja ${c + 1}`, pokemon });
   }
   const entrenador = entrenadorBDSP(bytes);
+  // Las medallas: solo cuántas (se ganan en orden)
+  const cuantasMedallas = bytes[ENTRENADOR + 0x29];
   return {
     juego: "bdsp",
     version: NOMBRE_VERSION[entrenador.version] || "",
     gen: 8,
     entrenador: texto(v, ENTRENADOR, 12),
+    medallas: Array.from({ length: 8 }, (_, i) => i < cuantasMedallas),
     abiertas: cajasAbiertasBDSP(bytes),
     equipo,
     cajas

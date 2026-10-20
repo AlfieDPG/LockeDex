@@ -15,6 +15,13 @@ export function textoDeCombate(texto) {
   return (enIngles && texto && (TEXTOS_EN[texto] || LUGARES_EN[texto])) || texto;
 }
 
+// Identifica el combate aunque se añadan otros a la lista más adelante.
+// Incluye el lugar porque hay rivales que se repiten (Azul en la Ruta 22, en Ciudad Celeste...).
+// Los personalizados llevan su propio id: así se pueden cambiar sin perder la marca.
+export function claveCombate(c) {
+  return c.id || `${c.etiqueta}|${c.nombre}|${c.lugar || ""}`;
+}
+
 const gim = (n, nombre, lugar, nivel) => ({ tipo: "gimnasio", etiqueta: `Gimnasio ${n}`, nombre, lugar, nivel });
 const am = (nombre, nivel, extra = {}) => ({ tipo: "alto-mando", etiqueta: "Alto Mando", nombre, nivel, ...extra });
 const campeon = (nombre, nivel, extra = {}) => ({ tipo: "campeon", etiqueta: "Campeón", nombre, nivel, ...extra });

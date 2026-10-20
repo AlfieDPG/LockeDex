@@ -20,7 +20,8 @@ import { usuarioActual } from "../comun/nube.js";
 import { caraDePokemon, carasDeEquipo } from "../comun/elegir-equipo.js";
 import { cargarDatos } from "../comun/datos.js";
 import { sumarContador } from "../comun/contadores.js";
-import { lockePorId, muertosDe, apuntarMuerto, estaEliminado, apuntarSuceso } from "../comun/lockes.js";
+import { lockePorId, muertosDe, apuntarMuerto, estaEliminado, apuntarSuceso, medallasDe, cambiarMedallas } from "../comun/lockes.js";
+import { tieneMedallas } from "../comun/medallas.js";
 import {
   sePuedeVigilar, cargarVinculos, vincular, reanudar, desvincular, leerUnaVez, estadoVinculo,
   copiasDe, restaurarCopia
@@ -125,6 +126,16 @@ const intentos = new Map(); // idLocke -> lecturas dudosas seguidas
 const MAX_DUDOSAS = 3;
 
 // true si ya está (bien o con un error que no se arregla reintentando)
+// Las medallas de la partida, a tu tarjeta del locke (las marcadas a mano se quedan)
+function subirMedallas(locke, partida) {
+  if (!partida.medallas || !tieneMedallas(locke.juego)) return;
+  const antes = medallasDe(locke, usuarioActual().uid);
+  const todas = new Set([...antes.tiene, ...partida.medallas.flatMap((tiene, i) => (tiene ? [i] : []))]);
+  const version = partida.version || antes.version;
+  if (todas.size === antes.tiene.length && version === antes.version) return;
+  cambiarMedallas(locke.id, [...todas], version).catch((error) => console.error(error));
+}
+
 async function alLeer(id, bytes, archivo) {
   const locke = lockePorId(id);
   if (!locke) return false; // los lockes todavía no han llegado: en el siguiente vistazo
@@ -147,6 +158,7 @@ async function alLeer(id, bytes, archivo) {
   }
 
   intentos.delete(id);
+  subirMedallas(locke, resultado.partida);
   repintar();
   if (dialogo.open && idAbierto === id) pintarPartida();
   // La ventana de los muertos sale sola si estás mirando «Lockes»; si no, queda el aviso

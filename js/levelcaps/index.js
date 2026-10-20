@@ -5,7 +5,7 @@
 // la misma lista pasa a tener casillas: título, nombre, lugar, nivel e imagen (un personaje
 // de la web o una subida), y botones para moverlos, quitarlos y añadir más.
 
-import { COMBATES, textoDeCombate } from "./datos.js";
+import { COMBATES, textoDeCombate, claveCombate } from "./datos.js";
 import { retratoDeLaWeb } from "./retratos.js";
 import { abrirElegirImagen } from "./elegir-imagen.js";
 import { crearSelectorJuego, CLAVE_MULTIPLICADOR_CAPS } from "../comun/selector-juego.js";
@@ -53,13 +53,6 @@ const multiplicadores = leer(CLAVE_MULTIPLICADOR, {});
 let editando = false;       // la lista propia abierta, con casillas para cambiarla
 let abrirEditando = false;  // la próxima lista que se abra, ya en modo editar (al crearla)
 let callado = false;        // guardando desde el editor: no se vuelve a pintar (se perdería el foco)
-
-// Identifica el combate aunque se añadan otros a la lista más adelante.
-// Incluye el lugar porque hay rivales que se repiten (Azul en la Ruta 22, en Ciudad Celeste...).
-// Los personalizados llevan su propio id: así se pueden cambiar sin perder la marca.
-function claveCombate(c) {
-  return c.id || `${c.etiqueta}|${c.nombre}|${c.lugar || ""}`;
-}
 
 // Nivel con el multiplicador aplicado (redondeado y como mucho 100)
 function nivel(c) {
@@ -325,6 +318,8 @@ export function iniciar() {
     else superados.delete(casilla.dataset.clave);
     casilla.closest(".cap").classList.toggle("superado", casilla.checked);
 
+    // Lo de los otros juegos, como esté ahora (las medallas de una partida marcan desde fuera)
+    Object.assign(guardados, leer(CLAVE_SUPERADOS, {}) || {});
     guardados[juego.id] = [...superados];
     escribir(CLAVE_SUPERADOS, guardados);
     pintarResumen();
@@ -415,9 +410,17 @@ function elegirJuego(nuevo) {
 }
 
 export function mostrar() {
+  // Las medallas de una partida vinculada pueden haber marcado gimnasios desde fuera
+  for (const clave of Object.keys(guardados)) delete guardados[clave];
+  Object.assign(guardados, leer(CLAVE_SUPERADOS, {}) || {});
   // Si se ha llegado desde un locke de «Lockes», el juego viene apuntado en CLAVE_JUEGO.
   // Si es el mismo que ya había, no hace nada.
   selectorJuego.elegirPorId(leer(CLAVE_JUEGO, null));
+  const ahora = juego ? guardados[juego.id] || [] : [];
+  if (juego && !editando && (ahora.length !== superados.size || ahora.some((clave) => !superados.has(clave)))) {
+    superados = new Set(ahora);
+    pintarLista();
+  }
   // Un locke con randomizer puede haber cambiado el multiplicador desde fuera
   for (const clave of Object.keys(multiplicadores)) delete multiplicadores[clave];
   Object.assign(multiplicadores, leer(CLAVE_MULTIPLICADOR, {}));

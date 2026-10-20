@@ -26,6 +26,7 @@ import {
   alCambiarLockes, misLockes, invitacionesALockes, estadoDe, estaEliminado, victoriasDe
 } from "../comun/lockes.js";
 import { irA } from "../navegacion.js";
+import { medallasDelJuego } from "../comun/medallas.js";
 
 let seccion = null;
 
@@ -209,6 +210,9 @@ function plantillaLocke(locke) {
 
   const vidas = locke.vidasIlimitadas ? "∞" : (locke.vidas || {})[uid] || 0;
   const fuera = estaEliminado(locke, uid);
+  const medallas = (locke.medallas || {})[uid] || {};
+  const delJuego = medallasDelJuego(locke.juego, medallas.version).length;
+  const conseguidas = (medallas.tiene || []).filter((i) => i < delJuego).length;
 
   return `
     <button class="inicio-locke" data-id="${escaparHTML(locke.id)}" style="--color-locke: ${colorDeTipo(tipo)}">
@@ -223,6 +227,7 @@ function plantillaLocke(locke) {
       <span class="inicio-locke-cifras">
         <span class="inicio-cifra victorias" title="${t("Victorias")}">${icono("espadas")} ${victoriasDe(locke, uid)}</span>
         <span class="inicio-cifra vidas ${fuera ? "fuera" : ""}" title="${t("Vidas")}">${icono(fuera ? "calavera" : "corazon")} ${fuera ? "" : vidas}</span>
+        ${delJuego ? `<span class="inicio-cifra medallas" title="${t("Medallas")}">${icono("escudo")} ${conseguidas}/${delJuego}</span>` : ""}
       </span>
     </button>`;
 }

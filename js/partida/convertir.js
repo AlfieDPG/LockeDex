@@ -185,6 +185,7 @@ export async function convertirPartida(leida) {
     juego: leida.juego,
     version: leida.version,
     entrenador: leida.entrenador,
+    medallas: leida.medallas || null,
     abiertas: leida.abiertas,
     equipo: leida.equipo.map((p) => convertir(p, leida.gen, true, leida.juego)),
     cajas: leida.cajas.map((caja) => ({

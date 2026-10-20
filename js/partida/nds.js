@@ -51,6 +51,9 @@ const EQUIPO_GEN5 = 0x18e00; // bloque del equipo: el número en +4 y los Pokém
 const LARGO_EQUIPO_GEN5 = 0x534;
 const BOLSA_GEN5 = 0x18400;
 const ENTRENADOR_GEN5 = 0x19400;
+// Las medallas (un bit cada una): en gen 4, en el entrenador (+0x1A; las de Kanto de HGSS, en
+// +0x1F); en gen 5, en el bloque de varios (dinero, medallas...), en +4
+const MEDALLAS_GEN5 = { bw: 0x21204, b2w2: 0x21104 };
 
 export const VERSIONES = {
   1: "Zafiro", 2: "Rubí", 3: "Esmeralda", 4: "Rojo Fuego", 5: "Verde Hoja", 7: "HeartGold", 8: "SoulSilver",
@@ -349,11 +352,17 @@ export function leerPartidaDS(bytes) {
     cajas.push({ nombre: texto(v, mapa.nombreCaja(c), 20) || `Caja ${c + 1}`, pokemon });
   }
 
+  const bits = (n) => Array.from({ length: 8 }, (_, i) => Boolean((n >> i) & 1));
+  const medallas = gen === 5
+    ? bits(b[MEDALLAS_GEN5[mapa.id]])
+    : bits(b[mapa.general + mapa.datos.nombre + 0x1a]).concat(mapa.id === "hgss" ? bits(b[mapa.general + mapa.datos.nombre + 0x1f]) : []);
+
   return {
     juego: mapa.id,
     version: VERSIONES[ent.version] || "",
     gen,
     entrenador: texto(new DataView(ent.nombre.buffer), 0, 8),
+    medallas,
     abiertas: mapa.numCajas,
     equipo,
     cajas

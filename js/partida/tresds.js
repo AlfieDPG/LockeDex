@@ -13,8 +13,8 @@ export const POR_CAJA = 30;
 // Juegos por tamaño del archivo (id: el de js/comun/juegos.js). Los bloques, por su número
 // en la tabla. firma: dónde va la firma de las partidas de gen 7 (ver escribir3ds.js).
 export const JUEGOS = {
-  0x65600: { id: "xy", gen: 6, bloques: { entrenador: 0x11, equipo: 0x12, cajasInfo: 0x0c, cajas: 0x35 }, cajas: 31 },
-  0x76000: { id: "oras", gen: 6, bloques: { entrenador: 0x11, equipo: 0x12, cajasInfo: 0x0c, cajas: 0x38 }, cajas: 31 },
+  0x65600: { id: "xy", gen: 6, bloques: { entrenador: 0x11, equipo: 0x12, cajasInfo: 0x0c, cajas: 0x35, varios: 0x0b }, cajas: 31 },
+  0x76000: { id: "oras", gen: 6, bloques: { entrenador: 0x11, equipo: 0x12, cajasInfo: 0x0c, cajas: 0x38, varios: 0x0b }, cajas: 31 },
   0x6be00: { id: "sm", gen: 7, bloques: { entrenador: 0x03, equipo: 0x04, cajasInfo: 0x0d, cajas: 0x0e }, cajas: 32, firma: 0x6bb00 },
   0x6cc00: { id: "usum", gen: 7, bloques: { entrenador: 0x03, equipo: 0x04, cajasInfo: 0x0d, cajas: 0x0e }, cajas: 32, firma: 0x6c100 }
 };
@@ -245,11 +245,16 @@ export function leerPartida3DS(bytes) {
     cajas.push({ nombre: texto(info, c * 0x22, 16) || `Caja ${c + 1}`, pokemon });
   }
 
+  // Las medallas (un bit cada una), en el bloque de varios (dinero, medallas...). En Alola no hay.
+  const varios = juego.bloques.varios !== undefined ? bloque("varios") : null;
+  const medallas = varios ? Array.from({ length: 8 }, (_, i) => Boolean((varios.getUint8(0xc) >> i) & 1)) : null;
+
   return {
     juego: juego.id,
     version: version || "",
     gen: juego.gen,
     entrenador: texto(ent, ENTRENADOR[juego.gen].nombre, 12),
+    medallas,
     abiertas: cajasAbiertas(bytes),
     equipo,
     cajas

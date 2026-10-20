@@ -250,6 +250,7 @@
 
 .inicio-cifra.victorias .icono { color: color-mix(in srgb, #f1c40f var(--t-vivo), black); }
 .inicio-cifra.vidas .icono { color: #e74c3c; }
+.inicio-cifra.medallas .icono { color: color-mix(in srgb, #e67e22 var(--t-vivo), black); }
 .inicio-cifra.vidas.fuera { opacity: 0.6; }
 .inicio-cifra.vidas.fuera .icono { color: var(--t-texto); }
 

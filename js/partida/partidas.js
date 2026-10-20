@@ -5,8 +5,9 @@
 // sitio, aunque leer el archivo solo se pueda en el ordenador donde está.
 //
 //   localStorage «poketeams-partidas-v1»:
-//     { idLocke: { juego, version, entrenador, actualizada, archivo, equipo, cajas,
-//                  cajasMuertos: [posiciones], mirados: [llaves], muertosVistos: [llaves] } }
+//     { idLocke: { juego, version, entrenador, actualizada, archivo, equipo, cajas, medallas: [sí/no],
+//                  cajasMuertos: [posiciones], mirados: [llaves], muertosVistos: [llaves],
+//                  medallasVistas: [índices] } }
 
 import { leer, escribir } from "../comun/almacen.js";
 import { pokemonParaCopia } from "../comun/pokemon.js";
@@ -16,6 +17,7 @@ import { leerPartidaSwSh, esPartidaSwSh } from "./switch.js";
 import { leerPartidaBDSP, esPartidaBDSP } from "./bdsp.js";
 import { convertirPartida } from "./convertir.js";
 import { marcarCapturas } from "./rutas.js";
+import { marcarMedallasNuevas } from "../comun/medallas.js";
 import { hierbaEnPueblos } from "../randomizer/reglas.js";
 import { CLAVE_HIERBA_RUTAS } from "../comun/selector-juego.js";
 import { nombreDeJuego } from "../comun/juegos.js";
@@ -112,6 +114,9 @@ export async function procesarArchivo(locke, bytes, archivo = "") {
     if (!juegos[leida.juego]) escribir(CLAVE_HIERBA_RUTAS, { ...juegos, [leida.juego]: true });
   }
   const marcadas = marcarCapturas(nueva, leida.juego, mirados, conHierba);
+  // Las medallas nuevas: su gimnasio, superado en «Level caps»
+  const medallasVistas = new Set(anterior.medallasVistas || []);
+  marcarMedallasNuevas(leida.juego, nueva.medallas, medallasVistas);
 
   const partida = {
     ...nueva,
@@ -119,6 +124,7 @@ export async function procesarArchivo(locke, bytes, archivo = "") {
     archivo,
     cajasMuertos,
     mirados: [...mirados],
+    medallasVistas: [...medallasVistas],
     muertosVistos: anterior.muertosVistos || [],
     creados: anterior.creados || []
   };

@@ -12,6 +12,7 @@
 // Las iniciales van en el programa: se cambian con un parche IPS (exefs) por versión. Los intercambios, en los scripts.
 
 import { abrirBundle, leerPorNombre, leerOriginal, cambiarPorNombre, guardarBundle } from "./unity.js";
+import { bolsilloBDSP } from "../partida/bdsp.js";
 
 export const ULTIMA_ESPECIE = 493;
 export const ULTIMO_ATAQUE = 826;
@@ -266,9 +267,11 @@ export function leerBW2(sesion) {
   // Las MT: qué objeto es cada una (las 100 primeras máquinas)
   const maquinas = items.WazaMachine.filter((m) => m.machineNo >= 1 && m.machineNo <= 100).sort((a, c) => a.machineNo - c.machineNo);
   perfil.mtItems = maquinas.map((m) => m.itemNo);
-  // Los objetos: los que no tienen dibujo o no van en ningún bolsillo no están en el juego
+  // Los objetos: los que no tienen dibujo o no van en ningún bolsillo no están en el juego. La tabla trae también
+  // muchos de otros juegos (semillas, discos de memoria...): solo valen los que caben en la bolsa de la partida
+  // (si no, salen como objeto desconocido y no se pueden usar)
   const precios = [];
-  for (const it of items.Item) if (it.no && it.iconid >= 0 && it.fld_pocket !== 9) precios[it.no] = it.price;
+  for (const it of items.Item) if (it.no && it.iconid >= 0 && it.fld_pocket !== 9 && bolsilloBDSP(it.no)) precios[it.no] = it.price;
   perfil.objetosInexistentes = (id) => precios[id] === undefined;
   const t = leerTiendas(shop);
   perfil.tiendas = t.tipo;

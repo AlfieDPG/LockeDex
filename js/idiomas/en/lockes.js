@@ -10,6 +10,8 @@ export default {
   "Sumar una vida": "Add a life",
   "Jugador": "Player",
   "tú": "you",
+  "Medallas": "Badges",
+  "{medalla} (sin conseguir)": "{medalla} (not earned yet)",
   "Tú": "You",
   "Sin contestar": "No answer yet",
   "sin contestar": "no answer yet",
