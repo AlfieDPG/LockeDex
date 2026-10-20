@@ -413,51 +413,11 @@ function parcheIniciales([planta, fuego, agua], inicial, rival) {
   return Uint8Array.from(salida);
 }
 
-// La inicial que escoges queda en la variable 246, y muchos scripts la comparan con Turtwig, Chimchar y Piplup (qué
-// equipo lleva Benito, qué te dicen...): en esas comparaciones (los números van como float), las nuevas
-const VARIABLE_INICIAL = 246;
-function scriptsIniciales(sesion, iniciales, especies) {
-  const ab = bundles(sesion).scripts;
-  // Cada fase de la línea de antes (Turtwig, Grotle, Torterra...), por la misma fase de la nueva (o la última que tenga)
-  const linea = (id) => {
-    const l = [id];
-    for (let e = especies[id]; e && e.evoluciones.length && l.length < 3; e = especies[e.evoluciones[0].especie]) l.push(e.evoluciones[0].especie);
-    return l;
-  };
-  const nuevo = new Map();
-  INICIALES.forEach((antes, k) => {
-    const ahora = linea(iniciales[k]);
-    [antes, antes + 1, antes + 2].forEach((fase, i) => nuevo.set(aBits(fase), aBits(ahora[Math.min(i, ahora.length - 1)])));
-  });
-  for (const nombre of ab.porNombre.keys()) {
-    let objeto;
-    try {
-      objeto = leerPorNombre(ab, nombre);
-    } catch (e) {
-      continue;
-    }
-    if (!Array.isArray(objeto.Scripts)) continue;
-    let cambio = false;
-    for (const s of objeto.Scripts) {
-      for (const c of s.Commands || []) {
-        const args = c.Arg || [];
-        if (!args.some((a) => a.argType === 2 && a.data === VARIABLE_INICIAL)) continue;
-        for (const a of args) {
-          if (a.argType === 1 && nuevo.has(a.data) && nuevo.get(a.data) !== a.data) {
-            a.data = nuevo.get(a.data);
-            cambio = true;
-          }
-        }
-      }
-    }
-    if (cambio) cambiarPorNombre(ab, nombre, objeto);
-  }
-  guardar(sesion, "scripts");
-}
 
 function escribirIniciales(sesion, iniciales, especies) {
   for (const [id, inicial, rival] of VERSIONES) sesion.cambiar(`@exefs/${id}.ips`, parcheIniciales(iniciales, inicial, rival));
-  scriptsIniciales(sesion, iniciales, especies);
+  // Los scripts no se tocan, como en el randomizer de Ai0796: reescribir los que miran la inicial (la casa de Benito,
+  // los de subir de nivel...) es lo único que no estaba probado y se sospecha de los cuelgues de los eventos
   // El diálogo de elegir: «¿Quieres a Turtwig, el Pokémon Hojita?», en cada idioma (el nombre y la categoría)
   if (!sesion.tiene(MENSAJES + "common_msbt")) return;
   const comun = abrirBundle(sesion.archivo(MENSAJES + "common_msbt"));
