@@ -349,6 +349,10 @@ export function escribirMochilaBDSP(original, mochila) {
     for (const objeto of legales) if (!vistos.has(objeto)) bolsa.fill(0, objeto * 16, objeto * 16 + 16);
     limpia[bolsillo] = lista;
   }
+  // Los objetos que no existen en el juego (los repartió un randomizer antiguo: salen «desconocidos») no se ven aquí
+  // y conservan su sitio al ordenar el bolsillo, que choca con el de los nuevos: el juego deja de poder salir de la
+  // bolsa. Fuera
+  for (let objeto = 0; objeto < 3000; objeto++) if (!BOLSILLO_DE.has(objeto)) bolsa.fill(0, objeto * 16, objeto * 16 + 16);
 
   const nuevo = escribirTrozos(original, [{ inicio: BOLSA, datos: bolsa }]);
   if (JSON.stringify(leerMochilaBDSP(nuevo)) !== JSON.stringify(limpia)) throw new Error("La bolsa no se ha guardado bien.");

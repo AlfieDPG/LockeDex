@@ -259,9 +259,18 @@ export function leerBW2(sesion) {
     for (let k = 0; k + 1 < ar.length; k += 2) lista.push([ar[k + 1], ar[k]]);
     aprende[e.id] = lista;
   }
+  // La tabla de ataques y la de habilidades traen muchos de otros juegos que Diamante y Perla no usan (sin efecto,
+  // o cuelgan el combate o el aprender al subir de nivel). Solo valen los que el propio juego usa: los ataques que
+  // algún Pokémon aprende, que llevan los entrenadores o que enseña una MT, y las habilidades de alguna especie
+  const usados = new Set(items.WazaMachine.filter((m) => m.machineNo >= 1 && m.machineNo <= 100).map((m) => m.wazaNo));
+  for (const o of oboe.WazaOboe) for (let k = 1; k < (o.ar || []).length; k += 2) usados.add(o.ar[k]);
+  for (const tp of entrenadores.TrainerPoke) for (const [campo, valor] of Object.entries(tp)) if (/^P\dWaza\d$/.test(campo)) usados.add(valor);
+  const habilidades = new Set();
+  for (const p of personal.Personal) if (p && p.valid_flag) [p.tokusei1, p.tokusei2, p.tokusei3].forEach((h) => habilidades.add(h));
+  perfil.habilidadesNunca = [...perfil.habilidadesNunca, ...Array.from({ length: ULTIMA_HABILIDAD }, (_, k) => k + 1).filter((h) => !habilidades.has(h))];
   const ataques = [];
   for (const w of waza.Waza) {
-    if (!w.isValid || !w.wazaNo || w.wazaNo > ULTIMO_ATAQUE) continue;
+    if (!w.isValid || !w.wazaNo || w.wazaNo > ULTIMO_ATAQUE || !usados.has(w.wazaNo)) continue;
     ataques[w.wazaNo] = { id: w.wazaNo, tipo: TIPOS[w.type], categoria: w.category, potencia: w.power, precision: w.hitPer, pp: w.basePP };
   }
   // Las MT: qué objeto es cada una (las 100 primeras máquinas)
