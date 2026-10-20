@@ -506,14 +506,15 @@ function randomizarSalvajes(datos, reglas, azar) {
   const nivel = reglas.salvajes.nivel;
   for (const area of datos.salvajes) {
     // En cada archivo (una ruta), cada especie original pasa a ser otra distinta, igual en todas
-    // sus zonas y estaciones
+    // sus zonas y estaciones. Con «variedad», cada hueco se sortea por separado (como en el Universal Pokémon
+    // Randomizer): en una ruta con solo Starly y Bidoof salen tantas especies como huecos, no dos
     const mapa = new Map();
     const usadas = new Set();
     for (const zonas of area.estaciones) {
       for (const { huecos } of zonas) {
         for (const h of huecos) {
           if (h.especie && modo !== "no") {
-            if (!mapa.has(h.especie)) {
+            if (reglas.salvajes.variedad || !mapa.has(h.especie)) {
               const elegida = sustituta(azar, datos.especies[h.especie], lista, modo, usadas);
               mapa.set(h.especie, elegida);
               usadas.add(elegida.id);

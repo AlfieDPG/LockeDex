@@ -34,7 +34,7 @@ export const REGLAS_VACIAS = {
   },
   // pueblos: hierba en los pueblos que no tienen (DS, X/Y y ROZA; Sol/Luna no). unico: en Espada y Escudo, todos los
   // que se ven por el campo de una zona, la misma especie
-  salvajes: { modo: "no", sinLegendarios: true, nivel: 0, objetos: false, pueblos: false, unico: false },
+  salvajes: { modo: "no", sinLegendarios: true, nivel: 0, objetos: false, pueblos: false, unico: false, variedad: false },
   // compat «aleatoria»: cada uno, cara o cruz (50 %); con deSuTipo, los de su tipo con «tipo» %
   mt: { ataques: false, compat: "no", deSuTipo: false, tipo: 90, mo: false },
   tutores: { ataques: false, compat: "no", deSuTipo: false, tipo: 90 },

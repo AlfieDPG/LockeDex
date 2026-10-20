@@ -97,6 +97,9 @@ export default {
   "Salvajes": "Wild",
   "Pokémon salvajes": "Wild Pokémon",
   "Un solo Pokémon por zona en el campo": "A single overworld Pokémon per area",
+  "Más variedad en cada zona": "More variety in each area",
+  "Normalmente cada Pokémon de una zona se cambia siempre por el mismo: si en la Ruta 201 solo hay Starly y Bidoof, solo verás dos Pokémon distintos. Con esta opción cada hueco de la hierba, el agua, etc. se sortea por separado, como en el Universal Pokémon Randomizer, y salen muchos más distintos.":
+    "Normally each Pokémon in an area is always replaced by the same one: if Route 201 only has Starly and Bidoof, you only see two different Pokémon. With this option each slot of the grass, water, etc. is rolled separately, like in the Universal Pokémon Randomizer, so many more different ones appear.",
   "En Espada y Escudo los Pokémon salvajes se ven por el campo, así que podrías elegir contra cuál luchar. Con esta opción, todos los que se ven en cada zona son de la misma especie, elegida al azar: te toca la que te toca.\n\nLos que salen de la hierba alta con «!» siguen siendo al azar entre los de la zona.":
     "In Sword and Shield wild Pokémon roam the overworld, so you could pick which one to fight. With this option, every one you see in each area is the same species, chosen at random: you get what you get.\n\nThe ones that pop out of tall grass with “!” are still random among the area's Pokémon.",
   "Objetos de los Pokémon salvajes aleatorios": "Random wild Pokémon items",

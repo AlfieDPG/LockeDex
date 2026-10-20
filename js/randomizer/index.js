@@ -256,6 +256,10 @@ const PESTANAS = [
             k: "unico", tipo: "casilla", texto: "Un solo Pokémon por zona en el campo", no: ["dp", "platino", "hgss", "bw", "b2w2", "xy", "oras", "sm", "usum", "bdsp"],
             ayuda: "En Espada y Escudo los Pokémon salvajes se ven por el campo, así que podrías elegir contra cuál luchar. Con esta opción, todos los que se ven en cada zona son de la misma especie, elegida al azar: te toca la que te toca.\n\nLos que salen de la hierba alta con «!» siguen siendo al azar entre los de la zona."
           },
+          {
+            k: "variedad", tipo: "casilla", texto: "Más variedad en cada zona",
+            ayuda: "Normalmente cada Pokémon de una zona se cambia siempre por el mismo: si en la Ruta 201 solo hay Starly y Bidoof, solo verás dos Pokémon distintos. Con esta opción cada hueco de la hierba, el agua, etc. se sortea por separado, como en el Universal Pokémon Randomizer, y salen muchos más distintos."
+          },
           { k: "objetos", tipo: "casilla", texto: "Objetos de los Pokémon salvajes aleatorios" },
           {
             k: "pueblos", tipo: "casilla", texto: "Hierba en los pueblos", no: ["sm", "usum", ...SWITCH],
