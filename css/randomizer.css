@@ -412,8 +412,10 @@
   justify-content: center;
   width: 1.15rem;
   height: 1.15rem;
+  box-sizing: border-box;
   margin-left: 0.4rem;
-  padding: 0;
+  /* la «i» tiene el punto arriba y parece subida: se baja un poco para que quede en el centro */
+  padding: 0.07rem 0 0;
   border: 1px solid rgba(var(--t-tinte), 0.35);
   border-radius: 50%;
   background: transparent;
