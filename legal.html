@@ -16,6 +16,26 @@
     } catch (error) {}
   </script>
   <style>
+    /* Las mismas letras que la web (ver css/base.css) */
+    @font-face {
+      font-family: "Nunito";
+      font-weight: 400 900;
+      font-display: swap;
+      src: url("fuentes/nunito.woff2") format("woff2");
+    }
+
+    @font-face {
+      font-family: "Baloo 2";
+      font-weight: 400 800;
+      font-display: swap;
+      src: url("fuentes/baloo2.woff2") format("woff2");
+    }
+
+    h1, h2, h3 {
+      font-family: "Baloo 2", "Nunito", Arial, sans-serif;
+      line-height: 1.15;
+    }
+
     :root {
       color-scheme: dark;
       --fondo: #1e1f2b;
@@ -40,7 +60,7 @@
       margin: 0;
       background: var(--fondo);
       color: var(--texto);
-      font-family: Arial, sans-serif;
+      font-family: "Nunito", Arial, sans-serif;
       font-size: 16px;
       line-height: 1.55;
       overflow-wrap: anywhere; /* que las rutas y enlaces largos no ensanchen la página en el móvil */
@@ -141,7 +161,7 @@
   </style>
 </head>
 <body>
-  <header><a href="./">NuzTheLocke</a></header>
+  <header><a href="./">NuzThe<span style="color: #e74c3c">Locke</span></a></header>
 
   <main>
     <h1>Créditos, aviso legal y privacidad</h1>
@@ -246,6 +266,14 @@
         los fondos de cada tipo están hechos con esos mismos iconos. El símbolo de la megaevolución es el de los juegos.
         El resto de iconos siguen el estilo de <a href="https://lucide.dev" target="_blank" rel="noopener">Lucide</a> (licencia ISC).
         El icono de NuzTheLocke (un candado con forma de Poké Ball) está dibujado a mano con código, sin IA generativa.</p>
+    </div>
+
+    <div class="fuente">
+      <h3>Letras</h3>
+      <p><a href="https://github.com/EkType/Baloo2" target="_blank" rel="noopener">Baloo 2</a> (de Ek Type) para los títulos y
+        <a href="https://github.com/googlefonts/nunito" target="_blank" rel="noopener">Nunito</a> (de Vernon Adams y Jacques Le Bailly) para el texto,
+        las dos con licencia <a href="https://openfontlicense.org" target="_blank" rel="noopener">SIL Open Font License</a>.
+        Van en la propia web, con su licencia, en la carpeta <code>fuentes/</code>.</p>
     </div>
 
     <!-- ---------- Privacidad ---------- -->
@@ -427,6 +455,14 @@
         the type backgrounds are made from those same icons. The Mega Evolution symbol is the one from the games.
         The rest of the icons follow the <a href="https://lucide.dev" target="_blank" rel="noopener">Lucide</a> style (ISC license).
         The NuzTheLocke icon (a padlock shaped like a Poké Ball) is drawn by hand in code, with no generative AI.</p>
+    </div>
+
+    <div class="fuente">
+      <h3>Fonts</h3>
+      <p><a href="https://github.com/EkType/Baloo2" target="_blank" rel="noopener">Baloo 2</a> (by Ek Type) for headings and
+        <a href="https://github.com/googlefonts/nunito" target="_blank" rel="noopener">Nunito</a> (by Vernon Adams and Jacques Le Bailly) for text,
+        both under the <a href="https://openfontlicense.org" target="_blank" rel="noopener">SIL Open Font License</a>.
+        They are hosted on this site, with their license, in the <code>fuentes/</code> folder.</p>
     </div>
 
     <h2 id="privacy">Privacy policy</h2>

@@ -30,8 +30,8 @@ import { medallasDelJuego } from "../comun/medallas.js";
 
 let seccion = null;
 
-const MAX_LOCKES = 4;
-const MAX_EQUIPOS = 3;
+const MAX_LOCKES = 12; // los que se pintan; en pantalla se ven los que caben (ajustarListas)
+const MAX_EQUIPOS = 10;
 
 // ---------- Notas y avisos (los escribe el desarrollador; los ven todos) ----------
 //
@@ -130,6 +130,7 @@ function plantillaBienvenida() {
         <p>${t(`Todo lo que necesitas para jugar <b>Nuzlockes</b> (y cualquier otro locke) en un solo
           sitio: tus equipos, las rutas, los level caps, una calculadora de daño, un randomizer…
           y lockes compartidos con tus amigos.`)}</p>
+        <p>${t("Elige una sección a la derecha para empezar a explorar: cada una te lleva directa a su página.")}</p>
         ${hayNube()
           ? `<p class="inicio-bienvenida-cuenta">${t(`Casi todo funciona sin cuenta. Con sesión, tus equipos
               se guardan en la nube y desbloqueas los lockes con amigos, los perfiles y los logros.`)}</p>
@@ -188,11 +189,24 @@ function plantillaCabecera() {
   const nombre = conSesion() ? (perfil && perfil.nombre) || "" : "";
   const pendientes = conSesion() ? invitacionesALockes().length + solicitudesRecibidas().length : 0;
 
+  // Con sesión, un vistazo: cuántos lockes en marcha y cuántos amigos conectados
+  let vistazo = "";
+  if (conSesion()) {
+    const lockes = lockesEnMarcha().length;
+    const amigos = amigosConectados().length;
+    vistazo = `
+      <p class="inicio-resumen">
+        <span><b>${lockes}</b> ${t(lockes === 1 ? "locke en marcha" : "lockes en marcha")}</span>
+        <span class="${amigos ? "en-linea" : ""}"><b>${amigos}</b> ${t(amigos === 1 ? "amigo conectado" : "amigos conectados")}</span>
+      </p>`;
+  }
+
   return `
     <header class="inicio-cabecera">
       <img class="inicio-logo" src="img/icono.svg" alt="" style="animation-delay: -${(performance.now() % 6000) / 1000}s">
       <div class="inicio-saludo">
-        <h1>${nombre ? t("Hola, {nombre}", { nombre: escaparHTML(nombre) }) : "NuzTheLocke"}</h1>
+        <h1>${nombre ? t("Hola, {nombre}", { nombre: escaparHTML(nombre) }) : `NuzThe<span class="logo-locke">Locke</span>`}</h1>
+        ${vistazo}
       </div>
       ${pendientes
         ? `<button class="inicio-avisos">${icono("campana")} ${t("{n} sin contestar", { n: pendientes })}</button>`
@@ -225,27 +239,23 @@ function plantillaLocke(locke) {
         ${jugadores.map((cada) => cara((locke.nombres || {})[cada], (locke.fotos || {})[cada])).join("")}
       </span>
       <span class="inicio-locke-cifras">
-        <span class="inicio-cifra victorias" title="${t("Victorias")}">${icono("espadas")} ${victoriasDe(locke, uid)}</span>
-        <span class="inicio-cifra vidas ${fuera ? "fuera" : ""}" title="${t("Vidas")}">${icono(fuera ? "calavera" : "corazon")} ${fuera ? "" : vidas}</span>
-        ${delJuego ? `<span class="inicio-cifra medallas" title="${t("Medallas")}">${icono("escudo")} ${conseguidas}/${delJuego}</span>` : ""}
+        <span class="inicio-cifra victorias"><b>${victoriasDe(locke, uid)}</b><small>${t("Victorias")}</small></span>
+        <span class="inicio-cifra vidas ${fuera ? "fuera" : ""}"><b>${fuera ? icono("calavera") : vidas}</b><small>${t("Vidas")}</small></span>
+        ${delJuego ? `<span class="inicio-cifra medallas"><b>${conseguidas}/${delJuego}</b><small>${t("Medallas")}</small></span>` : ""}
       </span>
     </button>`;
 }
 
 function plantillaLockes() {
   const enMarcha = lockesEnMarcha();
-  const quedan = enMarcha.length - MAX_LOCKES;
 
   return `
-    <section class="inicio-bloque inicio-lockes">
+    <section class="inicio-bloque inicio-lockes inicio-enlace" data-ir="lockes">
       <h2>${icono("espadas")} ${t("Lockes en marcha")}</h2>
       ${enMarcha.length
-        ? `<div class="inicio-lista">${enMarcha.slice(0, MAX_LOCKES).map(plantillaLocke).join("")}</div>`
+        ? `<div class="inicio-lista" data-total="${enMarcha.length}" data-modo="mas">${enMarcha.slice(0, MAX_LOCKES).map(plantillaLocke).join("")}</div>`
         : `<p class="inicio-vacio">${t("Ninguno ahora mismo.")}</p>`}
-      <div class="inicio-pie">
-        ${quedan > 0 ? `<button data-vista="lockes">${t("Ver todos ({n} más)", { n: quedan })}</button>` : ""}
-        <button class="inicio-principal inicio-nuevo">${icono("mas")} ${t("Nuevo locke")}</button>
-      </div>
+      ${enMarcha.length ? `<div class="inicio-pie"><button class="inicio-ver-resto" data-vista="lockes" hidden></button></div>` : ""}
     </section>`;
 }
 
@@ -253,7 +263,7 @@ function plantillaAmigos() {
   const conectados = amigosConectados();
 
   return `
-    <section class="inicio-bloque inicio-amigos">
+    <section class="inicio-bloque inicio-amigos inicio-enlace" data-ir="amigos">
       <h2>${icono("amigos")} ${t("Conectados")}</h2>
       ${conectados.length
         ? `<div class="inicio-amigos-lista">${conectados
@@ -276,10 +286,10 @@ function plantillaEquipos() {
     .sort((uno, otro) => (otro.actualizado || 0) - (uno.actualizado || 0));
 
   return `
-    <section class="inicio-bloque inicio-equipos">
+    <section class="inicio-bloque inicio-equipos inicio-enlace" data-ir="equipos">
       <h2>${icono("pokeball")} ${t("Últimos equipos")}</h2>
       ${equipos.length
-        ? `<div class="inicio-lista">${equipos
+        ? `<div class="inicio-lista" data-total="${equipos.length}" data-modo="total">${equipos
             .slice(0, MAX_EQUIPOS)
             .map(
               (equipo) => `
@@ -290,10 +300,6 @@ function plantillaEquipos() {
             )
             .join("")}</div>`
         : `<p class="inicio-vacio">${t("Ninguno guardado.")}</p>`}
-      <div class="inicio-pie">
-        ${equipos.length > MAX_EQUIPOS ? `<button data-vista="equipos">${t("Ver todos ({n})", { n: equipos.length })}</button>` : ""}
-        <button class="inicio-principal" data-vista="crear">${icono("mas")} ${t("Crear equipo")}</button>
-      </div>
     </section>`;
 }
 
@@ -326,13 +332,14 @@ function pintar() {
   const avisoAntes = aviso ? aviso.outerHTML : "";
 
   const pie = `
-    <div class="inicio-columnas">
+    <div class="inicio-columnas inicio-fila-baja">
       ${plantillaAvisos()}
-      <div class="inicio-lado">${conSesion() ? "" : plantillaEquipos()}${plantillaSugerencias()}</div>
+      <div class="inicio-lado">${plantillaSugerencias()}</div>
     </div>`;
 
-  // Con sesión, la pantalla justa: sin scroll (css/inicio.css, «Con sesión, sin scroll»)
-  seccion.classList.toggle("inicio-fijo", conSesion());
+  // Con o sin sesión, la pantalla justa: sin scroll (css/inicio.css, «Con sesión, sin scroll»)
+  seccion.classList.add("inicio-fijo");
+  seccion.classList.toggle("inicio-invitado", invitado());
   seccion.innerHTML = `
     ${plantillaCabecera()}
     ${invitado() ? plantillaBienvenida() : ""}
@@ -352,6 +359,37 @@ function pintar() {
   }
   if (avisoAntes) seccion.querySelector(".sugerencias-aviso").outerHTML = avisoAntes;
   seccion.querySelector(".sugerencias-form button").disabled = enviando;
+  ajustarListas();
+}
+
+// Nada de desplazarse dentro de las tarjetas: cada lista enseña las que caben en su hueco (el
+// que le deja la pantalla) y esconde el resto; el botón de «Ver todos» cuenta las que faltan.
+// En el móvil (la sección baja entera, sin alto fijo) se enseñan todas las pintadas.
+const PANTALLA_FIJA = window.matchMedia("(min-width: 761px)");
+
+function ajustarListas() {
+  if (!seccion || seccion.hidden) return;
+
+  for (const lista of seccion.querySelectorAll(".inicio-lista, .inicio-amigos-lista")) {
+    const elementos = [...lista.children];
+    for (const elemento of elementos) elemento.hidden = false;
+
+    let visibles = elementos.length;
+    if (PANTALLA_FIJA.matches) {
+      while (visibles > 1 && lista.scrollHeight > lista.clientHeight + 1) {
+        elementos[--visibles].hidden = true;
+      }
+    }
+
+    const boton = lista.closest(".inicio-bloque").querySelector(".inicio-ver-resto");
+    if (!boton) continue;
+    const total = Number(lista.dataset.total) || elementos.length;
+    const faltan = total - visibles;
+    boton.hidden = faltan <= 0;
+    boton.textContent = lista.dataset.modo === "mas"
+      ? t("Ver todos ({n} más)", { n: faltan })
+      : t("Ver todos ({n})", { n: total });
+  }
 }
 
 // ---------- Enviar una sugerencia ----------
@@ -429,6 +467,9 @@ export function iniciar() {
     if (e.target.closest(".inicio-nuevo")) return nuevoLocke();
     if (e.target.closest(".inicio-avisos")) return document.querySelector(".avisos-boton").click();
     if (e.target.closest(".inicio-entrar")) return document.querySelector(".sesion-boton").click();
+    // El resto de un bloque (Lockes, Conectados, Últimos equipos) lleva a su sección
+    const bloque = e.target.closest("[data-ir]");
+    if (bloque && !e.target.closest("button, a")) return irA(bloque.dataset.ir);
   });
 
   seccion.addEventListener("submit", (e) => {
@@ -444,8 +485,22 @@ export function iniciar() {
   alCambiarAmistades(pintar);
   alCambiarPerfilesAmigos(pintar);
   alCambiarPresencia(pintar);
+
+  // Al cambiar el tamaño de la ventana (o cuando llegan las letras) cambia lo que cabe
+  let esperando = false;
+  const reajustar = () => {
+    if (esperando) return;
+    esperando = true;
+    requestAnimationFrame(() => {
+      esperando = false;
+      ajustarListas();
+    });
+  };
+  window.addEventListener("resize", reajustar);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(reajustar);
 }
 
 export function mostrar() {
   pintar();
+  requestAnimationFrame(ajustarListas); // por si la sección acaba de aparecer
 }

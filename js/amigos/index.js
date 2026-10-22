@@ -392,10 +392,18 @@ function plantillaFicha(ficha) {
              style="${estiloFondo(ficha.fondo)}"
              draggable="true" data-clave="${escaparHTML(ficha.clave)}"
              title="${t("Pulsa para ver los lockes")}">
-      ${ficha.mia ? "" : `<span class="punto-conectado" title="${t("Tiene la web abierta")}"></span>`}
       ${plantillaAcciones(ficha)}
-      <div class="jugador-foto" data-inicial="${escaparHTML(ficha.nombre[0] || "?")}" data-perfil="${escaparHTML(ficha.clave)}" title="${t("Ver perfil")}">${imagen}</div>
-      <h2 class="jugador-nombre">${alt}</h2>
+      <header class="ficha-cabeza">
+        <div class="jugador-foto" data-inicial="${escaparHTML(ficha.nombre[0] || "?")}" data-perfil="${escaparHTML(ficha.clave)}" title="${t("Ver perfil")}">${imagen}</div>
+        <div class="ficha-quien">
+          <h2 class="jugador-nombre">${alt}</h2>
+          ${ficha.mia
+            ? `<span class="jugador-estado">${t("Tú")}</span>`
+            : conectado
+              ? `<span class="jugador-estado" title="${t("Tiene la web abierta")}"><span class="punto-conectado"></span>${t("Conectado")}</span>`
+              : ""}
+        </div>
+      </header>
 
       <div class="contadores-locke">${tipos}</div>
 

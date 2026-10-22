@@ -8,6 +8,9 @@ export default {
   "Casi todo funciona sin cuenta. Con sesión, tus equipos se guardan en la nube y desbloqueas los lockes con amigos, los perfiles y los logros.":
     "Almost everything works without an account. Signed in, your teams are saved in the cloud and you unlock lockes with friends, profiles and achievements.",
 
+  "Elige una sección a la derecha para empezar a explorar: cada una te lleva directa a su página.":
+    "Pick a section on the right to start exploring: each one takes you straight to its page.",
+
   // Las secciones de la bienvenida
   "Juega con amigos: vidas, muertes y victorias, y tu partida vinculada al momento.":
     "Play with friends: lives, deaths and wins, with your save file linked live.",
@@ -25,6 +28,10 @@ export default {
   // Con sesión
   "Hola, {nombre}": "Hi, {nombre}",
   "{n} sin contestar": "{n} unanswered",
+  "locke en marcha": "ongoing locke",
+  "lockes en marcha": "ongoing lockes",
+  "amigo conectado": "friend online",
+  "amigos conectados": "friends online",
   "Victorias": "Wins",
   "Vidas": "Lives",
   "Lockes en marcha": "Ongoing lockes",

@@ -53,7 +53,7 @@
 }
 
 .ruleta-rueda text {
-  font-family: Arial, sans-serif;
+  font-family: var(--letra);
   font-weight: bold;
   pointer-events: none;
 }

@@ -131,22 +131,32 @@ main {
 /* Lockes: arriba del todo y destacado, en su rojo (es lo principal) */
 .menu-lateral .boton-destacado {
   margin-bottom: 0.35rem;
-  background: rgba(var(--color-boton), 0.14);
-  box-shadow: inset 0 0 0 1px rgba(var(--color-boton), 0.45);
-}
-
-.menu-lateral .boton-destacado:hover {
-  background: rgba(var(--color-boton), 0.24);
-}
-
-.menu-lateral .boton-destacado.activa {
   background: rgb(var(--color-boton));
   color: #fff;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
 }
 
-.menu-lateral .boton-destacado.activa .icono {
+.menu-lateral .boton-destacado .icono {
   color: #fff;
+}
+
+.menu-lateral .boton-destacado:hover {
+  background: color-mix(in srgb, rgb(var(--color-boton)) 88%, white);
+}
+
+/* Siempre relleno; elegido, más oscuro y hundido, como un botón pulsado (sin bordes) */
+.menu-lateral .boton-destacado.activa {
+  background: color-mix(in srgb, rgb(var(--color-boton)) 72%, black);
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* El «Locke» del nombre de la web, en rojo */
+.logo-locke {
+  color: #e74c3c;
+}
+
+:root[data-tema="claro"] .logo-locke {
+  color: #c0392b;
 }
 
 .menu-lateral .icono {
@@ -1570,8 +1580,21 @@ button.perfil-fondo:hover:not(:disabled) {
   flex: 1;
   min-width: 0;
   /* Cada sección con su color, suave: un tinte arriba y los acentos de la sección (en :root\r\n   para que lo vean también los recuadros) */
+  position: relative;
   background-image: linear-gradient(180deg, rgba(var(--color-vista), 0.1), rgba(var(--color-vista), 0) 12rem);
-  box-shadow: inset 0 3px 0 rgb(var(--color-vista));
+}
+
+/* La línea de color de arriba, por encima de todo: las pestañas cuelgan de ella */
+.contenido::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  height: 3px;
+  background: rgb(var(--color-vista));
+  pointer-events: none;
 }
 
 :root:has(#vista-inicio:not([hidden])) { --color-vista: 231, 76, 60; }
@@ -1848,7 +1871,7 @@ button.perfil-fondo:hover:not(:disabled) {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
 }
 
-:is(.ruta, .logro, .logros-cabecera, .pokedex-filtros) {
+:is(.logro, .logros-cabecera, .pokedex-filtros) {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 

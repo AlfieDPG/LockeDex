@@ -1,5 +1,38 @@
 /* Estilos generales, compartidos por todas las secciones */
 
+/* ---------- Letras ----------
+   Nunito para el texto y Baloo 2 para títulos, pestañas y números grandes. Las dos son
+   variables (un archivo vale para todos los gruesos), solo con el alfabeto latino, y van en
+   la propia web (fuentes/, con su licencia SIL OFL) para no pedir nada a Google. */
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url("../fuentes/nunito.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Nunito";
+  font-style: italic;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url("../fuentes/nunito-cursiva.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Baloo 2";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("../fuentes/baloo2.woff2") format("woff2");
+}
+
+:root {
+  --letra: "Nunito", Arial, sans-serif;
+  --letra-titulos: "Baloo 2", "Nunito", Arial, sans-serif;
+}
+
 /* ---------- Colores del tema ----------
    Oscuro (el de siempre) en :root y claro en [data-tema="claro"] (lo pone js/comun/ajustes.js).
    Los colores vivos (rojo, amarillo, el de cada sección...) son los mismos en los dos */
@@ -121,11 +154,27 @@ input[type="number"] {
 }
 
 body {
-  font-family: Arial, sans-serif;
+  font-family: var(--letra);
   background: var(--t-fondo);
   color: var(--t-texto);
   margin: 0;
   font-size: 1rem;
+}
+
+/* Los controles no heredan la letra por su cuenta */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+h1,
+h2,
+h3,
+.logo {
+  font-family: var(--letra-titulos);
+  line-height: 1.15;
 }
 
 [hidden] {

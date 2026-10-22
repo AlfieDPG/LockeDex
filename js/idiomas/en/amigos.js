@@ -25,6 +25,7 @@ export default {
   "Vais empatados": "You're tied",
   "Pulsa para ver los lockes": "Click to see the lockes",
   "Tiene la web abierta": "Has the site open",
+  "Conectado": "Online",
   "Esperando a {nombre}": "Waiting for {nombre}",
 
   // Agregar

@@ -66,9 +66,12 @@
 
 /* ---------- Tarjeta de un locke ---------- */
 
+/* El color del tipo asoma por la izquierda y se difumina en la cabecera: el título es lo primero
+   que se lee; debajo, el camino (combates), las fichas de los jugadores y, al pie, los atajos. */
+
 .locke {
   border-left: 0.35rem solid var(--color-locke, #3498db);
-  border-radius: 0.7rem;
+  border-radius: 0.9rem;
   background: var(--t-panel);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   overflow: hidden;
@@ -80,72 +83,114 @@
 
 .locke-cabecera {
   display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  padding: 0.7rem 0.95rem;
-  background: rgba(var(--t-oscurecer), 0.2);
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.9rem 1.1rem 0.75rem;
+  border-bottom: 1px dashed rgba(var(--t-tinte), 0.14);
+  background: linear-gradient(100deg, color-mix(in srgb, var(--color-locke, #3498db) 17%, transparent), transparent 100%);
 }
 
+.locke-titular {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+}
+
+/* El tipo, como la etiqueta de una pestaña de cuaderno: una rayita y el nombre en su color */
 .locke-tipo {
-  flex: none;
-  padding: 0.2rem 0.55rem;
-  border-radius: 0.35rem;
-  background: var(--color-locke, #3498db);
-  color: #1e1f2b;
-  font-size: 0.72rem;
-  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: color-mix(in srgb, var(--color-locke, #3498db) var(--t-vivo), black);
+  font-size: 0.74rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.1em;
+}
+
+.locke-tipo::before {
+  content: "";
+  width: 1.3rem;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
 }
 
 .locke-titulo {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.85rem;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.locke-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 1rem;
+  margin-top: 0.2rem;
+}
+
+.locke-juego-nombre {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  opacity: 0.75;
+}
+
+.locke-juego-nombre .icono,
+.locke-resultado .icono {
+  width: 1rem;
+  height: 1rem;
 }
 
 .locke-resultado {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: bold;
   color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
 }
 
-.locke-resultado .icono {
-  width: 1rem;
-  height: 1rem;
-}
-
-/* Invitar y borrar, pegados al extremo derecho */
+/* Terminar, editar, quitar y borrar: juntos en una tira con borde de puntos (como el botón de la
+   ROM), pegada al extremo derecho, para que no floten sueltos */
 .locke-acciones {
   display: flex;
-  gap: 0.4rem;
+  align-items: center;
+  gap: 0.1rem;
   margin-left: auto;
+  padding: 0.15rem;
+  border: 1px dashed rgba(var(--t-tinte), 0.3);
+  border-radius: 0.7rem;
+  background: rgba(var(--t-oscurecer), 0.15);
 }
 
 .locke-acciones button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.9rem;
-  height: 1.9rem;
+  width: 2rem;
+  height: 2rem;
   padding: 0;
   border: none;
-  border-radius: 0.35rem;
-  background: var(--t-control);
-  color: var(--t-texto);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: rgba(var(--t-texto-rgb), 0.65);
   cursor: pointer;
 }
 
 .locke-acciones .icono {
-  width: 1rem;
-  height: 1rem;
+  width: 1.05rem;
+  height: 1.05rem;
 }
 
-.locke-editar:hover,
-.locke-quitar-lista:hover {
-  background: var(--t-control-2); /* neutro: el rojo es el de borrar */
+.locke-acciones button:hover {
+  background: var(--t-control);
   color: var(--t-texto-fuerte);
 }
 
@@ -286,126 +331,117 @@ button.locke-anadir .icono {
   cursor: not-allowed;
 }
 
-/* ---------- Juego del locke y atajos ---------- */
+/* ---------- Descripción y atajos del pie ---------- */
 
+.locke-descripcion {
+  margin: 0;
+  padding: 0.2rem 1.1rem 0.3rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  white-space: pre-wrap; /* se respetan los saltos de línea que escriba la persona */
+  opacity: 0.75;
+}
+
+/* Rutas, Level caps, Normas, Cementerio...: botones de texto, sin caja hasta que se les apunta */
 .locke-juego {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.6rem 0.95rem 0;
-}
-
-.locke-juego-nombre {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-right: 0.3rem;
-  font-size: 0.88rem;
-  font-weight: bold;
-}
-
-.locke-juego .icono {
-  width: 1rem;
-  height: 1rem;
+  gap: 0.15rem 0.3rem;
+  padding: 0.5rem 0.8rem;
+  border-top: 1px dashed rgba(var(--t-tinte), 0.14);
 }
 
 .locke-ir {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.3rem 0.65rem;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
   border: none;
-  border-radius: 0.4rem;
-  background: var(--t-control);
-  color: var(--t-texto);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: rgba(var(--t-texto-rgb), 0.8);
   font-family: inherit;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: bold;
   cursor: pointer;
 }
 
 .locke-ir:hover {
-  background: var(--color-locke, #3498db);
-  color: #1e1f2b;
+  background: color-mix(in srgb, var(--color-locke, #3498db) 20%, transparent);
+  color: var(--t-texto-fuerte);
 }
 
 .locke-ir .icono {
-  width: 0.85rem;
-  height: 0.85rem;
-}
-
-.locke-descripcion {
-  margin: 0;
-  padding: 0.6rem 0.95rem 0;
-  font-size: 0.88rem;
-  line-height: 1.4;
-  white-space: pre-wrap; /* se respetan los saltos de línea que escriba la persona */
-  opacity: 0.75;
+  width: 0.95rem;
+  height: 0.95rem;
+  color: color-mix(in srgb, var(--color-locke, #3498db) var(--t-vivo), black);
 }
 
 /* ---------- Jugadores ---------- */
 
-/* Cada jugador mide siempre lo mismo y van pegados a la izquierda: si hay uno solo, el
-   resto de la fila se queda vacío en vez de estirarse. auto-fill con un ancho fijo hace
-   justo eso; los que no quepan bajan a la siguiente fila. */
+/* Una ficha por jugador, todas del mismo ancho y pegadas a la izquierda: si hay uno solo, el
+   resto de la fila se queda vacío en vez de estirarse. auto-fill con un ancho máximo hace
+   justo eso; las que no quepan bajan a la siguiente fila. */
 .locke-jugadores {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 15rem)); /* que quepan 4 en una fila */
+  grid-template-columns: repeat(auto-fill, minmax(15.5rem, 19rem));
   gap: 0.85rem;
-  padding: 0.95rem;
+  padding: 0.8rem 1.1rem 0.9rem;
 }
 
+/* La ficha: arriba, quién es; en medio, sus números en grande; abajo, medallas y partida.
+   La tuya lleva la tira de arriba en el color del locke; las demás, apagada. */
 .locke-jugador {
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.85rem 0.7rem;
-  border-radius: 0.55rem;
+  gap: 0.6rem;
+  padding: 0.85rem 0.95rem 0.75rem;
+  border-radius: 0.8rem;
   background: var(--t-fondo-2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 3px 0 rgba(var(--t-tinte), 0.1);
+}
+
+.locke-jugador.mio {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 3px 0 var(--color-locke, rgb(var(--color-vista)));
 }
 
 .locke-jugador.ganador {
   background-color: var(--t-panel-2); /* solo el color: el dibujo de su fondo, si tiene, se queda */
-  box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.5);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 3px 0 #f1c40f;
 }
 
 /* Invitado que todavía no ha entrado */
 .locke-jugador.pendiente {
   opacity: 0.6;
-  box-shadow: inset 0 0 0 1px rgba(var(--t-tinte), 0.12);
 }
 
-/* Foto, nombre y su marca (Sin contestar, Eliminado, la corona): ocupa el alto que sobre y se
-   centra en él. Así, si un bloque es más alto (por la marca), los de al lado no se quedan con
-   un hueco debajo: las cifras quedan todas abajo, a la misma altura. */
 .locke-persona {
-  flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
+  gap: 0.7rem;
 }
 
 .locke-pendiente {
-  font-size: 0.7rem;
+  margin-left: auto;
+  font-size: 0.68rem;
   font-weight: bold;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: rgba(var(--t-texto-rgb), 0.6);
 }
 
 .locke-cara {
   position: relative;
-  width: 4.2rem;
-  height: 4.2rem;
+  flex: none;
+  width: 3.3rem;
+  height: 3.3rem;
   border-radius: 50%;
-  border: 0.18rem solid var(--color-locke, #c0392b);
+  border: 0.16rem solid var(--color-locke, #c0392b);
   background: var(--t-fondo);
   overflow: hidden;
+  cursor: pointer;
 }
 
 .locke-cara img {
@@ -416,9 +452,20 @@ button.locke-anadir .icono {
 }
 
 .locke-quien {
-  font-size: 1rem;
-  font-weight: bold;
-  text-align: center;
+  flex: 1;
+  min-width: 0;
+  font-family: var(--letra-titulos);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.locke-quien small {
+  font-family: var(--letra);
+  font-size: 0.78rem;
+  font-weight: normal;
+  opacity: 0.6;
 }
 
 .locke-corona {
@@ -426,25 +473,20 @@ button.locke-anadir .icono {
 }
 
 .locke-corona .icono {
-  width: 1.2rem;
-  height: 1.2rem;
-}
-
-.locke-quien small {
-  font-weight: normal;
-  opacity: 0.6;
+  width: 1.4rem;
+  height: 1.4rem;
 }
 
 /* ---------- Eliminado: perdió la vida cero ---------- */
 
-/* El bloque apagado y en gris, con borde rojo, la foto tachada por una calavera y una
+/* La ficha apagada y en gris, con la tira roja, la foto tachada por una calavera y una
    etiqueta «Eliminado» */
 .locke-jugador.eliminado,
 .locke-jugador.mio.eliminado {
   background:
     repeating-linear-gradient(-45deg, rgba(231, 76, 60, 0.07) 0 0.6rem, transparent 0.6rem 1.2rem),
     #1f2029;
-  box-shadow: inset 0 0 0 1px rgba(231, 76, 60, 0.55);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 3px 0 #c0392b;
 }
 
 .locke-jugador.eliminado .locke-cara {
@@ -466,8 +508,8 @@ button.locke-anadir .icono {
 }
 
 .locke-cara-fuera .icono {
-  width: 2.2rem;
-  height: 2.2rem;
+  width: 1.9rem;
+  height: 1.9rem;
 }
 
 .locke-jugador.eliminado .locke-quien {
@@ -478,11 +520,12 @@ button.locke-anadir .icono {
 }
 
 .locke-eliminado {
+  margin-left: auto;
   padding: 0.15rem 0.55rem;
   border-radius: 0.3rem;
   background: #c0392b;
   color: #fff;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -493,13 +536,13 @@ button.locke-anadir .icono {
 }
 
 .locke-numero .locke-sin-vidas .icono {
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 2rem;
+  height: 2rem;
 }
 
-/* Con 0 vidas aún se juega, pero ya es la vida cero: el corazón y el número laten */
+/* Con 0 vidas aún se juega, pero ya es la vida cero: el número late */
 .locke-cifra.vida-cero {
-  box-shadow: inset 0 0 0 1px rgba(231, 76, 60, 0.6);
+  border-radius: 0.5rem;
   animation: vida-cero 1.6s ease-in-out infinite;
 }
 
@@ -515,48 +558,44 @@ button.locke-anadir .icono {
   }
 }
 
-/* Tu bloque, un poco destacado: es el único que puedes tocar */
-.locke-jugador.mio {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-locke, rgb(var(--color-vista))) 35%, transparent);
-}
-
 /* ---------- Victorias y vidas ---------- */
 
-/* Dos cajitas iguales, una al lado de la otra, cada una con su etiqueta arriba.
+/* Lo importante, en grande: dos números separados por una raya fina, cada uno con su etiqueta.
    Las cifras de los demás se ven igual de grandes, solo que sin botones. */
 
 .locke-cifras {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.45rem;
   width: 100%;
-  margin-top: 0.2rem;
+  border-block: 1px solid rgba(var(--t-tinte), 0.1);
 }
 
 .locke-cifra {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.5rem 0.3rem;
-  border-radius: 0.45rem;
-  background: rgba(var(--t-oscurecer), 0.2);
+  gap: 0.15rem;
+  padding: 0.45rem 0.2rem 0.35rem;
+}
+
+.locke-cifra + .locke-cifra {
+  border-left: 1px solid rgba(var(--t-tinte), 0.1);
 }
 
 .locke-etiqueta {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.3rem;
   font-size: 0.68rem;
   font-weight: bold;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  opacity: 0.7;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
 }
 
 .locke-etiqueta .icono {
-  width: 0.8rem;
-  height: 0.8rem;
+  width: 0.85rem;
+  height: 0.85rem;
 }
 
 .locke-cifra.victorias .locke-etiqueta {
@@ -571,16 +610,16 @@ button.locke-anadir .icono {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.3rem;
-  min-height: 1.9rem;
+  gap: 0.2rem;
+  min-height: 2.5rem;
 }
 
 .locke-numero button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.7rem;
-  height: 1.7rem;
+  width: 1.6rem;
+  height: 1.6rem;
   padding: 0;
   border: none;
   border-radius: 50%;
@@ -598,6 +637,30 @@ button.locke-anadir .icono {
   cursor: default;
 }
 
+.locke-numero .icono {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.locke-valor {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.4rem;
+  font-family: var(--letra-titulos);
+  font-size: 2.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.locke-numero.marcador .locke-valor {
+  color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
+}
+
+.locke-numero.vidas .locke-valor {
+  color: #e74c3c;
+}
+
 /* ---------- Medallas ---------- */
 
 /* Las del juego, en fila (HGSS: Johto arriba y Kanto abajo), apagadas hasta conseguirlas */
@@ -605,12 +668,8 @@ button.locke-anadir .icono {
 .locke-medallas {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.3rem;
+  gap: 0.35rem;
   width: 100%;
-  padding: 0.45rem 0.4rem;
-  border-radius: 0.45rem;
-  background: rgba(var(--t-oscurecer), 0.2);
 }
 
 .locke-medallas .locke-etiqueta {
@@ -620,9 +679,8 @@ button.locke-anadir .icono {
 .locke-medallas-lista {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 0.25rem;
+  gap: 0.2rem;
   width: 100%;
-  max-width: 17rem;
 }
 
 .locke-medalla {
@@ -662,53 +720,43 @@ button.locke-medalla:hover img {
   transform: scale(1.12);
 }
 
-.locke-numero .icono {
-  width: 0.95rem;
-  height: 0.95rem;
-}
-
-.locke-valor {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2rem;
-  font-size: 1.6rem;
-  font-weight: bold;
-  line-height: 1;
-}
-
-.locke-numero.vidas .locke-valor {
-  color: #e74c3c;
-}
-
 /* ---------- ROM (js/versus/combates.js) ---------- */
 
+/* Un icono al final de la fila del nombre: gris si no se ha pasado, en verde si sí */
 .locke-rom {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.3rem;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0.35rem 0.5rem;
+  flex: none;
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
   border: none;
-  border-radius: 0.45rem;
-  background: rgba(var(--t-oscurecer), 0.2);
-  color: rgba(var(--t-texto-rgb), 0.5);
-  font-family: inherit;
-  font-size: 0.72rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  border-radius: 50%;
+  background: none;
+  color: rgba(var(--t-texto-rgb), 0.45);
+}
+
+.locke-persona > .locke-rom {
+  margin-left: auto;
+}
+
+.locke-persona > :is(.locke-pendiente, .locke-eliminado) + .locke-rom {
+  margin-left: 0;
 }
 
 .locke-rom .icono {
-  width: 0.9rem;
-  height: 0.9rem;
+  width: 1.15rem;
+  height: 1.15rem;
 }
 
 button.locke-rom {
+  border: 1px dashed rgba(var(--t-tinte), 0.3);
   cursor: pointer;
+}
+
+button.locke-rom.pasada {
+  border-color: rgba(46, 204, 113, 0.6);
 }
 
 button.locke-rom:hover {
@@ -716,15 +764,13 @@ button.locke-rom:hover {
   color: var(--t-texto);
 }
 
-.locke-rom.pasada {
-  background: rgba(46, 204, 113, 0.15);
-  box-shadow: inset 0 0 0 1px rgba(46, 204, 113, 0.5);
+.locke-rom.pasada,
+button.locke-rom.pasada:hover {
   color: color-mix(in srgb, #2ecc71 var(--t-vivo), black);
 }
 
-button.locke-rom.pasada:hover {
-  background: rgba(46, 204, 113, 0.25);
-  color: color-mix(in srgb, #2ecc71 var(--t-vivo), black);
+.locke-rom.pasada {
+  background: rgba(46, 204, 113, 0.15);
 }
 
 /* ---------- Combates del locke ---------- */
@@ -733,7 +779,7 @@ button.locke-rom.pasada:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
-  padding: 0.75rem 0.95rem 0;
+  padding: 0.5rem 1.1rem 0.2rem;
 }
 
 .locke-combate {
@@ -764,7 +810,9 @@ button.locke-rom.pasada:hover {
 
 .locke-combate.jugado {
   border-style: solid;
-  border-color: color-mix(in srgb, var(--color-locke, rgb(var(--color-vista))) 45%, transparent);
+  border-color: transparent;
+  background: var(--t-fondo);
+  box-shadow: inset 3px 0 0 var(--color-locke, rgb(var(--color-vista)));
 }
 
 .combate-nombre {
@@ -3203,21 +3251,16 @@ button.partida-ficha.arrastrando {
   height: 2rem;
 }
 
-/* ---------- Las partes del bloque de cada jugador, sobre su fondo ----------
-   Como en Amigos: macizas (no transparentes, que según el fondo no se leían), con una
-   sombrita y un reborde fino que las separa */
+/* ---------- Las partes de la ficha de cada jugador ----------
+   Macizas (no transparentes, que según el fondo no se leían), con una sombrita y un reborde
+   fino que las separa */
 
-.locke-jugador :is(.locke-cifra, .locke-rom, .locke-partida-abrir, .locke-salon-poner) {
+.locke-jugador :is(.locke-partida-abrir, .locke-salon-poner) {
   background: var(--t-fondo);
 }
 
-.locke-jugador :is(.locke-cifra, .locke-rom:not(.pasada), .locke-partida-abrir, .locke-salon-poner, .locke-partida-vincular, .locke-partida-reanudar, .locke-partida-ayuda) {
+.locke-jugador :is(.locke-partida-abrir, .locke-salon-poner, .locke-partida-vincular, .locke-partida-reanudar, .locke-partida-ayuda) {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(var(--t-tinte), 0.08);
-}
-
-.locke-jugador .locke-rom.pasada {
-  background: color-mix(in srgb, #2ecc71 15%, var(--t-fondo));
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(46, 204, 113, 0.5);
 }
 
 .locke-jugador .locke-partida-muertos {
@@ -3225,34 +3268,6 @@ button.partida-ficha.arrastrando {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(231, 76, 60, 0.45);
 }
 
-.locke-jugador :is(button.locke-rom, .locke-partida-abrir, .locke-salon-poner):hover {
+.locke-jugador :is(.locke-partida-abrir, .locke-salon-poner):hover {
   background: var(--t-control);
-}
-/* ---------- Sombritas de la tarjeta de un locke ---------- */
-
-.locke-ir,
-.locke-acciones button {
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
-}
-
-/* Cada bloque de jugador, con su sombra (y el reborde que ya tuviera) */
-.locke-jugador {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-}
-
-.locke-jugador.mio {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 0 0 1px color-mix(in srgb, var(--color-locke, rgb(var(--color-vista))) 35%, transparent);
-}
-
-.locke-jugador.ganador {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(241, 196, 15, 0.5);
-}
-
-.locke-jugador.pendiente {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(var(--t-tinte), 0.12);
-}
-
-.locke-jugador.eliminado,
-.locke-jugador.mio.eliminado {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(231, 76, 60, 0.55);
 }

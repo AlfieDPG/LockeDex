@@ -17,7 +17,7 @@ import {
   rutasPropias, lugaresDe, seccionesDeLaWeb, lugaresDeLaWeb, MAX_LUGARES
 } from "../comun/personalizados.js";
 import { apuntarEnLockesDelJuego } from "../comun/lockes.js";
-import { plantillaCaptura, abrirCaptura, iniciarCapturas, quitarCaptura, quitarCapturasDelJuego } from "./capturas.js";
+import { plantillaCaptura, abrirCaptura, iniciarCapturas, quitarCaptura, quitarCapturasDelJuego, capturaDe } from "./capturas.js";
 import { confirmar, avisar } from "../comun/ventanas.js";
 import { t } from "../comun/idioma.js";
 
@@ -88,11 +88,15 @@ function botonLugar(apartado, texto) {
     ? `<span class="ruta-lugar">${escaparHTML(visible.slice(0, corte))}</span><span class="ruta-detalle">${escaparHTML(visible.slice(corte + 2))}</span>`
     : `<span class="ruta-lugar">${escaparHTML(visible)}</span>`;
 
-  // Marcado: qué cogiste ahí (solo lo ves tú, ver ./capturas.js)
+  // Marcado: qué cogiste ahí (solo lo ves tú, ver ./capturas.js), con su retrato a la
+  // izquierda y el mote debajo del lugar. Sin marcar, el hueco del retrato vacío: así la
+  // tarjeta mide lo mismo y al marcarla no se mueve nada.
+  const captura = usada ? capturaDe(juego.id, clave) : null;
+  const mote = captura && captura.mote ? `<span class="ruta-mote">${escaparHTML(captura.mote)}</span>` : "";
   return `<button class="ruta ${evento ? "evento" : ""} ${usada ? "usada" : ""}" aria-pressed="${usada}"
-    data-clave="${escaparHTML(clave)}" data-buscar="${escaparHTML(quitarAcentos(visible === texto ? texto : `${texto} ${visible}`))}">${contenido}${
-      usada ? plantillaCaptura(juego.id, clave) : ""
-    }</button>`;
+    data-clave="${escaparHTML(clave)}" data-buscar="${escaparHTML(quitarAcentos(visible === texto ? texto : `${texto} ${visible}`))}">${
+      usada ? plantillaCaptura(juego.id, clave) : `<span class="ruta-hueco"></span>`
+    }<span class="ruta-textos">${contenido}${mote}</span></button>`;
 }
 
 // «rutas:Ruta 3» -> «Ruta 3»; en los eventos, solo el lugar («Lugar: detalle»)
@@ -146,9 +150,9 @@ function filtrar() {
 // ---------- Cada tarjeta, del ancho de su nombre ----------
 //
 // El nombre (y el detalle de los eventos, en la suya) va en una sola línea y cada tarjeta
-// mide lo que su texto; el CSS estira cada fila hasta llenar el ancho. Se mide con sitio para
-// la chapita de la captura (clase rutas-midiendo) y se guarda en su flex-basis, para que marcar
-// una no mueva nada. En «em»: la letra de la web cambia con la ventana y así crece con ella sin
+// mide lo que su texto y el retrato (o su hueco); el CSS estira cada fila hasta llenar el
+// ancho. Se mide sin estirar (clase rutas-midiendo) y se guarda en su flex-basis, para que
+// marcar una no mueva nada. En «em»: la letra de la web cambia con la ventana y así crece con ella sin
 // volver a medir. Si ni así cabe (un móvil muy estrecho), el CSS lo corta con «...».
 
 function ajustarAnchos() {

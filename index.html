@@ -27,6 +27,9 @@
       }
     } catch (error) {}
   </script>
+  <!-- Las letras de la web, ya pedidas (si no, el texto parpadea al cambiar de letra) -->
+  <link rel="preload" href="fuentes/nunito.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fuentes/baloo2.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/equipos.css">
@@ -44,7 +47,7 @@
 <body>
   <div class="app">
     <aside class="barra-lateral">
-      <h1 class="logo"><a href="#inicio" title="Inicio"><img src="img/icono.svg" alt="">NuzTheLocke</a></h1>
+      <h1 class="logo"><a href="#inicio" title="Inicio"><img src="img/icono.svg" alt=""><span>NuzThe<span class="logo-locke">Locke</span></span></a></h1>
       <nav class="menu-lateral">
         <!-- data-icono: el icono que se le pone delante (js/navegacion.js) -->
         <button data-vista="lockes" data-icono="espadas" class="boton-destacado">Lockes</button>
@@ -147,15 +150,20 @@
 
         <section id="vista-levelcaps" hidden>
           <div class="selector-juego"></div>
+          <!-- Solo lleva «Editar» (en los juegos propios); si no, no se ve -->
           <div class="barra-nuzlocke">
-            <div class="caps-actual"></div>
+            <button class="juego-editar" hidden>Editar</button>
+          </div>
+          <!-- Progreso, medallas, multiplicador y «Desmarcar todo» (js/levelcaps/index.js rellena los dos primeros) -->
+          <div class="caps-resumen" hidden>
+            <div class="caps-progreso"></div>
+            <div class="caps-medallas-fila"></div>
             <div class="multiplicador" title="Multiplicador de nivel de los entrenadores (randomizer)">
               <span>Multiplicador</span>
               <button class="multiplicador-menos" aria-label="Bajar multiplicador">−</button>
               <span class="multiplicador-valor">×1.0</span>
               <button class="multiplicador-mas" aria-label="Subir multiplicador">+</button>
             </div>
-            <button class="juego-editar" hidden>Editar</button>
             <button class="caps-reiniciar boton-reiniciar">Desmarcar todo</button>
           </div>
           <ol class="caps-lista"></ol>

@@ -142,42 +142,58 @@
   border-bottom: 3px solid rgb(var(--color-vista));
 }
 
+/* Las mismas pestañas que las de arriba de Rutas o Level caps (css/nuzlocke.css), pero de pie
+   sobre la línea: las no elegidas, solo la letra; la elegida (y la del ratón), con su fondo y
+   su curva a cada lado, y del color de la sección y un poco más alta */
+.logros-filtro {
+  align-items: flex-end;
+}
+
 .logros-filtro button {
   --fondo: transparent;
+  --curva: 1.1rem;
   position: relative;
-  padding: 0.55rem 1rem 0.5rem;
-  border-radius: 0.65rem 0.65rem 0 0;
+  padding: 0.5rem 1rem 0.55rem;
+  border-radius: 0.9rem 0.9rem 0 0;
   background: var(--fondo);
+  color: var(--t-gris-2);
+  font-family: var(--letra-titulos);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .logros-filtro button:hover {
-  --fondo: rgba(255, 255, 255, 0.08);
+  --fondo: rgba(var(--t-tinte), 0.08);
   background: var(--fondo);
+  color: var(--t-texto);
 }
 
 .logros-filtro button.activa {
   --fondo: rgb(var(--color-vista));
+  padding-top: 0.8rem;
   background: var(--fondo);
   color: #1e1f2b;
+  font-weight: 800;
 }
 
-.logros-filtro button:is(:hover, .activa)::before,
-.logros-filtro button:is(:hover, .activa)::after {
+.logros-filtro button::before,
+.logros-filtro button::after {
   content: "";
   position: absolute;
   bottom: 0;
-  width: 1.1rem;
-  height: 1.1rem;
+  width: var(--curva);
+  height: var(--curva);
 }
 
-.logros-filtro button:is(:hover, .activa)::before {
+.logros-filtro button::before {
   right: 100%;
-  background: radial-gradient(circle at 0 0, transparent 1.1rem, var(--fondo) calc(1.1rem + 0.5px));
+  background: radial-gradient(circle at 0 0, transparent var(--curva), var(--fondo) calc(var(--curva) + 0.5px));
 }
 
-.logros-filtro button:is(:hover, .activa)::after {
+.logros-filtro button::after {
   left: 100%;
-  background: radial-gradient(circle at 100% 0, transparent 1.1rem, var(--fondo) calc(1.1rem + 0.5px));
+  background: radial-gradient(circle at 100% 0, transparent var(--curva), var(--fondo) calc(var(--curva) + 0.5px));
 }
 
 .logros-grupo h2 {

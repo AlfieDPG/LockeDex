@@ -179,20 +179,19 @@ function plantillaJugador(locke, uid) {
         ${gano ? `<span class="locke-corona">${icono("corona")}</span>` : ""}
         ${pendiente ? `<span class="locke-pendiente">${t("Sin contestar")}</span>` : ""}
         ${eliminado ? `<span class="locke-eliminado">${t("Eliminado")}</span>` : ""}
+        ${pendiente ? "" : plantillaRom(locke, uid, esMio && !cerrado && !eliminado)}
       </div>
 
       ${plantillaCifras(locke, uid, esMio && !cerrado)}
       ${pendiente ? "" : plantillaMedallas(locke, uid, esMio && !cerrado)}
       ${esMio && !pendiente ? plantillaPartida(locke) : ""}
-      ${pendiente ? "" : plantillaRom(locke, uid, esMio && !cerrado && !eliminado)}
       ${cerrado && !pendiente ? plantillaSalon(locke, uid, esMio) : ""}
     </div>`;
 }
 
-// Juego del locke y atajos: a sus Rutas y sus Level caps si es un juego de la web, a sus
-// normas si tiene, a su cementerio y a su actividad
-function plantillaJuego(locke) {
-  const nombre = nombreJuego(locke);
+// Atajos del pie: a sus Rutas y sus Level caps si es un juego de la web, a sus normas si tiene,
+// a su cementerio y a su actividad
+function plantillaAtajos(locke) {
   const normas = normasCompletas(normasDeLocke(locke)).length;
 
   const rutas = destinoDe(locke, "rutas");
@@ -202,19 +201,19 @@ function plantillaJuego(locke) {
     ${caps ? `<button class="locke-ir" data-ir="levelcaps" data-juego="${escaparHTML(caps)}">${icono("escudo")} Level caps</button>` : ""}`;
 
   return `
-    <div class="locke-juego">
-      ${nombre ? `<span class="locke-juego-nombre">${icono("mando")} ${escaparHTML(nombre)}</span>` : ""}
+    <footer class="locke-juego">
       ${atajos}
       ${normas ? `<button class="locke-ir" data-ir="normas">${icono("libro")} ${t("Normas")} (${normas})</button>` : ""}
       ${locke.randomizer && locke.estado !== "cerrado" ? `<button class="locke-ir" data-ir="randomizer">${icono("mezclar")} ${t("Randomizar mi ROM")}</button>` : ""}
       <button class="locke-ir" data-ir="cementerio">${icono("calavera")} ${t("Cementerio")} (${totalMuertos(locke)})</button>
       <button class="locke-ir" data-ir="actividad">${icono("actividad")} ${t("Actividad")}</button>
-    </div>`;
+    </footer>`;
 }
 
 function plantillaLocke(locke) {
   const cerrado = locke.estado === "cerrado";
   const tipo = locke.tipo || { nombre: "Locke", color: "#3498db" };
+  const juego = nombreJuego(locke);
 
   // Cerrado sin ganador: nadie se pasó la ROM
   const resultado = !cerrado ? "" : locke.ganador
@@ -231,9 +230,16 @@ function plantillaLocke(locke) {
     <article class="locke ${cerrado ? "cerrado" : "abierto"}" data-id="${escaparHTML(locke.id)}"
              style="--color-locke: ${colorDeTipo(tipo)}">
       <header class="locke-cabecera">
-        <span class="locke-tipo">${escaparHTML(tipo.nombre)}</span>
-        <h2 class="locke-titulo">${escaparHTML(locke.nombre)}</h2>
-        ${cerrado ? `<span class="locke-resultado ${locke.ganador ? "" : "sin-ganador"}">${resultado}${fecha}</span>` : ""}
+        <div class="locke-titular">
+          <span class="locke-tipo">${escaparHTML(tipo.nombre)}</span>
+          <h2 class="locke-titulo">${escaparHTML(locke.nombre)}</h2>
+          ${juego || cerrado
+            ? `<div class="locke-meta">
+                ${juego ? `<span class="locke-juego-nombre">${icono("mando")} ${escaparHTML(juego)}</span>` : ""}
+                ${cerrado ? `<span class="locke-resultado ${locke.ganador ? "" : "sin-ganador"}">${resultado}${fecha}</span>` : ""}
+              </div>`
+            : ""}
+        </div>
         <div class="locke-acciones">
           ${!cerrado && soyCreador(locke) ? `<button class="locke-terminar" title="${t("Terminar el locke")}">${icono("corona")} ${t("Terminar")}</button>` : ""}
           ${puedeEditar ? `<button class="locke-editar" title="${t("Editar locke")}">${icono("lapiz")}</button>` : ""}
@@ -244,13 +250,14 @@ function plantillaLocke(locke) {
         </div>
       </header>
 
-      ${plantillaJuego(locke)}
       ${locke.descripcion ? `<p class="locke-descripcion">${escaparHTML(locke.descripcion)}</p>` : ""}
       ${plantillaCombates(locke)}
 
       <div class="locke-jugadores">
         ${locke.jugadores.map((uid) => plantillaJugador(locke, uid)).join("")}
       </div>
+
+      ${plantillaAtajos(locke)}
     </article>`;
 }
 

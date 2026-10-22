@@ -4,8 +4,6 @@
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
-  max-width: 72rem;
-  margin: 0 auto;
 }
 
 #vista-inicio[hidden] {
@@ -37,8 +35,8 @@
    salte al repintar) */
 .inicio-logo {
   flex: none;
-  width: 3.4rem;
-  height: 3.4rem;
+  width: 4.2rem;
+  height: 4.2rem;
   transform-origin: 50% 5%;
   animation: inicio-balancear 6s ease-in-out infinite;
 }
@@ -59,12 +57,41 @@
   min-width: 0;
 }
 
+.inicio-saludo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
 .inicio-saludo h1 {
   margin: 0;
   overflow: hidden;
-  font-size: 2rem;
+  font-size: 2.7rem;
+  line-height: 1.05;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* Un vistazo bajo el saludo: lockes en marcha y amigos conectados */
+.inicio-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1.4rem;
+  margin: 0;
+  color: var(--t-gris-2);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.inicio-resumen b {
+  font-family: var(--letra-titulos);
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--t-texto);
+}
+
+.inicio-resumen .en-linea b {
+  color: color-mix(in srgb, #2ecc71 var(--t-vivo), black);
 }
 
 .inicio-avisos,
@@ -119,26 +146,53 @@
 .inicio-bloque {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.9rem;
-  border-radius: 0.8rem;
+  gap: 0.6rem;
+  padding: 1rem 1.1rem 1.1rem;
+  border-radius: 0.9rem;
   background: var(--t-fondo-2);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  /* La tira de arriba, en el color de cada bloque (como las fichas de Lockes) */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 3px 0 rgb(var(--color-bloque, 128, 128, 128));
 }
 
+/* Títulos de bloque: en grande, con su icono suelto y una línea de puntos debajo */
 .inicio-bloque h2 {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin: 0 0 0.2rem;
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  opacity: 0.85;
+  gap: 0.55rem;
+  /* Sale hasta los bordes del bloque para que la línea de puntos lo cruce entero */
+  margin: 0 -1.1rem 0.2rem;
+  padding: 0.1rem 1.1rem 0.65rem;
+  border-bottom: 1px dashed rgba(var(--t-tinte), 0.25);
+  font-size: 1.3rem;
 }
 
-.inicio-lockes h2 .icono { color: rgb(214, 88, 76); }
-.inicio-amigos h2 .icono { color: rgb(80, 190, 215); }
+/* Bloques que llevan a su sección al pulsarlos: Lockes, Conectados y Últimos equipos */
+.inicio-enlace {
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.inicio-enlace:hover {
+  transform: translateY(-2px);
+}
+
+.inicio-enlace h2::after {
+  content: "→";
+  margin-left: auto;
+  color: color-mix(in srgb, rgb(var(--color-bloque)) var(--t-vivo), black);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.inicio-enlace:hover h2::after {
+  opacity: 1;
+}
+
+#vista-inicio .inicio-bloque h2 .icono {
+  width: 1.2rem;
+  height: 1.2rem;
+  color: color-mix(in srgb, rgb(var(--color-bloque, 128, 128, 128)) var(--t-vivo), black);
+}
 
 .inicio-vacio {
   margin: 0.2rem 0;
@@ -150,18 +204,20 @@
 .inicio-locke {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
+  gap: 1rem;
   width: 100%;
-  padding: 0.6rem 0.8rem;
+  padding: 0.75rem 1rem 0.75rem 1.1rem;
   border: none;
-  border-radius: 0.55rem;
-  background: var(--t-panel);
-  box-shadow: inset 4px 0 0 var(--color-locke, #3498db);
+  border-radius: 0.8rem;
+  /* La capa del color del locke a la izquierda, difuminada hacia dentro */
+  background: linear-gradient(100deg, color-mix(in srgb, var(--color-locke, #3498db) 16%, transparent), transparent 70%), var(--t-panel);
+  box-shadow: inset 5px 0 0 var(--color-locke, #3498db), 0 2px 6px rgba(0, 0, 0, 0.25);
   text-align: left;
+  transition: transform 0.15s;
 }
 
 .inicio-locke:hover {
-  background: var(--t-panel-3);
+  transform: translateY(-2px);
 }
 
 .inicio-locke-datos {
@@ -173,12 +229,24 @@
   padding-left: 0.2rem;
 }
 
+/* El tipo, como etiqueta de pestaña: rayita y nombre en su color */
 .inicio-locke-tipo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   font-size: 0.7rem;
-  font-weight: bold;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-locke, #3498db);
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--color-locke, #3498db) var(--t-vivo), black);
+}
+
+.inicio-locke-tipo::before {
+  content: "";
+  width: 1.1rem;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
 }
 
 .inicio-locke-nombre,
@@ -189,12 +257,14 @@
 }
 
 .inicio-locke-nombre {
-  font-size: 1.05rem;
+  font-family: var(--letra-titulos);
+  font-size: 1.45rem;
+  line-height: 1.1;
 }
 
 .inicio-locke-juego {
-  font-size: 0.8rem;
-  opacity: 0.6;
+  font-size: 0.82rem;
+  opacity: 0.65;
 }
 
 /* Las caras, montadas un poco unas encima de otras */
@@ -234,33 +304,60 @@
   image-rendering: auto;
 }
 
+/* Tus números, en grande y con su etiqueta debajo, separados por rayas de puntos */
 .inicio-locke-cifras {
   display: flex;
-  gap: 0.7rem;
   flex: none;
-  min-width: 6.5rem;
   justify-content: flex-end;
 }
 
 .inicio-cifra {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
-  font-size: 1.05rem;
-  font-weight: bold;
+  min-width: 3.9rem;
+  padding: 0 0.7rem;
 }
 
-.inicio-cifra.victorias .icono { color: color-mix(in srgb, #f1c40f var(--t-vivo), black); }
-.inicio-cifra.vidas .icono { color: #e74c3c; }
-.inicio-cifra.medallas .icono { color: color-mix(in srgb, #e67e22 var(--t-vivo), black); }
+.inicio-cifra + .inicio-cifra {
+  border-left: 1px dashed rgba(var(--t-tinte), 0.22);
+}
+
+.inicio-cifra b {
+  display: inline-flex;
+  align-items: center;
+  height: 2rem;
+  font-family: var(--letra-titulos);
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.inicio-cifra small {
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  opacity: 0.65;
+}
+
+.inicio-cifra.victorias b { color: color-mix(in srgb, #f1c40f var(--t-vivo), black); }
+.inicio-cifra.vidas b { color: #e74c3c; }
+.inicio-cifra.medallas b { color: color-mix(in srgb, #e67e22 var(--t-vivo), black); }
 .inicio-cifra.vidas.fuera { opacity: 0.6; }
-.inicio-cifra.vidas.fuera .icono { color: var(--t-texto); }
+.inicio-cifra.vidas.fuera b { color: var(--t-texto); }
+#vista-inicio .inicio-cifra b .icono { width: 1.7rem; height: 1.7rem; }
 
 .inicio-pie {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
   margin-top: 0.2rem;
+}
+
+/* Sin ningún botón a la vista (p. ej. «Ver todos» cuando todo cabe), el pie no ocupa sitio */
+.inicio-pie:not(:has(> :not([hidden]))) {
+  display: none;
 }
 
 .inicio-pie button {
@@ -282,6 +379,8 @@
 /* El botón de crear, en el color de su sección */
 .inicio-lockes { --color-bloque: 214, 88, 76; }
 .inicio-equipos { --color-bloque: 91, 141, 239; }
+.inicio-amigos { --color-bloque: 80, 190, 215; }
+.inicio-avisos-web { --color-bloque: 241, 196, 15; }
 
 .inicio-pie .inicio-principal {
   background: rgb(var(--color-bloque));
@@ -300,18 +399,17 @@
   min-width: 0;
 }
 
-.inicio-equipos h2 .icono { color: rgb(91, 141, 239); }
-
 .inicio-equipo {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.35rem;
   width: 100%;
-  padding: 0.55rem 0.7rem;
+  padding: 0.6rem 0.8rem 0.6rem 0.9rem;
   border: none;
-  border-radius: 0.55rem;
+  border-radius: 0.7rem;
   background: var(--t-panel);
+  box-shadow: inset 4px 0 0 rgb(var(--color-bloque)), 0 2px 6px rgba(0, 0, 0, 0.25);
   text-align: left;
 }
 
@@ -322,7 +420,8 @@
 .inicio-equipo strong {
   max-width: 100%;
   overflow: hidden;
-  font-size: 0.9rem;
+  font-family: var(--letra-titulos);
+  font-size: 1.05rem;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -407,10 +506,9 @@
 
 .inicio-bienvenida .inicio-bienvenida-texto h2 {
   margin: 0;
-  font-size: 1.75rem;
-  text-transform: none;
-  letter-spacing: 0;
-  opacity: 1;
+  padding: 0;
+  border: none;
+  font-size: 1.9rem;
 }
 
 .inicio-bienvenida-texto p {
@@ -464,16 +562,14 @@
   align-items: center;
   justify-content: center;
   flex: none;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.5rem;
-  background: rgba(var(--color-seccion), 0.16);
-  color: rgb(var(--color-seccion));
+  width: 1.6rem;
+  height: 1.6rem;
+  color: color-mix(in srgb, rgb(var(--color-seccion)) var(--t-vivo), black);
 }
 
 #vista-inicio .inicio-seccion-icono .icono {
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 1.4rem;
+  height: 1.4rem;
 }
 
 .inicio-seccion-datos {
@@ -494,8 +590,6 @@
 }
 
 /* ---------- Notas y avisos ---------- */
-
-.inicio-avisos-web h2 .icono { color: color-mix(in srgb, #f1c40f var(--t-vivo), black); }
 
 .inicio-nota {
   margin: 0;
@@ -535,17 +629,19 @@
   align-items: center;
   justify-content: center;
   flex: none;
-  width: 1.8rem;
-  height: 1.8rem;
-  border-radius: 0.45rem;
-  background: rgba(var(--color-aviso), 0.15);
-  color: rgb(var(--color-aviso));
+  width: 1.5rem;
+  height: 1.5rem;
+  color: color-mix(in srgb, rgb(var(--color-aviso)) var(--t-vivo), black);
+}
+
+#vista-inicio .inicio-aviso-icono .icono {
+  width: 1.3rem;
+  height: 1.3rem;
 }
 
 /* ---------- Sugerencias ---------- */
 
 .inicio-sugerencias { --color-bloque: 231, 76, 60; }
-.inicio-sugerencias h2 .icono { color: rgb(231, 76, 60); }
 
 .sugerencias-form {
   display: flex;
@@ -654,12 +750,36 @@
     flex: none;
   }
 
+  /* Nada de desplazarse dentro de las tarjetas: las listas enseñan las que caben (el JS esconde
+     el resto, ver ajustarListas en js/inicio/index.js) */
   .inicio-fijo .inicio-bloque > .inicio-lista,
-  .inicio-fijo .inicio-bloque > .inicio-amigos-lista,
-  .inicio-fijo .inicio-bloque > .inicio-avisos-lista {
+  .inicio-fijo .inicio-bloque > .inicio-amigos-lista {
     flex: 0 1 auto;
     min-height: 0;
-    overflow-y: auto;
+    overflow: hidden;
+  }
+
+  /* Conectados: como mucho dos filas de caras; no se estira ni se encoge */
+  .inicio-fijo .inicio-amigos {
+    flex: none;
+  }
+
+  .inicio-fijo .inicio-amigos-lista {
+    flex: none;
+    max-height: 10.2rem;
+  }
+
+  /* La fila de abajo (avisos y sugerencias) mide lo que mide su contenido; lo de arriba, el resto */
+  .inicio-fijo > .inicio-fila-baja {
+    flex: none;
+    grid-template-rows: auto;
+  }
+
+  /* Los avisos, de dos en dos y enteros: caben todos, sin desplazar */
+  .inicio-fijo .inicio-avisos-lista {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
   }
 
   /* Las sugerencias: el cuadro de texto ocupa lo que quede */
@@ -676,6 +796,98 @@
 
   .inicio-fijo .sugerencias-form .inicio-pie {
     flex: none;
+  }
+}
+
+/* Sin sesión también cabe en la pantalla: la bienvenida mantiene su alto y las columnas de abajo
+   se reparten el resto. En pantallas bajas, las secciones pierden su explicación. */
+@media (min-width: 761px) {
+  .inicio-fijo > .inicio-bienvenida {
+    flex: none;
+  }
+
+  .inicio-fijo .inicio-avisos-lista li {
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+}
+
+@media (min-width: 761px) and (max-height: 760px) {
+  .inicio-fijo .inicio-seccion-datos span,
+  .inicio-fijo .inicio-bienvenida-cuenta {
+    display: none;
+  }
+
+  .inicio-fijo .inicio-bienvenida {
+    padding: 1.1rem 1.4rem;
+  }
+
+  .inicio-fijo .inicio-seccion {
+    align-items: center;
+  }
+}
+
+/* Sin sesión, la bienvenida es lo principal: se lleva todo el alto que sobra, con las secciones
+   y el texto más grandes, y lo de abajo (avisos y sugerencias) se queda en una franja baja. */
+@media (min-width: 761px) {
+  .inicio-invitado > .inicio-bienvenida {
+    flex: 1 1 auto;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+    gap: 2.2rem;
+    padding: 2rem 2.2rem;
+  }
+
+  .inicio-invitado .inicio-bienvenida-texto {
+    gap: 1.1rem;
+  }
+
+  .inicio-invitado .inicio-bienvenida .inicio-bienvenida-texto h2 {
+    font-size: 2.6rem;
+    line-height: 1.05;
+  }
+
+  .inicio-invitado .inicio-bienvenida-texto p {
+    font-size: 1.1rem;
+  }
+
+  .inicio-invitado .inicio-bienvenida-texto .inicio-bienvenida-cuenta {
+    font-size: 0.98rem;
+  }
+
+  .inicio-invitado .inicio-bienvenida-secciones {
+    grid-auto-rows: minmax(0, 1fr);
+    gap: 0.7rem;
+  }
+
+  .inicio-invitado .inicio-seccion {
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.7rem 1rem;
+  }
+
+  .inicio-invitado .inicio-seccion-datos strong {
+    font-family: var(--letra-titulos);
+    font-size: 1.2rem;
+  }
+
+  .inicio-invitado .inicio-seccion-datos span {
+    font-size: 0.86rem;
+  }
+
+  .inicio-invitado .inicio-seccion-icono,
+  .inicio-invitado #vista-inicio .inicio-seccion-icono .icono {
+    width: 1.9rem;
+    height: 1.9rem;
+  }
+
+  #vista-inicio.inicio-invitado .inicio-seccion-icono .icono {
+    width: 1.8rem;
+    height: 1.8rem;
+  }
+
+  .inicio-invitado .sugerencias-texto {
+    min-height: 4.5rem;
   }
 }
 
@@ -707,6 +919,23 @@
 
   .inicio-locke-caras {
     display: none;
+  }
+
+  .inicio-locke {
+    flex-wrap: wrap;
+  }
+
+  .inicio-locke-cifras {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+
+  .inicio-cifra:first-child {
+    padding-left: 0;
+  }
+
+  .inicio-saludo h1 {
+    font-size: 1.9rem;
   }
 
   .inicio-bienvenida {

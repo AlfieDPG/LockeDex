@@ -16,13 +16,14 @@ import { icono } from "../comun/iconos.js";
 import { campoNumero } from "../comun/numero.js";
 import { capsPropios, tipoDeCombate, MAX_COMBATES } from "../comun/personalizados.js";
 import { apuntarEnLockesDelJuego } from "../comun/lockes.js";
+import { medallasDelJuego } from "../comun/medallas.js";
 import { confirmar, avisar } from "../comun/ventanas.js";
 import { t } from "../comun/idioma.js";
 
-function retrato(c) {
+function retrato(c, clase = "cap-retrato") {
   const url = juego.propio ? c.imagen : retratoDeLaWeb(juego.id, c.nombre);
   if (!url) return "";
-  return imagenConRespaldo([url], `class="cap-retrato" alt="" loading="lazy" data-quitar-si-falla`);
+  return imagenConRespaldo([url], `class="${clase}" alt="" loading="lazy" data-quitar-si-falla`);
 }
 
 // NO cambiar estas claves: si se cambian, se pierden los combates marcados como superados
@@ -38,7 +39,7 @@ const MULTIPLICADOR_PASO = 0.1;
 const vista = document.getElementById("vista-levelcaps");
 const selector = vista.querySelector(".selector-juego");
 const barra = vista.querySelector(".barra-nuzlocke");
-const resumen = vista.querySelector(".caps-actual");
+const resumen = vista.querySelector(".caps-resumen");
 const lista = vista.querySelector(".caps-lista");
 const valorMultiplicador = vista.querySelector(".multiplicador-valor");
 const editar = vista.querySelector(".juego-editar");
@@ -86,39 +87,71 @@ function cambiarMultiplicador(paso) {
   pintarLista();
 }
 
-function pintarResumen() {
-  // Los combates de secciones aparte (p. ej. líderes de otras regiones) no cuentan
-  const siguiente = combates.find((c) => !c.seccion && !superados.has(claveCombate(c)));
+// ---------- Medallas ----------
+//
+// Las del juego (js/comun/medallas.js), cada una con su gimnasio de la lista: se ven en
+// color las de los gimnasios superados. Los personalizados no tienen.
 
-  if (!combates.length) {
-    resumen.innerHTML = "";
-    return;
-  }
-  if (!siguiente) {
-    resumen.innerHTML = t("¡Has superado todos los combates de este juego!");
-    return;
-  }
-  resumen.innerHTML = `
-    <span>${t("Tu level cap ahora:")}</span>
-    <strong class="caps-nivel-grande">${textoNivel(siguiente)}</strong>
-    <span>${t("antes de {combate}", { combate: escaparHTML([textoDeCombate(siguiente.etiqueta).toLowerCase(), textoDeCombate(siguiente.nombre)].filter(Boolean).join(" · ")) })}</span>
-  `;
+let medallaDe = new Map(); // claveCombate -> { imagen, nombre }
+
+function calcularMedallas() {
+  medallaDe = new Map();
+  if (!juego || juego.propio) return [];
+  const gimnasios = combates.filter((c) => c.tipo === "gimnasio" && !c.seccion);
+  return medallasDelJuego(juego.id).map((medalla) => {
+    const combate = gimnasios[medalla.gimnasio];
+    if (combate) medallaDe.set(claveCombate(combate), medalla);
+    return { ...medalla, combate };
+  });
 }
 
-// Todo escapado: los personalizados los escribe la gente
-function filaCombate(c) {
+function imagenMedalla(medalla, clase) {
+  return `<img class="${clase}" src="${medalla.imagen}" alt="${escaparHTML(medalla.nombre)}" title="${escaparHTML(medalla.nombre)}" loading="lazy">`;
+}
+
+// ---------- Arriba: progreso y medallas ----------
+
+function pintarResumen() {
+  // Los combates de secciones aparte (p. ej. líderes de otras regiones) no cuentan
+  const propios = combates.filter((c) => !c.seccion);
+  resumen.hidden = !propios.length || (juego.propio && editando);
+  if (resumen.hidden) return;
+
+  const hechos = propios.filter((c) => superados.has(claveCombate(c))).length;
+  const medallas = calcularMedallas().filter((m) => m.combate);
+  resumen.querySelector(".caps-progreso").innerHTML = `
+    <div class="caps-progreso-texto">
+      <span>${hechos === propios.length ? t("¡Has superado todos los combates de este juego!") : t("Progreso")}</span>
+      <span>${t("{hechos} de {total} combates", { hechos, total: propios.length })}</span>
+    </div>
+    <div class="caps-pista"><i style="width: ${(hechos / propios.length) * 100}%"></i></div>`;
+  resumen.querySelector(".caps-medallas-fila").innerHTML = medallas
+    .map((m) => imagenMedalla(m, `caps-medalla-imagen ${superados.has(claveCombate(m.combate)) ? "ganada" : ""}`))
+    .join("");
+}
+
+// Todo escapado: los personalizados los escribe la gente. La casilla es el punto del riel; la
+// barra enseña el nivel frente al más alto de la lista; el que toca ahora va desplegado.
+function filaCombate(c, siguiente, techo) {
   const clave = claveCombate(c);
   const hecho = superados.has(clave);
+  const lugar = c.lugar ? ` · <span class="cap-lugar">${escaparHTML(textoDeCombate(c.lugar))}</span>` : "";
   return `
-    <li class="cap ${escaparHTML(c.tipo)} ${hecho ? "superado" : ""}">
+    <li class="cap ${escaparHTML(c.tipo)} ${hecho ? "superado" : ""} ${siguiente ? "siguiente" : ""}">
       <label>
         <input type="checkbox" data-clave="${escaparHTML(clave)}" ${hecho ? "checked" : ""}>
-        ${retrato(c)}
-        <span class="cap-etiqueta">${escaparHTML(textoDeCombate(c.etiqueta))}</span>
-        <span class="cap-nombre">${escaparHTML(textoDeCombate(c.nombre))}</span>
-        ${c.lugar ? `<span class="cap-lugar">${escaparHTML(textoDeCombate(c.lugar))}</span>` : ""}
+        ${retrato(c) || `<span class="cap-retrato"></span>`}
+        <span class="cap-textos">
+          ${siguiente ? `<span class="cap-chapa">${t("Próximo combate")}</span>` : ""}
+          <span class="cap-etiqueta">${escaparHTML(textoDeCombate(c.etiqueta))}${lugar}</span>
+          <span class="cap-nombre">${escaparHTML(textoDeCombate(c.nombre))}</span>
+        </span>
+        <span class="cap-barra" ${tituloNivel(c)}><i style="width: ${Math.min(100, (nivel(c) / techo) * 100)}%"></i></span>
+        <span class="cap-nivel-col">
+          ${siguiente ? `<span class="cap-leyenda">${t("Tu level cap")}</span>` : ""}
+          <span class="cap-nivel" ${tituloNivel(c)}>${siguiente ? textoNivel(c) : t("Nv. {nivel}", { nivel: textoNivel(c) })}</span>
+        </span>
       </label>
-      <span class="cap-nivel" ${tituloNivel(c)}>${t("Nv. {nivel}", { nivel: textoNivel(c) })}</span>
     </li>`;
 }
 
@@ -126,6 +159,8 @@ function filaCombate(c) {
 const TRAMOS = { "alto-mando": t("Alto Mando"), campeon: t("Campeón") };
 
 function pintarLista() {
+  // Fuera del editor, la ruta
+  lista.classList.toggle("caps-ruta", !(juego.propio && editando));
   if (juego.propio && editando) {
     pintarEditor();
     pintarResumen();
@@ -138,6 +173,12 @@ function pintarLista() {
     return;
   }
 
+  calcularMedallas(); // la de cada gimnasio, para el resumen de arriba
+
+  // El que toca ahora y el nivel más alto (el 100 % de las barras)
+  const siguiente = combates.find((c) => !c.seccion && !superados.has(claveCombate(c)));
+  const techo = Math.max(1, ...combates.map(nivel));
+
   // Primero los combates normales y después, con su título, los de cada sección aparte
   let html = "";
   let tipoAnterior = null;
@@ -147,13 +188,13 @@ function pintarLista() {
       html += `<li class="caps-tramo ${c.tipo}"><h3>${TRAMOS[c.tipo]}</h3></li>`;
     }
     tipoAnterior = c.tipo;
-    html += filaCombate(c);
+    html += filaCombate(c, c === siguiente, techo);
   }
 
   const secciones = [...new Set(combates.filter((c) => c.seccion).map((c) => c.seccion))];
   for (const seccion of secciones) {
     html += `<li class="caps-seccion"><h3>${escaparHTML(textoDeCombate(seccion))}</h3></li>`;
-    html += combates.filter((c) => c.seccion === seccion).map(filaCombate).join("");
+    html += combates.filter((c) => c.seccion === seccion).map((c) => filaCombate(c, false, techo)).join("");
   }
 
   lista.innerHTML = html;
@@ -316,13 +357,12 @@ export function iniciar() {
     if (!casilla) return;
     if (casilla.checked) superados.add(casilla.dataset.clave);
     else superados.delete(casilla.dataset.clave);
-    casilla.closest(".cap").classList.toggle("superado", casilla.checked);
 
     // Lo de los otros juegos, como esté ahora (las medallas de una partida marcan desde fuera)
     Object.assign(guardados, leer(CLAVE_SUPERADOS, {}) || {});
     guardados[juego.id] = [...superados];
     escribir(CLAVE_SUPERADOS, guardados);
-    pintarResumen();
+    pintarLista(); // cambia quién es el próximo, el progreso y las medallas
 
     // A la actividad de tus lockes de este juego («ha vencido a Brock»)
     const combate = combates.find((c) => claveCombate(c) === casilla.dataset.clave);
@@ -398,7 +438,7 @@ function elegirJuego(nuevo) {
   pintarBotonEditar();
   if (!juego) {
     lista.innerHTML = "";
-    resumen.innerHTML = "";
+    resumen.hidden = true;
     return;
   }
 
