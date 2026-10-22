@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Icono de NuzTheLocke: un candado con el cuerpo de Poké Ball y el ojo de la cerradura de botón -->
+  <!-- Arco del candado (el borde oscuro y la línea de metal de dentro) -->
+  <path d="M152 240V150a104 104 0 0 1 208 0v90" fill="none" stroke="#1b1c24" stroke-width="60"/>
+  <path d="M152 240V150a104 104 0 0 1 208 0v90" fill="none" stroke="#8d93a3" stroke-width="22"/>
+  <!-- Cuerpo: borde, mitad roja, mitad blanca y la franja -->
+  <circle cx="256" cy="304" r="190" fill="#1b1c24"/>
+  <path d="M92 304a164 164 0 0 1 328 0z" fill="#c0392b"/>
+  <path d="M92 304a164 164 0 0 0 328 0z" fill="#f0f0f0"/>
+  <rect x="70" y="282" width="372" height="44" fill="#1b1c24"/>
+  <!-- Botón con el ojo de la cerradura -->
+  <circle cx="256" cy="304" r="68" fill="#1b1c24"/>
+  <circle cx="256" cy="304" r="44" fill="#f0f0f0"/>
+  <circle cx="256" cy="293" r="13" fill="#1b1c24"/>
+  <path d="M249 298l-6 29h26l-6-29z" fill="#1b1c24"/>
+</svg>

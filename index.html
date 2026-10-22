@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LockeDex</title>
+  <title>NuzTheLocke</title>
   <meta name="description" content="Web de fans para jugar Nuzlockes con amigos: equipos, rutas, level caps, Pokédex y marcador de lockes.">
-  <link rel="icon" type="image/png" sizes="32x32" href="img/pokeball-32.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="img/pokeball-512.png">
-  <link rel="apple-touch-icon" href="img/pokeball-180.png">
+  <link rel="icon" type="image/svg+xml" href="img/icono.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="img/icono-32.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="img/icono-512.png">
+  <link rel="apple-touch-icon" href="img/icono-180.png">
   <!-- Abre ya la conexión con los sitios de donde salen imágenes y datos -->
   <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
   <link rel="preconnect" href="https://pokeapi.co" crossorigin>
@@ -43,7 +44,7 @@
 <body>
   <div class="app">
     <aside class="barra-lateral">
-      <h1 class="logo"><a href="#inicio" title="Inicio"><img src="img/pokeball-180.png" alt="">LockeDex</a></h1>
+      <h1 class="logo"><a href="#inicio" title="Inicio"><img src="img/icono.svg" alt="">NuzTheLocke</a></h1>
       <nav class="menu-lateral">
         <!-- data-icono: el icono que se le pone delante (js/navegacion.js) -->
         <button data-vista="lockes" data-icono="espadas" class="boton-destacado">Lockes</button>
@@ -740,9 +741,9 @@
       </ol>
       <p>Te descarga un .zip con los archivos cambiados, como un mod. Descomprímelo en la carpeta de mods del juego:</p>
       <ol>
-        <li data-t><b>Eden, yuzu o Sudachi:</b> clic derecho sobre el juego → «Abrir ubicación de los mods» y descomprime ahí el .zip (queda una carpeta «LockeDex» con «romfs» dentro).</li>
+        <li data-t><b>Eden, yuzu o Sudachi:</b> clic derecho sobre el juego → «Abrir ubicación de los mods» y descomprime ahí el .zip (queda una carpeta «NuzTheLocke» con «romfs» dentro). Si tienes una carpeta «LockeDex» de antes, bórrala: si no, se cargan los dos mods a la vez.</li>
         <li data-t><b>Ryujinx:</b> clic derecho sobre el juego → «Abrir carpeta de mods» y descomprime ahí el .zip.</li>
-        <li data-t><b>Consola con Atmosphère:</b> copia la carpeta «romfs» de dentro del .zip a <code>atmosphere/contents/</code> + el número del juego (Espada: 0100ABF008968000, Escudo: 01008DB008C2C000, Diamante Brillante: 0100000011D90000, Perla Reluciente: 010018E011D92000). Si el .zip trae también una carpeta «exefs» (las iniciales de Diamante Brillante y Perla Reluciente), copia los .ips de dentro a <code>atmosphere/exefs_patches/LockeDex/</code>.</li>
+        <li data-t><b>Consola con Atmosphère:</b> copia la carpeta «romfs» de dentro del .zip a <code>atmosphere/contents/</code> + el número del juego (Espada: 0100ABF008968000, Escudo: 01008DB008C2C000, Diamante Brillante: 0100000011D90000, Perla Reluciente: 010018E011D92000). Si el .zip trae también una carpeta «exefs» (las iniciales de Diamante Brillante y Perla Reluciente), copia los .ips de dentro a <code>atmosphere/exefs_patches/NuzTheLocke/</code> (y borra <code>exefs_patches/LockeDex</code> si lo tenías de antes).</li>
       </ol>
       <p>Para volver al juego normal, quita (o desactiva en el emulador) esa carpeta de mods.</p>
 
@@ -854,7 +855,7 @@
     <h2>Preguntas frecuentes</h2>
     <div class="ayuda-lista">
       <details>
-        <summary>¿Qué es LockeDex?</summary>
+        <summary>¿Qué es NuzTheLocke?</summary>
         <p>Una web para jugar Nuzlockes con tus amigos: lleváis el marcador de cada locke en «Lockes» (vidas, victorias, muertos y quién gana) y tienes a mano lo que hace falta mientras juegas: tus equipos, las rutas donde ya has capturado, los level caps de cada combate, las normas y la Pokédex.</p>
       </details>
       <details>

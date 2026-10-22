@@ -2,7 +2,7 @@
 // Si Firebase no está configurado no se enseña nada: la web va igual, solo que lo
 // guardado se queda en este navegador.
 //
-//   · Entrar: con usuario y contraseña de LockeDex o con Google (ver nube.js).
+//   · Entrar: con usuario y contraseña de NuzTheLocke o con Google (ver nube.js).
 //   · Crear cuenta: usuario, contraseña y repetirla. El usuario es también su nombre.
 //   · Nombre de usuario obligatorio: mientras la cuenta no tenga uno (las de Google al
 //     entrar por primera vez) sale una ventana que no se puede cerrar. Así nadie va por

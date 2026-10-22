@@ -22,7 +22,7 @@ Son unos diez minutos. Todo es gratis y sin tarjeta.
    proveedor nuevo → Correo electrónico/contraseña** → activar solo la primera opción →
    **Guardar**. Por dentro, el usuario «Pepe» es el correo inventado `pepe@pokely.invalid`
    (ver `js/comun/nube.js`); por eso esas cuentas no pueden recuperar la contraseña. Se
-   queda `pokely` (el nombre antiguo) aunque la web se llame LockeDex: si cambiase, las
+   queda `pokely` (el nombre antiguo) aunque la web se llame NuzTheLocke: si cambiase, las
    cuentas que ya existen no podrían entrar.
 5. Si la web cambia de dirección (otro nombre de repositorio o un dominio propio), hay que
    añadir la nueva en **Authorized domains**. Si no, no deja iniciar sesión.

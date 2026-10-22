@@ -152,11 +152,11 @@ function plantillaAtaque(a, i) {
 }
 
 // Amistad (o ciclos del huevo) y de dónde viene: dónde se conoció, el juego de origen y el
-// entrenador original. Los creados aquí son «de LockeDex» (hasta que se les ponga otro juego).
+// entrenador original. Los creados aquí son «de NuzTheLocke» (hasta que se les ponga otro juego).
 function plantillaOrigen(poke) {
   const creado = poke.creado && poke.version === "lockedex";
   const versiones = [
-    ...(poke.creado ? [{ id: "lockedex", nombre: "LockeDex" }] : []),
+    ...(poke.creado ? [{ id: "lockedex", nombre: "NuzTheLocke" }] : []),
     ...(versionesDe(abierto.juego).some((v) => v.id === poke.version) || poke.version === "lockedex" ? [] : [{ id: poke.version, nombre: (VERSIONES.find((v) => v.id === poke.version) || { nombre: t("Juego {n}", { n: poke.version }) }).nombre }]),
     ...versionesDe(abierto.juego)
   ];
@@ -410,7 +410,7 @@ export async function abrirEditor(idLocke, sitio, recargar = false) {
     };
 
     if (!crudo) {
-      // Los creados aquí: conocidos «en LockeDex», del entrenador de la partida
+      // Los creados aquí: conocidos «en NuzTheLocke», del entrenador de la partida
       const poke = { especie: 0, mote: "", shiny: false, objeto: 0, huevo: false, ball: 4, ataques: [null, null, null, null] };
       Object.assign(poke, { lugar: lugarIntercambio(formato.id), version: "lockedex", entrenador: (partidaDe(idLocke) || {}).entrenador || "", creado: true });
       abierto = { ...base, llave: 0, antes: null, poke };
@@ -541,7 +541,7 @@ async function guardar() {
         const sigueCreado = poke.creado && poke.version === "lockedex";
         return { metidos: [nueva], creados: sigueCreado ? [nueva] : [], noCreados: poke.creado ? [llave] : [] };
       }
-      // Creado aquí, pero con otro juego de origen: ya no sale como «LockeDex»
+      // Creado aquí, pero con otro juego de origen: ya no sale como «NuzTheLocke»
       return poke.creado && poke.version !== "lockedex" ? { noCreados: [llave] } : [];
     }
     const crudo = pk.crearPokemon(h.formato.entrenadorDe(h.bytes), despues, opciones);

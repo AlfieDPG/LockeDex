@@ -1,4 +1,4 @@
-// Service worker de LockeDex: guarda en el ordenador lo que viene de fuera para que, a partir
+// Service worker de NuzTheLocke: guarda en el ordenador lo que viene de fuera para que, a partir
 // de la segunda vez, salga al instante.
 //
 // Por qué hace falta: casi todas las imágenes (artes, retratos de Mundo Misterioso, sprites)

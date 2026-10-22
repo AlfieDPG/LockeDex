@@ -126,7 +126,7 @@ function plantillaBienvenida() {
   return `
     <section class="inicio-bloque inicio-bienvenida">
       <div class="inicio-bienvenida-texto">
-        <h2>${t("Bienvenido a LockeDex")}</h2>
+        <h2>${t("Bienvenido a NuzTheLocke")}</h2>
         <p>${t(`Todo lo que necesitas para jugar <b>Nuzlockes</b> (y cualquier otro locke) en un solo
           sitio: tus equipos, las rutas, los level caps, una calculadora de daño, un randomizer…
           y lockes compartidos con tus amigos.`)}</p>
@@ -190,9 +190,9 @@ function plantillaCabecera() {
 
   return `
     <header class="inicio-cabecera">
-      <img class="inicio-logo" src="img/pokeball-180.png" alt="" style="animation-delay: -${(performance.now() % 6000) / 1000}s">
+      <img class="inicio-logo" src="img/icono.svg" alt="" style="animation-delay: -${(performance.now() % 6000) / 1000}s">
       <div class="inicio-saludo">
-        <h1>${nombre ? t("Hola, {nombre}", { nombre: escaparHTML(nombre) }) : "LockeDex"}</h1>
+        <h1>${nombre ? t("Hola, {nombre}", { nombre: escaparHTML(nombre) }) : "NuzTheLocke"}</h1>
       </div>
       ${pendientes
         ? `<button class="inicio-avisos">${icono("campana")} ${t("{n} sin contestar", { n: pendientes })}</button>`
@@ -379,7 +379,7 @@ async function enviarSugerencia() {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({
-        _subject: "Sugerencia de LockeDex",
+        _subject: "Sugerencia de NuzTheLocke",
         message: texto,
         usuario: conSesion() ? (miPerfil() && miPerfil().nombre) || "Usuario registrado" : "Anónimo"
       })

@@ -3,7 +3,7 @@
 // No hay ROM: se elige la carpeta «romfs» sacada desde el emulador (ver el «?» del randomizer).
 // La sesión lee de antemano los archivos que hacen falta (después todo es síncrono, como en los
 // motores de DS y 3DS) y lo que cambia sale en un .zip, como un mod de LayeredFS:
-// «LockeDex/romfs/...», con las mismas rutas que en el juego.
+// «NuzTheLocke/romfs/...», con las mismas rutas que en el juego.
 
 export class SesionSwitch {
   // rutas: Map de la ruta dentro del romfs («bin/pml/...») al File (o a algo con arrayBuffer())
@@ -53,7 +53,7 @@ export class SesionSwitch {
 
   // El .zip con lo cambiado (sin comprimir: casi todo va ya comprimido o es pequeño). Lo que empieza por «@exefs/»
   // (parches del programa) va a la carpeta «exefs» del mod
-  zip(carpeta = "LockeDex") {
+  zip(carpeta = "NuzTheLocke") {
     const destino = (ruta) => (ruta.startsWith("@exefs/") ? `${carpeta}/exefs/${ruta.slice(7)}` : `${carpeta}/romfs/${ruta}`);
     return crearZip([...this.cambios].sort(([a], [b]) => (a < b ? -1 : 1)).map(([ruta, bytes]) => [destino(ruta), bytes]));
   }

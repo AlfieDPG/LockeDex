@@ -148,12 +148,12 @@ export default {
   "En la web, pulsa «Elegir carpeta» y elige esa carpeta «romfs».": "On the site, click “Choose folder” and pick that “romfs” folder.",
   "Te descarga un .zip con los archivos cambiados, como un mod. Descomprímelo en la carpeta de mods del juego:":
     "It downloads a .zip with the changed files, like a mod. Unzip it into the game's mods folder:",
-  "<b>Eden, yuzu o Sudachi:</b> clic derecho sobre el juego → «Abrir ubicación de los mods» y descomprime ahí el .zip (queda una carpeta «LockeDex» con «romfs» dentro).":
-    "<b>Eden, yuzu or Sudachi:</b> right-click the game → “Open Mod Data Location” and unzip the .zip there (you get a “LockeDex” folder with “romfs” inside).",
+  "<b>Eden, yuzu o Sudachi:</b> clic derecho sobre el juego → «Abrir ubicación de los mods» y descomprime ahí el .zip (queda una carpeta «NuzTheLocke» con «romfs» dentro). Si tienes una carpeta «LockeDex» de antes, bórrala: si no, se cargan los dos mods a la vez.":
+    "<b>Eden, yuzu or Sudachi:</b> right-click the game → “Open Mod Data Location” and unzip the .zip there (you get a “NuzTheLocke” folder with “romfs” inside). If you have an older “LockeDex” folder, delete it: otherwise both mods load at once.",
   "<b>Ryujinx:</b> clic derecho sobre el juego → «Abrir carpeta de mods» y descomprime ahí el .zip.":
     "<b>Ryujinx:</b> right-click the game → “Open Mods Directory” and unzip the .zip there.",
-  "<b>Consola con Atmosphère:</b> copia la carpeta «romfs» de dentro del .zip a <code>atmosphere/contents/</code> + el número del juego (Espada: 0100ABF008968000, Escudo: 01008DB008C2C000, Diamante Brillante: 0100000011D90000, Perla Reluciente: 010018E011D92000). Si el .zip trae también una carpeta «exefs» (las iniciales de Diamante Brillante y Perla Reluciente), copia los .ips de dentro a <code>atmosphere/exefs_patches/LockeDex/</code>.":
-    "<b>Console with Atmosphère:</b> copy the “romfs” folder from inside the .zip to <code>atmosphere/contents/</code> + the game's ID (Sword: 0100ABF008968000, Shield: 01008DB008C2C000, Brilliant Diamond: 0100000011D90000, Shining Pearl: 010018E011D92000). If the .zip also has an “exefs” folder (the starters of Brilliant Diamond and Shining Pearl), copy the .ips files inside it to <code>atmosphere/exefs_patches/LockeDex/</code>.",
+  "<b>Consola con Atmosphère:</b> copia la carpeta «romfs» de dentro del .zip a <code>atmosphere/contents/</code> + el número del juego (Espada: 0100ABF008968000, Escudo: 01008DB008C2C000, Diamante Brillante: 0100000011D90000, Perla Reluciente: 010018E011D92000). Si el .zip trae también una carpeta «exefs» (las iniciales de Diamante Brillante y Perla Reluciente), copia los .ips de dentro a <code>atmosphere/exefs_patches/NuzTheLocke/</code> (y borra <code>exefs_patches/LockeDex</code> si lo tenías de antes).":
+    "<b>Console with Atmosphère:</b> copy the “romfs” folder from inside the .zip to <code>atmosphere/contents/</code> + the game's ID (Sword: 0100ABF008968000, Shield: 01008DB008C2C000, Brilliant Diamond: 0100000011D90000, Shining Pearl: 010018E011D92000). If the .zip also has an “exefs” folder (the starters of Brilliant Diamond and Shining Pearl), copy the .ips files inside it to <code>atmosphere/exefs_patches/NuzTheLocke/</code> (and delete <code>exefs_patches/LockeDex</code> if you had it from before).",
   "Para volver al juego normal, quita (o desactiva en el emulador) esa carpeta de mods.": "To go back to the normal game, remove (or disable in the emulator) that mods folder.",
   "Chrome y Edge no dejan elegir nada de dentro de las carpetas del sistema, como <b>AppData</b> (que es donde los emuladores guardan muchas cosas). No es un fallo de la web: es una protección del navegador. Copia lo que quieras elegir a una carpeta normal, como Documentos o el Escritorio, y elígelo desde ahí.":
     "Chrome and Edge don't let you choose anything inside system folders, like <b>AppData</b> (which is where emulators keep a lot of things). It's not a bug in the site: it's a browser protection. Copy what you want to choose to a normal folder, like Documents or the Desktop, and choose it from there.",
@@ -173,7 +173,7 @@ export default {
   "Elige la forma": "Choose the form",
 
   // ---------- Preguntas frecuentes ----------
-  "¿Qué es LockeDex?": "What is LockeDex?",
+  "¿Qué es NuzTheLocke?": "What is NuzTheLocke?",
   "Una web para jugar Nuzlockes con tus amigos: lleváis el marcador de cada locke en «Lockes» (vidas, victorias, muertos y quién gana) y tienes a mano lo que hace falta mientras juegas: tus equipos, las rutas donde ya has capturado, los level caps de cada combate, las normas y la Pokédex.":
     "A site for playing Nuzlockes with your friends: you keep the scoreboard of each locke in “Lockes” (lives, wins, deaths and who wins) and have what you need at hand while you play: your teams, the routes where you've already caught, the level caps of each battle, the rules and the Pokédex.",
   "¿Necesito una cuenta?": "Do I need an account?",

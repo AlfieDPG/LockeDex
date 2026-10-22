@@ -2,7 +2,7 @@
 
 export default {
   "Notas y avisos": "News and notices",
-  "Bienvenido a LockeDex": "Welcome to LockeDex",
+  "Bienvenido a NuzTheLocke": "Welcome to NuzTheLocke",
   "Todo lo que necesitas para jugar <b>Nuzlockes</b> (y cualquier otro locke) en un solo sitio: tus equipos, las rutas, los level caps, una calculadora de daño, un randomizer… y lockes compartidos con tus amigos.":
     "Everything you need to play <b>Nuzlockes</b> (and any other locke) in one place: your teams, routes, level caps, a damage calculator, a randomizer… and lockes shared with your friends.",
   "Casi todo funciona sin cuenta. Con sesión, tus equipos se guardan en la nube y desbloqueas los lockes con amigos, los perfiles y los logros.":

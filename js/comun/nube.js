@@ -302,7 +302,7 @@ export async function entrar() {
 // «Pepe» -> pepe@pokely.invalid. «.invalid» es un dominio que no existe ni puede existir:
 // nunca se manda nada ahí. Por eso estas cuentas no pueden recuperar la contraseña.
 //
-// Se queda «pokely» (el nombre antiguo de la web) aunque ahora se llame LockeDex: es el
+// Se queda «pokely» (el nombre antiguo de la web) aunque ahora se llame NuzTheLocke: es el
 // correo con el que entran las cuentas que ya existen, y si cambiase no podrían entrar.
 // Lo mismo con las claves «pokely-...» del navegador.
 //

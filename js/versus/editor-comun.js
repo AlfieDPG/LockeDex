@@ -211,7 +211,7 @@ export function nombreLugar(numero, creado = false, juego = "xy") {
 
 function nombreLugarEs(numero, creado = false, juego = "xy") {
   const gen = genDe(juego);
-  if (creado && numero === INTERCAMBIO[gen]) return "LockeDex";
+  if (creado && numero === INTERCAMBIO[gen]) return "NuzTheLocke";
   if (gen === 4) return LUGARES_GEN4[numero] || LUGARES_GEN4_OTROS[numero] || (numero ? `Lugar ${numero}` : "");
   if (gen === 5) return LUGARES_GEN5[numero] || LUGARES_GEN5_OTROS[numero] || (numero ? `Lugar ${numero}` : "");
   if (numero === INTERCAMBIO[6] || numero === 30002) return "Intercambio";
@@ -547,7 +547,7 @@ export function comprobarSitio(h, sitio, llave) {
 // llaves de los Pokémon que mete (no cuentan como capturas ni como muertos). detalle: lo que
 // se apunta en la actividad al guardar (mover no apunta nada).
 // hacer(h) puede devolver también { metidos, creados, noCreados }: los creados de cero en la
-// web (su juego de origen sale como «LockeDex») y los que dejan de serlo
+// web (su juego de origen sale como «NuzTheLocke») y los que dejan de serlo
 export function cambiarHuecos(idLocke, hacer, detalle = "") {
   return cambiarPartida(idLocke, (original) => {
     const h = abrirHuecos(original, basesDe);

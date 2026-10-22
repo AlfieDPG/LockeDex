@@ -163,7 +163,7 @@ export function marcarMetidos(idLocke, llaves) {
   guardarPartida(idLocke, partida);
 }
 
-// Los creados de cero en la web (no los clonados): su juego de origen se ve como «LockeDex»
+// Los creados de cero en la web (no los clonados): su juego de origen se ve como «NuzTheLocke»
 export function marcarCreados(idLocke, llaves, creados = true) {
   const partida = partidaDe(idLocke);
   if (!partida) return;
