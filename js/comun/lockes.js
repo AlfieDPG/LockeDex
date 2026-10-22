@@ -448,14 +448,17 @@ export function ganadorPropuesto(locke) {
 }
 
 // Sin ganador: se borra el resultado
-export async function apuntarResultado(id, idCombate, ganador, marcador) {
+// puntos: { uid: combates que ha ganado cada uno } (con más de dos jugadores no vale un «2-1»)
+export async function apuntarResultado(id, idCombate, ganador, marcador, puntos = null) {
   const locke = lockePorId(id);
   const usuario = usuarioActual();
   if (!locke || !usuario || locke.estado === "cerrado") return;
 
   const { fn, ref } = referencia(id);
   await fn.updateDoc(ref, {
-    [`resultados.${idCombate}`]: ganador ? { ganador, marcador: marcador || "" } : fn.deleteField(),
+    [`resultados.${idCombate}`]: ganador
+      ? { ganador, marcador: marcador || "", ...(puntos ? { puntos } : {}) }
+      : fn.deleteField(),
     actualizado: Date.now()
   });
   if (ganador) {

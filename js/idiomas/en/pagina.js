@@ -50,6 +50,17 @@ export default {
   "Añadir locke": "Add locke",
 
   // ---------- Nuevo locke ----------
+  "Con el nombre y el juego ya puedes empezar. Lo demás es opcional.": "With a name and a game you can already start. The rest is optional.",
+  "Lo básico": "The basics",
+  "Por ejemplo: Nuzlocke de Platino": "For example: Platinum Nuzlocke",
+  "Vidas y combates": "Lives and battles",
+  "Las vidas son las de cada jugador al empezar. Los combates son los enfrentamientos entre vosotros: el que gana cada uno suma una victoria.":
+    "Lives are what each player starts with. Battles are the matches between you: whoever wins each one earns a win.",
+  "Tú ya estás dentro. Pulsa «+» para invitar a tus amigos; hasta que acepten salen como «sin contestar».":
+    "You're already in. Press “+” to invite your friends; until they accept they show as “unanswered”.",
+  "Por ejemplo: sin objetos en combate y solo Pokémon de Sinnoh": "For example: no items in battle and only Sinnoh Pokémon",
+  "Reglas y extras": "Rules and extras",
+  "opcional": "optional",
   "Tipo": "Type",
   "Juego": "Game",
   "Vidas ilimitadas": "Unlimited lives",

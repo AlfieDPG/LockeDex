@@ -10,6 +10,7 @@ export default {
   "Guardar equipo": "Save team",
   "Vaciar equipo": "Clear team",
   "Exportar: copiar el equipo como paste": "Export: copy the team as a paste",
+  "Importar: pegar un equipo de Showdown": "Import: paste a team from Showdown",
 
   // «Mis equipos» (index.html)
   "Ver en lista": "List view",

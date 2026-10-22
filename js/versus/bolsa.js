@@ -60,11 +60,13 @@ export async function pintarBolsa(contenedor, idLocke) {
         ${bolsillos
           .map((b) => `<button class="bolsa-bolsillo ${b.id === elegido ? "activo" : ""}" data-bolsillo="${b.id}">${icono(ICONOS[b.id])} ${(NOMBRES_DE[juego] || {})[b.id] || NOMBRES[b.id]} <small>${mochila[b.id].length}</small></button>`)
           .join("")}
+      </div>
+      <div class="bolsa-barra">
+        ${lleno
+          ? `<p class="bolsa-lleno">${t("Este bolsillo está lleno.")}</p>`
+          : `<span class="editor-buscar bolsa-anadir"><input class="bolsa-buscar" type="search" placeholder="${t("Meter un objeto...")}" autocomplete="off"></span>`}
         <button class="bolsa-caramelos" title="${t("Llevar 999 Caramelos Raros")}">${icono("caramelo")} ${t("Caramelos raros")}</button>
       </div>
-      ${lleno
-        ? `<p class="bolsa-lleno">${t("Este bolsillo está lleno.")}</p>`
-        : `<span class="editor-buscar bolsa-anadir"><input class="bolsa-buscar" type="search" placeholder="${t("Meter un objeto...")}" autocomplete="off"></span>`}
       <div class="bolsa-lista">
         ${lista.length ? lista.map((e) => fila(e, bolsillo, juego)).join("") : `<p class="bolsa-vacio">${t("No hay nada.")}</p>`}
       </div>

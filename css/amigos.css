@@ -1576,3 +1576,98 @@ button.cara-equipo.mvp:hover img {
     radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--c1) 30%, transparent), transparent 70%);
 }
 
+
+/* ---------- Mis lockes ganados: con el estilo de la ventana de crear un locke ---------- */
+
+#dialogo-palmares {
+  width: min(56rem, 94vw);
+  padding: 1.5rem 1.6rem 1.3rem;
+  border-top: 4px solid rgb(var(--color-vista));
+  border-radius: 1rem;
+}
+
+#dialogo-palmares h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.9rem;
+  line-height: 1.05;
+}
+
+#dialogo-palmares > p {
+  margin: 0 0 1rem;
+  opacity: 0.7;
+}
+
+#dialogo-palmares .palmares-lista {
+  gap: 0.7rem;
+  padding-right: 0.3rem;
+}
+
+/* Cada locke ganado, como un bloque con borde de línea de puntos */
+#dialogo-palmares .fila-palmares {
+  padding: 0.8rem 0.9rem 0.9rem;
+  border: 1px dashed rgba(var(--t-tinte), 0.24);
+  border-radius: 0.9rem;
+}
+
+#dialogo-palmares .dialogo-botones {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed rgba(var(--t-tinte), 0.24);
+}
+
+#dialogo-palmares .dialogo-botones button {
+  padding: 0.6rem 1.3rem;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+/* Cada combate: una fila por participante, con sus combates ganados, y el que gana marcado */
+.palmares-combate-equipo {
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.5rem;
+  background: var(--t-fondo-2);
+  box-shadow: inset 3px 0 0 rgba(var(--t-tinte), 0.15);
+}
+
+.palmares-combate-equipo.gana {
+  background: color-mix(in srgb, #f1c40f 10%, var(--t-fondo-2));
+  box-shadow: inset 3px 0 0 #f1c40f;
+}
+
+.palmares-combate-quien {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 7rem;
+  font-size: 0.9rem;
+  opacity: 1;
+}
+
+.palmares-corona {
+  display: inline-flex;
+  color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
+}
+
+.palmares-corona .icono {
+  width: 1rem;
+  height: 1rem;
+}
+
+.palmares-combate-equipo .numero {
+  flex: none;
+  width: 4.6rem;
+}
+
+.palmares-combate-equipo .palmares-combate-puntos {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.35rem 0.5rem;
+  border: none;
+  border-radius: 0.4rem;
+  background: var(--t-fondo);
+  color: var(--t-texto);
+  font-family: var(--letra-titulos);
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-align: center;
+}

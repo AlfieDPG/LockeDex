@@ -1525,3 +1525,47 @@
   opacity: 0.85;
 }
 
+
+/* ---------- Normas: sin una franja de color por cada norma ----------
+   Cada norma es una tarjeta lisa; el color queda para el título del apartado y para el bloque
+   de las normas de un locke (que sí identifica de quién son). */
+
+.normas-grupo h2 {
+  font-size: 1.6rem;
+  color: var(--t-texto);
+}
+
+.normas-grupo h2 .icono {
+  color: var(--color-apartado);
+}
+
+.normas-grupo h2 small {
+  font-family: var(--letra-titulos);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-apartado);
+  opacity: 1;
+}
+
+.normas-grupo h2::after {
+  height: 1px;
+  background: rgba(var(--t-tinte), 0.18);
+  opacity: 1;
+}
+
+.normas-grupo li {
+  padding: 0.75rem 1rem;
+  border-left: none;
+  border-radius: 0.7rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.normas-grupo li strong {
+  font-family: var(--letra-titulos);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.normas-grupo.del-locke {
+  border-radius: 0.9rem;
+}

@@ -32,6 +32,7 @@ import { t, nombre as nombreDe } from "../comun/idioma.js";
 let dialogo = null;
 let panel = null; // lo de dentro: va en su ventana o en el lado de la ventana «Partida»
 let lado = null;
+let reposo = null; // el aviso del hueco de la derecha cuando no se edita nada
 let cuerpo = null;
 let error = null;
 let alCambiarEditando = () => {};
@@ -230,7 +231,6 @@ function pintar() {
           </label>
           <select class="editor-naturaleza" aria-label="${t("Naturaleza")}" title="${t("Naturaleza")}">${opcionesNaturaleza(poke.entreno.naturaleza, true)}</select>
           ${plantillaBall(poke)}
-          <button class="editor-huevo ${poke.huevo ? "activo" : ""}" title="${poke.huevo ? t("Es un huevo (pulsa para que no lo sea)") : t("Convertir en huevo")}" aria-pressed="${poke.huevo}">${icono("huevo")}</button>
         </div>
       </div>
     </div>
@@ -247,7 +247,10 @@ function pintar() {
       <span class="editor-titulo">${t("Estadísticas")}</span>
       <div class="editor-estadisticas"></div>
     </div>
-    ${plantillaOrigen(poke)}`;
+    ${plantillaOrigen(poke)}
+    <div class="editor-extra">
+      <button class="editor-huevo ${poke.huevo ? "activo" : ""}" title="${poke.huevo ? t("Es un huevo (pulsa para que no lo sea)") : t("Convertir en huevo")}" aria-pressed="${poke.huevo}">${icono("huevo")} <span>${poke.huevo ? t("Es un huevo") : t("Convertir en huevo")}</span></button>
+    </div>`;
   // EVs e IVs: la ventana de «Crear equipo», aquí dentro (el nivel y la naturaleza, arriba)
   incrustarEntreno(cuerpo.querySelector(".editor-estadisticas"), poke);
 
@@ -339,7 +342,16 @@ function ventanaPartida() {
 
 // true si está abierto a la derecha de las cajas
 export function editorEnLado() {
-  return panel.parentElement === lado && ventanaPartida().classList.contains("con-editor");
+  return Boolean(editando) && panel.parentElement === lado && ventanaPartida().classList.contains("con-editor");
+}
+
+// El hueco de la derecha se reserva mientras la ventana «Partida» se puede editar (y cabe): así
+// las cajas no se mueven al elegir un Pokémon. Sin ninguno elegido, el hueco dice qué hacer.
+export function reservarEditor(activo) {
+  const reservar = Boolean(activo) && matchMedia(ANCHO_PARA_LADO).matches;
+  if (!reservar && editorEnLado()) cerrarEditor();
+  ventanaPartida().classList.toggle("con-editor", reservar);
+  reposo.hidden = !reservar || (panel.parentElement === lado && !panel.hidden);
 }
 
 // El sitio del que se está editando a la derecha (para marcarlo en las cajas), o null
@@ -348,17 +360,24 @@ export function sitioEditando() {
 }
 
 function mostrarPanel() {
-  if (ventanaPartida().open && matchMedia(ANCHO_PARA_LADO).matches) {
-    lado.appendChild(panel);
-    ventanaPartida().classList.add("con-editor");
+  panel.hidden = false;
+  if (ventanaPartida().open && ventanaPartida().classList.contains("con-editor")) {
+    if (panel.parentElement !== lado) lado.appendChild(panel);
+    reposo.hidden = true;
   } else {
-    dialogo.appendChild(panel);
+    if (panel.parentElement !== dialogo) dialogo.appendChild(panel);
     if (!dialogo.open) dialogo.showModal();
   }
 }
 
 export function cerrarEditor() {
-  if (panel.parentElement === lado) ventanaPartida().classList.remove("con-editor");
+  // A la derecha, el panel se esconde (y se vacía) y vuelve el aviso de «elige un Pokémon»; el
+  // hueco sigue reservado
+  if (panel.parentElement === lado) {
+    panel.hidden = true;
+    cuerpo.innerHTML = "";
+    reposo.hidden = !ventanaPartida().classList.contains("con-editor");
+  }
   if (dialogo.open) dialogo.close();
   abierto = null;
   editando = null;
@@ -385,16 +404,31 @@ function nivelInicial(idLocke) {
   return Math.max(5, ...equipo.filter((p) => !p.huevo).map((p) => p.nivel || 0));
 }
 
+// Ya está el nuevo: se quita lo de «atenuado» y, si es otro Pokémon, entra con un fundido corto
+// desde arriba del todo
+function entrar(recargado) {
+  panel.classList.remove("cambiando");
+  if (recargado) return;
+  cuerpo.scrollTop = 0;
+  cuerpo.classList.remove("entra");
+  void cuerpo.offsetWidth; // para que la animación vuelva a empezar
+  cuerpo.classList.add("entra");
+}
+
 // sitio: { equipo } o { caja, hueco }. Si está vacío, es para crear uno. recargar: el mismo
 // que ya estaba abierto, tras aceptar (sin el «Cargando...» de en medio).
 export async function abrirEditor(idLocke, sitio, recargar = false) {
   if (!recargar && editorEnLado() && sinAceptar() && !(await confirmar(t("Lo que has cambiado sin pulsar «Aceptar» se pierde. ¿Seguir?"), { aceptar: t("Seguir"), peligro: true }))) return;
+  // Pasando de un Pokémon a otro a la derecha, el panel no se vacía: se queda el anterior,
+  // atenuado, hasta que llega el nuevo (así no hay un «cerrar y abrir» en medio)
+  const conPrevio = !recargar && editorEnLado() && Boolean(cuerpo.firstElementChild) && !cuerpo.querySelector(".editor-cargando");
   abierto = null;
   editando = sitio;
   error.textContent = "";
-  if (!recargar) cuerpo.innerHTML = `<p class="editor-cargando">${t("Cargando...")}</p>`;
+  if (!recargar && !conPrevio) cuerpo.innerHTML = `<p class="editor-cargando">${t("Cargando...")}</p>`;
+  panel.classList.toggle("cambiando", conPrevio);
   panel.querySelector(".editor-guardar").disabled = true;
-  if (!recargar) panel.classList.remove("nuevo");
+  if (!recargar && !conPrevio) panel.classList.remove("nuevo");
   mostrarPanel();
   alCambiarEditando();
 
@@ -415,6 +449,7 @@ export async function abrirEditor(idLocke, sitio, recargar = false) {
       Object.assign(poke, { lugar: lugarIntercambio(formato.id), version: "lockedex", entrenador: (partidaDe(idLocke) || {}).entrenador || "", creado: true });
       abierto = { ...base, llave: 0, antes: null, poke };
       pintar();
+      entrar(recargar);
       return;
     }
 
@@ -431,10 +466,12 @@ export async function abrirEditor(idLocke, sitio, recargar = false) {
     if (poke.creado && antes.version === base.versionEntrenador) poke.version = "lockedex";
     await Promise.all([ponerEspecie(poke, antes.especie, antes.forma, false), ...antes.ataques.map((a) => cargarInfoAtaque(a.id))]);
     pintar();
+    entrar(recargar);
     panel.querySelector(".editor-guardar").disabled = false;
   } catch (fallo) {
     console.error(fallo);
     cuerpo.innerHTML = "";
+    panel.classList.remove("cambiando");
     error.textContent = t(fallo.message || "No se ha podido abrir.");
   }
 }
@@ -604,6 +641,13 @@ export function iniciarEditor(alCambiarEditandoPokemon = () => {}) {
   cuerpo = panel.querySelector(".editor-cuerpo");
   error = panel.querySelector(".editor-error");
   alCambiarEditando = alCambiarEditandoPokemon;
+
+  // Lo que se ve en el hueco de la derecha mientras no hay ningún Pokémon elegido
+  reposo = document.createElement("div");
+  reposo.className = "editor-reposo";
+  reposo.hidden = true;
+  reposo.innerHTML = `${icono("lapiz")}<p>${t("Elige un Pokémon de las cajas para editarlo, o un «+» para crear uno nuevo.")}</p>`;
+  lado.appendChild(reposo);
   const botones = { borrar: ["papelera", t("Borrar")], clonar: ["copiar", t("Clonar")] };
   for (const [nombre, [dibujo, texto]] of Object.entries(botones)) {
     panel.querySelector(`.editor-${nombre}`).innerHTML = `${icono(dibujo)} <span>${texto}</span>`;

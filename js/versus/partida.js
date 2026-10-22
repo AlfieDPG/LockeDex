@@ -31,7 +31,7 @@ import { POR_CAJA } from "../partida/tresds.js";
 import { pintarBolsa, activarBolsa } from "./bolsa.js";
 import { mover } from "../partida/huecos.js";
 import { prepararConversion } from "../partida/convertir.js";
-import { iniciarEditor, abrirEditor, cerrarEditor, editorEnLado, sitioEditando } from "./editor.js";
+import { iniciarEditor, abrirEditor, cerrarEditor, editorEnLado, sitioEditando, reservarEditor } from "./editor.js";
 import { iniciarMeter, abrirMeter } from "./meter-equipo.js";
 import {
   prepararDatos, cambiarHuecos, comprobarSitio, hayCambios, cuantosCambios, vistaConCambios, guardarCambios, descartarCambios, alCambiarBorrador
@@ -222,6 +222,8 @@ function pintarPartida() {
 
   const conSitio = editable(locke);
   if (!conSitio) pestana = "cajas";
+  // El hueco del editor, a la derecha de las cajas, ya desde que se abre (en la bolsa no hace falta)
+  reservarEditor(conSitio && pestana === "cajas");
   dialogo.classList.toggle("en-bolsa", pestana === "bolsa");
   const cuando = new Date(partida.actualizada).toLocaleString(LOCALE, {
     day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
@@ -245,7 +247,13 @@ function pintarPartida() {
   dialogo.querySelector(".partida-pendientes").textContent = pendientes
     ? t(pendientes === 1 ? "{n} cambio sin guardar: se guardan al cerrar (con el juego cerrado)" : "{n} cambios sin guardar: se guardan al cerrar (con el juego cerrado)", { n: pendientes })
     : "";
-  dialogo.querySelector(".partida-cerrar").title = pendientes ? t("Guardar y cerrar") : t("Cerrar");
+  // Con cambios, el botón de cerrar pasa a ser uno de guardar (icono y texto): así se ve que es
+  // por donde se guardan; sin cambios, la ✕ de siempre
+  const cerrar = dialogo.querySelector(".partida-cerrar");
+  cerrar.title = pendientes ? t("Guardar y cerrar") : t("Cerrar");
+  if (!cerrar.dataset.equis) cerrar.dataset.equis = cerrar.innerHTML;
+  cerrar.innerHTML = pendientes ? `${icono("guardar")} <span>${t("Guardar")}</span>` : cerrar.dataset.equis;
+  cerrar.classList.toggle("guardar", pendientes > 0);
 
   dialogo.querySelector(".partida-copias").hidden = !conSitio || pendientes > 0;
 

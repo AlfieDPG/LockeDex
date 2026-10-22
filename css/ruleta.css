@@ -371,3 +371,71 @@
   opacity: 0.55;
   pointer-events: none;
 }
+
+/* ---------- Rediseño: el panel de opciones como una tarjeta, y la letra de títulos ---------- */
+
+.ruleta-rueda text,
+.ruleta-girar {
+  font-family: var(--letra-titulos);
+}
+
+.ruleta-girar {
+  font-weight: 800;
+}
+
+/* Las opciones, en una tarjeta aparte (sin franjas de color) */
+.ruleta-panel {
+  align-self: flex-start;
+  max-width: 28rem;
+  padding: 1rem 1.1rem 1.1rem;
+  border-radius: 0.9rem;
+  background: var(--t-panel);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.ruleta-cabecera .ruleta-nombre {
+  font-family: var(--letra-titulos);
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.ruleta-panel input {
+  padding: 0.5rem 0.65rem;
+  border-color: transparent;
+}
+
+.ruleta-borrar {
+  background: var(--t-control);
+}
+
+/* Lo que ha salido: el texto grande y sin recuadro de color */
+.ruleta-resultado {
+  border-radius: 0.9rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.ruleta-resultado-texto {
+  font-family: var(--letra-titulos);
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.ruleta-resultado-etiqueta {
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.ruleta-historial-caja h3 {
+  font-family: var(--letra-titulos);
+  font-size: 1.15rem;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 1;
+}
+
+/* «Añadir opción...»: con el fondo oscuro de las demás casillas, para que no se funda con la tarjeta */
+.ruleta-panel .ruleta-nueva {
+  border: 1px dashed rgba(var(--t-tinte), 0.3);
+  background: var(--t-fondo);
+}

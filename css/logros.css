@@ -576,3 +576,129 @@ button.perfil-titulo:hover:not(:disabled) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ---------- Rediseño: capa de color por nivel, números grandes y líneas de puntos ---------- */
+
+/* La cabecera: el trofeo, el total en grande y los cuatro niveles en una tira */
+.logros-cabecera {
+  padding: 1.1rem 1.3rem 1.1rem 1.1rem;
+  border-radius: 0.9rem;
+  background:
+    linear-gradient(100deg, color-mix(in srgb, rgb(var(--color-vista)) 14%, transparent), transparent 60%),
+    var(--t-panel);
+  box-shadow: inset 5px 0 0 rgb(var(--color-vista)), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.logros-total strong {
+  font-family: var(--letra-titulos);
+  font-size: 2.8rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.logros-total strong small {
+  font-size: 1.4rem;
+}
+
+.logros-niveles {
+  gap: 0;
+  border: 1px dashed rgba(var(--t-tinte), 0.3);
+  border-radius: 0.7rem;
+  background: var(--t-fondo-2);
+}
+
+.logros-nivel {
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.logros-nivel + .logros-nivel {
+  border-left: 1px dashed rgba(var(--t-tinte), 0.25);
+}
+
+.logros-nivel .logro-insignia {
+  display: none;
+}
+
+.logros-nivel strong {
+  order: -1;
+  font-family: var(--letra-titulos);
+  font-size: 1.5rem;
+  line-height: 1;
+  color: color-mix(in srgb, var(--color-nivel) var(--t-vivo), black);
+}
+
+.logros-nivel.bronce { --color-nivel: #cd7f32; }
+.logros-nivel.plata { --color-nivel: #c3cad6; }
+.logros-nivel.oro { --color-nivel: #f1c40f; }
+.logros-nivel.platino { --color-nivel: #7fe0f0; }
+
+/* Título de cada categoría: grande, y la línea de puntos hasta el final */
+.logros-grupo h2 {
+  margin: 1.4rem 0 0.7rem;
+  font-size: 1.5rem;
+  color: var(--t-texto);
+}
+
+.logros-grupo h2 small {
+  font-family: var(--letra-titulos);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: color-mix(in srgb, #f1c40f var(--t-vivo), black);
+}
+
+.logros-grupo h2::after {
+  height: 0;
+  border-top: 1px dashed rgba(var(--t-tinte), 0.3);
+  border-radius: 0;
+  background: none;
+  opacity: 1;
+}
+
+/* Cada logro, con la capa del color de su nivel; los que faltan, apagados y con borde de puntos */
+.logro {
+  --color-nivel: #cd7f32;
+  padding: 0.8rem 0.9rem 0.8rem 1rem;
+  border: 1px dashed rgba(var(--t-tinte), 0.28);
+  border-left: 0.3rem solid rgba(var(--t-tinte), 0.2);
+  border-radius: 0.8rem;
+  opacity: 0.8;
+}
+
+.logro.bronce { --color-nivel: #cd7f32; }
+.logro.plata { --color-nivel: #c3cad6; }
+.logro.oro { --color-nivel: #f1c40f; }
+.logro.platino { --color-nivel: #7fe0f0; }
+
+.logro.conseguido {
+  border: 1px solid transparent;
+  border-left: 0.3rem solid var(--color-nivel);
+  background:
+    linear-gradient(100deg, color-mix(in srgb, var(--color-nivel) 16%, transparent), transparent 65%),
+    var(--t-panel);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  opacity: 1;
+}
+
+.logro-texto strong {
+  font-family: var(--letra-titulos);
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.logro-nivel {
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+}
+
+.logro.conseguido .logro-nivel {
+  color: color-mix(in srgb, var(--color-nivel) var(--t-vivo), black);
+  opacity: 1;
+}

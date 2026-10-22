@@ -58,6 +58,7 @@ export default {
   "Equipo con el que jugó este combate": "Team they played this battle with",
   "Quién lo ganó": "Who won it",
   "Ganador...": "Winner...",
+  "Ganó": "Won",
   "Quitar combate": "Remove battle",
 
   // Perfiles

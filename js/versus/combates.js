@@ -26,9 +26,8 @@ import {
 } from "../comun/lockes.js";
 import { equipoParaCombate } from "../partida/partidas.js";
 import { confirmar } from "../comun/ventanas.js";
+import { campoNumero } from "../comun/numero.js";
 import { t } from "../comun/idioma.js";
-
-const MARCADORES = ["2-0", "2-1", "1-0", "3-0", "3-1", "3-2"];
 
 let alFallar = (error) => console.error(error);
 
@@ -123,7 +122,48 @@ export function plantillaSalon(locke, uid, mio) {
 // ---------- Apuntar un combate ----------
 
 let dialogoCombate = null;
-let enCombate = null; // { id (locke), idCombate, ganador, marcador }
+let enCombate = null; // { id (locke), idCombate, puntos: { uid: combates ganados } }
+
+// Quién va ganando con esos puntos: el que más tiene, si es uno solo y más que 0
+function lider(locke, puntos) {
+  const valores = aceptados(locke).map((uid) => ({ uid, n: Number(puntos[uid]) || 0 }));
+  const max = Math.max(0, ...valores.map((v) => v.n));
+  const arriba = valores.filter((v) => v.n === max);
+  return { max, ganador: max > 0 && arriba.length === 1 ? arriba[0].uid : "", empate: max > 0 && arriba.length > 1 };
+}
+
+// El marcador como texto, de más a menos («2-1», «3-1-0»), para las casillas y el historial
+function textoMarcador(locke, puntos) {
+  return aceptados(locke)
+    .map((uid) => Number(puntos[uid]) || 0)
+    .sort((a, b) => b - a)
+    .join("-");
+}
+
+// Los apuntados antes de existir las casillas por jugador: el ganador y un «2-1»
+function puntosDe(locke, resultado) {
+  if (resultado.puntos) return { ...resultado.puntos };
+  const puntos = {};
+  const [alto, bajo] = String(resultado.marcador || "").split("-").map((n) => Number(n) || 0);
+  if (!resultado.ganador) return puntos;
+  puntos[resultado.ganador] = alto || 1;
+  const otros = aceptados(locke).filter((uid) => uid !== resultado.ganador);
+  if (otros.length && bajo) puntos[otros[0]] = bajo;
+  return puntos;
+}
+
+// El aviso de debajo (empate, nadie...) y el botón de guardar, sin volver a pintar las casillas
+function textoEstadoCombate(locke) {
+  const { ganador, empate } = lider(locke, enCombate.puntos);
+  const soloVer = locke.estado === "cerrado";
+  dialogoCombate.querySelector(".combate-estado").textContent = soloVer || ganador ? "" : empate
+    ? t("Empate: no se puede guardar. Sube los combates de uno.")
+    : t("Pon los combates que ha ganado cada uno.");
+  dialogoCombate.querySelector(".combate-ok").disabled = !ganador;
+  for (const fila of dialogoCombate.querySelectorAll(".combate-jugador")) {
+    fila.classList.toggle("gana", fila.dataset.uid === ganador);
+  }
+}
 
 function pintarCombate() {
   const locke = lockePorId(enCombate.id);
@@ -133,18 +173,20 @@ function pintarCombate() {
   dialogoCombate.classList.toggle("solo-ver", soloVer);
   dialogoCombate.querySelector(".combate-titulo").innerHTML =
     `${icono("espadas")} ${escaparHTML(nombreCombate(locke, enCombate.idCombate))}`;
-  dialogoCombate.querySelector(".combate-ganadores").innerHTML = aceptados(locke)
+  // Una fila por jugador, con los combates que ha ganado (se escribe a mano: valen dos o más)
+  const { ganador } = lider(locke, enCombate.puntos);
+  dialogoCombate.querySelector(".combate-jugadores").innerHTML = aceptados(locke)
     .map(
       (uid) => `
-        <button type="button" class="combate-opcion ${enCombate.ganador === uid ? "elegido" : ""}" data-ganador="${escaparHTML(uid)}" ${desactivado}>
+        <div class="combate-jugador ${ganador === uid ? "gana" : ""}" data-uid="${escaparHTML(uid)}">
           ${fotoDe(locke, uid, "combate-opcion-foto")}
-          <span>${escaparHTML(nombreDe(locke, uid))}</span>
-        </button>`
+          <span class="combate-jugador-nombre">${escaparHTML(nombreDe(locke, uid))}</span>
+          ${ganador === uid ? `<span class="combate-corona" title="${t("Va ganando")}">${icono("corona")}</span>` : ""}
+          ${campoNumero(`<input class="combate-puntos" type="number" min="0" max="99" value="${enCombate.puntos[uid] ?? 0}" aria-label="${t("Combates ganados")}" ${desactivado}>`)}
+        </div>`
     )
     .join("");
-  dialogoCombate.querySelector(".combate-marcadores").innerHTML = MARCADORES.map(
-    (marcador) => `<button type="button" class="combate-marcador-opcion ${enCombate.marcador === marcador ? "elegido" : ""}" data-marcador="${marcador}" ${desactivado}>${marcador}</button>`
-  ).join("");
+  textoEstadoCombate(locke);
 
   // Los equipos: el tuyo se elige (se guarda al momento, aparte del resultado); los de los
   // demás, los que hayan puesto ellos
@@ -165,7 +207,6 @@ function pintarCombate() {
     .join("");
 
   dialogoCombate.querySelector(".combate-ok").hidden = soloVer;
-  dialogoCombate.querySelector(".combate-ok").disabled = !enCombate.ganador;
   dialogoCombate.querySelector(".combate-borrar").hidden = soloVer || !((locke.resultados || {})[enCombate.idCombate]);
   dialogoCombate.querySelector(".combate-cancelar").textContent = soloVer ? t("Cerrar") : t("Cancelar");
 }
@@ -174,7 +215,7 @@ export function abrirCombate(id, idCombate) {
   const locke = lockePorId(id);
   if (!locke) return;
   const resultado = (locke.resultados || {})[idCombate] || {};
-  enCombate = { id, idCombate, ganador: resultado.ganador || "", marcador: resultado.marcador || "" };
+  enCombate = { id, idCombate, puntos: puntosDe(locke, resultado) };
   pintarCombate();
   dialogoCombate.showModal();
 }
@@ -286,13 +327,14 @@ export function iniciarCombates(fallo) {
       guardarEquipoCombate(id, idCombate, equipo).catch(alFallar); // al llegar el cambio se repinta
       return;
     }
-    const ganador = e.target.closest(".combate-opcion");
-    const marcador = e.target.closest(".combate-marcador-opcion");
-    if (dialogoCombate.classList.contains("solo-ver")) return;
-    if (ganador) enCombate.ganador = ganador.dataset.ganador;
-    else if (marcador) enCombate.marcador = enCombate.marcador === marcador.dataset.marcador ? "" : marcador.dataset.marcador;
-    else return;
-    pintarCombate();
+  });
+  // Los combates ganados de cada uno: se escriben (o con las flechas) y solo se actualiza el aviso
+  dialogoCombate.addEventListener("input", (e) => {
+    if (!e.target.matches(".combate-puntos") || !enCombate) return;
+    const locke = lockePorId(enCombate.id);
+    if (!locke) return;
+    enCombate.puntos[e.target.closest(".combate-jugador").dataset.uid] = Math.max(0, Math.min(99, Math.floor(Number(e.target.value) || 0)));
+    textoEstadoCombate(locke);
   });
   dialogoCombate.querySelector(".combate-cancelar").addEventListener("click", () => dialogoCombate.close());
   dialogoCombate.querySelector(".combate-borrar").addEventListener("click", () => {
@@ -301,10 +343,15 @@ export function iniciarCombates(fallo) {
     apuntarResultado(id, idCombate, "", "").catch(alFallar);
   });
   dialogoCombate.querySelector(".combate-ok").addEventListener("click", () => {
-    const { id, idCombate, ganador, marcador } = enCombate;
+    const { id, idCombate, puntos } = enCombate;
+    const locke = lockePorId(id);
+    const { ganador } = locke ? lider(locke, puntos) : {};
     if (!ganador) return;
+    // Solo los puntos de quienes están dentro (y mayores que 0)
+    const apuntados = {};
+    for (const uid of aceptados(locke)) if (puntos[uid] > 0) apuntados[uid] = puntos[uid];
     dialogoCombate.close();
-    apuntarResultado(id, idCombate, ganador, marcador).catch(alFallar);
+    apuntarResultado(id, idCombate, ganador, textoMarcador(locke, puntos), apuntados).catch(alFallar);
   });
 
   // Terminar

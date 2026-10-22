@@ -346,37 +346,55 @@ function botonQuitar(clase, uid, titulo) {
   return `<button class="${clase}" data-uid="${escaparHTML(uid)}" title="${titulo}">${icono("aspa")}</button>`;
 }
 
+// Cada integrante, como una tarjetita: su foto (o su inicial), su nombre y qué es en el locke
+function tarjetaIntegrante(nombre, foto, estado, clase, quitar = "") {
+  const inicial = escaparHTML((nombre || "?").trim()[0] || "?").toUpperCase();
+  return `
+    <span class="locke-dentro-uno ${clase}">
+      <span class="locke-dentro-cara" data-inicial="${inicial}">${foto ? `<img src="${escaparHTML(foto)}" alt="" referrerpolicy="no-referrer" data-respaldo="" data-quitar-si-falla>` : ""}</span>
+      <span class="locke-dentro-datos">
+        <b>${escaparHTML(nombre)}</b>
+        <small>${estado}</small>
+      </span>
+      ${quitar}
+    </span>`;
+}
+
 function plantillaIntegrantes(locke) {
   const cerrado = Boolean(locke && locke.estado === "cerrado");
+  const yo = usuarioActual().uid;
   let html = "";
 
   if (locke) {
     const creador = soyCreador(locke);
     html += locke.jugadores
       .map((uid) => {
-        const nombre = escaparHTML((locke.nombres || {})[uid] || t("Jugador"));
+        const nombre = (locke.nombres || {})[uid] || t("Jugador");
         const pendiente = estadoDe(locke, uid) === "pendiente";
         const sePuedeQuitar = !cerrado && uid !== locke.creador && (creador || pendiente);
         const quitar = sePuedeQuitar
           ? botonQuitar("locke-quitar", uid, pendiente ? t("Quitar del locke") : t("Expulsar del locke"))
           : "";
-        return `<span class="locke-dentro-uno ${pendiente ? "pendiente" : ""}">${nombre}${pendiente ? ` <small>(${t("sin contestar")})</small>` : ""}${quitar}</span>`;
+        const estado = pendiente
+          ? t("sin contestar")
+          : uid === locke.creador ? (uid === yo ? `${t("tú")} · ${t("creador")}` : t("creador"))
+          : uid === yo ? t("tú") : t("jugador");
+        return tarjetaIntegrante(nombre, (locke.fotos || {})[uid], estado, pendiente ? "pendiente" : "", quitar);
       })
       .join("");
   } else {
     const mio = miPerfilOProvisional();
-    html += `<span class="locke-dentro-uno">${escaparHTML((mio && mio.nombre) || t("Tú"))} <small>(${t("tú")})</small></span>`;
+    html += tarjetaIntegrante((mio && mio.nombre) || t("Tú"), mio && mio.foto, `${t("tú")} · ${t("creador")}`, "");
   }
 
   html += elegidos
-    .map(
-      (perfil) =>
-        `<span class="locke-dentro-uno pendiente">${escaparHTML(perfil.nombre)} <small>(${t("por añadir")})</small>${botonQuitar("locke-desmarcar", perfil.uid, t("No añadir"))}</span>`
+    .map((perfil) =>
+      tarjetaIntegrante(perfil.nombre, perfil.foto, t("por añadir"), "pendiente", botonQuitar("locke-desmarcar", perfil.uid, t("No añadir")))
     )
     .join("");
 
   if (!cerrado) {
-    html += `<button class="locke-dentro-uno pendiente locke-anadir" title="${t("Añadir gente")}">${icono("mas")}</button>`;
+    html += `<button class="locke-dentro-uno pendiente locke-anadir" title="${t("Añadir gente")}">${icono("mas")} ${t("Añadir gente")}</button>`;
   }
   return html;
 }
@@ -646,6 +664,9 @@ async function abrirDialogo(locke = null) {
         `<option value="${escaparHTML(tipo.id)}" ${tipo.id === tipoElegido ? "selected" : ""}>${escaparHTML(tipo.nombre)}</option>`
     )
     .join("");
+
+  // Reglas y extras: plegadas al crear (son opcionales); al editar, abiertas
+  campo(".locke-extras").open = Boolean(locke);
 
   campo("#locke-nombre").value = locke ? locke.nombre : "";
   campo("#locke-descripcion").value = locke ? locke.descripcion || "" : "";

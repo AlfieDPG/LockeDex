@@ -752,6 +752,12 @@ function ponerIcono(id, nombre, texto) {
   boton.setAttribute("aria-label", texto);
 }
 
+function ponerBoton(id, nombre, texto, titulo) {
+  const boton = document.getElementById(id);
+  boton.innerHTML = `${icono(nombre)} <span>${texto}</span>`;
+  boton.title = titulo;
+}
+
 export function iniciarCrear() {
   activarArrastreTarjetas();
 
@@ -764,7 +770,9 @@ export function iniciarCrear() {
     if (boton) boton.innerHTML = textoBotonEntreno(poke);
   });
 
-  ponerIcono("exportar-equipo", "copiar", t("Exportar: copiar el equipo como paste"));
+  // Importar y exportar llevan su nombre al lado del icono, para que se sepa qué es cada uno
+  ponerBoton("importar-equipo", "importar", t("Importar"), t("Importar: pegar un equipo de Showdown"));
+  ponerBoton("exportar-equipo", "copiar", t("Exportar"), t("Exportar: copiar el equipo como paste"));
   ponerIcono("guardar", "guardar", t("Guardar equipo"));
   ponerIcono("vaciar", "papelera", t("Vaciar equipo"));
 

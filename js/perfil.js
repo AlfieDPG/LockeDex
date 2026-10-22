@@ -497,12 +497,21 @@ function pintar() {
 
   // Con el fondo que haya elegido para su tarjeta (el mismo que en «Amigos»)
   const fondo = fondoDe(perfil);
+  // Como en su ficha de «Amigos»: la capa de color a la izquierda dice quién es, y debajo del nombre
+  // «Tú» o «Conectado»
+  const conectado = !mio && estaConectado(perfil.uid);
+  const estado = mio
+    ? `<span class="jugador-estado">${t("Tú")}</span>`
+    : conectado
+      ? `<span class="jugador-estado"><span class="punto-conectado"></span>${t("Conectado")}</span>`
+      : "";
   const cabeza = `
-    <header class="perfil-cabeza ${fondo ? `con-fondo ${claseFondo(fondo)}` : ""}" style="${estiloFondo(fondo)}">
+    <header class="perfil-cabeza ${mio ? "mia" : conectado ? "conectado" : ""} ${fondo ? `con-fondo ${claseFondo(fondo)}` : ""}" style="${estiloFondo(fondo)}">
       ${mio
         ? `<button class="perfil-avatar" title="${t("Cambiar foto")}">${plantillaFoto(perfil, "perfil-foto")}<span class="perfil-avatar-lapiz">${icono("lapiz")}</span></button>`
         : `<div class="perfil-avatar">${plantillaFoto(perfil, "perfil-foto")}</div>`}
       <div class="perfil-datos">
+        ${estado}
         ${plantillaNombre(perfil, mio)}
         ${plantillaTitulo(perfil, mio)}
         <div class="perfil-cifras">${cifras}</div>

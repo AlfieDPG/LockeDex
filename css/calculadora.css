@@ -1095,3 +1095,53 @@
   height: 0.95rem;
   stroke-width: 2.8;
 }
+
+/* ---------- Rediseño: capa de color a la izquierda, como el resto de tarjetas ---------- */
+
+/* Atacante en rojo, defensor en azul y el centro en el color de la sección */
+.calc-lado,
+.calc-centro {
+  padding: 1rem 1rem 1rem 1.15rem;
+  border-radius: 0.9rem;
+}
+
+.calc-lado {
+  background: linear-gradient(100deg, rgba(var(--color-rol), 0.12), transparent 60%), var(--t-panel);
+  box-shadow: inset 5px 0 0 rgb(var(--color-rol)), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.calc-centro {
+  background: linear-gradient(100deg, rgba(var(--color-vista), 0.1), transparent 60%), var(--t-panel);
+  box-shadow: inset 5px 0 0 rgb(var(--color-vista)), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* El rol, como texto de color (sin recuadro) */
+.calc-rol {
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, rgb(var(--color-rol)) var(--t-vivo), black);
+}
+
+.calc-nombre {
+  font-family: var(--letra-titulos);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+/* La línea de color: la del atacante, a la izquierda; la del defensor, a la derecha; y la del centro,
+   debajo (las tarjetas, en su sitio de siempre) */
+.calc-lado[data-lado="defensor"] {
+  padding: 1rem 1.15rem 1rem 1rem;
+  background: linear-gradient(260deg, rgba(var(--color-rol), 0.12), transparent 60%), var(--t-panel);
+  box-shadow: inset -5px 0 0 rgb(var(--color-rol)), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.calc-centro {
+  padding: 1rem 1rem 1.15rem;
+  background: linear-gradient(0deg, rgba(var(--color-vista), 0.1), transparent 60%), var(--t-panel);
+  box-shadow: inset 0 -5px 0 rgb(var(--color-vista)), 0 2px 8px rgba(0, 0, 0, 0.35);
+}

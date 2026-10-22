@@ -742,25 +742,44 @@ function plantillaEquipoMvp(p) {
         .join("")}
     </span>`;
 }
+// Los combates ganados por cada participante en un combate: { idParticipante: n }. Los apuntados
+// antes de existir estas casillas traían un ganador y un «2-1»: se reparten entre el ganador y el
+// primer participante que no lo es.
+function puntosDeCombate(combate, participantes) {
+  if (combate.puntos) return { ...combate.puntos };
+  const puntos = {};
+  if (!combate.ganador) return puntos;
+  const [alto, bajo] = String(combate.marcador || "").split("-").map((n) => Number(n) || 0);
+  puntos[combate.ganador] = alto || 1;
+  const otro = participantes.find((p) => p.id !== combate.ganador && (p.nombre || "").trim());
+  if (otro && bajo) puntos[otro.id] = bajo;
+  return puntos;
+}
 
-const MARCADORES = ["2-0", "2-1", "1-0", "3-0", "3-1", "3-2"];
+// De esos puntos: quién gana (el que más tiene, si es uno solo) y el marcador como texto
+// («2-1», «3-1-0»: de mayor a menor)
+function resumenDeCombate(puntos, ids) {
+  const valores = ids.map((id) => ({ id, n: Number(puntos[id]) || 0 }));
+  const max = Math.max(0, ...valores.map((v) => v.n));
+  const arriba = valores.filter((v) => v.n === max);
+  return {
+    ganador: max > 0 && arriba.length === 1 ? arriba[0].id : "",
+    marcador: max > 0 ? valores.map((v) => v.n).sort((a, b) => b - a).join("-") : ""
+  };
+}
 
-// Un combate: nombre, quién lo ganó, cómo y con qué equipo jugó cada participante
+// Un combate: nombre y, por cada participante, los combates que ha ganado y con qué equipo jugó
 function plantillaCombatePalmares(combate, i, participantes) {
-  const ganadores = participantes
-    .filter((p) => (p.nombre || "").trim())
-    .map((p) => `<option value="${escaparHTML(p.id)}" ${combate.ganador === p.id ? "selected" : ""}>${escaparHTML(p.nombre)}</option>`)
-    .join("");
-  const marcadores = MARCADORES.map(
-    (marcador) => `<option value="${marcador}" ${combate.marcador === marcador ? "selected" : ""}>${marcador}</option>`
-  ).join("");
-  const equipos = participantes
-    .filter((p) => (p.nombre || "").trim())
+  const conNombre = participantes.filter((p) => (p.nombre || "").trim());
+  const puntos = puntosDeCombate(combate, participantes);
+  const { ganador } = resumenDeCombate(puntos, conNombre.map((p) => p.id));
+  const filas = conNombre
     .map((p) => {
       const equipo = (combate.equipos || {})[p.id];
       return `
-        <div class="palmares-combate-equipo" data-participante="${escaparHTML(p.id)}">
-          <span class="palmares-combate-quien">${escaparHTML(p.nombre)}</span>
+        <div class="palmares-combate-equipo ${ganador === p.id ? "gana" : ""}" data-participante="${escaparHTML(p.id)}">
+          <span class="palmares-combate-quien">${ganador === p.id ? `<span class="palmares-corona" title="${t("Ganó")}">${icono("corona")}</span>` : ""}${escaparHTML(p.nombre)}</span>
+          ${campoNumero(`<input class="palmares-combate-puntos" type="number" min="0" max="99" value="${puntos[p.id] ?? 0}" aria-label="${t("Combates ganados")}" title="${t("Combates ganados")}">`)}
           ${equipo ? carasDeEquipo(equipo) : ""}
           <button type="button" class="palmares-elegir-equipo" data-para="${i}" title="${t("Equipo con el que jugó este combate")}">
             ${icono("pokeball")} ${equipo ? t("Cambiar") : t("Equipo")}
@@ -773,19 +792,12 @@ function plantillaCombatePalmares(combate, i, participantes) {
     <div class="palmares-combate" data-combate="${i}">
       <div class="palmares-combate-fila">
         <input class="palmares-combate-nombre" type="text" maxlength="30" value="${escaparHTML(combate.nombre || "")}" placeholder="${t("Combate {n}", { n: i + 1 })}">
-        <select class="palmares-combate-ganador" title="${t("Quién lo ganó")}">
-          <option value="">${t("Ganador...")}</option>
-          ${ganadores}
-        </select>
-        <select class="palmares-combate-marcador" title="${t("Resultado")}">
-          <option value="">${t("Resultado")}</option>
-          ${marcadores}
-        </select>
         <button class="palmares-quitar-combate" title="${t("Quitar combate")}">${icono("aspa")}</button>
       </div>
-      ${equipos ? `<div class="palmares-combate-equipos">${equipos}</div>` : ""}
+      ${filas ? `<div class="palmares-combate-equipos">${filas}</div>` : ""}
     </div>`;
 }
+
 
 // Una fila del diálogo tal y como está escrita ahora mismo. «abierto» solo sirve para que
 // los detalles sigan desplegados al repintar; no se guarda.
@@ -816,12 +828,19 @@ function leerFila(fila, posicion, tipos) {
         rom: p.querySelector(".participante-rom-casilla").checked
       };
     }),
-    combates: [...fila.querySelectorAll(".palmares-combate")].map((c, i) => ({
-      ...((anterior.combates || [])[i] || {}), // sus equipos
-      nombre: c.querySelector(".palmares-combate-nombre").value,
-      ganador: c.querySelector(".palmares-combate-ganador").value,
-      marcador: c.querySelector(".palmares-combate-marcador").value
-    })),
+    combates: [...fila.querySelectorAll(".palmares-combate")].map((c, i) => {
+      // Los combates ganados que hay en las casillas; de ahí salen el ganador y el marcador
+      const puntos = {};
+      for (const cada of c.querySelectorAll(".palmares-combate-equipo")) {
+        puntos[cada.dataset.participante] = Math.max(0, Math.min(99, Math.floor(Number(cada.querySelector(".palmares-combate-puntos").value) || 0)));
+      }
+      return {
+        ...((anterior.combates || [])[i] || {}), // sus equipos
+        nombre: c.querySelector(".palmares-combate-nombre").value,
+        puntos,
+        ...resumenDeCombate(puntos, Object.keys(puntos))
+      };
+    }),
     abierto: fila.querySelector(".palmares-mas").open
   };
 }
@@ -871,12 +890,15 @@ async function guardarPalmares() {
         juegoOtro: ganado.juegoOtro.trim(),
         participantes,
         // Los equipos y el ganador de cada combate, solo de los que siguen
-        combates: (ganado.combates || []).map((combate) => ({
-          nombre: (combate.nombre || "").trim(),
-          ganador: ids.has(combate.ganador) ? combate.ganador : "",
-          marcador: combate.marcador || "",
-          equipos: Object.fromEntries(Object.entries(combate.equipos || {}).filter(([id]) => ids.has(id)))
-        }))
+        combates: (ganado.combates || []).map((combate) => {
+          const puntos = Object.fromEntries(Object.entries(combate.puntos || {}).filter(([id, n]) => ids.has(id) && n > 0));
+          return {
+            nombre: (combate.nombre || "").trim(),
+            puntos,
+            ...resumenDeCombate(puntos, [...ids]),
+            equipos: Object.fromEntries(Object.entries(combate.equipos || {}).filter(([id]) => ids.has(id)))
+          };
+        })
       };
     })
     .filter((ganado) => ganado.nombre);

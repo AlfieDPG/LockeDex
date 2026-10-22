@@ -427,7 +427,7 @@ export function iniciarImportar() {
     dialogo.showModal();
     texto.focus();
   };
-  document.getElementById("boton-importar").addEventListener("click", abrir);
+  document.getElementById("importar-equipo").addEventListener("click", abrir);
   document.getElementById("importar-varios").addEventListener("click", abrir);
 
   document.getElementById("importar-cancelar").addEventListener("click", () => {
