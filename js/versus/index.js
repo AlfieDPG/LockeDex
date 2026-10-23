@@ -23,7 +23,7 @@ import { irA } from "../navegacion.js";
 import {
   rutasPropias, capsPropios, copiaRutasParaLocke, copiaCapsParaLocke
 } from "../comun/personalizados.js";
-import { iniciarCementerio, abrirCementerio, abrirMuerte, totalMuertos } from "./cementerio.js";
+import { iniciarCementerio, abrirCementerio, abrirMuerte, totalMuertos, retratoMuerto, nombreMuerto } from "./cementerio.js";
 import { iniciarActividad, abrirActividad } from "./actividad.js";
 import {
   ID_GENERALES, NOMBRE_GENERALES, conjuntos, copiaParaLocke, normasDeLocke, normasCompletas
@@ -35,10 +35,11 @@ import {
 import {
   alCambiarLockes, misLockes, invitacionesALockes, estadoDe, fallaLosLockes, soyCreador,
   crearLocke, editarLocke, invitarALocke, quitarDeLocke, sePuedenCambiarVidas,
-  cambiarNumero, borrarLocke, lockePorId, estaEliminado, combatesDe, victoriasDe, medallasDe, cambiarMedallas
+  cambiarNumero, borrarLocke, lockePorId, estaEliminado, combatesDe, victoriasDe, medallasDe, cambiarMedallas,
+  muertosDe
 } from "../comun/lockes.js";
 import { medallasDelJuego, marcarGimnasios } from "../comun/medallas.js";
-import { partidaDe } from "../partida/partidas.js";
+import { partidaDe, sePuedeLeer } from "../partida/partidas.js";
 import {
   iniciarCombates, plantillaCombates, plantillaRom, plantillaSalon, abrirCombate, abrirTerminar, abrirSalon,
   alternarRom
@@ -157,6 +158,32 @@ function alternarMedalla(locke, indice) {
   return cambiarMedallas(locke.id, [...tiene], versionDeMedallas(locke, usuario.uid));
 }
 
+// En la ficha de los demás, donde en la tuya va la partida: el mismo recuadro del equipo pero
+// con sus caídos (los últimos, con su cuenta), y a la derecha su actividad. Lo que se ve ya está
+// en el cementerio, así que no destapa nada en un randomlocke.
+const CAIDOS_VISIBLES = 4;
+
+function plantillaCaidos(locke, uid) {
+  const muertos = muertosDe(locke, uid);
+  const ultimos = muertos.slice(-CAIDOS_VISIBLES).reverse(); // el último, primero
+  const resto = muertos.length - ultimos.length;
+  const caidos = muertos.length
+    ? `<button class="locke-caidos" title="${t("Ver cementerio")}">
+         <span class="locke-caidos-cuenta">${icono("calavera")} ${muertos.length}</span>
+         <span class="locke-caidos-caras">
+           ${ultimos.map((muerto) => `<span title="${escaparHTML(nombreMuerto(muerto))}">${retratoMuerto(muerto)}</span>`).join("")}
+           ${resto ? `<small>+${resto}</small>` : ""}
+         </span>
+       </button>`
+    : `<div class="locke-caidos vacio">${icono("calavera")} ${t("Sin bajas")}</div>`;
+
+  return `
+    <div class="locke-partida">
+      ${caidos}
+      <button class="locke-actividad-de" title="${t("Ver su actividad")}">${icono("actividad")}</button>
+    </div>`;
+}
+
 function plantillaJugador(locke, uid) {
   const usuario = usuarioActual();
   const nombre = escaparHTML((locke.nombres || {})[uid] || t("Jugador"));
@@ -185,6 +212,7 @@ function plantillaJugador(locke, uid) {
       ${plantillaCifras(locke, uid, esMio && !cerrado)}
       ${pendiente ? "" : plantillaMedallas(locke, uid, esMio && !cerrado)}
       ${esMio && !pendiente ? plantillaPartida(locke) : ""}
+      ${!esMio && !pendiente && !cerrado && sePuedeLeer(locke) ? plantillaCaidos(locke, uid) : ""}
       ${cerrado && !pendiente ? plantillaSalon(locke, uid, esMio) : ""}
     </div>`;
 }
@@ -947,6 +975,14 @@ export function iniciar() {
     let tarea = null;
 
     if (accionPartida(boton, id)) return;
+    if (boton.classList.contains("locke-caidos")) {
+      abrirCementerio(id);
+      return;
+    }
+    if (boton.classList.contains("locke-actividad-de")) {
+      abrirActividad(id, jugador.dataset.uid);
+      return;
+    }
     if (boton.classList.contains("locke-ir") && boton.dataset.ir === "normas") {
       tarea = irANormas(id);
     } else if (boton.classList.contains("locke-ir") && boton.dataset.ir === "cementerio") {

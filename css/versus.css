@@ -397,7 +397,7 @@ button.locke-anadir .icono {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  padding: 0.85rem 0.95rem 0.75rem;
+  padding: 0.85rem 0.95rem 0.55rem;
   border-radius: 0.8rem;
   background: var(--t-fondo-2);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 3px 0 rgba(var(--t-tinte), 0.1);
@@ -563,10 +563,12 @@ button.locke-anadir .icono {
 /* Lo importante, en grande: dos números separados por una raya fina, cada uno con su etiqueta.
    Las cifras de los demás se ven igual de grandes, solo que sin botones. */
 
+/* Las rayas llegan de borde a borde de la ficha (el margen negativo es su relleno lateral) */
 .locke-cifras {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  width: 100%;
+  width: calc(100% + 1.9rem);
+  margin-inline: -0.95rem;
   border-block: 1px solid rgba(var(--t-tinte), 0.1);
 }
 
@@ -674,6 +676,15 @@ button.locke-anadir .icono {
 
 .locke-medallas .locke-etiqueta {
   color: color-mix(in srgb, #e67e22 var(--t-vivo), black);
+}
+
+/* Una raya como la de las cifras entre las medallas y lo de debajo (la partida, o los caídos
+   en la ficha de los demás) */
+.locke-medallas:has(+ .locke-partida)::after {
+  content: "";
+  align-self: stretch;
+  margin: 0.25rem -0.95rem 0;
+  border-top: 1px solid rgba(var(--t-tinte), 0.1);
 }
 
 .locke-medallas-lista {
@@ -1903,7 +1914,7 @@ button.salon-cara:hover {
   align-items: center;
   gap: 0.35rem;
   width: 100%;
-  min-height: 2.3rem;
+  min-height: 2.1rem;
 }
 
 .locke-partida-abrir {
@@ -1964,7 +1975,8 @@ button.salon-cara:hover {
   color: #e74c3c;
 }
 
-.locke-partida .icono {
+.locke-partida .icono,
+.locke-actividad-de .icono {
   width: 0.85rem;
   height: 0.85rem;
 }
@@ -2250,7 +2262,8 @@ button.salon-cara:hover {
 
 /* «?»: cómo funciona lo de la partida (en el título de la ventana y en tu bloque) */
 .partida-ayuda,
-.locke-partida-ayuda {
+.locke-partida-ayuda,
+.locke-actividad-de {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2269,7 +2282,8 @@ button.salon-cara:hover {
 }
 
 .partida-ayuda:hover,
-.locke-partida-ayuda:hover {
+.locke-partida-ayuda:hover,
+.locke-actividad-de:hover {
   background: var(--color-locke, rgb(var(--color-vista)));
   color: #1e1f2b;
 }
@@ -3332,7 +3346,7 @@ button.partida-ficha.arrastrando {
   background: var(--t-fondo);
 }
 
-.locke-jugador :is(.locke-partida-abrir, .locke-salon-poner, .locke-partida-vincular, .locke-partida-reanudar, .locke-partida-ayuda) {
+.locke-jugador :is(.locke-partida-abrir, .locke-salon-poner, .locke-partida-vincular, .locke-partida-reanudar, .locke-partida-ayuda, .locke-actividad-de) {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(var(--t-tinte), 0.08);
 }
 
@@ -3343,6 +3357,69 @@ button.partida-ficha.arrastrando {
 
 .locke-jugador :is(.locke-partida-abrir, .locke-salon-poner):hover {
   background: var(--t-control);
+}
+
+/* Los caídos de los demás, donde en tu ficha va la partida: el mismo recuadro que el del equipo
+   (dentro de .locke-partida), con el botón de su actividad a la derecha. */
+.locke-caidos {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: var(--t-fondo);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(var(--t-tinte), 0.08);
+  color: var(--t-texto);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+button.locke-caidos {
+  cursor: pointer;
+}
+
+button.locke-caidos:hover {
+  background: var(--t-control);
+}
+
+.locke-caidos .icono {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.locke-caidos-cuenta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #e74c3c;
+}
+
+.locke-caidos-caras {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.locke-caidos-caras img {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: block;
+}
+
+.locke-caidos-caras small {
+  margin-left: 0.2rem;
+  opacity: 0.7;
+}
+
+.locke-caidos.vacio {
+  gap: 0.35rem;
+  align-self: stretch;
+  font-weight: normal;
+  color: rgba(var(--t-texto-rgb), 0.6);
 }
 
 /* ---------- Ventana de nuevo locke (más grande y por bloques) ----------

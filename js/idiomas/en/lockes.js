@@ -104,6 +104,8 @@ export default {
   "Contra {causa}": "Against {causa}",
   "Apuntar un muerto": "Record a death",
   "Ninguno": "None",
+  "Sin bajas": "No losses",
+  "Ver cementerio": "View graveyard",
   "Perder el locke": "Lose the locke",
   "Perder también la vida cero (quedas eliminado)": "Also lose life zero (you're eliminated)",
   "Elige un Pokémon de la lista.": "Choose a Pokémon from the list.",
@@ -138,6 +140,8 @@ export default {
   "{quien} ha editado su partida: {detalle}": "{quien} edited their save file: {detalle}",
   "No se ha podido cargar.": "It couldn't be loaded.",
   "Todavía no ha pasado nada.": "Nothing has happened yet.",
+  "Todavía no ha hecho nada.": "Hasn't done anything yet.",
+  "Ver su actividad": "View their activity",
 
   // ---------- Notificaciones ----------
   "{nombre} quiere ser tu amigo": "{nombre} wants to be your friend",

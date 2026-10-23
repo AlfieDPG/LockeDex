@@ -13,6 +13,7 @@ import { textoDeCombate } from "../levelcaps/datos.js";
 
 let dialogo = null;
 let idLocke = null;
+let uidFiltrado = null; // solo los sucesos de esta persona
 let sucesos = [];
 let dejarDeEscuchar = null;
 
@@ -95,7 +96,8 @@ function pintar() {
   const locke = idLocke ? lockePorId(idLocke) : null;
   if (!locke) return;
 
-  dialogo.querySelector(".actividad-titulo").innerHTML = `${icono("actividad")} ${t("Actividad")} · ${escaparHTML(locke.nombre)}`;
+  const de = uidFiltrado ? ` · ${escaparHTML((locke.nombres || {})[uidFiltrado] || t("Jugador"))}` : "";
+  dialogo.querySelector(".actividad-titulo").innerHTML = `${icono("actividad")} ${t("Actividad")} · ${escaparHTML(locke.nombre)}${de}`;
   const lista = dialogo.querySelector(".actividad-lista");
 
   if (sucesos === undefined) {
@@ -106,7 +108,7 @@ function pintar() {
     lista.innerHTML = `<p class="actividad-vacia">${t("No se ha podido cargar.")}</p>`;
     return;
   }
-  const conTexto = sucesos.filter((suceso) => textoSuceso(suceso, locke));
+  const conTexto = sucesos.filter((suceso) => (!uidFiltrado || suceso.uid === uidFiltrado) && textoSuceso(suceso, locke));
   lista.innerHTML = conTexto.length
     ? conTexto
         .map(
@@ -118,12 +120,14 @@ function pintar() {
             </div>`
         )
         .join("")
-    : `<p class="actividad-vacia">${t("Todavía no ha pasado nada.")}</p>`;
+    : `<p class="actividad-vacia">${t(uidFiltrado ? "Todavía no ha hecho nada." : "Todavía no ha pasado nada.")}</p>`;
 }
 
-export function abrirActividad(id) {
+// uid: solo lo que ha hecho esa persona (el botón de su ficha); sin uid, la de todos
+export function abrirActividad(id, uid = null) {
   if (dejarDeEscuchar) dejarDeEscuchar();
   idLocke = id;
+  uidFiltrado = uid;
   sucesos = undefined;
   pintar();
   dialogo.showModal();
@@ -140,5 +144,6 @@ export function iniciarActividad() {
     if (dejarDeEscuchar) dejarDeEscuchar();
     dejarDeEscuchar = null;
     idLocke = null;
+    uidFiltrado = null;
   });
 }
