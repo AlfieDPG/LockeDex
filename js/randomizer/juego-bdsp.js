@@ -57,12 +57,10 @@ const LIDERES = [175, 179, 240, 241, 242, 243, 244, 245, 676, 677, 678, 679, 680
 const GRUPOS = [[175], [179], [240], [241], [242], [243], [244], [245], [185], [186], [187], [188], [191]];
 // Los que no se tocan (los combates de la historia que no son de verdad: el tutorial de captura...)
 const NO_TOCAR = new Set([487, 488, 489, 490, 491, 492]);
-// El Bidoof del tutorial de captura (va en el programa, a nivel bajo): se queda como en el juego (estadísticas, tipos,
-// habilidades y los ataques hasta TUTORIAL_NIVEL). Si no, con un ataque como Rugido o una habilidad como Huida, el
-// combate acaba sin la captura y el juego deja sin controles en los combates siguientes
-const TUTORIAL = 399;
-const TUTORIAL_NIVEL = 5;
-const CAMPOS_TUTORIAL = ["basic_hp", "basic_atk", "basic_def", "basic_spatk", "basic_spdef", "basic_agi", "type1", "type2", "tokusei1", "tokusei2", "tokusei3"];
+// Los combates del principio que van en el programa (especie y nivel fijos): el Starly del combate de la inicial y el
+// Bidoof del tutorial de captura. Siguen siendo aleatorios, pero sin lo que acaba el combate antes de tiempo (Huida y,
+// hasta nivel 5, ataques como Rugido: ver randomizar.js). Si no, el juego deja sin controles en los combates siguientes
+const PRIMEROS_COMBATES = [396, 399];
 // Las listas de salvajes de cada zona que llevan Pokémon (cada una, [{ monsNo, minlv?, maxlv? }])
 const LISTAS = ["ground_mons", "tairyo", "day", "night", "swayGrass", "gbaRuby", "gbaSapp", "gbaEme", "gbaFire", "gbaLeaf", "water_mons", "boro_mons", "ii_mons", "sugoi_mons"];
 // Huecos libres al final de las tiendas especiales (para añadir sin quitar nada)
@@ -106,7 +104,7 @@ export function perfilDe(sesion) {
     legendarios: [],
     maxEvoluciones: 8,
     sinMT: false, bitsMT: { tm: 100, hm: 0, extra: 0 }, bloquesMT: 13,
-    tutores: false, tutorInfo: null, claros: false, iniciales: true,
+    tutores: false, tutorInfo: null, claros: false, iniciales: true, primerosCombates: PRIMEROS_COMBATES,
     lideres: LIDERES, rivales: RIVALES, grupos: GRUPOS, importantes: new Set([...LIDERES, ...RIVALES]),
     sinDobles: [],
     preciosEnDecenas: false
@@ -207,14 +205,15 @@ function leerSalvajes(tablas) {
   return { salvajes, estaticos };
 }
 
-// Las tiendas: la normal (todas las listas de la Tienda Pokémon juntas, la 0) y cada tienda especial (por su número)
+// Las tiendas: la normal (todas las listas de la Tienda Pokémon juntas, la 0) y cada tienda especial (por su número).
+// En la normal solo se añaden los Caramelos Raros (es la «primera»); las piedras van a las especiales
 function leerTiendas(t) {
   const normal = [...new Set(t.FS.filter((x) => x.ZoneID === -1).map((x) => x.ItemNo))];
   const tiendas = [{ indice: 0, objetos: [...normal, 0], originales: normal }];
   const ids = [...new Set(t.FixedShop.map((x) => x.ShopID))];
   ids.forEach((id, k) => tiendas.push({ indice: k + 1, shopID: id, objetos: [...t.FixedShop.filter((x) => x.ShopID === id).map((x) => x.ItemNo), ...new Array(HUECOS_LIBRES).fill(0)] }));
   const especiales = tiendas.slice(1).map((x) => x.indice);
-  return { tiendas, tipo: { normales: [0], mt: [], historia: [0, ...especiales], primera: 0, saltar: [], cuantas: tiendas.length } };
+  return { tiendas, tipo: { normales: [0], mt: [], historia: especiales, primera: 0, saltar: [], cuantas: tiendas.length } };
 }
 
 // Los objetos del suelo: en los scripts de fld_item, el comando que da el objeto lleva su número como float
@@ -333,16 +332,6 @@ export function escribirBW2(sesion, datos) {
       return [evo.metodo, dato, evo.especie, forma, conNivel ? evo.dato : evo.nivelOriginal || 0];
     });
     oboe.WazaOboe[e.id].ar = (datos.aprende[e.id] || []).flatMap(([ataque, nivel]) => [nivel, ataque]);
-    // El del tutorial de captura, como en el juego (los ataques de después, los nuevos)
-    if (e.id === TUTORIAL) {
-      const o = bd.personal.Personal[e.id];
-      for (const c of CAMPOS_TUTORIAL) p[c] = o[c];
-      const pares = (ar) => ar.flatMap((x, i) => (i % 2 ? [] : [[x, ar[i + 1]]]));
-      oboe.WazaOboe[e.id].ar = [
-        ...pares(bd.oboe.WazaOboe[e.id].ar).filter(([nivel]) => nivel <= TUTORIAL_NIVEL),
-        ...pares(oboe.WazaOboe[e.id].ar).filter(([nivel]) => nivel > TUTORIAL_NIVEL)
-      ].flat();
-    }
   }
   poner(b.personal, "PersonalTable", personal, bd.personal);
   poner(b.personal, "EvolveTable", evolucion, bd.evolucion);
@@ -386,7 +375,12 @@ export function escribirBW2(sesion, datos) {
   }
 
   for (const clave of Object.keys(RUTAS)) guardar(sesion, clave);
-  if (datos.iniciales.some((id, k) => id !== INICIALES[k])) escribirIniciales(sesion, datos.iniciales, datos.especies);
+  escribirIniciales(sesion, datos.iniciales.some((id, k) => id !== INICIALES[k]) ? datos.iniciales : null);
+  // Todo lo que el randomizer puede tocar va siempre en el .zip, aunque no cambie (tal cual está en el juego): si se
+  // descomprime encima de un mod de antes, no queda nada de aquel mezclado con este (unos scripts o unas iniciales viejas)
+  for (const ruta of [...Object.values(RUTAS), ...IDIOMAS.map((i) => MENSAJES + i)]) {
+    if (sesion.tiene(ruta) && !sesion.cambiados.has(ruta)) sesion.cambiar(ruta, sesion.archivo(ruta));
+  }
 }
 
 // ---------- Iniciales ----------
@@ -412,10 +406,13 @@ function parcheIniciales([planta, fuego, agua], inicial, rival) {
   salida.push(..."EEOF".split("").map((c) => c.charCodeAt(0)));
   return Uint8Array.from(salida);
 }
+// El que no cambia nada (para las iniciales de siempre: pisa el de un mod de antes)
+const PARCHE_VACIO = Uint8Array.from([..."IPS32EEOF"].map((c) => c.charCodeAt(0)));
 
-
-function escribirIniciales(sesion, iniciales, especies) {
-  for (const [id, inicial, rival] of VERSIONES) sesion.cambiar(`@exefs/${id}.ips`, parcheIniciales(iniciales, inicial, rival));
+// iniciales: las tres nuevas, o null si son las de siempre
+function escribirIniciales(sesion, iniciales) {
+  for (const [id, inicial, rival] of VERSIONES) sesion.cambiar(`@exefs/${id}.ips`, iniciales ? parcheIniciales(iniciales, inicial, rival) : PARCHE_VACIO);
+  if (!iniciales) return;
   // Los scripts no se tocan, como en el randomizer de Ai0796: reescribir los que miran la inicial (la casa de Benito,
   // los de subir de nivel...) es lo único que no estaba probado y se sospecha de los cuelgues de los eventos
   // El diálogo de elegir: «¿Quieres a Turtwig, el Pokémon Hojita?», en cada idioma (el nombre y la categoría)

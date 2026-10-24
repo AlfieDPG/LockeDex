@@ -35,6 +35,12 @@ const HABILIDADES_MALAS = new Set([54, 112, 129, 103, 100, 118, 50, 35, 57, 58, 
 const rango = (desde, hasta) => Array.from({ length: hasta - desde + 1 }, (_, k) => desde + k);
 // Forcejeo y los que solo existen en combate: los movimientos Z (7.ª) y los Maxiataques (8.ª, al dinamaxizarse)
 const ATAQUES_MALOS = new Set([165, ...rango(622, 658), ...rango(695, 703), 719, ...rango(723, 728), 743, ...rango(757, 774)]);
+// Los que acaban el combate o debilitan al que los usa (Remolino, Rugido, Teletransporte, Autodestrucción, Explosión,
+// Mismodestino, Canto Mortal, Legado, Deseo Cura y Danza Lunar) y Huida: en el primer combate (la inicial, a nivel 5) y
+// en los que el juego hace a su manera (perfil.primerosCombates), el juego se queda a medias si acaba antes de tiempo
+const ATAQUES_FIN = new Set([18, 46, 100, 120, 153, 194, 195, 262, 361, 461]);
+const HUIDA = 50;
+const NIVEL_INICIAL = 5;
 const PIEDRAS = [80, 81, 82, 83, 84, 85]; // Solar, Lunar, Fuego, Trueno, Agua, Hoja
 const PIEDRAS_EVOLUTIVAS = [...PIEDRAS, 107, 108, 109]; // y Piedra Brillante, Noche y Alba
 const CARAMELO_RARO = 50;
@@ -189,6 +195,11 @@ function randomizarHabilidades(datos, reglas, azar) {
   }
   // Las evoluciones, las mismas que su base
   if (reglas.habilidades.familia) porFamilias(datos, (hija, madre) => (hija.habilidades = madre.habilidades.slice()));
+  // Los de los primeros combates, sin Huida (si les toca, otra al azar)
+  for (const id of datos.perfil.primerosCombates || []) {
+    const e = datos.especies[id];
+    if (e) e.habilidades = e.habilidades.map((h) => (h === HUIDA ? azar.elegir(buenas.filter((x) => x !== HUIDA)) : h));
+  }
 }
 
 // ---------- Evoluciones ----------
@@ -355,6 +366,28 @@ function randomizarIniciales(datos, reglas, azar) {
     elegidas.push(azar.elegir(posibles).id);
   }
   datos.iniciales = elegidas;
+}
+
+// Con ataques aleatorios: las iniciales y los de los primeros combates, hasta nivel 5, sin los que acaban el combate.
+// Si les toca uno, otro al azar (que pegue, si el de antes pegaba)
+function primerosCombatesSeguros(datos, reglas, azar) {
+  const pos = ataquesPosibles(datos);
+  const tipo = reglas.ataques.deSuTipo ? reglas.ataques.tipo : 0;
+  const pega = (id) => datos.ataques[id] && datos.ataques[id].potencia > 1;
+  for (const id of new Set([...(datos.iniciales || []), ...(datos.perfil.primerosCombates || [])])) {
+    const e = datos.especies[id];
+    const lista = datos.aprende[id] || [];
+    const usados = new Set(lista.map(([ataque]) => ataque));
+    for (const par of lista) {
+      if (!e || par[1] > NIVEL_INICIAL || !ATAQUES_FIN.has(par[0])) continue;
+      const debePegar = pega(par[0]);
+      let nuevo;
+      do nuevo = ataqueAlAzar(azar, e, pos, tipo, usados);
+      while (ATAQUES_FIN.has(nuevo.id) || (debePegar && !(nuevo.potencia > 1)));
+      par[0] = nuevo.id;
+      usados.add(nuevo.id);
+    }
+  }
 }
 
 // ---------- Estáticos e intercambios ----------
@@ -802,14 +835,17 @@ function randomizarTiendas(datos, reglas, azar, objetos) {
 }
 
 // Que estos objetos se vendan en alguna tienda especial de las de la historia (si no está ya, en
-// el sitio de otro objeto). primera: una tienda concreta, si se quiere.
+// el sitio de otro objeto). primera: una tienda concreta (aunque sea una normal), si se quiere.
+// Lo que pone una llamada no lo quita la siguiente: los Caramelos Raros no pisan una piedra
 function venderSiempre(datos, azar, ids, primera) {
   const tiendas = datos.tiendas.filter((t) => datos.perfil.tiendas.historia.includes(t.indice) && t.objetos.length);
-  const fijos = new Set(); // «tienda:hueco» ya ocupados por uno de estos
-  const concreta = primera !== undefined && tiendas.find((t) => t.indice === primera);
+  if (!datos.fijosTiendas) datos.fijosTiendas = new Set(); // «tienda:hueco» ya ocupados por uno de estos
+  const fijos = datos.fijosTiendas;
+  const concreta = primera !== undefined && datos.tiendas.find((t) => t.indice === primera && t.objetos.length);
   for (const id of ids) {
     if ((concreta ? [concreta] : tiendas).some((t) => t.objetos.includes(id))) continue;
     const donde = concreta || azar.elegir(tiendas);
+    if (!donde) continue;
     const libres = donde.objetos.map((_, k) => k).filter((k) => !fijos.has(`${donde.indice}:${k}`) && !ids.includes(donde.objetos[k]));
     if (!libres.length) continue;
     // Mejor en un hueco libre (0) que en el sitio de otro objeto
@@ -886,6 +922,8 @@ export async function randomizarROM(bytes, reglasEntrada, semilla) {
   hacer("habilidades", r.habilidades.modo !== "no", () => randomizarHabilidades(datos, reglas, azar("habilidades")));
   hacer("ataques", r.ataques.modo !== "no", () => randomizarAtaques(datos, reglas, azar("ataques")));
   hacer("iniciales", r.iniciales.modo !== "no" && datos.perfil.iniciales !== false, () => randomizarIniciales(datos, reglas, azar("iniciales")));
+  // (antes de los entrenadores: el rival lleva los mismos ataques)
+  if (r.ataques.modo !== "no") primerosCombatesSeguros(datos, reglas, azar("primeros-combates"));
   hacer("estáticos", r.estaticos.modo !== "no", () => randomizarEstaticos(datos, reglas, azar("estaticos")));
   hacer("tótems", datos.totems && datos.totems.length && (r.estaticos.totems !== "no" || r.estaticos.aliados !== "no" || r.estaticos.aura === "azar"), () => randomizarTotems(datos, reglas, azar("totems")));
   hacer("intercambios", r.intercambios.modo !== "no" || r.intercambios.objetos || r.intercambios.ivs, () =>

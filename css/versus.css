@@ -3365,9 +3365,9 @@ button.partida-ficha.arrastrando {
   flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  padding: 0.25rem 0.5rem;
+  justify-content: flex-start;
+  gap: 0.7rem;
+  padding: 0.25rem 0.65rem;
   border: none;
   border-radius: 0.45rem;
   background: var(--t-fondo);
@@ -3391,23 +3391,45 @@ button.locke-caidos:hover {
   height: 0.85rem;
 }
 
+/* La cuenta, a la izquierda y más grande; las caras, justo a su lado */
 .locke-caidos-cuenta {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.4rem;
+  font-family: var(--letra-titulos);
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1;
   color: #e74c3c;
+}
+
+.locke-caidos-cuenta .icono {
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 .locke-caidos-caras {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
+  gap: 0.3rem;
+  padding-right: 0.1rem; /* que el aro de la última no se corte */
 }
 
+/* Redondas como las caras del equipo (.cara-equipo, en base.css), pero apagadas, como en el
+   cementerio, y con un aro rojo y el fondo rojizo: que se vea que son bajas, no su equipo */
 .locke-caidos-caras img {
   width: 1.75rem;
   height: 1.75rem;
   display: block;
+  border-radius: 50%;
+  background: rgba(231, 76, 60, 0.18);
+  box-shadow: 0 0 0 1.5px rgba(231, 76, 60, 0.7);
+  filter: grayscale(0.85) brightness(0.9);
+  image-rendering: pixelated;
+}
+
+button.locke-caidos:hover .locke-caidos-caras img {
+  filter: none;
 }
 
 .locke-caidos-caras small {

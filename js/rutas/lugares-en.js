@@ -280,7 +280,6 @@ export const LUGARES_EN = {
   "Ciudad Marina":"Sunyshore City",
   "Zona Descanso":"Resort Area",
   "Ruta 201: Pokémon inicial":"Route 201: starter Pokémon",
-  "Museo de Ciudad Pirita: Fósil revivido":"Oreburgh Mining Museum: revived Fossil",
   "Ciudad Vetusta: Huevo de Togepi (regalo de Cintia)":"Eterna City: Togepi Egg (gift from Cynthia)",
   "Ciudad Corazón: Eevee (regalo de Teo)":"Hearthome City: Eevee (gift from Bebe)",
   "Ciudad Rocavelo: Porygon (regalo en una casa)":"Veilstone City: Porygon (gift in a house)",

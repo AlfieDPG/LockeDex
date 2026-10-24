@@ -443,11 +443,8 @@ function leerTiendas(sesion) {
     const todo = [...new Set(m.Inventories.flatMap((inv) => inv.Items))];
     tiendas.push({ indice: i, objetos: [...todo, 0], fb: m, varias: true, originales: todo });
     tipo.normales.push(i);
-    // La de los Centros, también entre las de la historia: ahí van los Caramelos Raros (y alguna piedra)
-    if (m.Hash === TIENDA_CENTRO) {
-      primera = i;
-      tipo.historia.push(i);
-    }
+    // En la de los Centros solo se añaden los Caramelos Raros (es la «primera»); las piedras van a las especiales
+    if (m.Hash === TIENDA_CENTRO) primera = i;
   });
   return { fb, tiendas, tipoTiendas: { ...tipo, primera, saltar: [], cuantas: tiendas.length } };
 }

@@ -77,10 +77,10 @@ const CIUDADES_SINNOH = [
   "Ciudad Marina", "Zona Descanso"
 ];
 
-// Eventos de Diamante / Perla (los remakes tienen los mismos y alguno más)
+// Eventos de Diamante / Perla (los remakes tienen los mismos y alguno más). El fósil del Museo de Ciudad Pirita no:
+// depende de que salga uno en el Subsuelo (y en la partida se apunta en Ciudad Pirita, que no es ruta)
 const EVENTOS_DP = [
   "Ruta 201: Pokémon inicial",
-  "Museo de Ciudad Pirita: Fósil revivido",
   "Ciudad Vetusta: Huevo de Togepi (regalo de Cintia)",
   "Ciudad Corazón: Eevee (regalo de Teo)",
   "Ciudad Rocavelo: Porygon (regalo en una casa)",

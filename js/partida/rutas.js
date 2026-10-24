@@ -55,6 +55,12 @@ const POR_NOMBRE = {
   "Mina Ruinamaníaco (Mina del Ruinamaníaco)": "Mina Ruinamaníaco"
 };
 
+// Dónde apunta el juego a la inicial, si no es el sitio de su evento: en Diamante Brillante y Perla Reluciente, en el
+// Lago Veraz (el evento es «Ruta 201», donde se da en Diamante y Perla)
+const LUGAR_INICIAL = { bdsp: "Lago Veraz" };
+// La inicial se da a nivel 5 (lo salvaje del primer sitio sale más bajo)
+const NIVEL_INICIAL = 5;
+
 // «Villa Raíz / Ruta 101: Pokémon inicial» -> ["Villa Raíz", "Ruta 101"]
 function lugaresDelEvento(texto) {
   const corte = texto.indexOf(": ");
@@ -95,9 +101,16 @@ export function marcarCapturas(partida, idJuego, mirados, conHierba = false) {
   const ediciones = EDICIONES[idJuego] || [];
 
   // Del primero capturado al último: si dos salen del mismo sitio, cuenta el primero
-  const todos = [...partida.equipo, ...partida.cajas.flatMap((caja) => caja.pokemon)]
-    .filter((p) => p.lugar && !mirados.has(p.llave) && (!p.origen || ediciones.includes(p.origen)))
+  const deEsteJuego = [...partida.equipo, ...partida.cajas.flatMap((caja) => caja.pokemon)]
+    .filter((p) => p.lugar && (!p.origen || ediciones.includes(p.origen)))
     .sort((uno, otro) => String(uno.fecha).localeCompare(String(otro.fecha)));
+  const todos = deEsteJuego.filter((p) => !mirados.has(p.llave));
+
+  // La inicial va siempre a su evento (nunca a la ruta de su sitio), y lo salvaje de ese sitio, nunca al evento. Es la
+  // primera que se tuvo de las de ese sitio a nivel 5 (también entre las ya miradas: así no se toma otra por ella)
+  const eventoInicial = eventos.find((e) => e.texto.endsWith(": Pokémon inicial"));
+  const sitiosInicial = eventoInicial ? [...eventoInicial.lugares, LUGAR_INICIAL[idJuego]] : [];
+  const inicial = deEsteJuego.find((p) => sitiosInicial.includes(p.lugar) && (!p.nivelCaptura || p.nivelCaptura === NIVEL_INICIAL));
 
   const nuevos = [];
   for (const p of todos) {
@@ -106,11 +119,13 @@ export function marcarCapturas(partida, idJuego, mirados, conHierba = false) {
     const lugar = (POR_NUMERO[idJuego] || {})[p.lugarN] || (alias && (porTexto.has(alias) || eventos.some((e) => e.lugares.includes(alias))) ? alias : p.lugar);
 
     let elegido = null;
-    if (porTexto.has(lugar) && !usadosTexto.has(lugar)) elegido = { clave: porTexto.get(lugar), texto: lugar, lugar };
+    if (p === inicial) {
+      if (!usadosTexto.has(eventoInicial.texto)) elegido = { clave: eventoInicial.clave, texto: eventoInicial.texto, lugar };
+    } else if (porTexto.has(lugar) && !usadosTexto.has(lugar)) elegido = { clave: porTexto.get(lugar), texto: lugar, lugar };
     else {
       // El lugar ya está usado (o no es de los que tienen Pokémon salvajes): un evento de
-      // ese sitio, si hay uno solo libre (el inicial, un regalo...)
-      const libres = eventos.filter((e) => !usadosTexto.has(e.texto) && e.lugares.includes(lugar));
+      // ese sitio, si hay uno solo libre (un regalo, un estático...)
+      const libres = eventos.filter((e) => e !== eventoInicial && !usadosTexto.has(e.texto) && e.lugares.includes(lugar));
       if (libres.length === 1) elegido = { clave: libres[0].clave, texto: libres[0].texto, lugar };
     }
     if (!elegido) continue;
