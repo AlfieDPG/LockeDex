@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NuzTheLocke · Nueva dirección</title>
+  <meta name="robots" content="noindex">
+  <link rel="canonical" href="https://alfiedpg.github.io/NuzTheLocke/">
+  <!-- Sin JavaScript: a los 3 segundos -->
+  <meta http-equiv="refresh" content="3;url=https://alfiedpg.github.io/NuzTheLocke/">
+  <style>
+    :root { color-scheme: dark light; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px;
+      background: #1e1f2b; color: #f2f2f2; font-family: "Nunito", system-ui, sans-serif; text-align: center;
+    }
+    main { max-width: 30rem; }
+    h1 { margin: 0 0 0.6rem; font-size: 1.8rem; }
+    p { line-height: 1.5; }
+    a.boton {
+      display: inline-block; margin-top: 0.6rem; padding: 0.7rem 1.4rem; border-radius: 0.5rem;
+      background: #d6584c; color: #fff; font-weight: bold; text-decoration: none;
+    }
+    small { display: block; margin-top: 1.4rem; opacity: 0.7; }
+  </style>
+  <script>
+    // La misma página en la dirección nueva, con lo que llevase detrás (#rutas, ?algo)
+    location.replace("https://alfiedpg.github.io/NuzTheLocke/" + location.search + location.hash);
+  </script>
+</head>
+<body>
+  <main>
+    <h1 id="titulo">LockeDex ahora es NuzTheLocke</h1>
+    <p id="texto">La web ha cambiado de nombre y de dirección. Tu cuenta, tus equipos y tus lockes siguen igual: solo hay que entrar por la dirección nueva.</p>
+    <a class="boton" id="enlace" href="https://alfiedpg.github.io/NuzTheLocke/">Ir a NuzTheLocke</a>
+    <small id="nota">Te llevamos solos en unos segundos. Si la tenías guardada en favoritos, cámbiala por la nueva.</small>
+  </main>
+  <script>
+    if (!/^es\b/i.test(navigator.language || "")) {
+      document.documentElement.lang = "en";
+      document.title = "NuzTheLocke · New address";
+      document.getElementById("titulo").textContent = "LockeDex is now NuzTheLocke";
+      document.getElementById("texto").textContent = "The site has a new name and a new address. Your account, teams and lockes are unchanged: just come in through the new address.";
+      document.getElementById("enlace").textContent = "Go to NuzTheLocke";
+      document.getElementById("nota").textContent = "We'll take you there in a few seconds. If you bookmarked it, please update the bookmark.";
+    }
+  </script>
+</body>
+</html>

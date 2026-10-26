@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NuzTheLocke · Nueva dirección</title>
+  <meta name="robots" content="noindex">
+  <script>
+    // Cualquier otra dirección de la web vieja (LockeDex/legal.html, etc.): a la misma en la nueva
+    const resto = location.pathname.replace(/^\/LockeDex\/?/i, "");
+    location.replace("https://alfiedpg.github.io/NuzTheLocke/" + resto + location.search + location.hash);
+  </script>
+  <meta http-equiv="refresh" content="0;url=https://alfiedpg.github.io/NuzTheLocke/">
+</head>
+<body>
+  <p><a href="https://alfiedpg.github.io/NuzTheLocke/">NuzTheLocke</a></p>
+</body>
+</html>
